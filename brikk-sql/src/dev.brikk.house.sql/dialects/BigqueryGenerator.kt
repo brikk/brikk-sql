@@ -49,7 +49,7 @@ open class BigqueryGenerator(
     pretty: Boolean = false,
     identify: kotlin.Any = false,
     comments: Boolean = true,
-    tokenizerConfig: TokenizerConfig = BigqueryTokenizerTables.CONFIG,
+    tokenizerConfig: TokenizerConfig = BigqueryDialect.TOKENIZER_CONFIG,
     overrides: Map<KClass<out Expression>, GenMethod> = emptyMap(),
     sourceDialect: String? = null,
 ) : Generator(
@@ -65,6 +65,17 @@ open class BigqueryGenerator(
     override val dialectUnnestColumnOnly: Boolean get() = true
 
     override val dialect: Dialect get() = Dialects.BIGQUERY
+
+    // sqlglot #8863 and 093f2ec7: escape existing backslashes and control characters,
+    // then introduce delimiter escapes. A single pass cannot re-escape its own output.
+    override fun escapeIdentifier(text: String): String = buildString {
+        for (ch in text) {
+            when (ch.toString()) {
+                identifierEnd -> append('\\').append(identifierEnd)
+                else -> append(escapedSequences[ch.toString()] ?: ch.toString())
+            }
+        }
+    }
 
     override fun bytestringSql(expression: ByteString): String {
         if (expression.args["is_bytes"] != true) return super.bytestringSql(expression)

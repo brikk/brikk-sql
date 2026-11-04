@@ -1037,21 +1037,43 @@ open class Generator(
         val stack = ArrayDeque<kotlin.Any?>()
         stack.addLast(expression)
         val binaryClass: KClass<out Expression> = expression::class
+        val isIs = expression is Is && op in setOf("IS", "IS NOT")
+        val negate = expression.args["negate"]
 
         while (stack.isNotEmpty()) {
             val node = stack.removeLast()
-            if (node != null && node is Expression && node::class == binaryClass) {
+            if (node is Expression && node::class == binaryClass && (node === expression ||
+                    isIs && node.expressionArg !is BooleanNode || node.args["negate"] == negate)) {
                 val opFunc = node.args["operator"]
                 if (opFunc != null) opText = "OPERATOR(${sql(opFunc)})"
-                stack.addLast(node.args["expression"])
+                else if (isIs) opText = if (node.args["negate"] == true) "IS NOT" else "IS"
+                val right = node.args["expression"]
+                val left = node.args["this"]
+                stack.addLast(if (needsBitwiseGrouping(node as Binary, right, rightSide = true)) "(${sql(right)})" else right)
                 stack.addLast(" ${maybeComment(opText, comments = node.comments)} ")
-                stack.addLast(node.args["this"])
+                stack.addLast(if (needsBitwiseGrouping(node, left, rightSide = false)) "(${sql(left)})" else left)
             } else {
                 sqls.add(sql(node))
             }
         }
 
         return sqls.joinToString("")
+    }
+
+    // SG29-007: bitwise/arithmetic binding differs between engines (^ in particular).
+    // Preserve the AST's grouping rather than assume the destination has the source's
+    // binding powers. Do not alter explicit groups or ordinary arithmetic rendering.
+    private fun needsBitwiseGrouping(parent: Binary, child: kotlin.Any?, rightSide: Boolean): Boolean {
+        if (child !is Binary) return false
+        fun bitwise(node: Expression) = node is BitwiseAnd || node is BitwiseOr || node is BitwiseXor ||
+            node is BitwiseLeftShift || node is BitwiseRightShift
+        fun arithmetic(node: Expression) = node is Add || node is Sub || node is Mul || node is Div ||
+            node is IntDiv || node is Mod || node is Pow
+        if (!(bitwise(parent) && (bitwise(child) || arithmetic(child)) || bitwise(child) && arithmetic(parent))) return false
+        // The generic parser deliberately gives these operators one left-associative
+        // tier. Its left operand therefore already has the AST's grouping without parens.
+        if (dialect.name.isEmpty() && !rightSide && bitwise(parent) && bitwise(child)) return false
+        return parent::class != child::class || rightSide && (parent is BitwiseLeftShift || parent is BitwiseRightShift)
     }
 
     // sqlglot: Generator.connector_sql
@@ -1078,7 +1100,13 @@ open class Generator(
 
         while (workStack.isNotEmpty()) {
             val node = workStack.removeLast()
-            if (node is Connector) {
+            // Dialect XOR renderers may be functions or an AND/OR lowering. Flattening
+            // them as the base infix XOR both bypasses dispatch and loses grouping.
+            if (node is Xor && node !== expression && dispatch[Xor::class] !== GeneratorTables.DISPATCH[Xor::class]) {
+                val rendered = "(${sql(node)})"
+                if (sqls.isNotEmpty() && sqls.last() in ops) sqls[sqls.size - 1] = sqls.last() + " $rendered"
+                else sqls.add(rendered)
+            } else if (node is Connector) {
                 ops.add(connectorOpSql(node, workStack))
             } else {
                 val nodeSql = sql(node)
@@ -1135,14 +1163,7 @@ open class Generator(
         val lower = text.lowercase()
         val quoted = expression.quoted
         if (normalize && !quoted) text = lower
-        // sqlglot #8533: escape the escape character before doubling quote delimiters.
-        for ((escaped, plain) in tokenizerConfig.unescapedSequences) {
-            if (escaped.firstOrNull() in tokenizerConfig.identifierEscapes &&
-                plain.singleOrNull() in tokenizerConfig.identifierEscapes) {
-                text = text.replace(plain, escaped)
-            }
-        }
-        text = text.replace(identifierEnd, escapedIdentifierEnd)
+        text = escapeIdentifier(text)
         if (
             quoted ||
             canQuote(expression, identify) ||
@@ -1152,6 +1173,19 @@ open class Generator(
             text = "$identifierStart${replaceLineBreaks(text)}$identifierEnd"
         }
         return text
+    }
+
+    /** Identifier escapes are independent of string-literal escapes and quote decisions. */
+    protected open fun escapeIdentifier(text: String): String {
+        var escapedText = text
+        // sqlglot #8533: escape the escape character before doubling quote delimiters.
+        for ((escaped, plain) in tokenizerConfig.unescapedSequences) {
+            if (escaped.firstOrNull() in tokenizerConfig.identifierEscapes &&
+                plain.singleOrNull() in tokenizerConfig.identifierEscapes) {
+                escapedText = escapedText.replace(plain, escaped)
+            }
+        }
+        return escapedText.replace(identifierEnd, escapedIdentifierEnd)
     }
 
     // sqlglot: Generator.national_sql
@@ -1792,15 +1826,44 @@ open class Generator(
         }
         val sqls = mutableListOf<String>()
         val stack = mutableListOf<kotlin.Any?>(expression)
+        var depth = 0
+        var openParens = ""
+
+        fun noModifiers(node: Expression) = (QUERY_MODIFIERS.keys + "with_").all { node.args[it] == null }
 
         while (stack.isNotEmpty()) {
             val node = stack.removeLast()
+            if (node is Int) {
+                depth = node
+                sqls[sqls.lastIndex] += sep("") + indent(")", level = depth, pad = 0)
+                continue
+            }
             // A nested set's own pagination belongs to that set, not the outer chain.
             if (node is SetOperation && (node === expression ||
                     listOf("limit", "offset", "order", "with_").all { node.args[it] == null })) {
                 stack.add(node.args["expression"])
                 stack.add(maybeComment(setOperation(node), comments = node.comments, separated = true))
-                stack.add(node.args["this"])
+                var left = node.thisArg as? Expression
+                if (!setOpParenthesizedOperands && !dialect.intersectBindsTighterThanUnionAndExcept) {
+                    val wrappers = mutableListOf<Subquery>()
+                    var inner = left
+                    while (inner is Subquery && inner.isWrapper) {
+                        wrappers.add(inner)
+                        inner = inner.thisArg as? Expression
+                    }
+                    if (inner is SetOperation && noModifiers(inner)) {
+                        for (wrapper in wrappers) inner.addComments(wrapper.popComments())
+                        left = inner
+                    }
+                } else if (setOpParenthesizedOperands && left is Subquery && left.isWrapper &&
+                    left.comments.isNullOrEmpty() && left.thisArg is SetOperation && noModifiers(left.thisArg as Expression)) {
+                    // sqlglot #8704: do not recurse once per left-associated INTERSECT.
+                    openParens += indent("(", level = depth, pad = 0) + sep("")
+                    stack.add(depth)
+                    depth++
+                    left = left.thisArg as Expression
+                }
+                stack.add(left)
             } else {
                 val paginatedSelect = node is Select && !setOpLimits &&
                     listOf("limit", "offset", "order").any { node.args[it] != null }
@@ -1809,8 +1872,11 @@ open class Generator(
                     val subquery = Subquery(args("this" to node))
                     if (setOpParenthesizedOperands) subquery else
                         Select(args("expressions" to listOf(Star()), "from_" to From(args("this" to subquery))))
+                } else if (!setOpParenthesizedOperands && node is Subquery && node.unnest() is SetOperation) {
+                    Select(args("expressions" to listOf(Star()), "from_" to From(args("this" to node))))
                 } else node
-                sqls.add(sql(operand))
+                sqls.add(openParens + indent(sql(operand), level = depth, pad = 0))
+                openParens = ""
             }
         }
 
@@ -5311,6 +5377,16 @@ open class Generator(
     open fun isSql(expression: Is): String {
         val negate = expression.args["negate"] == true
         if (!isBoolAllowed && expression.expressionArg is BooleanNode) {
+            // The legacy identity/NOT fallback is equivalent only for a proven non-null
+            // Boolean. Preserve preview compatibility, not an unsafe NULL-sensitive
+            // execution claim for StarRocks/Presto/Trino when those facts are absent.
+            var operand = expression.thisArg as? Expression
+            while (operand is Paren || operand is Not) operand = operand.thisArg as? Expression
+            val proven = operand is BooleanNode || operand is Is || operand is NullSafeEQ || operand is NullSafeNEQ ||
+                operand?.isType(DType.BOOLEAN) == true && operand.metaOrNull?.get("nonnull") == true
+            if (forExecution && !proven) {
+                throw UnsupportedError("IS Boolean lowering requires a proven non-null Boolean operand; NULL-sensitive translation is not qualified")
+            }
             val rhs = expression.expressionArg as BooleanNode
             val positive = (rhs.thisArg == true) != negate
             return if (positive) sql(expression, "this")

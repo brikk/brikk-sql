@@ -517,37 +517,29 @@ open class PostgresGenerator(
     // sqlglot: generators.postgres._date_add_sql — _simplify_unless_literal is
     // approximated by the identity (the optimizer's simplify is not ported)
     open fun dateAddSql(expression: Expression, kind: String): String {
-        var expr = expression
-        if (expr is TsOrDsAdd) {
-            expr = tsOrDsAddCast(expr)
+        val expr = if (expression is TsOrDsAdd) tsOrDsAddCast(expression.copy() as TsOrDsAdd) else expression
+        var this_ = expr.thisArg as? Expression
+        // Newly supported timestamp/datetime deltas must not leave a bare unknown
+        // string for PostgreSQL to resolve as an interval instead of a timestamp.
+        if (this_ is Literal && this_.isString &&
+            (expr is TimestampAdd || expr is TimestampSub || expr is DatetimeAdd || expr is DatetimeSub)) {
+            this_ = Cast(args("this" to this_.copy(), "to" to DataType.build(DType.TIMESTAMP)))
         }
-
-        val this_ = sql(expr, "this")
         val unit = (expr.args["unit"] as? Expression)?.let {
             if (it is Literal || it is Var) Var(args("this" to it.name)) else it.copy()
         }
 
-        var e = expr.args["expression"] as? Expression
-        if (e is Interval) {
-            return "$this_ $kind ${sql(e)}"
-        } else if (e is Literal && e.isString) {
-            // handled below (is_string stays true)
-        } else if (e is Literal) {
-            e.set("is_string", true)
-        } else if (e != null && e.isNumber) {
-            e = Literal.string(e.name)
-        } else {
-            val one = Literal.number("1")
-            val intervalTimesValue = Mul(
-                args(
-                    "this" to Interval(args("this" to one, "unit" to unit)),
-                    "expression" to e,
-                )
-            )
-            return "$this_ $kind ${sql(intervalTimesValue)}"
+        val e = expr.args["expression"] as? Expression
+        val interval = when {
+            e is Interval -> e
+            e is Literal -> Interval(args("this" to Literal.string(e.name), "unit" to unit))
+            e?.isNumber == true -> Interval(args("this" to Literal.string(sql(e)), "unit" to unit))
+            else -> Mul(args(
+                "this" to Interval(args("this" to Literal.number("1"), "unit" to unit)),
+                "expression" to e?.copy()?.let { if (it is Binary) Paren(args("this" to it)) else it },
+            ))
         }
-
-        return "$this_ $kind ${sql(Interval(args("this" to e, "unit" to unit)))}"
+        return dateDeltaToBinarySql(expression, this_, interval, subtract = kind == "-")
     }
 
     // sqlglot: dialect.ts_or_ds_add_cast
@@ -879,8 +871,10 @@ open class PostgresGenerator(
 
     // sqlglot: dialect.bool_xor_sql
     open fun boolXorSql(expression: Xor): String {
-        val a = sql(expression.thisArg)
-        val b = sql(expression.args["expression"])
+        val left = expression.thisArg
+        val right = expression.expressionArg
+        val a = if (left is Connector) "(${sql(left)})" else sql(left)
+        val b = if (right is Connector) "(${sql(right)})" else sql(right)
         return "($a AND (NOT $b)) OR ((NOT $a) AND $b)"
     }
 
@@ -1284,6 +1278,10 @@ open class PostgresGenerator(
             reg(DateDiff::class) { e -> pg().dateDiffSql(e) }
             reg(DateStrToDate::class) { e -> pg().datestrtodateSql(e as DateStrToDate) }
             reg(DateSub::class) { e -> pg().dateAddSql(e, "-") }
+            reg(DatetimeAdd::class) { e -> pg().dateAddSql(e, "+") }
+            reg(DatetimeSub::class) { e -> pg().dateAddSql(e, "-") }
+            reg(TimestampAdd::class) { e -> pg().dateAddSql(e, "+") }
+            reg(TimestampSub::class) { e -> pg().dateAddSql(e, "-") }
             reg(Explode::class) { e -> pg().renameFuncSql("UNNEST", e) }
             reg(ExplodingGenerateSeries::class) { e -> pg().renameFuncSql("GENERATE_SERIES", e) }
             reg(GenerateSeries::class) { e -> pg().generateseriesSql(e as GenerateSeries) }

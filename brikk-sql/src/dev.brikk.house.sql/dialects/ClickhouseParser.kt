@@ -314,8 +314,9 @@ open class ClickhouseParser(
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.CLICKHOUSE
 
-    // sqlglot: ClickHouseParser.MODIFIERS_ATTACHED_TO_SET_OP = False
-    override val modifiersAttachedToSetOp: Boolean get() = false
+    // sqlglot #8704: pagination stays on the last arm; SETTINGS/FORMAT own the whole set.
+    override val setOpModifiers: Set<String> get() = setOf("settings", "format")
+    override val isPredicatePrecedence get() = dev.brikk.house.sql.parser.IsPredicatePrecedence.LOW
 
     // sqlglot: ClickHouseParser.INTERVAL_SPANS = False
     override val intervalSpans: Boolean get() = false

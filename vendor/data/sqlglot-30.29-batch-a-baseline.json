@@ -1,0 +1,59 @@
+{
+  "captured_at": "2026-11-03",
+  "scope": "Historical generic parser/rendering observations for SG29-001 through SG29-004. Not native engine acceptance or executable qualification.",
+  "brikk": {
+    "version": "0.23.0",
+    "checkout_reviewed": "9a7c648f205ba71b1af6f08a914398b9bc4c75d0",
+    "artifacts": [
+      {
+        "coordinate": "dev.brikk.house:brikk-sql-jvm:0.23.0",
+        "sha256": "4d272ed1c0a6e84ba9086b5a3e21c62a1c2e094f2d886de3fcbce6d86e9e0d38"
+      },
+      {
+        "coordinate": "dev.brikk.house:brikk-sql-metadata-jvm:0.23.0",
+        "sha256": "be6cda26ed8e7de2a89b3bfc15724c466d4d0ec95bf52fb2d4cedfdfe4c158c1"
+      }
+    ]
+  },
+  "upstream": {
+    "release": "v30.29.0",
+    "release_commit": "2fe25297af5b0f44f5c9e5d03e1b296424b7acbe",
+    "reviewed_main": "f7a36727",
+    "shipped_brikk_oracle": "a00dc2e5c489214bea53bacbbeba8713f21ebce1"
+  },
+  "original_capture": {
+    "path_at_review": "/var/tmp/jayson/opencode/sqlglot-review-20261103/probe-results.json",
+    "sha256": "d437f1225cf1f14b5d00e5b4fbdc4c0824d9bc83f8565b5954f464eac951c533",
+    "cases": 23
+  },
+  "cases": [
+    {
+      "id": "SG29-002",
+      "read": "mysql",
+      "write": "mysql",
+      "sql": "DESC.",
+      "prior_brikk": "java.lang.StackOverflowError",
+      "upstream": "ParseError: Expected table name",
+      "upstream_commit": "d6e787519b1d3952ff3921251cf60b5afcd82bde"
+    },
+    {
+      "id": "SG29-003",
+      "read": "duckdb",
+      "write": "duckdb",
+      "sql": "SELECT JSON_EXTRACT('{}', '$[1e2]')",
+      "prior_brikk": "java.lang.NumberFormatException: For input string: \"1e2\"",
+      "upstream": "SELECT '{}' -> '$[1e2]'",
+      "upstream_commit": "8a524dfa1ea61f924afa0f58e0c16a1882410b71"
+    },
+    {
+      "id": "SG29-004",
+      "read": "postgres",
+      "write": "bigquery",
+      "sql": "SELECT \"a`b\\c\"",
+      "prior_brikk": "SELECT `a``b\\c`",
+      "upstream": "SELECT `a\\`b\\\\c`",
+      "upstream_commit": "c39005c3438ef7d64930666e98824de242462682",
+      "upstream_followups": ["093f2ec7", "7696edf9"]
+    }
+  ]
+}

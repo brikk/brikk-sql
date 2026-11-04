@@ -652,12 +652,15 @@ private fun traverseUnion(scope: Scope, acc: MutableList<Scope>) {
             scopeType = ScopeType.SET_OPERATION,
         )
 
-        if (expression is SetOperation) {
+        // sqlglot #8704: unwrap left grouping iteratively. A right set operand is a
+        // separate branch, not another frame in the pending left-operand chain.
+        val inner = newScope.expression
+        if (prevScope == null && inner is SetOperation) {
             traverseCtes(newScope, acc)
 
             unionScopeStack.add(newScope)
-            expressionStack.add(expression.right)
-            expressionStack.add(expression.left)
+            expressionStack.add(inner.right)
+            expressionStack.add(inner.left)
             continue
         }
 

@@ -393,6 +393,21 @@ open class StarrocksGenerator(
         val TRANSFORMS: Map<KClass<out Expression>, GenMethod> = buildMap {
             fun reg(cls: KClass<out Expression>, method: GenMethod) { put(cls, method) }
             fun Generator.sg(): StarrocksGenerator = this as StarrocksGenerator
+            // SG29-007: StarRocks 4.1.4 has no infix logical XOR rule. Keep generic
+            // preview compatibility, but never claim this is executable native SQL.
+            reg(Xor::class) { e ->
+                val message = "StarRocks 4.1.4 logical XOR translation is not qualified"
+                unexecutable(message)
+                binary(e as Binary, "XOR")
+            }
+            reg(BitwiseLeftShift::class) { e ->
+                unexecutable("StarRocks 4.1.4 symbolic bitwise shift translation is not qualified")
+                binary(e as Binary, "<<")
+            }
+            reg(BitwiseRightShift::class) { e ->
+                unexecutable("StarRocks 4.1.4 symbolic bitwise shift translation is not qualified")
+                binary(e as Binary, ">>")
+            }
             reg(TimeSlice::class) { e -> sg().timeSliceSql(e as TimeSlice) }
 
             reg(ArgMax::class) { e -> sg().renameFuncSql("MAX_BY", e) }

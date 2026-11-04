@@ -990,6 +990,16 @@ open class DorisGenerator(
         val TRANSFORMS: Map<KClass<out Expression>, GenMethod> = buildMap {
             fun reg(cls: KClass<out Expression>, method: GenMethod) { put(cls, method) }
             fun Generator.dg(): DorisGenerator = this as DorisGenerator
+            // SG29-007: Doris 4.1.5 has no symbolic << / >> expression grammar.
+            // A width/signedness-qualified functional lowering is a separate feature.
+            reg(BitwiseLeftShift::class) { e ->
+                unexecutable("Doris 4.1.5 symbolic bitwise shift translation is not qualified")
+                binary(e as Binary, "<<")
+            }
+            reg(BitwiseRightShift::class) { e ->
+                unexecutable("Doris 4.1.5 symbolic bitwise shift translation is not qualified")
+                binary(e as Binary, ">>")
+            }
 
             reg(AddMonths::class) { e -> dg().renameFuncSql("MONTHS_ADD", e) }
             // BUGS-doris-generator-mappings row 1 (P1): duckdb list_has_any(a,b) parses to

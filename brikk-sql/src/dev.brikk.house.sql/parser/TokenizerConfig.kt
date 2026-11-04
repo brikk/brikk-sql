@@ -172,6 +172,10 @@ class TokenizerConfig(
     fun withIdentifiers(extra: Map<Char, String>): TokenizerConfig =
         copyWith(emptyMap(), unescapedSequences, identifiers = identifiers + extra)
 
+    /** Runtime dialect escape overlay while generated tables retain their frozen oracle pin. */
+    internal fun withIdentifierEscapes(escapes: Set<Char>): TokenizerConfig =
+        copyWith(emptyMap(), unescapedSequences, identifierEscapes = escapes.toSet())
+
     /** Additional prefixed literal spellings, without changing constructor/default ABI. */
     fun withFormatStrings(extra: Map<String, StringFormat>): TokenizerConfig =
         copyWith(emptyMap(), unescapedSequences, formatStrings = formatStrings + extra)
@@ -183,6 +187,7 @@ class TokenizerConfig(
         identifiers: Map<Char, String> = this.identifiers,
         formatStrings: Map<String, StringFormat> = this.formatStrings,
         keywords: Map<String, TokenType> = this.keywords + extra,
+        identifierEscapes: Set<Char> = this.identifierEscapes,
     ): TokenizerConfig = TokenizerConfig(
         singleTokens = singleTokens,
         keywords = keywords,

@@ -598,8 +598,10 @@ open class PrestoGenerator(
 
     // sqlglot: dialect.bool_xor_sql
     open fun boolXorSql(expression: Xor): String {
-        val a = sql(expression, "this")
-        val b = sql(expression, "expression")
+        val left = expression.thisArg
+        val right = expression.expressionArg
+        val a = if (left is Connector) "(${sql(left)})" else sql(left)
+        val b = if (right is Connector) "(${sql(right)})" else sql(right)
         return "($a AND (NOT $b)) OR ((NOT $a) AND $b)"
     }
 

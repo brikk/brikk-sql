@@ -176,7 +176,9 @@ open class DatafusionGenerator(
         return when (predicate) {
             is Between -> betweenSql(predicate).replaceFirst(" BETWEEN ", " NOT BETWEEN ")
             is In -> inSql(predicate).replaceFirst(" IN ", " NOT IN ")
-            is Is -> isSql(predicate).replaceFirst(" IS ", " IS NOT ")
+            // SG29-005: replacing the first IS in rendered text negates an inner
+            // predicate in a chain. Toggle only the outer node, without mutating it.
+            is Is -> isSql((predicate.copy() as Is).also { it.set("negate", predicate.args["negate"] != true) })
             else -> super.notSql(expression)
         }
     }

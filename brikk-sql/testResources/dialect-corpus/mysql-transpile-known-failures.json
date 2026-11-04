@@ -1,3 +1,10 @@
 {
-    "cases": []
+    "cases": [
+        {
+            "id": "assertion:v1:sha256:145b41f19ff19c75da4d4482012d74ae0d07b16df9b7740d04c3c955520ad512:1",
+            "case": "write|postgres|WITH t AS (SELECT CAST('2020-01-10' AS DATE) AS col, 5 AS num_days) SELECT DATE_ADD(col, INTERVAL num_days DAY) FROM t",
+            "signature": "sql-mismatch:v1:sha256:f75adc8e62f506fb3b95f0279715b2da9fb81b0c10891a2a8ef8a6bd3c123875",
+            "reason": "SG29-009 frozen-pin output drift, SQLGlot #8815/3cca3ea4: the interval-times-count operand is now explicitly grouped as col + (INTERVAL '1 DAY' * num_days), matching the reviewed upstream fix. Same value/type for this flat control; dynamic n+1 and right-nested subtraction controls prove why grouping is needed. Exact assertion only, remove with coherent SG29-020 oracle refresh. No general mismatch allowance."
+        }
+    ]
 }

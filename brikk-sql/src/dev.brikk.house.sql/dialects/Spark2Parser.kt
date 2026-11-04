@@ -74,6 +74,7 @@ open class Spark2Parser(
 
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.SPARK2
+    override val isPredicatePrecedence get() = dev.brikk.house.sql.parser.IsPredicatePrecedence.LOW
     override val normalizeDecimalLiterals: Boolean get() = false
     override val decimalLiteralsAllowNegativeScale: Boolean get() = true
 

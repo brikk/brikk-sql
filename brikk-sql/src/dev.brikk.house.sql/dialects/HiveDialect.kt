@@ -20,6 +20,7 @@ import dev.brikk.house.sql.parser.TokenizerConfig
 open class HiveDialect : Dialect() {
 
     override val name: String get() = "hive"
+    override val intersectBindsTighterThanUnionAndExcept: Boolean get() = false
 
     // brikk-native: see Dialect.groupByProjectionAliases.
     override val groupByProjectionAliases: Boolean get() = false

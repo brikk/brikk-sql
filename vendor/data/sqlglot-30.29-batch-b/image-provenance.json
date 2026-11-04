@@ -1,0 +1,34 @@
+{
+  "mysql": {
+    "image_id": "sha256:85b9bf2e29cf836ecb8c2a15a935d4ba0c606631dff1dd79531a11983c638f2a",
+    "repo_digests": [
+      "mysql@sha256:85b9bf2e29cf836ecb8c2a15a935d4ba0c606631dff1dd79531a11983c638f2a"
+    ],
+    "architecture": "amd64",
+    "os": "linux"
+  },
+  "doris": {
+    "image_id": "sha256:e67f66e621d2d77be7d210b8cab4b1e62e89ff4a0bdaf894bf155fdb1fe441dc",
+    "repo_digests": [
+      "apache/doris@sha256:e67f66e621d2d77be7d210b8cab4b1e62e89ff4a0bdaf894bf155fdb1fe441dc"
+    ],
+    "architecture": "amd64",
+    "os": "linux"
+  },
+  "starrocks": {
+    "image_id": "sha256:5c0a65390daa18ea5db9251f4bed2c6d9cdba174363fb289b58af180ea680a14",
+    "repo_digests": [
+      "starrocks/allin1-ubuntu@sha256:5c0a65390daa18ea5db9251f4bed2c6d9cdba174363fb289b58af180ea680a14"
+    ],
+    "architecture": "amd64",
+    "os": "linux"
+  },
+  "clickhouse": {
+    "image_id": "sha256:b2bfa4d8399ee9973868cc5c1754cb506a6f4b86fbddc41010cc090beb55c85e",
+    "repo_digests": [
+      "clickhouse/clickhouse-server@sha256:b2bfa4d8399ee9973868cc5c1754cb506a6f4b86fbddc41010cc090beb55c85e"
+    ],
+    "architecture": "amd64",
+    "os": "linux"
+  }
+}

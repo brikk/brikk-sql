@@ -1,0 +1,929 @@
+{
+  "scope": "Finite DOUBLE value/type controls only; no general coercion, DECIMAL typing or floating-point algorithm equivalence claim.",
+  "engines": {
+    "mysql": {
+      "container": "brikk-sg008-mysql",
+      "image": "mysql@sha256:85b9bf2e29cf836ecb8c2a15a935d4ba0c606631dff1dd79531a11983c638f2a",
+      "version": {
+        "returncode": 0,
+        "stdout": "8.4.11\tONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION\n",
+        "stderr": ""
+      },
+      "metadata": {
+        "returncode": 0,
+        "stdout": "--------------\nSELECT STD(x),STDDEV_SAMP(x),VARIANCE(x),VAR_SAMP(x) FROM (SELECT CAST(0 AS DOUBLE) x UNION ALL SELECT CAST(2 AS DOUBLE)) t\n--------------\n\nField   1:  `STD(x)`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       DOUBLE\nCollation:  binary (63)\nLength:     23\nMax_length: 1\nDecimals:   31\nFlags:      BINARY NUM \n\nField   2:  `STDDEV_SAMP(x)`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       DOUBLE\nCollation:  binary (63)\nLength:     23\nMax_length: 18\nDecimals:   31\nFlags:      BINARY NUM \n\nField   3:  `VARIANCE(x)`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       DOUBLE\nCollation:  binary (63)\nLength:     23\nMax_length: 1\nDecimals:   31\nFlags:      BINARY NUM \n\nField   4:  `VAR_SAMP(x)`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       DOUBLE\nCollation:  binary (63)\nLength:     23\nMax_length: 1\nDecimals:   31\nFlags:      BINARY NUM \n\n\n+--------+--------------------+-------------+-------------+\n| STD(x) | STDDEV_SAMP(x)     | VARIANCE(x) | VAR_SAMP(x) |\n+--------+--------------------+-------------+-------------+\n|      1 | 1.4142135623730951 |           1 |           2 |\n+--------+--------------------+-------------+-------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": ""
+      },
+      "distinct_syntax_rejection": {
+        "returncode": 1,
+        "stdout": "",
+        "stderr": "ERROR 1064 (42000) at line 1: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'DISTINCT x) FROM (SELECT CAST(2 AS DOUBLE) x) t' at line 1\n"
+      }
+    },
+    "starrocks": {
+      "container": "brikk-sg008-starrocks",
+      "image": "starrocks/allin1-ubuntu@sha256:5c0a65390daa18ea5db9251f4bed2c6d9cdba174363fb289b58af180ea680a14",
+      "version": {
+        "returncode": 0,
+        "stdout": "4.1.4-4a9848e\n",
+        "stderr": ""
+      },
+      "metadata": {
+        "returncode": 0,
+        "stdout": "--------------\nSELECT STD(x),STDDEV_SAMP(x),VARIANCE(x),VAR_SAMP(x) FROM (SELECT CAST(0 AS DOUBLE) x UNION ALL SELECT CAST(2 AS DOUBLE)) t\n--------------\n\nField   1:  `std(x)`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       DOUBLE\nCollation:  binary (63)\nLength:     22\nMax_length: 1\nDecimals:   31\nFlags:      NUM \n\nField   2:  `stddev_samp(x)`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       DOUBLE\nCollation:  binary (63)\nLength:     22\nMax_length: 18\nDecimals:   31\nFlags:      NUM \n\nField   3:  `variance(x)`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       DOUBLE\nCollation:  binary (63)\nLength:     22\nMax_length: 1\nDecimals:   31\nFlags:      NUM \n\nField   4:  `var_samp(x)`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       DOUBLE\nCollation:  binary (63)\nLength:     22\nMax_length: 1\nDecimals:   31\nFlags:      NUM \n\n\n+--------+--------------------+-------------+-------------+\n| std(x) | stddev_samp(x)     | variance(x) | var_samp(x) |\n+--------+--------------------+-------------+-------------+\n|      1 | 1.4142135623730951 |           1 |           2 |\n+--------+--------------------+-------------+-------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": ""
+      },
+      "distinct_syntax_rejection": {
+        "returncode": 1,
+        "stdout": "",
+        "stderr": "ERROR 1064 (HY000) at line 1: Getting syntax error at line 1, column 18. Detail message: Unexpected input '(', the most similar input is {<EOF>, ';'}.\n"
+      }
+    }
+  },
+  "observations": [
+    {
+      "case": "empty",
+      "source": "mysql",
+      "target": "mysql",
+      "sql": "SELECT STDDEV(x),STDDEV_SAMP(x),VARIANCE(x),VAR_SAMP(x) FROM (SELECT CAST(NULL AS DOUBLE) x WHERE FALSE) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[StddevPop(this=Column(this=Identifier(this=x,quoted=false))),StddevSamp(this=Column(this=Identifier(this=x,quoted=false))),VariancePop(this=Column(this=Identifier(this=x,quoted=false))),Variance(this=Column(this=Identifier(this=x,quoted=false)))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Cast(this=Null(),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=x,quoted=false))],limit=null,exclude=null,operation_modifiers=null,where=Where(this=Boolean(this=false))),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(NULL AS DOUBLE) AS x WHERE FALSE) AS t",
+      "executable": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(NULL AS DOUBLE) AS x WHERE FALSE) AS t",
+      "result": {
+        "returncode": 0,
+        "stdout": "NULL\tNULL\tNULL\tNULL\n",
+        "stderr": ""
+      },
+      "expected": [
+        [
+          null,
+          null,
+          null,
+          null
+        ]
+      ]
+    },
+    {
+      "case": "empty",
+      "source": "mysql",
+      "target": "starrocks",
+      "sql": "SELECT STDDEV(x),STDDEV_SAMP(x),VARIANCE(x),VAR_SAMP(x) FROM (SELECT CAST(NULL AS DOUBLE) x WHERE FALSE) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[StddevPop(this=Column(this=Identifier(this=x,quoted=false))),StddevSamp(this=Column(this=Identifier(this=x,quoted=false))),VariancePop(this=Column(this=Identifier(this=x,quoted=false))),Variance(this=Column(this=Identifier(this=x,quoted=false)))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Cast(this=Null(),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=x,quoted=false))],limit=null,exclude=null,operation_modifiers=null,where=Where(this=Boolean(this=false))),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(NULL AS DOUBLE) AS x WHERE FALSE) AS t",
+      "executable": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(NULL AS DOUBLE) AS x WHERE FALSE) AS t",
+      "result": {
+        "returncode": 0,
+        "stdout": "NULL\tNULL\tNULL\tNULL\n",
+        "stderr": ""
+      },
+      "expected": [
+        [
+          null,
+          null,
+          null,
+          null
+        ]
+      ]
+    },
+    {
+      "case": "empty",
+      "source": "starrocks",
+      "target": "mysql",
+      "sql": "SELECT STDDEV(x),STDDEV_SAMP(x),VARIANCE(x),VAR_SAMP(x) FROM (SELECT CAST(NULL AS DOUBLE) x WHERE FALSE) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[StddevPop(this=Column(this=Identifier(this=x,quoted=false))),StddevSamp(this=Column(this=Identifier(this=x,quoted=false))),VariancePop(this=Column(this=Identifier(this=x,quoted=false))),Variance(this=Column(this=Identifier(this=x,quoted=false)))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Cast(this=Null(),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=x,quoted=false))],limit=null,exclude=null,operation_modifiers=null,where=Where(this=Boolean(this=false))),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(NULL AS DOUBLE) AS x WHERE FALSE) AS t",
+      "executable": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(NULL AS DOUBLE) AS x WHERE FALSE) AS t",
+      "result": {
+        "returncode": 0,
+        "stdout": "NULL\tNULL\tNULL\tNULL\n",
+        "stderr": ""
+      },
+      "expected": [
+        [
+          null,
+          null,
+          null,
+          null
+        ]
+      ]
+    },
+    {
+      "case": "empty",
+      "source": "starrocks",
+      "target": "starrocks",
+      "sql": "SELECT STDDEV(x),STDDEV_SAMP(x),VARIANCE(x),VAR_SAMP(x) FROM (SELECT CAST(NULL AS DOUBLE) x WHERE FALSE) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[StddevPop(this=Column(this=Identifier(this=x,quoted=false))),StddevSamp(this=Column(this=Identifier(this=x,quoted=false))),VariancePop(this=Column(this=Identifier(this=x,quoted=false))),Variance(this=Column(this=Identifier(this=x,quoted=false)))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Cast(this=Null(),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=x,quoted=false))],limit=null,exclude=null,operation_modifiers=null,where=Where(this=Boolean(this=false))),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(NULL AS DOUBLE) AS x WHERE FALSE) AS t",
+      "executable": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(NULL AS DOUBLE) AS x WHERE FALSE) AS t",
+      "result": {
+        "returncode": 0,
+        "stdout": "NULL\tNULL\tNULL\tNULL\n",
+        "stderr": ""
+      },
+      "expected": [
+        [
+          null,
+          null,
+          null,
+          null
+        ]
+      ]
+    },
+    {
+      "case": "empty",
+      "source": "postgres",
+      "target": "mysql",
+      "sql": "SELECT STDDEV_POP(x),STDDEV(x),VAR_POP(x),VARIANCE(x) FROM (SELECT CAST(NULL AS DOUBLE) x WHERE FALSE) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[StddevPop(this=Column(this=Identifier(this=x,quoted=false))),Stddev(this=Column(this=Identifier(this=x,quoted=false))),VariancePop(this=Column(this=Identifier(this=x,quoted=false))),Variance(this=Column(this=Identifier(this=x,quoted=false)))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Cast(this=Null(),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=x,quoted=false))],limit=null,exclude=null,operation_modifiers=null,where=Where(this=Boolean(this=false))),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(NULL AS DOUBLE) AS x WHERE FALSE) AS t",
+      "executable": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(NULL AS DOUBLE) AS x WHERE FALSE) AS t",
+      "result": {
+        "returncode": 0,
+        "stdout": "NULL\tNULL\tNULL\tNULL\n",
+        "stderr": ""
+      },
+      "expected": [
+        [
+          null,
+          null,
+          null,
+          null
+        ]
+      ]
+    },
+    {
+      "case": "empty",
+      "source": "postgres",
+      "target": "starrocks",
+      "sql": "SELECT STDDEV_POP(x),STDDEV(x),VAR_POP(x),VARIANCE(x) FROM (SELECT CAST(NULL AS DOUBLE) x WHERE FALSE) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[StddevPop(this=Column(this=Identifier(this=x,quoted=false))),Stddev(this=Column(this=Identifier(this=x,quoted=false))),VariancePop(this=Column(this=Identifier(this=x,quoted=false))),Variance(this=Column(this=Identifier(this=x,quoted=false)))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Cast(this=Null(),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=x,quoted=false))],limit=null,exclude=null,operation_modifiers=null,where=Where(this=Boolean(this=false))),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(NULL AS DOUBLE) AS x WHERE FALSE) AS t",
+      "executable": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(NULL AS DOUBLE) AS x WHERE FALSE) AS t",
+      "result": {
+        "returncode": 0,
+        "stdout": "NULL\tNULL\tNULL\tNULL\n",
+        "stderr": ""
+      },
+      "expected": [
+        [
+          null,
+          null,
+          null,
+          null
+        ]
+      ]
+    },
+    {
+      "case": "empty",
+      "source": "duckdb",
+      "target": "mysql",
+      "sql": "SELECT STDDEV_POP(x),STDDEV(x),VAR_POP(x),VARIANCE(x) FROM (SELECT CAST(NULL AS DOUBLE) x WHERE FALSE) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[StddevPop(this=Column(this=Identifier(this=x,quoted=false))),Stddev(this=Column(this=Identifier(this=x,quoted=false))),VariancePop(this=Column(this=Identifier(this=x,quoted=false))),Variance(this=Column(this=Identifier(this=x,quoted=false)))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Cast(this=Null(),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=x,quoted=false))],limit=null,exclude=null,operation_modifiers=null,where=Where(this=Boolean(this=false))),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(NULL AS DOUBLE) AS x WHERE FALSE) AS t",
+      "executable": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(NULL AS DOUBLE) AS x WHERE FALSE) AS t",
+      "result": {
+        "returncode": 0,
+        "stdout": "NULL\tNULL\tNULL\tNULL\n",
+        "stderr": ""
+      },
+      "expected": [
+        [
+          null,
+          null,
+          null,
+          null
+        ]
+      ]
+    },
+    {
+      "case": "empty",
+      "source": "duckdb",
+      "target": "starrocks",
+      "sql": "SELECT STDDEV_POP(x),STDDEV(x),VAR_POP(x),VARIANCE(x) FROM (SELECT CAST(NULL AS DOUBLE) x WHERE FALSE) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[StddevPop(this=Column(this=Identifier(this=x,quoted=false))),Stddev(this=Column(this=Identifier(this=x,quoted=false))),VariancePop(this=Column(this=Identifier(this=x,quoted=false))),Variance(this=Column(this=Identifier(this=x,quoted=false)))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Cast(this=Null(),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=x,quoted=false))],limit=null,exclude=null,operation_modifiers=null,where=Where(this=Boolean(this=false))),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(NULL AS DOUBLE) AS x WHERE FALSE) AS t",
+      "executable": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(NULL AS DOUBLE) AS x WHERE FALSE) AS t",
+      "result": {
+        "returncode": 0,
+        "stdout": "NULL\tNULL\tNULL\tNULL\n",
+        "stderr": ""
+      },
+      "expected": [
+        [
+          null,
+          null,
+          null,
+          null
+        ]
+      ]
+    },
+    {
+      "case": "null",
+      "source": "mysql",
+      "target": "mysql",
+      "sql": "SELECT STDDEV(x),STDDEV_SAMP(x),VARIANCE(x),VAR_SAMP(x) FROM (SELECT CAST(NULL AS DOUBLE) x) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[StddevPop(this=Column(this=Identifier(this=x,quoted=false))),StddevSamp(this=Column(this=Identifier(this=x,quoted=false))),VariancePop(this=Column(this=Identifier(this=x,quoted=false))),Variance(this=Column(this=Identifier(this=x,quoted=false)))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Cast(this=Null(),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=x,quoted=false))],limit=null,exclude=null,operation_modifiers=null),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(NULL AS DOUBLE) AS x) AS t",
+      "executable": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(NULL AS DOUBLE) AS x) AS t",
+      "result": {
+        "returncode": 0,
+        "stdout": "NULL\tNULL\tNULL\tNULL\n",
+        "stderr": ""
+      },
+      "expected": [
+        [
+          null,
+          null,
+          null,
+          null
+        ]
+      ]
+    },
+    {
+      "case": "null",
+      "source": "mysql",
+      "target": "starrocks",
+      "sql": "SELECT STDDEV(x),STDDEV_SAMP(x),VARIANCE(x),VAR_SAMP(x) FROM (SELECT CAST(NULL AS DOUBLE) x) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[StddevPop(this=Column(this=Identifier(this=x,quoted=false))),StddevSamp(this=Column(this=Identifier(this=x,quoted=false))),VariancePop(this=Column(this=Identifier(this=x,quoted=false))),Variance(this=Column(this=Identifier(this=x,quoted=false)))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Cast(this=Null(),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=x,quoted=false))],limit=null,exclude=null,operation_modifiers=null),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(NULL AS DOUBLE) AS x) AS t",
+      "executable": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(NULL AS DOUBLE) AS x) AS t",
+      "result": {
+        "returncode": 0,
+        "stdout": "NULL\tNULL\tNULL\tNULL\n",
+        "stderr": ""
+      },
+      "expected": [
+        [
+          null,
+          null,
+          null,
+          null
+        ]
+      ]
+    },
+    {
+      "case": "null",
+      "source": "starrocks",
+      "target": "mysql",
+      "sql": "SELECT STDDEV(x),STDDEV_SAMP(x),VARIANCE(x),VAR_SAMP(x) FROM (SELECT CAST(NULL AS DOUBLE) x) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[StddevPop(this=Column(this=Identifier(this=x,quoted=false))),StddevSamp(this=Column(this=Identifier(this=x,quoted=false))),VariancePop(this=Column(this=Identifier(this=x,quoted=false))),Variance(this=Column(this=Identifier(this=x,quoted=false)))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Cast(this=Null(),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=x,quoted=false))],limit=null,exclude=null,operation_modifiers=null),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(NULL AS DOUBLE) AS x) AS t",
+      "executable": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(NULL AS DOUBLE) AS x) AS t",
+      "result": {
+        "returncode": 0,
+        "stdout": "NULL\tNULL\tNULL\tNULL\n",
+        "stderr": ""
+      },
+      "expected": [
+        [
+          null,
+          null,
+          null,
+          null
+        ]
+      ]
+    },
+    {
+      "case": "null",
+      "source": "starrocks",
+      "target": "starrocks",
+      "sql": "SELECT STDDEV(x),STDDEV_SAMP(x),VARIANCE(x),VAR_SAMP(x) FROM (SELECT CAST(NULL AS DOUBLE) x) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[StddevPop(this=Column(this=Identifier(this=x,quoted=false))),StddevSamp(this=Column(this=Identifier(this=x,quoted=false))),VariancePop(this=Column(this=Identifier(this=x,quoted=false))),Variance(this=Column(this=Identifier(this=x,quoted=false)))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Cast(this=Null(),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=x,quoted=false))],limit=null,exclude=null,operation_modifiers=null),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(NULL AS DOUBLE) AS x) AS t",
+      "executable": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(NULL AS DOUBLE) AS x) AS t",
+      "result": {
+        "returncode": 0,
+        "stdout": "NULL\tNULL\tNULL\tNULL\n",
+        "stderr": ""
+      },
+      "expected": [
+        [
+          null,
+          null,
+          null,
+          null
+        ]
+      ]
+    },
+    {
+      "case": "null",
+      "source": "postgres",
+      "target": "mysql",
+      "sql": "SELECT STDDEV_POP(x),STDDEV(x),VAR_POP(x),VARIANCE(x) FROM (SELECT CAST(NULL AS DOUBLE) x) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[StddevPop(this=Column(this=Identifier(this=x,quoted=false))),Stddev(this=Column(this=Identifier(this=x,quoted=false))),VariancePop(this=Column(this=Identifier(this=x,quoted=false))),Variance(this=Column(this=Identifier(this=x,quoted=false)))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Cast(this=Null(),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=x,quoted=false))],limit=null,exclude=null,operation_modifiers=null),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(NULL AS DOUBLE) AS x) AS t",
+      "executable": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(NULL AS DOUBLE) AS x) AS t",
+      "result": {
+        "returncode": 0,
+        "stdout": "NULL\tNULL\tNULL\tNULL\n",
+        "stderr": ""
+      },
+      "expected": [
+        [
+          null,
+          null,
+          null,
+          null
+        ]
+      ]
+    },
+    {
+      "case": "null",
+      "source": "postgres",
+      "target": "starrocks",
+      "sql": "SELECT STDDEV_POP(x),STDDEV(x),VAR_POP(x),VARIANCE(x) FROM (SELECT CAST(NULL AS DOUBLE) x) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[StddevPop(this=Column(this=Identifier(this=x,quoted=false))),Stddev(this=Column(this=Identifier(this=x,quoted=false))),VariancePop(this=Column(this=Identifier(this=x,quoted=false))),Variance(this=Column(this=Identifier(this=x,quoted=false)))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Cast(this=Null(),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=x,quoted=false))],limit=null,exclude=null,operation_modifiers=null),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(NULL AS DOUBLE) AS x) AS t",
+      "executable": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(NULL AS DOUBLE) AS x) AS t",
+      "result": {
+        "returncode": 0,
+        "stdout": "NULL\tNULL\tNULL\tNULL\n",
+        "stderr": ""
+      },
+      "expected": [
+        [
+          null,
+          null,
+          null,
+          null
+        ]
+      ]
+    },
+    {
+      "case": "null",
+      "source": "duckdb",
+      "target": "mysql",
+      "sql": "SELECT STDDEV_POP(x),STDDEV(x),VAR_POP(x),VARIANCE(x) FROM (SELECT CAST(NULL AS DOUBLE) x) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[StddevPop(this=Column(this=Identifier(this=x,quoted=false))),Stddev(this=Column(this=Identifier(this=x,quoted=false))),VariancePop(this=Column(this=Identifier(this=x,quoted=false))),Variance(this=Column(this=Identifier(this=x,quoted=false)))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Cast(this=Null(),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=x,quoted=false))],limit=null,exclude=null,operation_modifiers=null),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(NULL AS DOUBLE) AS x) AS t",
+      "executable": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(NULL AS DOUBLE) AS x) AS t",
+      "result": {
+        "returncode": 0,
+        "stdout": "NULL\tNULL\tNULL\tNULL\n",
+        "stderr": ""
+      },
+      "expected": [
+        [
+          null,
+          null,
+          null,
+          null
+        ]
+      ]
+    },
+    {
+      "case": "null",
+      "source": "duckdb",
+      "target": "starrocks",
+      "sql": "SELECT STDDEV_POP(x),STDDEV(x),VAR_POP(x),VARIANCE(x) FROM (SELECT CAST(NULL AS DOUBLE) x) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[StddevPop(this=Column(this=Identifier(this=x,quoted=false))),Stddev(this=Column(this=Identifier(this=x,quoted=false))),VariancePop(this=Column(this=Identifier(this=x,quoted=false))),Variance(this=Column(this=Identifier(this=x,quoted=false)))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Cast(this=Null(),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=x,quoted=false))],limit=null,exclude=null,operation_modifiers=null),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(NULL AS DOUBLE) AS x) AS t",
+      "executable": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(NULL AS DOUBLE) AS x) AS t",
+      "result": {
+        "returncode": 0,
+        "stdout": "NULL\tNULL\tNULL\tNULL\n",
+        "stderr": ""
+      },
+      "expected": [
+        [
+          null,
+          null,
+          null,
+          null
+        ]
+      ]
+    },
+    {
+      "case": "singleton",
+      "source": "mysql",
+      "target": "mysql",
+      "sql": "SELECT STDDEV(x),STDDEV_SAMP(x),VARIANCE(x),VAR_SAMP(x) FROM (SELECT CAST(2 AS DOUBLE) x) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[StddevPop(this=Column(this=Identifier(this=x,quoted=false))),StddevSamp(this=Column(this=Identifier(this=x,quoted=false))),VariancePop(this=Column(this=Identifier(this=x,quoted=false))),Variance(this=Column(this=Identifier(this=x,quoted=false)))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Cast(this=Literal(this=2,is_string=false),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=x,quoted=false))],limit=null,exclude=null,operation_modifiers=null),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(2 AS DOUBLE) AS x) AS t",
+      "executable": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(2 AS DOUBLE) AS x) AS t",
+      "result": {
+        "returncode": 0,
+        "stdout": "0\tNULL\t0\tNULL\n",
+        "stderr": ""
+      },
+      "expected": [
+        [
+          0,
+          null,
+          0,
+          null
+        ]
+      ]
+    },
+    {
+      "case": "singleton",
+      "source": "mysql",
+      "target": "starrocks",
+      "sql": "SELECT STDDEV(x),STDDEV_SAMP(x),VARIANCE(x),VAR_SAMP(x) FROM (SELECT CAST(2 AS DOUBLE) x) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[StddevPop(this=Column(this=Identifier(this=x,quoted=false))),StddevSamp(this=Column(this=Identifier(this=x,quoted=false))),VariancePop(this=Column(this=Identifier(this=x,quoted=false))),Variance(this=Column(this=Identifier(this=x,quoted=false)))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Cast(this=Literal(this=2,is_string=false),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=x,quoted=false))],limit=null,exclude=null,operation_modifiers=null),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(2 AS DOUBLE) AS x) AS t",
+      "executable": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(2 AS DOUBLE) AS x) AS t",
+      "result": {
+        "returncode": 0,
+        "stdout": "0\tNULL\t0\tNULL\n",
+        "stderr": ""
+      },
+      "expected": [
+        [
+          0,
+          null,
+          0,
+          null
+        ]
+      ]
+    },
+    {
+      "case": "singleton",
+      "source": "starrocks",
+      "target": "mysql",
+      "sql": "SELECT STDDEV(x),STDDEV_SAMP(x),VARIANCE(x),VAR_SAMP(x) FROM (SELECT CAST(2 AS DOUBLE) x) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[StddevPop(this=Column(this=Identifier(this=x,quoted=false))),StddevSamp(this=Column(this=Identifier(this=x,quoted=false))),VariancePop(this=Column(this=Identifier(this=x,quoted=false))),Variance(this=Column(this=Identifier(this=x,quoted=false)))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Cast(this=Literal(this=2,is_string=false),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=x,quoted=false))],limit=null,exclude=null,operation_modifiers=null),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(2 AS DOUBLE) AS x) AS t",
+      "executable": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(2 AS DOUBLE) AS x) AS t",
+      "result": {
+        "returncode": 0,
+        "stdout": "0\tNULL\t0\tNULL\n",
+        "stderr": ""
+      },
+      "expected": [
+        [
+          0,
+          null,
+          0,
+          null
+        ]
+      ]
+    },
+    {
+      "case": "singleton",
+      "source": "starrocks",
+      "target": "starrocks",
+      "sql": "SELECT STDDEV(x),STDDEV_SAMP(x),VARIANCE(x),VAR_SAMP(x) FROM (SELECT CAST(2 AS DOUBLE) x) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[StddevPop(this=Column(this=Identifier(this=x,quoted=false))),StddevSamp(this=Column(this=Identifier(this=x,quoted=false))),VariancePop(this=Column(this=Identifier(this=x,quoted=false))),Variance(this=Column(this=Identifier(this=x,quoted=false)))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Cast(this=Literal(this=2,is_string=false),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=x,quoted=false))],limit=null,exclude=null,operation_modifiers=null),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(2 AS DOUBLE) AS x) AS t",
+      "executable": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(2 AS DOUBLE) AS x) AS t",
+      "result": {
+        "returncode": 0,
+        "stdout": "0\tNULL\t0\tNULL\n",
+        "stderr": ""
+      },
+      "expected": [
+        [
+          0,
+          null,
+          0,
+          null
+        ]
+      ]
+    },
+    {
+      "case": "singleton",
+      "source": "postgres",
+      "target": "mysql",
+      "sql": "SELECT STDDEV_POP(x),STDDEV(x),VAR_POP(x),VARIANCE(x) FROM (SELECT CAST(2 AS DOUBLE) x) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[StddevPop(this=Column(this=Identifier(this=x,quoted=false))),Stddev(this=Column(this=Identifier(this=x,quoted=false))),VariancePop(this=Column(this=Identifier(this=x,quoted=false))),Variance(this=Column(this=Identifier(this=x,quoted=false)))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Cast(this=Literal(this=2,is_string=false),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=x,quoted=false))],limit=null,exclude=null,operation_modifiers=null),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(2 AS DOUBLE) AS x) AS t",
+      "executable": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(2 AS DOUBLE) AS x) AS t",
+      "result": {
+        "returncode": 0,
+        "stdout": "0\tNULL\t0\tNULL\n",
+        "stderr": ""
+      },
+      "expected": [
+        [
+          0,
+          null,
+          0,
+          null
+        ]
+      ]
+    },
+    {
+      "case": "singleton",
+      "source": "postgres",
+      "target": "starrocks",
+      "sql": "SELECT STDDEV_POP(x),STDDEV(x),VAR_POP(x),VARIANCE(x) FROM (SELECT CAST(2 AS DOUBLE) x) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[StddevPop(this=Column(this=Identifier(this=x,quoted=false))),Stddev(this=Column(this=Identifier(this=x,quoted=false))),VariancePop(this=Column(this=Identifier(this=x,quoted=false))),Variance(this=Column(this=Identifier(this=x,quoted=false)))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Cast(this=Literal(this=2,is_string=false),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=x,quoted=false))],limit=null,exclude=null,operation_modifiers=null),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(2 AS DOUBLE) AS x) AS t",
+      "executable": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(2 AS DOUBLE) AS x) AS t",
+      "result": {
+        "returncode": 0,
+        "stdout": "0\tNULL\t0\tNULL\n",
+        "stderr": ""
+      },
+      "expected": [
+        [
+          0,
+          null,
+          0,
+          null
+        ]
+      ]
+    },
+    {
+      "case": "singleton",
+      "source": "duckdb",
+      "target": "mysql",
+      "sql": "SELECT STDDEV_POP(x),STDDEV(x),VAR_POP(x),VARIANCE(x) FROM (SELECT CAST(2 AS DOUBLE) x) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[StddevPop(this=Column(this=Identifier(this=x,quoted=false))),Stddev(this=Column(this=Identifier(this=x,quoted=false))),VariancePop(this=Column(this=Identifier(this=x,quoted=false))),Variance(this=Column(this=Identifier(this=x,quoted=false)))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Cast(this=Literal(this=2,is_string=false),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=x,quoted=false))],limit=null,exclude=null,operation_modifiers=null),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(2 AS DOUBLE) AS x) AS t",
+      "executable": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(2 AS DOUBLE) AS x) AS t",
+      "result": {
+        "returncode": 0,
+        "stdout": "0\tNULL\t0\tNULL\n",
+        "stderr": ""
+      },
+      "expected": [
+        [
+          0,
+          null,
+          0,
+          null
+        ]
+      ]
+    },
+    {
+      "case": "singleton",
+      "source": "duckdb",
+      "target": "starrocks",
+      "sql": "SELECT STDDEV_POP(x),STDDEV(x),VAR_POP(x),VARIANCE(x) FROM (SELECT CAST(2 AS DOUBLE) x) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[StddevPop(this=Column(this=Identifier(this=x,quoted=false))),Stddev(this=Column(this=Identifier(this=x,quoted=false))),VariancePop(this=Column(this=Identifier(this=x,quoted=false))),Variance(this=Column(this=Identifier(this=x,quoted=false)))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Cast(this=Literal(this=2,is_string=false),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=x,quoted=false))],limit=null,exclude=null,operation_modifiers=null),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(2 AS DOUBLE) AS x) AS t",
+      "executable": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(2 AS DOUBLE) AS x) AS t",
+      "result": {
+        "returncode": 0,
+        "stdout": "0\tNULL\t0\tNULL\n",
+        "stderr": ""
+      },
+      "expected": [
+        [
+          0,
+          null,
+          0,
+          null
+        ]
+      ]
+    },
+    {
+      "case": "pair",
+      "source": "mysql",
+      "target": "mysql",
+      "sql": "SELECT STDDEV(x),STDDEV_SAMP(x),VARIANCE(x),VAR_SAMP(x) FROM (SELECT CAST(0 AS DOUBLE) x UNION ALL SELECT CAST(2 AS DOUBLE)) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[StddevPop(this=Column(this=Identifier(this=x,quoted=false))),StddevSamp(this=Column(this=Identifier(this=x,quoted=false))),VariancePop(this=Column(this=Identifier(this=x,quoted=false))),Variance(this=Column(this=Identifier(this=x,quoted=false)))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Union(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Cast(this=Literal(this=0,is_string=false),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=x,quoted=false))],limit=null,exclude=null,operation_modifiers=null),distinct=false,by_name=null,expression=Select(kind=null,hint=null,distinct=null,expressions=[Cast(this=Literal(this=2,is_string=false),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null)],limit=null,exclude=null,operation_modifiers=null),side=null,kind=null,on=null),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(0 AS DOUBLE) AS x UNION ALL SELECT CAST(2 AS DOUBLE)) AS t",
+      "executable": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(0 AS DOUBLE) AS x UNION ALL SELECT CAST(2 AS DOUBLE)) AS t",
+      "result": {
+        "returncode": 0,
+        "stdout": "1\t1.4142135623730951\t1\t2\n",
+        "stderr": ""
+      },
+      "expected": [
+        [
+          1,
+          1.4142135623730951,
+          1,
+          2
+        ]
+      ]
+    },
+    {
+      "case": "pair",
+      "source": "mysql",
+      "target": "starrocks",
+      "sql": "SELECT STDDEV(x),STDDEV_SAMP(x),VARIANCE(x),VAR_SAMP(x) FROM (SELECT CAST(0 AS DOUBLE) x UNION ALL SELECT CAST(2 AS DOUBLE)) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[StddevPop(this=Column(this=Identifier(this=x,quoted=false))),StddevSamp(this=Column(this=Identifier(this=x,quoted=false))),VariancePop(this=Column(this=Identifier(this=x,quoted=false))),Variance(this=Column(this=Identifier(this=x,quoted=false)))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Union(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Cast(this=Literal(this=0,is_string=false),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=x,quoted=false))],limit=null,exclude=null,operation_modifiers=null),distinct=false,by_name=null,expression=Select(kind=null,hint=null,distinct=null,expressions=[Cast(this=Literal(this=2,is_string=false),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null)],limit=null,exclude=null,operation_modifiers=null),side=null,kind=null,on=null),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(0 AS DOUBLE) AS x UNION ALL SELECT CAST(2 AS DOUBLE)) AS t",
+      "executable": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(0 AS DOUBLE) AS x UNION ALL SELECT CAST(2 AS DOUBLE)) AS t",
+      "result": {
+        "returncode": 0,
+        "stdout": "1\t1.4142135623730951\t1\t2\n",
+        "stderr": ""
+      },
+      "expected": [
+        [
+          1,
+          1.4142135623730951,
+          1,
+          2
+        ]
+      ]
+    },
+    {
+      "case": "pair",
+      "source": "starrocks",
+      "target": "mysql",
+      "sql": "SELECT STDDEV(x),STDDEV_SAMP(x),VARIANCE(x),VAR_SAMP(x) FROM (SELECT CAST(0 AS DOUBLE) x UNION ALL SELECT CAST(2 AS DOUBLE)) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[StddevPop(this=Column(this=Identifier(this=x,quoted=false))),StddevSamp(this=Column(this=Identifier(this=x,quoted=false))),VariancePop(this=Column(this=Identifier(this=x,quoted=false))),Variance(this=Column(this=Identifier(this=x,quoted=false)))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Union(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Cast(this=Literal(this=0,is_string=false),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=x,quoted=false))],limit=null,exclude=null,operation_modifiers=null),distinct=false,by_name=null,expression=Select(kind=null,hint=null,distinct=null,expressions=[Cast(this=Literal(this=2,is_string=false),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null)],limit=null,exclude=null,operation_modifiers=null),side=null,kind=null,on=null),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(0 AS DOUBLE) AS x UNION ALL SELECT CAST(2 AS DOUBLE)) AS t",
+      "executable": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(0 AS DOUBLE) AS x UNION ALL SELECT CAST(2 AS DOUBLE)) AS t",
+      "result": {
+        "returncode": 0,
+        "stdout": "1\t1.4142135623730951\t1\t2\n",
+        "stderr": ""
+      },
+      "expected": [
+        [
+          1,
+          1.4142135623730951,
+          1,
+          2
+        ]
+      ]
+    },
+    {
+      "case": "pair",
+      "source": "starrocks",
+      "target": "starrocks",
+      "sql": "SELECT STDDEV(x),STDDEV_SAMP(x),VARIANCE(x),VAR_SAMP(x) FROM (SELECT CAST(0 AS DOUBLE) x UNION ALL SELECT CAST(2 AS DOUBLE)) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[StddevPop(this=Column(this=Identifier(this=x,quoted=false))),StddevSamp(this=Column(this=Identifier(this=x,quoted=false))),VariancePop(this=Column(this=Identifier(this=x,quoted=false))),Variance(this=Column(this=Identifier(this=x,quoted=false)))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Union(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Cast(this=Literal(this=0,is_string=false),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=x,quoted=false))],limit=null,exclude=null,operation_modifiers=null),distinct=false,by_name=null,expression=Select(kind=null,hint=null,distinct=null,expressions=[Cast(this=Literal(this=2,is_string=false),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null)],limit=null,exclude=null,operation_modifiers=null),side=null,kind=null,on=null),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(0 AS DOUBLE) AS x UNION ALL SELECT CAST(2 AS DOUBLE)) AS t",
+      "executable": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(0 AS DOUBLE) AS x UNION ALL SELECT CAST(2 AS DOUBLE)) AS t",
+      "result": {
+        "returncode": 0,
+        "stdout": "1\t1.4142135623730951\t1\t2\n",
+        "stderr": ""
+      },
+      "expected": [
+        [
+          1,
+          1.4142135623730951,
+          1,
+          2
+        ]
+      ]
+    },
+    {
+      "case": "pair",
+      "source": "postgres",
+      "target": "mysql",
+      "sql": "SELECT STDDEV_POP(x),STDDEV(x),VAR_POP(x),VARIANCE(x) FROM (SELECT CAST(0 AS DOUBLE) x UNION ALL SELECT CAST(2 AS DOUBLE)) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[StddevPop(this=Column(this=Identifier(this=x,quoted=false))),Stddev(this=Column(this=Identifier(this=x,quoted=false))),VariancePop(this=Column(this=Identifier(this=x,quoted=false))),Variance(this=Column(this=Identifier(this=x,quoted=false)))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Union(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Cast(this=Literal(this=0,is_string=false),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=x,quoted=false))],limit=null,exclude=null,operation_modifiers=null),distinct=false,by_name=null,expression=Select(kind=null,hint=null,distinct=null,expressions=[Cast(this=Literal(this=2,is_string=false),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null)],limit=null,exclude=null,operation_modifiers=null),side=null,kind=null,on=null),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(0 AS DOUBLE) AS x UNION ALL SELECT CAST(2 AS DOUBLE)) AS t",
+      "executable": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(0 AS DOUBLE) AS x UNION ALL SELECT CAST(2 AS DOUBLE)) AS t",
+      "result": {
+        "returncode": 0,
+        "stdout": "1\t1.4142135623730951\t1\t2\n",
+        "stderr": ""
+      },
+      "expected": [
+        [
+          1,
+          1.4142135623730951,
+          1,
+          2
+        ]
+      ]
+    },
+    {
+      "case": "pair",
+      "source": "postgres",
+      "target": "starrocks",
+      "sql": "SELECT STDDEV_POP(x),STDDEV(x),VAR_POP(x),VARIANCE(x) FROM (SELECT CAST(0 AS DOUBLE) x UNION ALL SELECT CAST(2 AS DOUBLE)) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[StddevPop(this=Column(this=Identifier(this=x,quoted=false))),Stddev(this=Column(this=Identifier(this=x,quoted=false))),VariancePop(this=Column(this=Identifier(this=x,quoted=false))),Variance(this=Column(this=Identifier(this=x,quoted=false)))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Union(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Cast(this=Literal(this=0,is_string=false),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=x,quoted=false))],limit=null,exclude=null,operation_modifiers=null),distinct=false,by_name=null,expression=Select(kind=null,hint=null,distinct=null,expressions=[Cast(this=Literal(this=2,is_string=false),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null)],limit=null,exclude=null,operation_modifiers=null),side=null,kind=null,on=null),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(0 AS DOUBLE) AS x UNION ALL SELECT CAST(2 AS DOUBLE)) AS t",
+      "executable": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(0 AS DOUBLE) AS x UNION ALL SELECT CAST(2 AS DOUBLE)) AS t",
+      "result": {
+        "returncode": 0,
+        "stdout": "1\t1.4142135623730951\t1\t2\n",
+        "stderr": ""
+      },
+      "expected": [
+        [
+          1,
+          1.4142135623730951,
+          1,
+          2
+        ]
+      ]
+    },
+    {
+      "case": "pair",
+      "source": "duckdb",
+      "target": "mysql",
+      "sql": "SELECT STDDEV_POP(x),STDDEV(x),VAR_POP(x),VARIANCE(x) FROM (SELECT CAST(0 AS DOUBLE) x UNION ALL SELECT CAST(2 AS DOUBLE)) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[StddevPop(this=Column(this=Identifier(this=x,quoted=false))),Stddev(this=Column(this=Identifier(this=x,quoted=false))),VariancePop(this=Column(this=Identifier(this=x,quoted=false))),Variance(this=Column(this=Identifier(this=x,quoted=false)))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Union(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Cast(this=Literal(this=0,is_string=false),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=x,quoted=false))],limit=null,exclude=null,operation_modifiers=null),distinct=false,by_name=null,expression=Select(kind=null,hint=null,distinct=null,expressions=[Cast(this=Literal(this=2,is_string=false),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null)],limit=null,exclude=null,operation_modifiers=null),side=null,kind=null,on=null),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(0 AS DOUBLE) AS x UNION ALL SELECT CAST(2 AS DOUBLE)) AS t",
+      "executable": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(0 AS DOUBLE) AS x UNION ALL SELECT CAST(2 AS DOUBLE)) AS t",
+      "result": {
+        "returncode": 0,
+        "stdout": "1\t1.4142135623730951\t1\t2\n",
+        "stderr": ""
+      },
+      "expected": [
+        [
+          1,
+          1.4142135623730951,
+          1,
+          2
+        ]
+      ]
+    },
+    {
+      "case": "pair",
+      "source": "duckdb",
+      "target": "starrocks",
+      "sql": "SELECT STDDEV_POP(x),STDDEV(x),VAR_POP(x),VARIANCE(x) FROM (SELECT CAST(0 AS DOUBLE) x UNION ALL SELECT CAST(2 AS DOUBLE)) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[StddevPop(this=Column(this=Identifier(this=x,quoted=false))),Stddev(this=Column(this=Identifier(this=x,quoted=false))),VariancePop(this=Column(this=Identifier(this=x,quoted=false))),Variance(this=Column(this=Identifier(this=x,quoted=false)))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Union(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Cast(this=Literal(this=0,is_string=false),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=x,quoted=false))],limit=null,exclude=null,operation_modifiers=null),distinct=false,by_name=null,expression=Select(kind=null,hint=null,distinct=null,expressions=[Cast(this=Literal(this=2,is_string=false),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null)],limit=null,exclude=null,operation_modifiers=null),side=null,kind=null,on=null),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(0 AS DOUBLE) AS x UNION ALL SELECT CAST(2 AS DOUBLE)) AS t",
+      "executable": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT CAST(0 AS DOUBLE) AS x UNION ALL SELECT CAST(2 AS DOUBLE)) AS t",
+      "result": {
+        "returncode": 0,
+        "stdout": "1\t1.4142135623730951\t1\t2\n",
+        "stderr": ""
+      },
+      "expected": [
+        [
+          1,
+          1.4142135623730951,
+          1,
+          2
+        ]
+      ]
+    },
+    {
+      "case": "groups",
+      "source": "mysql",
+      "target": "mysql",
+      "sql": "SELECT STDDEV(x),STDDEV_SAMP(x),VARIANCE(x),VAR_SAMP(x) FROM (SELECT 1 g,1 n,CAST(0 AS DOUBLE) x UNION ALL SELECT 1,2,CAST(2 AS DOUBLE) UNION ALL SELECT 2,3,CAST(NULL AS DOUBLE)) t GROUP BY g ORDER BY g",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[StddevPop(this=Column(this=Identifier(this=x,quoted=false))),StddevSamp(this=Column(this=Identifier(this=x,quoted=false))),VariancePop(this=Column(this=Identifier(this=x,quoted=false))),Variance(this=Column(this=Identifier(this=x,quoted=false)))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Union(this=Union(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Literal(this=1,is_string=false),alias=Identifier(this=g,quoted=false)),Alias(this=Literal(this=1,is_string=false),alias=Identifier(this=n,quoted=false)),Alias(this=Cast(this=Literal(this=0,is_string=false),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=x,quoted=false))],limit=null,exclude=null,operation_modifiers=null),distinct=false,by_name=null,expression=Select(kind=null,hint=null,distinct=null,expressions=[Literal(this=1,is_string=false),Literal(this=2,is_string=false),Cast(this=Literal(this=2,is_string=false),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null)],limit=null,exclude=null,operation_modifiers=null),side=null,kind=null,on=null),distinct=false,by_name=null,expression=Select(kind=null,hint=null,distinct=null,expressions=[Literal(this=2,is_string=false),Literal(this=3,is_string=false),Cast(this=Null(),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null)],limit=null,exclude=null,operation_modifiers=null),side=null,kind=null,on=null),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)),group=Group(expressions=[Column(this=Identifier(this=g,quoted=false))]),order=Order(this=null,expressions=[Ordered(this=Column(this=Identifier(this=g,quoted=false)),desc=null,nulls_first=true,with_fill=null)],siblings=null))",
+      "preview": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT 1 AS g, 1 AS n, CAST(0 AS DOUBLE) AS x UNION ALL SELECT 1, 2, CAST(2 AS DOUBLE) UNION ALL SELECT 2, 3, CAST(NULL AS DOUBLE)) AS t GROUP BY g ORDER BY g",
+      "executable": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT 1 AS g, 1 AS n, CAST(0 AS DOUBLE) AS x UNION ALL SELECT 1, 2, CAST(2 AS DOUBLE) UNION ALL SELECT 2, 3, CAST(NULL AS DOUBLE)) AS t GROUP BY g ORDER BY g",
+      "result": {
+        "returncode": 0,
+        "stdout": "1\t1.4142135623730951\t1\t2\nNULL\tNULL\tNULL\tNULL\n",
+        "stderr": ""
+      },
+      "expected": [
+        [
+          1,
+          1.4142135623730951,
+          1,
+          2
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ]
+      ]
+    },
+    {
+      "case": "window",
+      "source": "mysql",
+      "target": "mysql",
+      "sql": "SELECT STDDEV(x) OVER (PARTITION BY g ORDER BY n ROWS BETWEEN 1 PRECEDING AND CURRENT ROW),STDDEV_SAMP(x) OVER (PARTITION BY g ORDER BY n ROWS BETWEEN 1 PRECEDING AND CURRENT ROW),VARIANCE(x) OVER (PARTITION BY g ORDER BY n ROWS BETWEEN 1 PRECEDING AND CURRENT ROW),VAR_SAMP(x) OVER (PARTITION BY g ORDER BY n ROWS BETWEEN 1 PRECEDING AND CURRENT ROW) FROM (SELECT 1 g,1 n,CAST(0 AS DOUBLE) x UNION ALL SELECT 1,2,CAST(2 AS DOUBLE) UNION ALL SELECT 2,3,CAST(NULL AS DOUBLE)) t ORDER BY n",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Window(this=StddevPop(this=Column(this=Identifier(this=x,quoted=false))),partition_by=[Column(this=Identifier(this=g,quoted=false))],order=Order(this=null,expressions=[Ordered(this=Column(this=Identifier(this=n,quoted=false)),desc=null,nulls_first=true,with_fill=null)],siblings=null),spec=WindowSpec(kind=ROWS,start=Literal(this=1,is_string=false),start_side=PRECEDING,end=CURRENT ROW,end_side=null,exclude=null),alias=null,over=OVER,first=null),Window(this=StddevSamp(this=Column(this=Identifier(this=x,quoted=false))),partition_by=[Column(this=Identifier(this=g,quoted=false))],order=Order(this=null,expressions=[Ordered(this=Column(this=Identifier(this=n,quoted=false)),desc=null,nulls_first=true,with_fill=null)],siblings=null),spec=WindowSpec(kind=ROWS,start=Literal(this=1,is_string=false),start_side=PRECEDING,end=CURRENT ROW,end_side=null,exclude=null),alias=null,over=OVER,first=null),Window(this=VariancePop(this=Column(this=Identifier(this=x,quoted=false))),partition_by=[Column(this=Identifier(this=g,quoted=false))],order=Order(this=null,expressions=[Ordered(this=Column(this=Identifier(this=n,quoted=false)),desc=null,nulls_first=true,with_fill=null)],siblings=null),spec=WindowSpec(kind=ROWS,start=Literal(this=1,is_string=false),start_side=PRECEDING,end=CURRENT ROW,end_side=null,exclude=null),alias=null,over=OVER,first=null),Window(this=Variance(this=Column(this=Identifier(this=x,quoted=false))),partition_by=[Column(this=Identifier(this=g,quoted=false))],order=Order(this=null,expressions=[Ordered(this=Column(this=Identifier(this=n,quoted=false)),desc=null,nulls_first=true,with_fill=null)],siblings=null),spec=WindowSpec(kind=ROWS,start=Literal(this=1,is_string=false),start_side=PRECEDING,end=CURRENT ROW,end_side=null,exclude=null),alias=null,over=OVER,first=null)],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Union(this=Union(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Literal(this=1,is_string=false),alias=Identifier(this=g,quoted=false)),Alias(this=Literal(this=1,is_string=false),alias=Identifier(this=n,quoted=false)),Alias(this=Cast(this=Literal(this=0,is_string=false),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=x,quoted=false))],limit=null,exclude=null,operation_modifiers=null),distinct=false,by_name=null,expression=Select(kind=null,hint=null,distinct=null,expressions=[Literal(this=1,is_string=false),Literal(this=2,is_string=false),Cast(this=Literal(this=2,is_string=false),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null)],limit=null,exclude=null,operation_modifiers=null),side=null,kind=null,on=null),distinct=false,by_name=null,expression=Select(kind=null,hint=null,distinct=null,expressions=[Literal(this=2,is_string=false),Literal(this=3,is_string=false),Cast(this=Null(),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null)],limit=null,exclude=null,operation_modifiers=null),side=null,kind=null,on=null),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)),order=Order(this=null,expressions=[Ordered(this=Column(this=Identifier(this=n,quoted=false)),desc=null,nulls_first=true,with_fill=null)],siblings=null))",
+      "preview": "SELECT STDDEV_POP(x) OVER (PARTITION BY g ORDER BY n ROWS BETWEEN 1 PRECEDING AND CURRENT ROW), STDDEV_SAMP(x) OVER (PARTITION BY g ORDER BY n ROWS BETWEEN 1 PRECEDING AND CURRENT ROW), VAR_POP(x) OVER (PARTITION BY g ORDER BY n ROWS BETWEEN 1 PRECEDING AND CURRENT ROW), VAR_SAMP(x) OVER (PARTITION BY g ORDER BY n ROWS BETWEEN 1 PRECEDING AND CURRENT ROW) FROM (SELECT 1 AS g, 1 AS n, CAST(0 AS DOUBLE) AS x UNION ALL SELECT 1, 2, CAST(2 AS DOUBLE) UNION ALL SELECT 2, 3, CAST(NULL AS DOUBLE)) AS t ORDER BY n",
+      "executable": "SELECT STDDEV_POP(x) OVER (PARTITION BY g ORDER BY n ROWS BETWEEN 1 PRECEDING AND CURRENT ROW), STDDEV_SAMP(x) OVER (PARTITION BY g ORDER BY n ROWS BETWEEN 1 PRECEDING AND CURRENT ROW), VAR_POP(x) OVER (PARTITION BY g ORDER BY n ROWS BETWEEN 1 PRECEDING AND CURRENT ROW), VAR_SAMP(x) OVER (PARTITION BY g ORDER BY n ROWS BETWEEN 1 PRECEDING AND CURRENT ROW) FROM (SELECT 1 AS g, 1 AS n, CAST(0 AS DOUBLE) AS x UNION ALL SELECT 1, 2, CAST(2 AS DOUBLE) UNION ALL SELECT 2, 3, CAST(NULL AS DOUBLE)) AS t ORDER BY n",
+      "result": {
+        "returncode": 0,
+        "stdout": "0\tNULL\t0\tNULL\n1\t1.4142135623730951\t1\t2\nNULL\tNULL\tNULL\tNULL\n",
+        "stderr": ""
+      },
+      "expected": [
+        [
+          0,
+          null,
+          0,
+          null
+        ],
+        [
+          1,
+          1.4142135623730951,
+          1,
+          2
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ]
+      ]
+    },
+    {
+      "case": "groups",
+      "source": "mysql",
+      "target": "starrocks",
+      "sql": "SELECT STDDEV(x),STDDEV_SAMP(x),VARIANCE(x),VAR_SAMP(x) FROM (SELECT 1 g,1 n,CAST(0 AS DOUBLE) x UNION ALL SELECT 1,2,CAST(2 AS DOUBLE) UNION ALL SELECT 2,3,CAST(NULL AS DOUBLE)) t GROUP BY g ORDER BY g",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[StddevPop(this=Column(this=Identifier(this=x,quoted=false))),StddevSamp(this=Column(this=Identifier(this=x,quoted=false))),VariancePop(this=Column(this=Identifier(this=x,quoted=false))),Variance(this=Column(this=Identifier(this=x,quoted=false)))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Union(this=Union(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Literal(this=1,is_string=false),alias=Identifier(this=g,quoted=false)),Alias(this=Literal(this=1,is_string=false),alias=Identifier(this=n,quoted=false)),Alias(this=Cast(this=Literal(this=0,is_string=false),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=x,quoted=false))],limit=null,exclude=null,operation_modifiers=null),distinct=false,by_name=null,expression=Select(kind=null,hint=null,distinct=null,expressions=[Literal(this=1,is_string=false),Literal(this=2,is_string=false),Cast(this=Literal(this=2,is_string=false),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null)],limit=null,exclude=null,operation_modifiers=null),side=null,kind=null,on=null),distinct=false,by_name=null,expression=Select(kind=null,hint=null,distinct=null,expressions=[Literal(this=2,is_string=false),Literal(this=3,is_string=false),Cast(this=Null(),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null)],limit=null,exclude=null,operation_modifiers=null),side=null,kind=null,on=null),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)),group=Group(expressions=[Column(this=Identifier(this=g,quoted=false))]),order=Order(this=null,expressions=[Ordered(this=Column(this=Identifier(this=g,quoted=false)),desc=null,nulls_first=true,with_fill=null)],siblings=null))",
+      "preview": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT 1 AS g, 1 AS n, CAST(0 AS DOUBLE) AS x UNION ALL SELECT 1, 2, CAST(2 AS DOUBLE) UNION ALL SELECT 2, 3, CAST(NULL AS DOUBLE)) AS t GROUP BY g ORDER BY g",
+      "executable": "SELECT STDDEV_POP(x), STDDEV_SAMP(x), VAR_POP(x), VAR_SAMP(x) FROM (SELECT 1 AS g, 1 AS n, CAST(0 AS DOUBLE) AS x UNION ALL SELECT 1, 2, CAST(2 AS DOUBLE) UNION ALL SELECT 2, 3, CAST(NULL AS DOUBLE)) AS t GROUP BY g ORDER BY g",
+      "result": {
+        "returncode": 0,
+        "stdout": "1\t1.4142135623730951\t1\t2\nNULL\tNULL\tNULL\tNULL\n",
+        "stderr": ""
+      },
+      "expected": [
+        [
+          1,
+          1.4142135623730951,
+          1,
+          2
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ]
+      ]
+    },
+    {
+      "case": "window",
+      "source": "mysql",
+      "target": "starrocks",
+      "sql": "SELECT STDDEV(x) OVER (PARTITION BY g ORDER BY n ROWS BETWEEN 1 PRECEDING AND CURRENT ROW),STDDEV_SAMP(x) OVER (PARTITION BY g ORDER BY n ROWS BETWEEN 1 PRECEDING AND CURRENT ROW),VARIANCE(x) OVER (PARTITION BY g ORDER BY n ROWS BETWEEN 1 PRECEDING AND CURRENT ROW),VAR_SAMP(x) OVER (PARTITION BY g ORDER BY n ROWS BETWEEN 1 PRECEDING AND CURRENT ROW) FROM (SELECT 1 g,1 n,CAST(0 AS DOUBLE) x UNION ALL SELECT 1,2,CAST(2 AS DOUBLE) UNION ALL SELECT 2,3,CAST(NULL AS DOUBLE)) t ORDER BY n",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Window(this=StddevPop(this=Column(this=Identifier(this=x,quoted=false))),partition_by=[Column(this=Identifier(this=g,quoted=false))],order=Order(this=null,expressions=[Ordered(this=Column(this=Identifier(this=n,quoted=false)),desc=null,nulls_first=true,with_fill=null)],siblings=null),spec=WindowSpec(kind=ROWS,start=Literal(this=1,is_string=false),start_side=PRECEDING,end=CURRENT ROW,end_side=null,exclude=null),alias=null,over=OVER,first=null),Window(this=StddevSamp(this=Column(this=Identifier(this=x,quoted=false))),partition_by=[Column(this=Identifier(this=g,quoted=false))],order=Order(this=null,expressions=[Ordered(this=Column(this=Identifier(this=n,quoted=false)),desc=null,nulls_first=true,with_fill=null)],siblings=null),spec=WindowSpec(kind=ROWS,start=Literal(this=1,is_string=false),start_side=PRECEDING,end=CURRENT ROW,end_side=null,exclude=null),alias=null,over=OVER,first=null),Window(this=VariancePop(this=Column(this=Identifier(this=x,quoted=false))),partition_by=[Column(this=Identifier(this=g,quoted=false))],order=Order(this=null,expressions=[Ordered(this=Column(this=Identifier(this=n,quoted=false)),desc=null,nulls_first=true,with_fill=null)],siblings=null),spec=WindowSpec(kind=ROWS,start=Literal(this=1,is_string=false),start_side=PRECEDING,end=CURRENT ROW,end_side=null,exclude=null),alias=null,over=OVER,first=null),Window(this=Variance(this=Column(this=Identifier(this=x,quoted=false))),partition_by=[Column(this=Identifier(this=g,quoted=false))],order=Order(this=null,expressions=[Ordered(this=Column(this=Identifier(this=n,quoted=false)),desc=null,nulls_first=true,with_fill=null)],siblings=null),spec=WindowSpec(kind=ROWS,start=Literal(this=1,is_string=false),start_side=PRECEDING,end=CURRENT ROW,end_side=null,exclude=null),alias=null,over=OVER,first=null)],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Union(this=Union(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Literal(this=1,is_string=false),alias=Identifier(this=g,quoted=false)),Alias(this=Literal(this=1,is_string=false),alias=Identifier(this=n,quoted=false)),Alias(this=Cast(this=Literal(this=0,is_string=false),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=x,quoted=false))],limit=null,exclude=null,operation_modifiers=null),distinct=false,by_name=null,expression=Select(kind=null,hint=null,distinct=null,expressions=[Literal(this=1,is_string=false),Literal(this=2,is_string=false),Cast(this=Literal(this=2,is_string=false),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null)],limit=null,exclude=null,operation_modifiers=null),side=null,kind=null,on=null),distinct=false,by_name=null,expression=Select(kind=null,hint=null,distinct=null,expressions=[Literal(this=2,is_string=false),Literal(this=3,is_string=false),Cast(this=Null(),to=DataType(this=DOUBLE,expressions=null,nested=false),format=null,safe=null,action=null,default=null)],limit=null,exclude=null,operation_modifiers=null),side=null,kind=null,on=null),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)),order=Order(this=null,expressions=[Ordered(this=Column(this=Identifier(this=n,quoted=false)),desc=null,nulls_first=true,with_fill=null)],siblings=null))",
+      "preview": "SELECT STDDEV_POP(x) OVER (PARTITION BY g ORDER BY n ROWS BETWEEN 1 PRECEDING AND CURRENT ROW), STDDEV_SAMP(x) OVER (PARTITION BY g ORDER BY n ROWS BETWEEN 1 PRECEDING AND CURRENT ROW), VAR_POP(x) OVER (PARTITION BY g ORDER BY n ROWS BETWEEN 1 PRECEDING AND CURRENT ROW), VAR_SAMP(x) OVER (PARTITION BY g ORDER BY n ROWS BETWEEN 1 PRECEDING AND CURRENT ROW) FROM (SELECT 1 AS g, 1 AS n, CAST(0 AS DOUBLE) AS x UNION ALL SELECT 1, 2, CAST(2 AS DOUBLE) UNION ALL SELECT 2, 3, CAST(NULL AS DOUBLE)) AS t ORDER BY n",
+      "executable": "SELECT STDDEV_POP(x) OVER (PARTITION BY g ORDER BY n ROWS BETWEEN 1 PRECEDING AND CURRENT ROW), STDDEV_SAMP(x) OVER (PARTITION BY g ORDER BY n ROWS BETWEEN 1 PRECEDING AND CURRENT ROW), VAR_POP(x) OVER (PARTITION BY g ORDER BY n ROWS BETWEEN 1 PRECEDING AND CURRENT ROW), VAR_SAMP(x) OVER (PARTITION BY g ORDER BY n ROWS BETWEEN 1 PRECEDING AND CURRENT ROW) FROM (SELECT 1 AS g, 1 AS n, CAST(0 AS DOUBLE) AS x UNION ALL SELECT 1, 2, CAST(2 AS DOUBLE) UNION ALL SELECT 2, 3, CAST(NULL AS DOUBLE)) AS t ORDER BY n",
+      "result": {
+        "returncode": 0,
+        "stdout": "0\tNULL\t0\tNULL\n1\t1.4142135623730951\t1\t2\nNULL\tNULL\tNULL\tNULL\n",
+        "stderr": ""
+      },
+      "expected": [
+        [
+          0,
+          null,
+          0,
+          null
+        ],
+        [
+          1,
+          1.4142135623730951,
+          1,
+          2
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ]
+      ]
+    }
+  ],
+  "alias_controls": [
+    {
+      "engine": "mysql",
+      "alias": "STD",
+      "result": {
+        "returncode": 0,
+        "stdout": "0\n",
+        "stderr": ""
+      }
+    },
+    {
+      "engine": "mysql",
+      "alias": "STDDEV",
+      "result": {
+        "returncode": 0,
+        "stdout": "0\n",
+        "stderr": ""
+      }
+    },
+    {
+      "engine": "mysql",
+      "alias": "VARIANCE",
+      "result": {
+        "returncode": 0,
+        "stdout": "0\n",
+        "stderr": ""
+      }
+    },
+    {
+      "engine": "starrocks",
+      "alias": "STD",
+      "result": {
+        "returncode": 0,
+        "stdout": "0\n",
+        "stderr": ""
+      }
+    },
+    {
+      "engine": "starrocks",
+      "alias": "STDDEV",
+      "result": {
+        "returncode": 0,
+        "stdout": "0\n",
+        "stderr": ""
+      }
+    },
+    {
+      "engine": "starrocks",
+      "alias": "VARIANCE",
+      "result": {
+        "returncode": 0,
+        "stdout": "0\n",
+        "stderr": ""
+      }
+    }
+  ]
+}

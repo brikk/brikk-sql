@@ -1,0 +1,53 @@
+{
+  "scope": "Source-backed grammar/binding evidence, not a claim of native DataFusion/Spice or Hive/Spark/BigQuery runtime execution.",
+  "sources": {
+    "doris-parser.g4": {
+      "url": "https://raw.githubusercontent.com/apache/doris/917b20be83878e98f94e3ebf7efccc80346e3e50/fe/fe-core/src/main/antlr4/org/apache/doris/nereids/DorisParser.g4",
+      "sha256": "c5c9bf224d73bde2e6d3b6c1610f38fe3e7721619558a6774f84f725e774551c"
+    },
+    "doris-lexer.g4": {
+      "url": "https://raw.githubusercontent.com/apache/doris/917b20be83878e98f94e3ebf7efccc80346e3e50/fe/fe-core/src/main/antlr4/org/apache/doris/nereids/DorisLexer.g4",
+      "sha256": "645a583ede179a1f44d08612c7e39b4e908523936bf447b8975289d3f7264ffb"
+    },
+    "starrocks-parser.g4": {
+      "url": "https://raw.githubusercontent.com/StarRocks/starrocks/4a9848edf03f5c936dac664b2d52527f48e72eb0/fe/fe-grammar/src/main/antlr/com/starrocks/grammar/StarRocks.g4",
+      "sha256": "48c33cc741e82f838ebbad09b83ffa8011e690368cbfa2112ecf5d0c810abe3b"
+    },
+    "starrocks-lexer.g4": {
+      "url": "https://raw.githubusercontent.com/StarRocks/starrocks/4a9848edf03f5c936dac664b2d52527f48e72eb0/fe/fe-grammar/src/main/antlr/com/starrocks/grammar/StarRocksLex.g4",
+      "sha256": "9823ca3a363cab28f2feb4d41cd2aa64dd711a75693e6bef43405fc434666456"
+    }
+  },
+  "sqlparser": {
+    "version": "0.62.0",
+    "registry_archive_sha256": "13c6d1b651dc4edf07eead2a0c6c78016ce971bc2c10da5266861b13f25e7cec",
+    "source_file_sha256": {
+      "src/dialect/mod.rs": "76c0cc2ed0e3faa6ca1258d88e7836b0b7c222c3f9e616d148747564fa00a7d3",
+      "src/dialect/postgresql.rs": "b55ac6da20eccfe3514542e82491931bee5c8442c6df361afaa1062dd6138cfe",
+      "src/parser/mod.rs": "024cf521b6c9e4941bddd14e115920a49b0a503b7bebb68fabfb284bb9684a1c"
+    },
+    "existing_lock_sha256": {
+      "tools/datafusion-reference/upstream/Cargo.lock": "3f0a075dca5d9c2c4e7544d2e3c7e9f06f078e3164594d06445e4df53057173e",
+      "tools/datafusion-reference/spice/Cargo.lock": "f74a7e8fe3754f3769e6346a87fd696df297c54f76ad76b87c5d3e8d53d65c98"
+    },
+    "generic_precedence": {
+      "IS": 17,
+      "comparison": 20
+    },
+    "postgresql_precedence": {
+      "IS": 40,
+      "comparison": 50
+    },
+    "profiles": {
+      "datafusion": "GenericDialect, existing 55.2.0 reference profile",
+      "spice": "PostgreSqlDialect, existing 2.4.0 reference profile"
+    },
+    "native_parser_execution_in_this_batch": false
+  },
+  "dialect_dispositions": {
+    "doris": "4.1.5: ! consumes a valueExpression; XOR below AND; ^ above multiply and & above |; no symbolic shift grammar. FE plans recorded separately; backend vm.max_map_count guard remains intact.",
+    "starrocks": "4.1.4: ! is a primary-expression unary operator; ^ above multiply and & above |; no infix logical XOR or symbolic shift grammar. Row execution recorded separately.",
+    "hive_spark": "Unversioned SQLGlot 30.29 profiles: Hive left-associative, Spark2/Spark prioritize INTERSECT. No live/version-qualified Hive/Spark or legacy setops-mode claim.",
+    "generic_bigquery_presto_trino": "Retain SQLGlot HIGH IS policy for generic syntax compatibility. Explicit groups are tested; unparenthesized comparison/IS chains are not claimed as native-valid server SQL."
+  }
+}

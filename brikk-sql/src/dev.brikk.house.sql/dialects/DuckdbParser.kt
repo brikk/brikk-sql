@@ -232,6 +232,7 @@ open class DuckdbParser(
 
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.DUCKDB
+    override val isPredicatePrecedence get() = dev.brikk.house.sql.parser.IsPredicatePrecedence.LOW
 
     // sqlglot: DuckDBParser.MAP_KEYS_ARE_ARBITRARY_EXPRESSIONS = True
     override val mapKeysAreArbitraryExpressions: Boolean get() = true

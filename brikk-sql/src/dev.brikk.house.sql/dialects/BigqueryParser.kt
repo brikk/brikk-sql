@@ -5,7 +5,6 @@ import dev.brikk.house.sql.ast.*
 import dev.brikk.house.sql.optimizer.annotateTypes
 import dev.brikk.house.sql.parser.ErrorLevel
 import dev.brikk.house.sql.parser.BaseParserTables
-import dev.brikk.house.sql.parser.BigqueryTokenizerTables
 import dev.brikk.house.sql.parser.ParseError
 import dev.brikk.house.sql.parser.Parser
 import dev.brikk.house.sql.parser.Token
@@ -362,7 +361,7 @@ private val binaryFromFunctionIntDiv: (List<Expression?>) -> Expression = { a ->
 // sqlglot: parsers.bigquery.BigQueryParser
 open class BigqueryParser(
     errorLevel: ErrorLevel? = null,
-    tokenizerConfig: TokenizerConfig = BigqueryTokenizerTables.CONFIG,
+    tokenizerConfig: TokenizerConfig = BigqueryDialect.TOKENIZER_CONFIG,
 ) : Parser(errorLevel = errorLevel, tokenizerConfig = tokenizerConfig) {
 
     override val dialect: Dialect get() = Dialects.BIGQUERY

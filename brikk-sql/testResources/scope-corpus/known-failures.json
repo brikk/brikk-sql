@@ -1,4 +1,11 @@
 {
     "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
-    "cases": []
+    "cases": [
+        {
+            "id": "assertion:v1:sha256:811d0adf78a0ce219073a286a7e5a7bc99b953e02180592df038135e63e79deb:1",
+            "sql": "SELECT x FROM t UNION SELECT y FROM u INTERSECT SELECT z FROM v",
+            "signature": "scope-mismatch:v1:sha256:ca59febe602baea9c1810a427e9c0ce91ed8adb61bcf1a29b527bdeb4176a99c",
+            "reason": "SG29-006 frozen-pin drift, upstream #8704/86abcde3: INTERSECT binds above UNION. Correct scopes are Select(t), Select(u), Select(v), Intersect(u,v), Union(t,intersect), not the a00dc2e5c left-associated Union(t,u) then Intersect. Hand-owned SetPrecedenceCatchupTest and native row controls retain this grouping. Remove only with the coherent SG29-020 oracle refresh; no blanket scope allowance."
+        }
+    ]
 }

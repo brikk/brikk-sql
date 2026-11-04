@@ -1,0 +1,93 @@
+{
+  "scope": "Four finite ClickHouse global SETTINGS/FORMAT, arm-limit and IS controls; no other version qualification.",
+  "image_id": "sha256:b2bfa4d8399ee9973868cc5c1754cb506a6f4b86fbddc41010cc090beb55c85e",
+  "image_reference": "clickhouse/clickhouse-server:26.10.2.103",
+  "version": {
+    "returncode": 0,
+    "stdout": "26.10.2.103\n",
+    "stderr": "",
+    "evidence": "native-rows"
+  },
+  "cases": [
+    {
+      "id": "CH-01",
+      "sql": "SELECT 1 AS v UNION ALL SELECT 2 INTERSECT DISTINCT SELECT 2 LIMIT 0 SETTINGS max_threads = 1 FORMAT TabSeparated",
+      "ast": "Union(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Literal(this=1,is_string=false),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null),distinct=false,by_name=null,expression=Subquery(this=Intersect(this=Select(kind=null,hint=null,distinct=null,expressions=[Literal(this=2,is_string=false)],limit=null,exclude=null,operation_modifiers=null),distinct=true,by_name=null,expression=Select(kind=null,hint=null,distinct=null,expressions=[Literal(this=2,is_string=false)],limit=Limit(this=null,expression=Literal(this=0,is_string=false),limit_options=null),exclude=null,operation_modifiers=null),side=null,kind=null,on=null)),side=null,kind=null,on=null,settings=[EQ(this=Column(this=Identifier(this=max_threads,quoted=false)),expression=Literal(this=1,is_string=false))],format=Identifier(this=TabSeparated,quoted=false))",
+      "preview": "SELECT 1 AS v UNION ALL (SELECT 2 INTERSECT DISTINCT SELECT 2 LIMIT 0) SETTINGS max_threads = 1 FORMAT TabSeparated",
+      "executable": "SELECT 1 AS v UNION ALL (SELECT 2 INTERSECT DISTINCT SELECT 2 LIMIT 0) SETTINGS max_threads = 1 FORMAT TabSeparated",
+      "original": {
+        "returncode": 0,
+        "stdout": "1\n",
+        "stderr": "",
+        "evidence": "native-rows"
+      },
+      "generated": {
+        "returncode": 0,
+        "stdout": "1\n",
+        "stderr": "",
+        "evidence": "native-rows"
+      },
+      "equal_values": true
+    },
+    {
+      "id": "CH-02",
+      "sql": "SELECT 1 AS v UNION ALL SELECT 2 INTERSECT DISTINCT SELECT 2 ORDER BY 1 LIMIT 1 SETTINGS max_threads = 1 FORMAT TabSeparated",
+      "ast": "Union(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Literal(this=1,is_string=false),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null),distinct=false,by_name=null,expression=Subquery(this=Intersect(this=Select(kind=null,hint=null,distinct=null,expressions=[Literal(this=2,is_string=false)],limit=null,exclude=null,operation_modifiers=null),distinct=true,by_name=null,expression=Select(kind=null,hint=null,distinct=null,expressions=[Literal(this=2,is_string=false)],limit=Limit(this=null,expression=Literal(this=1,is_string=false),limit_options=null),exclude=null,operation_modifiers=null,order=Order(this=null,expressions=[Ordered(this=Literal(this=1,is_string=false),desc=null,nulls_first=false,with_fill=null)],siblings=null)),side=null,kind=null,on=null)),side=null,kind=null,on=null,settings=[EQ(this=Column(this=Identifier(this=max_threads,quoted=false)),expression=Literal(this=1,is_string=false))],format=Identifier(this=TabSeparated,quoted=false))",
+      "preview": "SELECT 1 AS v UNION ALL (SELECT 2 INTERSECT DISTINCT SELECT 2 ORDER BY 1 LIMIT 1) SETTINGS max_threads = 1 FORMAT TabSeparated",
+      "executable": "SELECT 1 AS v UNION ALL (SELECT 2 INTERSECT DISTINCT SELECT 2 ORDER BY 1 LIMIT 1) SETTINGS max_threads = 1 FORMAT TabSeparated",
+      "original": {
+        "returncode": 0,
+        "stdout": "1\n2\n",
+        "stderr": "",
+        "evidence": "native-rows"
+      },
+      "generated": {
+        "returncode": 0,
+        "stdout": "1\n2\n",
+        "stderr": "",
+        "evidence": "native-rows"
+      },
+      "equal_values": true
+    },
+    {
+      "id": "CH-03",
+      "sql": "SELECT 1 = NULL IS NULL FORMAT TabSeparated",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Is(this=Paren(this=EQ(this=Literal(this=1,is_string=false),expression=Null())),expression=Null())],limit=null,exclude=null,operation_modifiers=null,format=Identifier(this=TabSeparated,quoted=false))",
+      "preview": "SELECT (1 = NULL) IS NULL FORMAT TabSeparated",
+      "executable": "SELECT (1 = NULL) IS NULL FORMAT TabSeparated",
+      "original": {
+        "returncode": 0,
+        "stdout": "1\n",
+        "stderr": "",
+        "evidence": "native-rows"
+      },
+      "generated": {
+        "returncode": 0,
+        "stdout": "1\n",
+        "stderr": "",
+        "evidence": "native-rows"
+      },
+      "equal_values": true
+    },
+    {
+      "id": "CH-04",
+      "sql": "SELECT 1 = NULL IS NOT NULL FORMAT TabSeparated",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Not(this=Is(this=Paren(this=EQ(this=Literal(this=1,is_string=false),expression=Null())),expression=Null()))],limit=null,exclude=null,operation_modifiers=null,format=Identifier(this=TabSeparated,quoted=false))",
+      "preview": "SELECT NOT ((1 = NULL) IS NULL) FORMAT TabSeparated",
+      "executable": "SELECT NOT ((1 = NULL) IS NULL) FORMAT TabSeparated",
+      "original": {
+        "returncode": 0,
+        "stdout": "0\n",
+        "stderr": "",
+        "evidence": "native-rows"
+      },
+      "generated": {
+        "returncode": 0,
+        "stdout": "0\n",
+        "stderr": "",
+        "evidence": "native-rows"
+      },
+      "equal_values": true
+    }
+  ]
+}

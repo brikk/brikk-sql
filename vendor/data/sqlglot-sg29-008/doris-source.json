@@ -1,0 +1,55 @@
+{
+  "scope": "Doris 4.1.5 source registration and signature evidence only, not backend row execution.",
+  "sources": [
+    {
+      "url": "https://raw.githubusercontent.com/apache/doris/917b20be83878e98f94e3ebf7efccc80346e3e50/fe/fe-core/src/main/java/org/apache/doris/catalog/BuiltinAggregateFunctions.java",
+      "sha256": "48cd4823a1736570134db0fdf8524b19022b6a7016b7e7c4b728fac6c0b3699e",
+      "excerpts": [
+        "68: import org.apache.doris.nereids.trees.expressions.functions.agg.NotNullableAggregateFunction;",
+        "187:                 agg(Stddev.class, \"stddev_pop\", \"stddev\", \"std\"),",
+        "188:                 agg(StddevSamp.class, \"stddev_samp\"),",
+        "194:                 agg(Variance.class, \"var_pop\", \"variance_pop\", \"variance\"),",
+        "195:                 agg(VarianceSamp.class, \"var_samp\", \"variance_samp\"),",
+        "204:                 boolean resultNullable = !(NotNullableAggregateFunction.class"
+      ]
+    },
+    {
+      "url": "https://raw.githubusercontent.com/apache/doris/917b20be83878e98f94e3ebf7efccc80346e3e50/fe/fe-core/src/main/java/org/apache/doris/nereids/trees/expressions/functions/agg/Stddev.java",
+      "sha256": "471c97f1f10c27aed4de716fef30ee1093d7d452c12971fe17fcfb4a7143bc17",
+      "excerpts": [
+        "36: public class Stddev extends NullableAggregateFunction",
+        "41:             FunctionSignature.ret(DoubleType.INSTANCE).args(DoubleType.INSTANCE));",
+        "62:     private Stddev(NullableAggregateFunctionParams functionParams) {",
+        "76:     public NullableAggregateFunction withAlwaysNullable(boolean alwaysNullable) {"
+      ]
+    },
+    {
+      "url": "https://raw.githubusercontent.com/apache/doris/917b20be83878e98f94e3ebf7efccc80346e3e50/fe/fe-core/src/main/java/org/apache/doris/nereids/trees/expressions/functions/agg/StddevSamp.java",
+      "sha256": "a5355ad964326788648d82798b5c32befb836a519f7440482a2e8e056396e676",
+      "excerpts": [
+        "36: public class StddevSamp extends NullableAggregateFunction",
+        "41:             FunctionSignature.ret(DoubleType.INSTANCE).args(DoubleType.INSTANCE));",
+        "62:     private StddevSamp(NullableAggregateFunctionParams functionParams) {"
+      ]
+    },
+    {
+      "url": "https://raw.githubusercontent.com/apache/doris/917b20be83878e98f94e3ebf7efccc80346e3e50/fe/fe-core/src/main/java/org/apache/doris/nereids/trees/expressions/functions/agg/Variance.java",
+      "sha256": "8bdb4033f203cfabde13152f91a8a913fa8a265f2f7c7885bfed47b2121a47d8",
+      "excerpts": [
+        "36: public class Variance extends NullableAggregateFunction",
+        "41:             FunctionSignature.ret(DoubleType.INSTANCE).args(DoubleType.INSTANCE));",
+        "62:     private Variance(NullableAggregateFunctionParams functionParams) {",
+        "76:     public NullableAggregateFunction withAlwaysNullable(boolean alwaysNullable) {"
+      ]
+    },
+    {
+      "url": "https://raw.githubusercontent.com/apache/doris/917b20be83878e98f94e3ebf7efccc80346e3e50/fe/fe-core/src/main/java/org/apache/doris/nereids/trees/expressions/functions/agg/VarianceSamp.java",
+      "sha256": "458a03b14299c6394b0c7a6e8d17cb1a39b353904868e38b8ea6eb7aa3d8a914",
+      "excerpts": [
+        "35: public class VarianceSamp extends NullableAggregateFunction",
+        "40:             FunctionSignature.ret(DoubleType.INSTANCE).args(DoubleType.INSTANCE));",
+        "61:     private VarianceSamp(NullableAggregateFunctionParams functionParams) {"
+      ]
+    }
+  ]
+}

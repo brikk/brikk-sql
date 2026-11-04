@@ -1330,7 +1330,7 @@ open class DuckdbGenerator(
 
             val timestampNs = Cast(
                 args(
-                    "this" to expression.thisArg,
+                    "this" to (expression.thisArg as? Expression)?.copy(),
                     "to" to DataType(args("this" to DType.TIMESTAMP_NS)),
                 )
             )
@@ -1348,7 +1348,7 @@ open class DuckdbGenerator(
                                             "expressions" to listOf(timestampNs),
                                         )
                                     ),
-                                    "expression" to intervalValue,
+                                    "expression" to intervalValue?.copy(),
                                 )
                             ),
                         ),
@@ -1361,16 +1361,13 @@ open class DuckdbGenerator(
         if (intervalValue != null && intervalValue !is Interval) {
             val ivType = intervalValue.type?.thisArg as? DType
             if (ivType in REAL_TYPES) {
-                expression.set(
-                    "expression",
-                    Cast(
-                        args(
-                            "this" to Anonymous(
-                                args("this" to "ROUND", "expressions" to listOf(intervalValue))
-                            ),
-                            "to" to DataType(args("this" to DType.INT)),
-                        )
-                    ),
+                intervalValue = Cast(
+                    args(
+                        "this" to Anonymous(
+                            args("this" to "ROUND", "expressions" to listOf(intervalValue.copy()))
+                        ),
+                        "to" to DataType(args("this" to DType.INT)),
+                    )
                 )
             }
         }
@@ -1389,7 +1386,8 @@ open class DuckdbGenerator(
                 ?: DType.DATE
         } else if (this_ is Literal && this_.isString) {
             // Cast string literals to the appropriate type for +/- interval to work
-            toType = if (expression is DatetimeAdd || expression is DatetimeSub) {
+            toType = if (expression is DatetimeAdd || expression is DatetimeSub ||
+                expression is TimestampAdd || expression is TimestampSub) {
                 DType.DATETIME
             } else {
                 DType.DATE
@@ -1397,15 +1395,14 @@ open class DuckdbGenerator(
         }
 
         if (toType != null) {
-            this_ = Cast(args("this" to this_, "to" to DataType(args("this" to toType))))
+            this_ = Cast(args("this" to this_.copy(), "to" to DataType(args("this" to toType))))
         }
 
-        val expr = expression.args["expression"] as? Expression
-        val interval = if (expr is Interval) expr else Interval(
-            args("this" to expr, "unit" to unitVar)
+        val interval = if (intervalValue is Interval) intervalValue else Interval(
+            args("this" to intervalValue?.copy(), "unit" to unitVar?.copy())
         )
 
-        return "${sql(this_)} $op ${sql(interval)}"
+        return dateDeltaToBinarySql(expression, this_, interval, subtract = op == "-")
     }
 
     // sqlglot: dialect.unit_to_var
@@ -3040,8 +3037,12 @@ open class DuckdbGenerator(
                         )
                     } else a
                 }
-                val left = roundArg(e.thisArg)
-                val right = roundArg(e.args["expression"])
+                // SG29-007: both the negated and positive uses of a compound operand
+                // must remain a unit inside the AND/OR lowering.
+                fun grouped(arg: Expression?): Expression? =
+                    if (arg is Connector) Paren(args("this" to arg.copy())) else arg
+                val left = grouped(roundArg(e.thisArg))
+                val right = grouped(roundArg(e.args["expression"]))
                 sql(
                     Or(
                         args(

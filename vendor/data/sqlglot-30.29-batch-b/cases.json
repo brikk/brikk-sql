@@ -1,0 +1,31 @@
+{
+  "scope": "Hand-owned, finite SELECT precedence controls for SG29-005 through SG29-007; native versions/settings are captured separately.",
+  "cases": [
+    {"id":"IS-01","sql":"SELECT 1 = NULL IS NULL AS v"},
+    {"id":"IS-02","sql":"SELECT NULL = 1 IS NULL AS v"},
+    {"id":"IS-03","sql":"SELECT 2 > 1 IS NULL AS v"},
+    {"id":"IS-04","sql":"SELECT 1 = NULL IS NOT NULL AS v"},
+    {"id":"IS-05","sql":"SELECT (1 = NULL) IS NULL AS v"},
+    {"id":"IS-06","sql":"SELECT 1 <=> NULL IS NULL AS v","sources":["mysql","doris","starrocks"]},
+    {"id":"NOT-01","sql":"SELECT !1 + 1 AS v"},
+    {"id":"NOT-02","sql":"SELECT (!1) + 1 AS v"},
+    {"id":"NOT-03","sql":"SELECT !(1 + 1) AS v"},
+    {"id":"NOT-04","sql":"SELECT NOT 1 + 1 AS v"},
+    {"id":"NOT-05","sql":"SELECT !NULL AS v"},
+    {"id":"XOR-01","sql":"SELECT TRUE XOR TRUE AND FALSE AS v","rejected_sources":["starrocks"],"unqualified_targets":["starrocks"]},
+    {"id":"XOR-02","sql":"SELECT TRUE AND (FALSE XOR TRUE) AS v","rejected_sources":["starrocks"],"unqualified_targets":["starrocks"]},
+    {"id":"XOR-03","sql":"SELECT TRUE XOR NULL AND FALSE AS v","rejected_sources":["starrocks"],"unqualified_targets":["starrocks"]},
+    {"id":"XOR-04","sql":"SELECT NULL XOR TRUE AS v","rejected_sources":["starrocks"],"unqualified_targets":["starrocks"]},
+    {"id":"XOR-05","sql":"SELECT FALSE OR TRUE XOR FALSE AS v","rejected_sources":["starrocks"],"unqualified_targets":["starrocks"]},
+    {"id":"BIT-01","sql":"SELECT 1 | 2 & 0 AS v"},
+    {"id":"BIT-02","sql":"SELECT 1 ^ 2 * 3 AS v"},
+    {"id":"BIT-03","sql":"SELECT 2 + 1 ^ 3 AS v"},
+    {"id":"BIT-04","sql":"SELECT 8 & 3 + 1 AS v"},
+    {"id":"BIT-05","sql":"SELECT 1 | 2 << 1 & 2 AS v","sources":["mysql"],"unqualified_targets":["doris","starrocks"]},
+    {"id":"BIT-06","sql":"SELECT NULL | 2 & 0 AS v"},
+    {"id":"SET-01","sql":"SELECT 1 AS v UNION SELECT 2 INTERSECT SELECT 2"},
+    {"id":"SET-02","sql":"(SELECT 1 AS v UNION SELECT 2) INTERSECT SELECT 2"},
+    {"id":"SET-03","sql":"SELECT 1 AS v UNION ALL (SELECT 2 INTERSECT SELECT 2) ORDER BY v LIMIT 1"},
+    {"id":"SET-04","sql":"SELECT 1 AS v UNION ALL (SELECT 2 INTERSECT SELECT 2)"}
+  ]
+}

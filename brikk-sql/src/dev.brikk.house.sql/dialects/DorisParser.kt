@@ -152,6 +152,10 @@ open class DorisParser(
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.DORIS
 
+    // brikk-native: Doris 4.1.5 booleanExpression's LOGICALNOT consumes a complete
+    // valueExpression. Unlike MySQL/StarRocks, !1 + 1 therefore means !(1 + 1).
+    override val exclamationBindsTightly: Boolean get() = false
+
     // brikk-native: SELECT ... INTO OUTFILE ends a query (see parseDorisOutfile).
     override val queryModifierParsers: Map<TokenType, (Parser) -> Pair<String, kotlin.Any?>>
         get() = super.queryModifierParsers + (TokenType.INTO to { p -> (p as DorisParser).parseDorisOutfile() })
@@ -1195,4 +1199,3 @@ private fun buildDorisGroupConcat(a: List<Expression?>): Expression {
     val separator = values[1] as? Expression
     return GroupConcat(args("this" to value, "separator" to (order?.let { Order(args("this" to separator, "expressions" to it.expressionsArg)) } ?: separator)))
 }
-

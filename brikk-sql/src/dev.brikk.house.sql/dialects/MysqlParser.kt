@@ -9,6 +9,12 @@ import dev.brikk.house.sql.ast.BitwiseAndAgg
 import dev.brikk.house.sql.ast.BitwiseCount
 import dev.brikk.house.sql.ast.BitwiseOrAgg
 import dev.brikk.house.sql.ast.BitwiseXorAgg
+import dev.brikk.house.sql.ast.BitwiseXor
+import dev.brikk.house.sql.ast.BitwiseOr
+import dev.brikk.house.sql.ast.BitwiseAnd
+import dev.brikk.house.sql.ast.BitwiseLeftShift
+import dev.brikk.house.sql.ast.BitwiseRightShift
+import dev.brikk.house.sql.ast.Not
 import dev.brikk.house.sql.ast.Cast
 import dev.brikk.house.sql.ast.Column
 import dev.brikk.house.sql.ast.PrimaryKey
@@ -74,6 +80,7 @@ import dev.brikk.house.sql.ast.StrToDate
 import dev.brikk.house.sql.ast.StrToTime
 import dev.brikk.house.sql.ast.TimeToStr
 import dev.brikk.house.sql.ast.TimestampDiff
+import dev.brikk.house.sql.ast.TimestampAdd
 import dev.brikk.house.sql.ast.UniqueColumnConstraint
 import dev.brikk.house.sql.ast.TsOrDsToDate
 import dev.brikk.house.sql.ast.TsOrDsToTimestamp
@@ -200,6 +207,59 @@ open class MysqlParser(
 
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.MYSQL
+    override val isPredicatePrecedence get() = dev.brikk.house.sql.parser.IsPredicatePrecedence.COMPARISON
+
+    // sqlglot #8687. Doris' native boolean grammar differs and overrides this policy.
+    protected open val exclamationBindsTightly: Boolean get() = true
+
+    override val exponent: Map<TokenType, NodeFactory> get() = MYSQL_EXPONENT
+    override val unaryParsers: Map<TokenType, (Parser) -> Expression?>
+        get() = super.unaryParsers + (TokenType.NOT to { p -> (p as MysqlParser).parseMysqlNot() })
+
+    private fun parseMysqlNot(): Expression = if (prevToken.text == "!" && exclamationBindsTightly) {
+        expression(Paren(args("this" to expression(Not(args("this" to parseUnary()))))))
+    } else expression(Not(args("this" to parseEquality())))
+
+    // sqlglot #8686: AND > XOR > OR, rather than treating XOR as another AND.
+    override fun parseConjunction(): Expression? {
+        var current = super.parseConjunction()
+        while (match(TokenType.XOR)) {
+            val comments = prevComments
+            current = expression(Xor(args("this" to current, "expression" to super.parseConjunction())), comments = comments)
+        }
+        return current
+    }
+
+    // sqlglot #8688: ^ > multiplication/addition > shifts > & > |.
+    override fun parseBitwise(): Expression? {
+        var current = parseBitwiseAnd()
+        while (match(TokenType.PIPE)) {
+            val comments = prevComments
+            current = expression(BitwiseOr(args("this" to current, "expression" to parseBitwiseAnd())), comments = comments)
+        }
+        return current
+    }
+
+    private fun parseBitwiseAnd(): Expression? {
+        var current = parseBitwiseShift()
+        while (match(TokenType.AMP)) {
+            val comments = prevComments
+            current = expression(BitwiseAnd(args("this" to current, "expression" to parseBitwiseShift())), comments = comments)
+        }
+        return current
+    }
+
+    private fun parseBitwiseShift(): Expression? {
+        var current = parseTerm()
+        while (true) {
+            val left = if (matchPair(TokenType.LT, TokenType.LT)) true
+                else if (matchPair(TokenType.GT, TokenType.GT)) false else break
+            val comments = prevComments
+            val operands = args("this" to current, "expression" to parseTerm())
+            current = expression(if (left) BitwiseLeftShift(operands) else BitwiseRightShift(operands), comments = comments)
+        }
+        return current
+    }
 
     // -------------------------------------------------------------------
     // Flags (sqlglot: MySQLParser / MySQL dialect class attributes)
@@ -859,6 +919,7 @@ open class MysqlParser(
     }
 
     companion object {
+        private val MYSQL_EXPONENT: Map<TokenType, NodeFactory> = mapOf(TokenType.CARET to { BitwiseXor(it) })
         // sqlglot: expressions.SAFE_IDENTIFIER_RE
         private val SAFE_IDENTIFIER_RE = Regex("^[_a-zA-Z][\\w]*$")
     }
@@ -893,7 +954,6 @@ object MysqlParserTables {
     // sqlglot: MySQLParser.CONJUNCTION
     val CONJUNCTION: Map<TokenType, NodeFactory> = BaseParserTables.CONJUNCTION + mapOf<TokenType, NodeFactory>(
         TokenType.DAMP to { a -> And(a) },
-        TokenType.XOR to { a -> Xor(a) },
     )
 
     // sqlglot: MySQLParser.DISJUNCTION
@@ -1012,6 +1072,17 @@ object MysqlParserTables {
         put("SCHEMA") { a -> CurrentSchema(args("this" to seqGet(a, 0))) }
         put("DATABASE") { a -> CurrentSchema(args("this" to seqGet(a, 0))) }
         put("STR_TO_DATE", ::buildStrToDate)
+        // sqlglot #8809/#8815: TIMESTAMPADD(unit,count,time), including ODBC units.
+        put("TIMESTAMPADD") { a ->
+            buildDateDelta { nodeArgs -> TimestampAdd(nodeArgs) }(a).also { delta ->
+                val unit = (delta.args["unit"] as? Expression)?.name ?: "DAY"
+                delta.set("unit", Var(args("this" to unit.uppercase().removePrefix("SQL_TSI_"))))
+            }
+        }
+        // sqlglot #8632: MySQL's unqualified aliases are population aggregates.
+        put("STD") { a -> dev.brikk.house.sql.ast.StddevPop(args("this" to seqGet(a, 0))) }
+        put("STDDEV") { a -> dev.brikk.house.sql.ast.StddevPop(args("this" to seqGet(a, 0))) }
+        put("VARIANCE") { a -> dev.brikk.house.sql.ast.VariancePop(args("this" to seqGet(a, 0))) }
         put("TIMESTAMPDIFF", buildDateDelta { a -> TimestampDiff(a) })
         put("TO_DAYS") { a ->
             Paren(

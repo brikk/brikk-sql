@@ -160,7 +160,11 @@ private class JsonPathParser(
         val numberToken = match(TokenType.NUMBER)
         if (numberToken != null) number += numberToken.text
 
-        if (number.isNotEmpty()) return number.toInt()
+        // sqlglot #8869: invalid numeric tokens are syntax errors, not conversion errors.
+        // Int overflow follows the same path without changing the serialized index type.
+        if (number.isNotEmpty()) {
+            return number.toIntOrNull() ?: throw ParseError(error("Invalid integer index: $number"))
+        }
 
         return false
     }

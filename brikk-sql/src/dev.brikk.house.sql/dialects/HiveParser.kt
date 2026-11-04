@@ -172,6 +172,7 @@ open class HiveParser(
 
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.HIVE
+    override val isPredicatePrecedence get() = dev.brikk.house.sql.parser.IsPredicatePrecedence.EQUALITY
     open val normalizeDecimalLiterals: Boolean get() = true
     open val decimalLiteralsAllowNegativeScale: Boolean get() = false
 

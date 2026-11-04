@@ -126,7 +126,7 @@ open class SparkGenerator(
             "this" to (expression.args["expression"] as? Expression)?.copy(),
             "unit" to unit?.let { if (it is Literal || it is Var) Var(args("this" to it.name)) else it.copy() },
         ))
-        return "${sql(expression, "this")} $operator ${sql(interval)}"
+        return dateDeltaToBinarySql(expression, expression.thisArg as? Expression, interval, subtract = operator == "-")
     }
 
     // sqlglot: SparkGenerator.readparquet_sql

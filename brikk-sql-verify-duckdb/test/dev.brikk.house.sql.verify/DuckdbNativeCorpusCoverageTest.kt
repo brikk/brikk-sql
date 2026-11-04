@@ -136,10 +136,20 @@ internal class DuckdbNativeCorpusCoverageTest {
                 val v=run.verdicts.getValue(input.sql);put("origin",input.origin);put("sql",input.sql);put("status",v.status);put("type",v.type);put("message",v.message)
             }) })
         })
-        // Main's Trino authorization nodes refuse nine formerly opaque translations;
-        // its ClickHouse division policy adds five warnings. Native outcomes for every
-        // remaining origin are unchanged. Retain the original baseline as historical evidence.
-        val baseline=NativeCorpusAudit.root.resolve("brikk-sql-verify-duckdb/testResources/native-coverage-baseline-main-0572f6d.json")
+        // SG29-B: exactly 11 generated inputs in four reviewed forms changed; nested
+        // logical XOR no longer emits unsupported DuckDB infix XOR (five rejections
+        // become accepted). Local dispositions/other 24595 origins are unchanged.
+        // The scope ledger's one exact SG29-006 correction accounts for inventory drift.
+        // Published 0.23.0 replay reproduced the old fingerprints under identical engine,
+        // JDBC and complete settings. Keep historical baselines and the per-origin review
+        // in vendor/data/sqlglot-30.29-batch-b/native-coverage-delta.json. Still enforce ONE
+        // exact current summary, not a count allowance or an old/new fingerprint whitelist.
+        // SG29-009 changes ONLY the inventory hash for its exact MySQL transpile
+        // ledger row. Every one of the 24606 native SQL/status/type tuples, all local
+        // dispositions, engine/JDBC/settings and all other inventory rows are identical.
+        // Restoring that one file hash reproduces the complete prior inventory hash.
+        // See vendor/data/sqlglot-sg29-009/native-coverage-review.json. Keep B's baseline.
+        val baseline=NativeCorpusAudit.root.resolve("brikk-sql-verify-duckdb/testResources/native-coverage-baseline-sg29-009.json")
         assertTrue(Files.isRegularFile(baseline),"Review build/duckdb-parser-audit/native-coverage.json before adding a baseline")
         assertEquals(Json.parseToJsonElement(Files.readString(baseline)),summary,"Investigate coverage changes; never refresh parity ledgers from native syntax outcomes")
         println("DDB20-050 $summary")

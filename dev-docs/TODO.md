@@ -9,6 +9,17 @@ native resource packaging is tracked in [brikk-chdb](https://github.com/brikk/br
 
 ## Design and correctness
 
+- [ ] **SQL-09: Review and implement the SQLGlot 30.29 catch-up.** Proposed scope
+  and ordered batches are in [the catch-up tracker](TODO-sqlglot-30.29.md).
+  Approved Batches A and B implement robustness, identifier escaping and
+  precedence/grouping in worktree `sqlglot-30-29-batch-a`. Separately approved
+  SG29-008 population/sample aggregates and SG29-009 temporal arithmetic are also
+  verified, with commit/push of the accumulated branch authorized. SG29-010 is
+  proposed next, not authorized.
+  Native coverage drift is individually reviewed; the
+  [evidence guide](../vendor/data/sqlglot-30.29-batch-b/README.md) retains limits.
+  Preserve the separate DuckDB native/executable safeguards; global
+  oracle migration, publication and consumer adoption are not yet authorized.
 - [ ] **SQL-08: Improve bounded ClickHouse semantic analysis.** The user accepted
   the CHSEM-001 through CHSEM-023 scope as opt-in hints and separately proved
   checks, not full validation or native-exact metadata for every AST node.
