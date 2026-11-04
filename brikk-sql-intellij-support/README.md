@@ -790,6 +790,11 @@ dialect and a `PgFamilyDialect`), so Trino and DuckDB need none of this.
 
 ### Live function catalog
 
+The owner-authorized local SNAPSHOT candidate fixes forget/refresh and out-of-order
+refresh races in released `0.4.0`. See [recording policy, engine impact and consumer
+verification boundaries](../docs/live-catalog-refresh-ordering.md). This is not a
+public final-library release.
+
 What the connected server reports about its functions, harvested per data source and served to
 completion. A plugin implements one `LiveCatalogProfile` (minimum: `dbms`, `productLabel`, bundled
 `metadata`, `harvester`) and registers no-arg subclasses:
