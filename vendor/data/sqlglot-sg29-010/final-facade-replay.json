@@ -1,0 +1,13 @@
+{
+  "scope": "Final Java 17 public-facade replay, not additional backend executions.",
+  "native_generated_statements_reproduced_exactly": 26,
+  "preview_dispositions_reproduced_exactly": 4,
+  "outbound_refusals_reproduced_exactly": 3,
+  "class_sha256": {
+    "dev/brikk/house/sql/dialects/ClickhouseParserKt.class": "352bfba9596f6e8a071e097ca28361728948d9f02a89123c7df3249827bd733a",
+    "dev/brikk/house/sql/dialects/ClickhouseParserTables.class": "c9febcd671b881367c6a5c447a3a7766ab84161d911151d7e618901383ebb559",
+    "dev/brikk/house/sql/dialects/ClickhouseGenerator.class": "9c86dd7de056a1c9faca53cc84dccd5448e67b3fc947cc5c5f9e04a1fd8330a1",
+    "dev/brikk/house/sql/dialects/ClickhouseDialect.class": "9270cac39826661ee29f26674470c184617fd5cf7d49ced84a181b78b7e93796",
+    "dev/brikk/house/sql/generator/Generator.class": "6d31bd6075f99b32354aeaca93a0a8565b93c0ef3e4c9dcbe284834fb1f377c4"
+  }
+}

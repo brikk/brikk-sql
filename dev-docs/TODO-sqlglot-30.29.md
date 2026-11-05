@@ -2,7 +2,10 @@
 
 Status: Batches A and B approved, implemented and verified in worktree `sqlglot-30-29-batch-a`,
 2026-11-03. SG29-008 and SG29-009 are separately approved, implemented and verified,
-SG29-009 on 2026-11-04, including authorized commit/push of the accumulated branch. Remaining items
+SG29-009 on 2026-11-04, including authorized commit/push of the accumulated branch.
+SG29-010 is separately approved, implemented and verified on 2026-11-04. The owner
+has now approved SG29-011 through SG29-013 in order, with commit/push between items.
+Remaining items
 in Batches C through F remain proposed, not authorized. Publication and
 downstream adoption require their own authorization.
 
@@ -131,11 +134,19 @@ baseline explain the bounded drift. No global oracle refresh or release follows.
   ledger row accounts for an inventory-only audit update; all 24,606 native
   SQL/status/type tuples and local dispositions remain unchanged. Build, 2,528
   JVM tests and 827 IntelliJ tests pass. The oracle pin remains unchanged.
-- [ ] **SG29-010: Preserve JSON-valued ClickHouse extraction.** Port
+- [x] **SG29-010: Preserve JSON-valued ClickHouse extraction.** Port
   [#8601](https://github.com/tobymao/sqlglot/pull/8601), `4d7d7ca9`.
   Our JSON_EXTRACT probe emits JSONExtractString instead of JSONExtractRaw.
   Keep scalar extraction separate; test arrays/objects/scalars, paths/index bases,
   missing members, JSON null versus SQL NULL and native results/types.
+  [Evidence and limits](../vendor/data/sqlglot-sg29-010/README.md) record 26 native
+  ClickHouse 26.10.2.103 value/type pairs, four preview-only controls and three
+  outbound refusals. Quoted numeric/empty/escaped keys and native index bases
+  are preserved. Native raw results have String-compatible typing; cross-engine
+  raw execution refuses unqualified missing/null/type conversions. Build, 2,537
+  JVM tests and all 827 IntelliJ tests pass. Native coverage, fixtures, ledgers,
+  existing baseline and oracle pin remain unchanged. Commit/push is now authorized
+  before beginning the next three items.
 - [ ] **SG29-011: Qualify PostgreSQL interval/date mappings.** Review named
   MAKE_INTERVAL arguments and anonymous-call preservation, `5739cd6c`/`53ccce9f`;
   boundary-counting DATEDIFF, `8709510f`/`991d6ce5`; ISO week/year formats,
@@ -217,14 +228,18 @@ The owner approved **Batch A, SG29-001 through SG29-004**, in a separate worktre
 then **Batch B, SG29-005 through SG29-007**, in that same worktree, followed by
 the bounded **SG29-008** population/sample-aggregate fix and **SG29-009** temporal
 arithmetic grouping/TIMESTAMPADD. The owner also authorized commit/push of the
-accumulated branch after SG29-009 validation. SG29-010 onward is not authorized.
-Stop after SG29-009 with results and the next recommendation.
+accumulated branch after SG29-009 validation, completed as `70a9f1c0` on
+`origin/sqlglot-30-29-batch-a`. SG29-010 JSON-valued ClickHouse extraction is
+separately approved. The owner subsequently approved SG29-011, SG29-012 and
+SG29-013 in order, with commit/push after each. Commit/push SG29-010 first to
+keep the new items separate. SG29-014 onward is not authorized.
 
-SG29-009 is complete. Proposed next is **SG29-010**, JSON-valued ClickHouse
-extraction, pending separate authorization.
+SG29-010 is complete. Next is **SG29-011**, PostgreSQL interval/date mappings,
+as separately verified sub-rounds, then SG29-012 and SG29-013. Stop after those
+three with results and the next recommendation.
 
 Implementation is isolated on branch/worktree `sqlglot-30-29-batch-a`. The
 planning request initially added this TODO and its index links; later approvals
-cover the implementation and evidence for SG29-001 through SG29-009. Earlier
+cover the implementation and evidence for SG29-001 through SG29-010. Earlier
 guides' uncommitted-status statements describe their original checkpoints.
 Publication, consumer adoption and PR creation remain unrequested.

@@ -79,6 +79,7 @@ import dev.brikk.house.sql.ast.In
 import dev.brikk.house.sql.ast.IndexColumnConstraint
 import dev.brikk.house.sql.ast.JSONCast
 import dev.brikk.house.sql.ast.JSONExtractScalar
+import dev.brikk.house.sql.ast.JSONExtract
 import dev.brikk.house.sql.ast.JSONPath
 import dev.brikk.house.sql.ast.JSONPathKey
 import dev.brikk.house.sql.ast.JSONPathRoot
@@ -257,26 +258,38 @@ private fun buildDialectLike(
     likeExpr
 }
 
-// sqlglot: dialect.build_json_extract_path(exp.JSONExtractScalar, zero_based_indexing=False)
-private fun buildJsonExtractStringPath(fnArgs: List<Expression?>): Expression {
+// sqlglot #8601: native raw and scalar extraction share path structure, not result kind.
+private fun buildClickhouseJsonExtractPath(
+    fnArgs: List<Expression?>,
+    raw: Boolean,
+): Expression {
+    fun node(nodeArgs: Args): Expression = (if (raw) JSONExtract(nodeArgs) else JSONExtractScalar(nodeArgs)).also {
+        // Native raw extraction returns String/Nullable(String), with '' on a missing
+        // path. Its JSON-valued canonical node alone does not qualify other engines.
+        if (raw) it.meta["clickhouse_json_extract_raw"] = true
+    }
+    fun fallback(): Expression = node(args(
+        "this" to seqGet(fnArgs, 0), "expression" to seqGet(fnArgs, 1),
+        "expressions" to fnArgs.drop(2).filterNotNull().takeIf { it.isNotEmpty() },
+    ))
     val segments = mutableListOf<Expression>(JSONPathRoot())
     for (arg in fnArgs.drop(1)) {
-        if (arg !is Literal) {
-            // We use the fallback parser because we can't really transpile non-literals safely
-            return fromArgList(
-                listOf("this", "expression", "only_json_types", "expressions", "json_type", "scalar_only"),
-                true,
-            ) { JSONExtractScalar(it) }(fnArgs)
-        }
+        // Dynamic, zero and negative native segments retain their native arguments.
+        // Zero has no corresponding zero-based JSONPath array element. Negative native
+        // subscripts are already from-end, so must not be decremented.
+        if (arg !is Literal) return fallback()
         val text = arg.name
-        if (isInt(text)) {
-            segments.add(JSONPathSubscript(args("this" to (text.toInt() - 1))))
+        val index = if (arg.isString) null else text.toLongOrNull()
+        if (!arg.isString && index == null) return fallback()
+        if (index != null) {
+            if (index <= 0) return fallback()
+            segments.add(JSONPathSubscript(args("this" to (index - 1))))
         } else {
             segments.add(JSONPathKey(args("this" to text)))
         }
     }
 
-    return JSONExtractScalar(
+    return node(
         args(
             "this" to seqGet(fnArgs, 0),
             "expression" to JSONPath(args("expressions" to segments)),
@@ -1586,7 +1599,8 @@ object ClickhouseParserTables {
         put("FORMATDATETIME", buildDatetimeFormat { a: Args -> TimeToStr(a) })
         put("HAS", fromArgList(listOf("this", "expression", "ensure_variant", "check_null"), false) { ArrayContains(it) })
         put("ILIKE", buildDialectLike({ a: Args -> ILike(a) }))
-        put("JSONEXTRACTSTRING", ::buildJsonExtractStringPath)
+        put("JSONEXTRACTRAW") { a -> buildClickhouseJsonExtractPath(a, raw = true) }
+        put("JSONEXTRACTSTRING") { a -> buildClickhouseJsonExtractPath(a, raw = false) }
         put("LENGTH") { a -> Length(args("this" to seqGet(a, 0), "binary" to true)) }
         put("LIKE", buildDialectLike({ a: Args -> Like(a) }))
         // NOTE (sqlglot parity): the Python key is "L2Distance", which never matches the

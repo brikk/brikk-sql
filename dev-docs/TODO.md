@@ -14,8 +14,10 @@ native resource packaging is tracked in [brikk-chdb](https://github.com/brikk/br
   Approved Batches A and B implement robustness, identifier escaping and
   precedence/grouping in worktree `sqlglot-30-29-batch-a`. Separately approved
   SG29-008 population/sample aggregates and SG29-009 temporal arithmetic are also
-  verified, with commit/push of the accumulated branch authorized. SG29-010 is
-  proposed next, not authorized.
+  verified and committed/pushed as `70a9f1c0`. SG29-010 JSON-valued ClickHouse
+  extraction is separately verified. Commit/push of SG29-010 and sequential
+  SG29-011 through SG29-013 are now approved, with commit/push between items.
+  SG29-014 onward is not authorized.
   Native coverage drift is individually reviewed; the
   [evidence guide](../vendor/data/sqlglot-30.29-batch-b/README.md) retains limits.
   Preserve the separate DuckDB native/executable safeguards; global

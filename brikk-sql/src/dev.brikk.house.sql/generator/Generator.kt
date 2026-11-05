@@ -753,6 +753,9 @@ open class Generator(
         }
 
         val nativeDialect = expression.metaOrNull?.get("native_only_dialect") as? String
+        if (forExecution && dialect.name != "clickhouse" && expression.metaOrNull?.get("clickhouse_json_extract_raw") == true) {
+            throw UnsupportedError("ClickHouse JSONExtractRaw String results and missing-value semantics have no qualified cross-engine execution mapping")
+        }
         if (nativeDialect != null && nativeDialect != dialect.name) {
             throw UnsupportedError("${expression::class.simpleName} requires a $nativeDialect-specific translation")
         }

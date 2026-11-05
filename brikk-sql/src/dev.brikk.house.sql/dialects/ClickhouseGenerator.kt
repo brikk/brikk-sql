@@ -541,7 +541,7 @@ open class ClickhouseGenerator(
     override fun jsonpathsubscriptSql(expression: JSONPathSubscript): String {
         val this_ = jsonPathPart(expression.thisArg)
         val asInt = this_.toLongOrNull()
-        return if (asInt != null) (asInt + 1).toString() else this_
+        return if (asInt != null && asInt >= 0) (asInt + 1).toString() else this_
     }
 
     // sqlglot: ClickHouseGenerator.likeproperty_sql
@@ -1458,7 +1458,11 @@ open class ClickhouseGenerator(
             }
             reg(JSONCast::class) { e -> ch().jsonCastSql(e as JSONCast) }
             reg(JSONExtract::class) { e ->
-                ch().jsonExtractSegments(e, "JSONExtractString", quotedIndex = false)
+                if (sourceDialect?.equals("clickhouse", ignoreCase = true) != true &&
+                    e.metaOrNull?.get("clickhouse_json_extract_raw") != true) {
+                    unexecutable("ClickHouse raw JSON extraction result types and missing-value semantics have no qualified cross-engine execution mapping")
+                }
+                ch().jsonExtractSegments(e, "JSONExtractRaw", quotedIndex = false)
             }
             reg(JSONExtractScalar::class) { e ->
                 ch().jsonExtractSegments(e, "JSONExtractString", quotedIndex = false)
@@ -1610,11 +1614,12 @@ open class ClickhouseGenerator(
         val segments = mutableListOf<String>()
         for (segment in path.expressionsArg) {
             val seg = segment as? Expression ?: continue
-            val escape = seg.args["quoted"] == true
             var segSql = sql(seg)
-            if (segSql.isNotEmpty()) {
+            if (segSql.isNotEmpty() || seg is JSONPathKey && seg.thisArg == "") {
                 if (seg is JSONPathPart && (quotedIndex || seg !is JSONPathSubscript)) {
-                    if (escape) segSql = escapeStr(segSql)
+                    // JSONPathKey renders an unquoted native key, including keys built
+                    // from literal JSONExtractRaw/String arguments, not only JSONPath text.
+                    segSql = escapeStr(segSql)
                     segSql = "$quoteStart$segSql$quoteEnd"
                 }
                 segments.add(segSql)
