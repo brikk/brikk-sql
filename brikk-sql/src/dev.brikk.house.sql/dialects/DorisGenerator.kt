@@ -58,6 +58,16 @@ open class DorisGenerator(
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.DORIS
 
+    override fun matchSql(expression: Match): String {
+        if (expression.metaOrNull?.get("doris_full_text") != true && sourceDialect?.equals("doris", true) != true) {
+            unexecutable("Foreign MATCH semantics are not qualified as Doris full-text search")
+        }
+        val kind = expression.text("kind")
+        val predicate = binary(expression, if (kind.isEmpty()) "MATCH" else "MATCH_$kind")
+        val analyzer = sql(expression, "analyzer")
+        return if (analyzer.isEmpty()) predicate else "$predicate USING ANALYZER $analyzer"
+    }
+
     // Paired 484/4.1.5 probes: MySQL's null parseJsonName silently removed the
     // parser, turning CAST(JSON_PARSE(text) AS STRING) into CAST(text AS STRING).
     // Doris needs its actual parser for numeric rendering and invalid/JSON-null input.

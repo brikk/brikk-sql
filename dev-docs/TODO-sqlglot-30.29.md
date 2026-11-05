@@ -4,7 +4,8 @@ Status: Batches A and B approved, implemented and verified in worktree `sqlglot-
 2026-11-03. SG29-008 and SG29-009 are separately approved, implemented and verified,
 SG29-009 on 2026-11-04, including authorized commit/push of the accumulated branch.
 SG29-010 is separately approved, implemented and verified on 2026-11-04. The owner
-has now approved SG29-011 through SG29-013 in order, with commit/push between items.
+approved SG29-011 through SG29-013 in order, with commit/push between items; all
+three are now implemented and verified on 2026-11-05.
 Remaining items
 in Batches C through F remain proposed, not authorized. Publication and
 downstream adoption require their own authorization.
@@ -157,7 +158,7 @@ baseline explain the bounded drift. No global oracle refresh or release follows.
   sub-rounds. Strict DuckDB SHA384/512 generation also refuses algorithm loss.
   Five exact parity rows and three unsupported-size preview origins are reviewed;
   all other native origins and local dispositions are unchanged. Build, 2,549
-  JVM tests and 827 IntelliJ tests pass. SG29-011 is ready for its approved commit/push.
+  JVM tests and 827 IntelliJ tests pass. Committed/pushed as `9bc34f04`.
 
 ## Batch D: supported syntax and dialect features
 
@@ -171,11 +172,17 @@ baseline explain the bounded drift. No global oracle refresh or release follows.
   homogeneous INTEGER/MAX output typing and lineage. The exact optional Values
   schema suffix is separately gated without refreshing the frozen manifest.
   Build, 2,556 JVM tests and all 827 IntelliJ tests pass. Native audit and existing
-  baseline are unchanged. Ready for approved commit/push before SG29-013.
-- [ ] **SG29-013: Add Doris full-text operator support.** Review `f3a6eb95` and
+  baseline are unchanged. Committed/pushed as `aca9c090` before SG29-013 began.
+- [x] **SG29-013: Add Doris full-text operator support.** Review `f3a6eb95` and
   `a0cc28b9`. Our MATCH_ALL with a quoted analyzer rejects. Preserve operands,
   MATCH variants, negation, analyzer strings and implicit aliases. Native grammar
   and semantic evidence must bound support; refuse unsupported target mappings.
+  [Evidence](../vendor/data/sqlglot-sg29-013/README.md) includes 21 paired native
+  Doris 4.1.5 parsed plans, seven analyzed plans, pinned Boolean/nullability/opcode
+  contracts and eight outbound execution refusals. No backend rows, index/tokenizer
+  behavior or analyzer-catalog execution is claimed; the host guard remains intact.
+  Build, 2,562 JVM tests and 827 IntelliJ tests pass. Native coverage/baselines,
+  the global oracle pin and generated manifests remain unchanged.
 - [ ] **SG29-014: Reconcile StarRocks fixes and features.** First fix LIKE argument
   order, `f321207c`, and map literals, `fc1472a0`, both observed to change meaning
   in our probes. Then assess native TO_DAYS/DATEDIFF, hash-comment rules, PIVOT
@@ -245,12 +252,12 @@ separately approved. The owner subsequently approved SG29-011, SG29-012 and
 SG29-013 in order, with commit/push after each. Commit/push SG29-010 first to
 keep the new items separate. SG29-014 onward is not authorized.
 
-SG29-010 is complete. Next is **SG29-011**, PostgreSQL interval/date mappings,
-as separately verified sub-rounds, then SG29-012 and SG29-013. Stop after those
-three with results and the next recommendation.
+SG29-010 through SG29-013 are complete, with the three requested items validated
+and committed/pushed separately. Proposed next is **SG29-014**, StarRocks fixes
+and features, pending separate authorization. Seven items remain open.
 
 Implementation is isolated on branch/worktree `sqlglot-30-29-batch-a`. The
 planning request initially added this TODO and its index links; later approvals
-cover the implementation and evidence for SG29-001 through SG29-010. Earlier
+cover the implementation and evidence for SG29-001 through SG29-013. Earlier
 guides' uncommitted-status statements describe their original checkpoints.
 Publication, consumer adoption and PR creation remain unrequested.

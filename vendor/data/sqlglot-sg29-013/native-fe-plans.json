@@ -1,0 +1,604 @@
+{
+  "scope": "Private FE parser and semantic binding only. No backend result, index/tokenizer behavior, analyzer catalog availability or general target equivalence is claimed.",
+  "image": "apache/doris@sha256:e67f66e621d2d77be7d210b8cab4b1e62e89ff4a0bdaf894bf155fdb1fe441dc",
+  "version": {
+    "stdout": "fe_c02fff54_4d58_45bf_aa42_c090a52d7600\t127.0.0.1\t9010\t8030\t9030\t9020\t8070\tFOLLOWER\ttrue\t1684493694\ttrue\ttrue\t125\t2026-11-05 17:31:17\t2026-11-05 17:40:59\ttrue\t\tdoris-4.1.5-release-917b20be838\tYes\tNULL\n",
+    "stderr": "",
+    "returncode": 0
+  },
+  "host_vm_max_map_count": 1048576,
+  "backend_execution": false,
+  "kernel_setting_changed": false,
+  "observations": [
+    {
+      "level": "PARSED",
+      "sql": "SELECT * FROM t WHERE c MATCH ('word1 word2')",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Star(ilike=null,except_=null,replace=null,rename=null)],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Table(this=Identifier(this=t,quoted=false))),where=Where(this=Match(this=Column(this=Identifier(this=c,quoted=false)),expression=Paren(this=Literal(this=word1 word2,is_string=true)),kind=null,analyzer=null)))",
+      "preview": "SELECT * FROM t WHERE c MATCH ('word1 word2')",
+      "executable": "SELECT * FROM t WHERE c MATCH ('word1 word2')",
+      "original": {
+        "stdout": "UnboundResultSink[4] (  )\n+--LogicalProject[3] ( distinct=false, projects=[*] )\n   +--LogicalFilter[2] ( predicates=('c MATCH_ANY 'word1 word2') )\n      +--LogicalCheckPolicy (  )\n         +--UnboundRelation ( id=RelationId#0, nameParts=t )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "UnboundResultSink[4] (  )\n+--LogicalProject[3] ( distinct=false, projects=[*] )\n   +--LogicalFilter[2] ( predicates=('c MATCH_ANY 'word1 word2') )\n      +--LogicalCheckPolicy (  )\n         +--UnboundRelation ( id=RelationId#0, nameParts=t )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "normalized_plans_equal": true,
+      "classification": "FE plan/binding evidence, not backend value/index/analyzer execution"
+    },
+    {
+      "level": "PARSED",
+      "sql": "SELECT * FROM t WHERE c MATCH ('word1 word2') USING ANALYZER 'standard'",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Star(ilike=null,except_=null,replace=null,rename=null)],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Table(this=Identifier(this=t,quoted=false))),where=Where(this=Match(this=Column(this=Identifier(this=c,quoted=false)),expression=Paren(this=Literal(this=word1 word2,is_string=true)),kind=null,analyzer=Literal(this=standard,is_string=true))))",
+      "preview": "SELECT * FROM t WHERE c MATCH ('word1 word2') USING ANALYZER 'standard'",
+      "executable": "SELECT * FROM t WHERE c MATCH ('word1 word2') USING ANALYZER 'standard'",
+      "original": {
+        "stdout": "UnboundResultSink[4] (  )\n+--LogicalProject[3] ( distinct=false, projects=[*] )\n   +--LogicalFilter[2] ( predicates=('c MATCH_ANY 'word1 word2' USING ANALYZER standard) )\n      +--LogicalCheckPolicy (  )\n         +--UnboundRelation ( id=RelationId#0, nameParts=t )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "UnboundResultSink[4] (  )\n+--LogicalProject[3] ( distinct=false, projects=[*] )\n   +--LogicalFilter[2] ( predicates=('c MATCH_ANY 'word1 word2' USING ANALYZER standard) )\n      +--LogicalCheckPolicy (  )\n         +--UnboundRelation ( id=RelationId#0, nameParts=t )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "normalized_plans_equal": true,
+      "classification": "FE plan/binding evidence, not backend value/index/analyzer execution"
+    },
+    {
+      "level": "PARSED",
+      "sql": "SELECT * FROM t WHERE c MATCH_ANY ('word1 word2')",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Star(ilike=null,except_=null,replace=null,rename=null)],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Table(this=Identifier(this=t,quoted=false))),where=Where(this=Match(this=Column(this=Identifier(this=c,quoted=false)),expression=Paren(this=Literal(this=word1 word2,is_string=true)),kind=ANY,analyzer=null)))",
+      "preview": "SELECT * FROM t WHERE c MATCH_ANY ('word1 word2')",
+      "executable": "SELECT * FROM t WHERE c MATCH_ANY ('word1 word2')",
+      "original": {
+        "stdout": "UnboundResultSink[4] (  )\n+--LogicalProject[3] ( distinct=false, projects=[*] )\n   +--LogicalFilter[2] ( predicates=('c MATCH_ANY 'word1 word2') )\n      +--LogicalCheckPolicy (  )\n         +--UnboundRelation ( id=RelationId#0, nameParts=t )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "UnboundResultSink[4] (  )\n+--LogicalProject[3] ( distinct=false, projects=[*] )\n   +--LogicalFilter[2] ( predicates=('c MATCH_ANY 'word1 word2') )\n      +--LogicalCheckPolicy (  )\n         +--UnboundRelation ( id=RelationId#0, nameParts=t )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "normalized_plans_equal": true,
+      "classification": "FE plan/binding evidence, not backend value/index/analyzer execution"
+    },
+    {
+      "level": "PARSED",
+      "sql": "SELECT * FROM t WHERE c MATCH_ANY ('word1 word2') USING ANALYZER 'standard'",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Star(ilike=null,except_=null,replace=null,rename=null)],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Table(this=Identifier(this=t,quoted=false))),where=Where(this=Match(this=Column(this=Identifier(this=c,quoted=false)),expression=Paren(this=Literal(this=word1 word2,is_string=true)),kind=ANY,analyzer=Literal(this=standard,is_string=true))))",
+      "preview": "SELECT * FROM t WHERE c MATCH_ANY ('word1 word2') USING ANALYZER 'standard'",
+      "executable": "SELECT * FROM t WHERE c MATCH_ANY ('word1 word2') USING ANALYZER 'standard'",
+      "original": {
+        "stdout": "UnboundResultSink[4] (  )\n+--LogicalProject[3] ( distinct=false, projects=[*] )\n   +--LogicalFilter[2] ( predicates=('c MATCH_ANY 'word1 word2' USING ANALYZER standard) )\n      +--LogicalCheckPolicy (  )\n         +--UnboundRelation ( id=RelationId#0, nameParts=t )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "UnboundResultSink[4] (  )\n+--LogicalProject[3] ( distinct=false, projects=[*] )\n   +--LogicalFilter[2] ( predicates=('c MATCH_ANY 'word1 word2' USING ANALYZER standard) )\n      +--LogicalCheckPolicy (  )\n         +--UnboundRelation ( id=RelationId#0, nameParts=t )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "normalized_plans_equal": true,
+      "classification": "FE plan/binding evidence, not backend value/index/analyzer execution"
+    },
+    {
+      "level": "PARSED",
+      "sql": "SELECT * FROM t WHERE c MATCH_ALL ('word1 word2')",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Star(ilike=null,except_=null,replace=null,rename=null)],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Table(this=Identifier(this=t,quoted=false))),where=Where(this=Match(this=Column(this=Identifier(this=c,quoted=false)),expression=Paren(this=Literal(this=word1 word2,is_string=true)),kind=ALL,analyzer=null)))",
+      "preview": "SELECT * FROM t WHERE c MATCH_ALL ('word1 word2')",
+      "executable": "SELECT * FROM t WHERE c MATCH_ALL ('word1 word2')",
+      "original": {
+        "stdout": "UnboundResultSink[4] (  )\n+--LogicalProject[3] ( distinct=false, projects=[*] )\n   +--LogicalFilter[2] ( predicates=('c MATCH_ALL 'word1 word2') )\n      +--LogicalCheckPolicy (  )\n         +--UnboundRelation ( id=RelationId#0, nameParts=t )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "UnboundResultSink[4] (  )\n+--LogicalProject[3] ( distinct=false, projects=[*] )\n   +--LogicalFilter[2] ( predicates=('c MATCH_ALL 'word1 word2') )\n      +--LogicalCheckPolicy (  )\n         +--UnboundRelation ( id=RelationId#0, nameParts=t )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "normalized_plans_equal": true,
+      "classification": "FE plan/binding evidence, not backend value/index/analyzer execution"
+    },
+    {
+      "level": "PARSED",
+      "sql": "SELECT * FROM t WHERE c MATCH_ALL ('word1 word2') USING ANALYZER 'standard'",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Star(ilike=null,except_=null,replace=null,rename=null)],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Table(this=Identifier(this=t,quoted=false))),where=Where(this=Match(this=Column(this=Identifier(this=c,quoted=false)),expression=Paren(this=Literal(this=word1 word2,is_string=true)),kind=ALL,analyzer=Literal(this=standard,is_string=true))))",
+      "preview": "SELECT * FROM t WHERE c MATCH_ALL ('word1 word2') USING ANALYZER 'standard'",
+      "executable": "SELECT * FROM t WHERE c MATCH_ALL ('word1 word2') USING ANALYZER 'standard'",
+      "original": {
+        "stdout": "UnboundResultSink[4] (  )\n+--LogicalProject[3] ( distinct=false, projects=[*] )\n   +--LogicalFilter[2] ( predicates=('c MATCH_ALL 'word1 word2' USING ANALYZER standard) )\n      +--LogicalCheckPolicy (  )\n         +--UnboundRelation ( id=RelationId#0, nameParts=t )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "UnboundResultSink[4] (  )\n+--LogicalProject[3] ( distinct=false, projects=[*] )\n   +--LogicalFilter[2] ( predicates=('c MATCH_ALL 'word1 word2' USING ANALYZER standard) )\n      +--LogicalCheckPolicy (  )\n         +--UnboundRelation ( id=RelationId#0, nameParts=t )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "normalized_plans_equal": true,
+      "classification": "FE plan/binding evidence, not backend value/index/analyzer execution"
+    },
+    {
+      "level": "PARSED",
+      "sql": "SELECT * FROM t WHERE c MATCH_PHRASE ('word1 word2')",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Star(ilike=null,except_=null,replace=null,rename=null)],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Table(this=Identifier(this=t,quoted=false))),where=Where(this=Match(this=Column(this=Identifier(this=c,quoted=false)),expression=Paren(this=Literal(this=word1 word2,is_string=true)),kind=PHRASE,analyzer=null)))",
+      "preview": "SELECT * FROM t WHERE c MATCH_PHRASE ('word1 word2')",
+      "executable": "SELECT * FROM t WHERE c MATCH_PHRASE ('word1 word2')",
+      "original": {
+        "stdout": "UnboundResultSink[4] (  )\n+--LogicalProject[3] ( distinct=false, projects=[*] )\n   +--LogicalFilter[2] ( predicates=('c MATCH_PHRASE 'word1 word2') )\n      +--LogicalCheckPolicy (  )\n         +--UnboundRelation ( id=RelationId#0, nameParts=t )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "UnboundResultSink[4] (  )\n+--LogicalProject[3] ( distinct=false, projects=[*] )\n   +--LogicalFilter[2] ( predicates=('c MATCH_PHRASE 'word1 word2') )\n      +--LogicalCheckPolicy (  )\n         +--UnboundRelation ( id=RelationId#0, nameParts=t )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "normalized_plans_equal": true,
+      "classification": "FE plan/binding evidence, not backend value/index/analyzer execution"
+    },
+    {
+      "level": "PARSED",
+      "sql": "SELECT * FROM t WHERE c MATCH_PHRASE ('word1 word2') USING ANALYZER 'standard'",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Star(ilike=null,except_=null,replace=null,rename=null)],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Table(this=Identifier(this=t,quoted=false))),where=Where(this=Match(this=Column(this=Identifier(this=c,quoted=false)),expression=Paren(this=Literal(this=word1 word2,is_string=true)),kind=PHRASE,analyzer=Literal(this=standard,is_string=true))))",
+      "preview": "SELECT * FROM t WHERE c MATCH_PHRASE ('word1 word2') USING ANALYZER 'standard'",
+      "executable": "SELECT * FROM t WHERE c MATCH_PHRASE ('word1 word2') USING ANALYZER 'standard'",
+      "original": {
+        "stdout": "UnboundResultSink[4] (  )\n+--LogicalProject[3] ( distinct=false, projects=[*] )\n   +--LogicalFilter[2] ( predicates=('c MATCH_PHRASE 'word1 word2' USING ANALYZER standard) )\n      +--LogicalCheckPolicy (  )\n         +--UnboundRelation ( id=RelationId#0, nameParts=t )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "UnboundResultSink[4] (  )\n+--LogicalProject[3] ( distinct=false, projects=[*] )\n   +--LogicalFilter[2] ( predicates=('c MATCH_PHRASE 'word1 word2' USING ANALYZER standard) )\n      +--LogicalCheckPolicy (  )\n         +--UnboundRelation ( id=RelationId#0, nameParts=t )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "normalized_plans_equal": true,
+      "classification": "FE plan/binding evidence, not backend value/index/analyzer execution"
+    },
+    {
+      "level": "PARSED",
+      "sql": "SELECT * FROM t WHERE c MATCH_PHRASE_PREFIX ('word1 word2')",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Star(ilike=null,except_=null,replace=null,rename=null)],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Table(this=Identifier(this=t,quoted=false))),where=Where(this=Match(this=Column(this=Identifier(this=c,quoted=false)),expression=Paren(this=Literal(this=word1 word2,is_string=true)),kind=PHRASE_PREFIX,analyzer=null)))",
+      "preview": "SELECT * FROM t WHERE c MATCH_PHRASE_PREFIX ('word1 word2')",
+      "executable": "SELECT * FROM t WHERE c MATCH_PHRASE_PREFIX ('word1 word2')",
+      "original": {
+        "stdout": "UnboundResultSink[4] (  )\n+--LogicalProject[3] ( distinct=false, projects=[*] )\n   +--LogicalFilter[2] ( predicates=('c MATCH_PHRASE_PREFIX 'word1 word2') )\n      +--LogicalCheckPolicy (  )\n         +--UnboundRelation ( id=RelationId#0, nameParts=t )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "UnboundResultSink[4] (  )\n+--LogicalProject[3] ( distinct=false, projects=[*] )\n   +--LogicalFilter[2] ( predicates=('c MATCH_PHRASE_PREFIX 'word1 word2') )\n      +--LogicalCheckPolicy (  )\n         +--UnboundRelation ( id=RelationId#0, nameParts=t )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "normalized_plans_equal": true,
+      "classification": "FE plan/binding evidence, not backend value/index/analyzer execution"
+    },
+    {
+      "level": "PARSED",
+      "sql": "SELECT * FROM t WHERE c MATCH_PHRASE_PREFIX ('word1 word2') USING ANALYZER 'standard'",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Star(ilike=null,except_=null,replace=null,rename=null)],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Table(this=Identifier(this=t,quoted=false))),where=Where(this=Match(this=Column(this=Identifier(this=c,quoted=false)),expression=Paren(this=Literal(this=word1 word2,is_string=true)),kind=PHRASE_PREFIX,analyzer=Literal(this=standard,is_string=true))))",
+      "preview": "SELECT * FROM t WHERE c MATCH_PHRASE_PREFIX ('word1 word2') USING ANALYZER 'standard'",
+      "executable": "SELECT * FROM t WHERE c MATCH_PHRASE_PREFIX ('word1 word2') USING ANALYZER 'standard'",
+      "original": {
+        "stdout": "UnboundResultSink[4] (  )\n+--LogicalProject[3] ( distinct=false, projects=[*] )\n   +--LogicalFilter[2] ( predicates=('c MATCH_PHRASE_PREFIX 'word1 word2' USING ANALYZER standard) )\n      +--LogicalCheckPolicy (  )\n         +--UnboundRelation ( id=RelationId#0, nameParts=t )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "UnboundResultSink[4] (  )\n+--LogicalProject[3] ( distinct=false, projects=[*] )\n   +--LogicalFilter[2] ( predicates=('c MATCH_PHRASE_PREFIX 'word1 word2' USING ANALYZER standard) )\n      +--LogicalCheckPolicy (  )\n         +--UnboundRelation ( id=RelationId#0, nameParts=t )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "normalized_plans_equal": true,
+      "classification": "FE plan/binding evidence, not backend value/index/analyzer execution"
+    },
+    {
+      "level": "PARSED",
+      "sql": "SELECT * FROM t WHERE c MATCH_PHRASE_EDGE ('word1 word2')",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Star(ilike=null,except_=null,replace=null,rename=null)],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Table(this=Identifier(this=t,quoted=false))),where=Where(this=Match(this=Column(this=Identifier(this=c,quoted=false)),expression=Paren(this=Literal(this=word1 word2,is_string=true)),kind=PHRASE_EDGE,analyzer=null)))",
+      "preview": "SELECT * FROM t WHERE c MATCH_PHRASE_EDGE ('word1 word2')",
+      "executable": "SELECT * FROM t WHERE c MATCH_PHRASE_EDGE ('word1 word2')",
+      "original": {
+        "stdout": "UnboundResultSink[4] (  )\n+--LogicalProject[3] ( distinct=false, projects=[*] )\n   +--LogicalFilter[2] ( predicates=('c MATCH_PHRASE_EDGE 'word1 word2') )\n      +--LogicalCheckPolicy (  )\n         +--UnboundRelation ( id=RelationId#0, nameParts=t )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "UnboundResultSink[4] (  )\n+--LogicalProject[3] ( distinct=false, projects=[*] )\n   +--LogicalFilter[2] ( predicates=('c MATCH_PHRASE_EDGE 'word1 word2') )\n      +--LogicalCheckPolicy (  )\n         +--UnboundRelation ( id=RelationId#0, nameParts=t )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "normalized_plans_equal": true,
+      "classification": "FE plan/binding evidence, not backend value/index/analyzer execution"
+    },
+    {
+      "level": "PARSED",
+      "sql": "SELECT * FROM t WHERE c MATCH_PHRASE_EDGE ('word1 word2') USING ANALYZER 'standard'",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Star(ilike=null,except_=null,replace=null,rename=null)],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Table(this=Identifier(this=t,quoted=false))),where=Where(this=Match(this=Column(this=Identifier(this=c,quoted=false)),expression=Paren(this=Literal(this=word1 word2,is_string=true)),kind=PHRASE_EDGE,analyzer=Literal(this=standard,is_string=true))))",
+      "preview": "SELECT * FROM t WHERE c MATCH_PHRASE_EDGE ('word1 word2') USING ANALYZER 'standard'",
+      "executable": "SELECT * FROM t WHERE c MATCH_PHRASE_EDGE ('word1 word2') USING ANALYZER 'standard'",
+      "original": {
+        "stdout": "UnboundResultSink[4] (  )\n+--LogicalProject[3] ( distinct=false, projects=[*] )\n   +--LogicalFilter[2] ( predicates=('c MATCH_PHRASE_EDGE 'word1 word2' USING ANALYZER standard) )\n      +--LogicalCheckPolicy (  )\n         +--UnboundRelation ( id=RelationId#0, nameParts=t )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "UnboundResultSink[4] (  )\n+--LogicalProject[3] ( distinct=false, projects=[*] )\n   +--LogicalFilter[2] ( predicates=('c MATCH_PHRASE_EDGE 'word1 word2' USING ANALYZER standard) )\n      +--LogicalCheckPolicy (  )\n         +--UnboundRelation ( id=RelationId#0, nameParts=t )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "normalized_plans_equal": true,
+      "classification": "FE plan/binding evidence, not backend value/index/analyzer execution"
+    },
+    {
+      "level": "PARSED",
+      "sql": "SELECT * FROM t WHERE c MATCH_REGEXP ('word1 word2')",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Star(ilike=null,except_=null,replace=null,rename=null)],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Table(this=Identifier(this=t,quoted=false))),where=Where(this=Match(this=Column(this=Identifier(this=c,quoted=false)),expression=Paren(this=Literal(this=word1 word2,is_string=true)),kind=REGEXP,analyzer=null)))",
+      "preview": "SELECT * FROM t WHERE c MATCH_REGEXP ('word1 word2')",
+      "executable": "SELECT * FROM t WHERE c MATCH_REGEXP ('word1 word2')",
+      "original": {
+        "stdout": "UnboundResultSink[4] (  )\n+--LogicalProject[3] ( distinct=false, projects=[*] )\n   +--LogicalFilter[2] ( predicates=('c MATCH_REGEXP 'word1 word2') )\n      +--LogicalCheckPolicy (  )\n         +--UnboundRelation ( id=RelationId#0, nameParts=t )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "UnboundResultSink[4] (  )\n+--LogicalProject[3] ( distinct=false, projects=[*] )\n   +--LogicalFilter[2] ( predicates=('c MATCH_REGEXP 'word1 word2') )\n      +--LogicalCheckPolicy (  )\n         +--UnboundRelation ( id=RelationId#0, nameParts=t )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "normalized_plans_equal": true,
+      "classification": "FE plan/binding evidence, not backend value/index/analyzer execution"
+    },
+    {
+      "level": "PARSED",
+      "sql": "SELECT * FROM t WHERE c MATCH_REGEXP ('word1 word2') USING ANALYZER 'standard'",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Star(ilike=null,except_=null,replace=null,rename=null)],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Table(this=Identifier(this=t,quoted=false))),where=Where(this=Match(this=Column(this=Identifier(this=c,quoted=false)),expression=Paren(this=Literal(this=word1 word2,is_string=true)),kind=REGEXP,analyzer=Literal(this=standard,is_string=true))))",
+      "preview": "SELECT * FROM t WHERE c MATCH_REGEXP ('word1 word2') USING ANALYZER 'standard'",
+      "executable": "SELECT * FROM t WHERE c MATCH_REGEXP ('word1 word2') USING ANALYZER 'standard'",
+      "original": {
+        "stdout": "UnboundResultSink[4] (  )\n+--LogicalProject[3] ( distinct=false, projects=[*] )\n   +--LogicalFilter[2] ( predicates=('c MATCH_REGEXP 'word1 word2' USING ANALYZER standard) )\n      +--LogicalCheckPolicy (  )\n         +--UnboundRelation ( id=RelationId#0, nameParts=t )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "UnboundResultSink[4] (  )\n+--LogicalProject[3] ( distinct=false, projects=[*] )\n   +--LogicalFilter[2] ( predicates=('c MATCH_REGEXP 'word1 word2' USING ANALYZER standard) )\n      +--LogicalCheckPolicy (  )\n         +--UnboundRelation ( id=RelationId#0, nameParts=t )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "normalized_plans_equal": true,
+      "classification": "FE plan/binding evidence, not backend value/index/analyzer execution"
+    },
+    {
+      "level": "PARSED",
+      "sql": "SELECT c match_any FROM t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Column(this=Identifier(this=c,quoted=false)),alias=Identifier(this=match_any,quoted=false))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Table(this=Identifier(this=t,quoted=false))))",
+      "preview": "SELECT c AS `match_any` FROM t",
+      "executable": "SELECT c AS `match_any` FROM t",
+      "original": {
+        "stdout": "UnboundResultSink[3] (  )\n+--LogicalProject[2] ( distinct=false, projects=[UnboundAlias('c) AS match_any] )\n   +--LogicalCheckPolicy (  )\n      +--UnboundRelation ( id=RelationId#0, nameParts=t )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "UnboundResultSink[3] (  )\n+--LogicalProject[2] ( distinct=false, projects=[UnboundAlias('c) AS match_any] )\n   +--LogicalCheckPolicy (  )\n      +--UnboundRelation ( id=RelationId#0, nameParts=t )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "normalized_plans_equal": true,
+      "classification": "FE plan/binding evidence, not backend value/index/analyzer execution"
+    },
+    {
+      "level": "PARSED",
+      "sql": "SELECT c match_any",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Column(this=Identifier(this=c,quoted=false)),alias=Identifier(this=match_any,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT c AS `match_any`",
+      "executable": "SELECT c AS `match_any`",
+      "original": {
+        "stdout": "UnboundResultSink[2] (  )\n+--UnboundOneRowRelation ( relationId=RelationId#0, projects=[UnboundAlias('c) AS match_any] )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "UnboundResultSink[2] (  )\n+--UnboundOneRowRelation ( relationId=RelationId#0, projects=[UnboundAlias('c) AS match_any] )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "normalized_plans_equal": true,
+      "classification": "FE plan/binding evidence, not backend value/index/analyzer execution"
+    },
+    {
+      "level": "PARSED",
+      "sql": "SELECT c AS match_all FROM t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Column(this=Identifier(this=c,quoted=false)),alias=Identifier(this=match_all,quoted=false))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Table(this=Identifier(this=t,quoted=false))))",
+      "preview": "SELECT c AS `match_all` FROM t",
+      "executable": "SELECT c AS `match_all` FROM t",
+      "original": {
+        "stdout": "UnboundResultSink[3] (  )\n+--LogicalProject[2] ( distinct=false, projects=[UnboundAlias('c) AS match_all] )\n   +--LogicalCheckPolicy (  )\n      +--UnboundRelation ( id=RelationId#0, nameParts=t )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "UnboundResultSink[3] (  )\n+--LogicalProject[2] ( distinct=false, projects=[UnboundAlias('c) AS match_all] )\n   +--LogicalCheckPolicy (  )\n      +--UnboundRelation ( id=RelationId#0, nameParts=t )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "normalized_plans_equal": true,
+      "classification": "FE plan/binding evidence, not backend value/index/analyzer execution"
+    },
+    {
+      "level": "PARSED",
+      "sql": "SELECT * FROM t WHERE c NOT MATCH_ALL ('x') USING ANALYZER 'standard' AND d MATCH_ANY 'y' OR e = 1",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Star(ilike=null,except_=null,replace=null,rename=null)],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Table(this=Identifier(this=t,quoted=false))),where=Where(this=Or(this=And(this=Not(this=Match(this=Column(this=Identifier(this=c,quoted=false)),expression=Paren(this=Literal(this=x,is_string=true)),kind=ALL,analyzer=Literal(this=standard,is_string=true))),expression=Match(this=Column(this=Identifier(this=d,quoted=false)),expression=Literal(this=y,is_string=true),kind=ANY,analyzer=null)),expression=EQ(this=Column(this=Identifier(this=e,quoted=false)),expression=Literal(this=1,is_string=false)))))",
+      "preview": "SELECT * FROM t WHERE NOT c MATCH_ALL ('x') USING ANALYZER 'standard' AND d MATCH_ANY 'y' OR e = 1",
+      "executable": "SELECT * FROM t WHERE NOT c MATCH_ALL ('x') USING ANALYZER 'standard' AND d MATCH_ANY 'y' OR e = 1",
+      "original": {
+        "stdout": "UnboundResultSink[4] (  )\n+--LogicalProject[3] ( distinct=false, projects=[*] )\n   +--LogicalFilter[2] ( predicates=OR[AND[( not ('c MATCH_ALL 'x' USING ANALYZER standard)),('d MATCH_ANY 'y')],('e = 1)] )\n      +--LogicalCheckPolicy (  )\n         +--UnboundRelation ( id=RelationId#0, nameParts=t )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "UnboundResultSink[4] (  )\n+--LogicalProject[3] ( distinct=false, projects=[*] )\n   +--LogicalFilter[2] ( predicates=OR[AND[( not ('c MATCH_ALL 'x' USING ANALYZER standard)),('d MATCH_ANY 'y')],('e = 1)] )\n      +--LogicalCheckPolicy (  )\n         +--UnboundRelation ( id=RelationId#0, nameParts=t )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "normalized_plans_equal": true,
+      "classification": "FE plan/binding evidence, not backend value/index/analyzer execution"
+    },
+    {
+      "level": "PARSED",
+      "sql": "SELECT c MATCH_ANY terms AS found FROM t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Match(this=Column(this=Identifier(this=c,quoted=false)),expression=Column(this=Identifier(this=terms,quoted=false)),kind=ANY,analyzer=null),alias=Identifier(this=found,quoted=false))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Table(this=Identifier(this=t,quoted=false))))",
+      "preview": "SELECT c MATCH_ANY terms AS found FROM t",
+      "executable": "SELECT c MATCH_ANY terms AS found FROM t",
+      "original": {
+        "stdout": "UnboundResultSink[3] (  )\n+--LogicalProject[2] ( distinct=false, projects=[UnboundAlias(('c MATCH_ANY 'terms)) AS found] )\n   +--LogicalCheckPolicy (  )\n      +--UnboundRelation ( id=RelationId#0, nameParts=t )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "UnboundResultSink[3] (  )\n+--LogicalProject[2] ( distinct=false, projects=[UnboundAlias(('c MATCH_ANY 'terms)) AS found] )\n   +--LogicalCheckPolicy (  )\n      +--UnboundRelation ( id=RelationId#0, nameParts=t )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "normalized_plans_equal": true,
+      "classification": "FE plan/binding evidence, not backend value/index/analyzer execution"
+    },
+    {
+      "level": "PARSED",
+      "sql": "SELECT c MATCH_ALL CONCAT('a', 'b') AS found FROM t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Match(this=Column(this=Identifier(this=c,quoted=false)),expression=Concat(expressions=[Literal(this=a,is_string=true),Literal(this=b,is_string=true)],safe=true,coalesce=false),kind=ALL,analyzer=null),alias=Identifier(this=found,quoted=false))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Table(this=Identifier(this=t,quoted=false))))",
+      "preview": "SELECT c MATCH_ALL CONCAT('a', 'b') AS found FROM t",
+      "executable": "SELECT c MATCH_ALL CONCAT('a', 'b') AS found FROM t",
+      "original": {
+        "stdout": "UnboundResultSink[3] (  )\n+--LogicalProject[2] ( distinct=false, projects=[UnboundAlias(('c MATCH_ALL 'CONCAT('a', 'b'))) AS found] )\n   +--LogicalCheckPolicy (  )\n      +--UnboundRelation ( id=RelationId#0, nameParts=t )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "UnboundResultSink[3] (  )\n+--LogicalProject[2] ( distinct=false, projects=[UnboundAlias(('c MATCH_ALL 'CONCAT('a', 'b'))) AS found] )\n   +--LogicalCheckPolicy (  )\n      +--UnboundRelation ( id=RelationId#0, nameParts=t )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "normalized_plans_equal": true,
+      "classification": "FE plan/binding evidence, not backend value/index/analyzer execution"
+    },
+    {
+      "level": "PARSED",
+      "sql": "SELECT c MATCH_ANY 'x' USING ANALYZER `std_analyzer` AS found FROM t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Match(this=Column(this=Identifier(this=c,quoted=false)),expression=Literal(this=x,is_string=true),kind=ANY,analyzer=Identifier(this=std_analyzer,quoted=true)),alias=Identifier(this=found,quoted=false))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Table(this=Identifier(this=t,quoted=false))))",
+      "preview": "SELECT c MATCH_ANY 'x' USING ANALYZER `std_analyzer` AS found FROM t",
+      "executable": "SELECT c MATCH_ANY 'x' USING ANALYZER `std_analyzer` AS found FROM t",
+      "original": {
+        "stdout": "UnboundResultSink[3] (  )\n+--LogicalProject[2] ( distinct=false, projects=[UnboundAlias(('c MATCH_ANY 'x' USING ANALYZER std_analyzer)) AS found] )\n   +--LogicalCheckPolicy (  )\n      +--UnboundRelation ( id=RelationId#0, nameParts=t )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "UnboundResultSink[3] (  )\n+--LogicalProject[2] ( distinct=false, projects=[UnboundAlias(('c MATCH_ANY 'x' USING ANALYZER std_analyzer)) AS found] )\n   +--LogicalCheckPolicy (  )\n      +--UnboundRelation ( id=RelationId#0, nameParts=t )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "normalized_plans_equal": true,
+      "classification": "FE plan/binding evidence, not backend value/index/analyzer execution"
+    },
+    {
+      "level": "ANALYZED",
+      "sql": "SELECT c MATCH 'word' AS found FROM (SELECT CAST('word' AS STRING) AS c) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Match(this=Column(this=Identifier(this=c,quoted=false)),expression=Literal(this=word,is_string=true),kind=null,analyzer=null),alias=Identifier(this=found,quoted=false))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Cast(this=Literal(this=word,is_string=true),to=DataType(this=TEXT,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=c,quoted=false))],limit=null,exclude=null,operation_modifiers=null),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT c MATCH 'word' AS found FROM (SELECT CAST('word' AS STRING) AS c) AS t",
+      "executable": "SELECT c MATCH 'word' AS found FROM (SELECT CAST('word' AS STRING) AS c) AS t",
+      "original": {
+        "stdout": "LogicalResultSink[14] ( outputExprs=[found#2] )\n+--LogicalProject[13] ( distinct=false, projects=[(c#1 MATCH_ANY 'word') AS `found`#2] )\n   +--LogicalSubQueryAlias ( qualifier=[t] )\n      +--LogicalOneRowRelation ( projects=[cast('word' as TEXT) AS `c`#1] )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "LogicalResultSink[14] ( outputExprs=[found#2] )\n+--LogicalProject[13] ( distinct=false, projects=[(c#1 MATCH_ANY 'word') AS `found`#2] )\n   +--LogicalSubQueryAlias ( qualifier=[t] )\n      +--LogicalOneRowRelation ( projects=[cast('word' as TEXT) AS `c`#1] )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "normalized_plans_equal": true,
+      "classification": "FE plan/binding evidence, not backend value/index/analyzer execution"
+    },
+    {
+      "level": "ANALYZED",
+      "sql": "SELECT c MATCH_ANY 'word' AS found FROM (SELECT CAST('word' AS STRING) AS c) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Match(this=Column(this=Identifier(this=c,quoted=false)),expression=Literal(this=word,is_string=true),kind=ANY,analyzer=null),alias=Identifier(this=found,quoted=false))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Cast(this=Literal(this=word,is_string=true),to=DataType(this=TEXT,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=c,quoted=false))],limit=null,exclude=null,operation_modifiers=null),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT c MATCH_ANY 'word' AS found FROM (SELECT CAST('word' AS STRING) AS c) AS t",
+      "executable": "SELECT c MATCH_ANY 'word' AS found FROM (SELECT CAST('word' AS STRING) AS c) AS t",
+      "original": {
+        "stdout": "LogicalResultSink[14] ( outputExprs=[found#2] )\n+--LogicalProject[13] ( distinct=false, projects=[(c#1 MATCH_ANY 'word') AS `found`#2] )\n   +--LogicalSubQueryAlias ( qualifier=[t] )\n      +--LogicalOneRowRelation ( projects=[cast('word' as TEXT) AS `c`#1] )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "LogicalResultSink[14] ( outputExprs=[found#2] )\n+--LogicalProject[13] ( distinct=false, projects=[(c#1 MATCH_ANY 'word') AS `found`#2] )\n   +--LogicalSubQueryAlias ( qualifier=[t] )\n      +--LogicalOneRowRelation ( projects=[cast('word' as TEXT) AS `c`#1] )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "normalized_plans_equal": true,
+      "classification": "FE plan/binding evidence, not backend value/index/analyzer execution"
+    },
+    {
+      "level": "ANALYZED",
+      "sql": "SELECT c MATCH_ALL 'word' AS found FROM (SELECT CAST('word' AS STRING) AS c) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Match(this=Column(this=Identifier(this=c,quoted=false)),expression=Literal(this=word,is_string=true),kind=ALL,analyzer=null),alias=Identifier(this=found,quoted=false))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Cast(this=Literal(this=word,is_string=true),to=DataType(this=TEXT,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=c,quoted=false))],limit=null,exclude=null,operation_modifiers=null),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT c MATCH_ALL 'word' AS found FROM (SELECT CAST('word' AS STRING) AS c) AS t",
+      "executable": "SELECT c MATCH_ALL 'word' AS found FROM (SELECT CAST('word' AS STRING) AS c) AS t",
+      "original": {
+        "stdout": "LogicalResultSink[14] ( outputExprs=[found#2] )\n+--LogicalProject[13] ( distinct=false, projects=[(c#1 MATCH_ALL 'word') AS `found`#2] )\n   +--LogicalSubQueryAlias ( qualifier=[t] )\n      +--LogicalOneRowRelation ( projects=[cast('word' as TEXT) AS `c`#1] )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "LogicalResultSink[14] ( outputExprs=[found#2] )\n+--LogicalProject[13] ( distinct=false, projects=[(c#1 MATCH_ALL 'word') AS `found`#2] )\n   +--LogicalSubQueryAlias ( qualifier=[t] )\n      +--LogicalOneRowRelation ( projects=[cast('word' as TEXT) AS `c`#1] )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "normalized_plans_equal": true,
+      "classification": "FE plan/binding evidence, not backend value/index/analyzer execution"
+    },
+    {
+      "level": "ANALYZED",
+      "sql": "SELECT c MATCH_PHRASE 'word' AS found FROM (SELECT CAST('word' AS STRING) AS c) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Match(this=Column(this=Identifier(this=c,quoted=false)),expression=Literal(this=word,is_string=true),kind=PHRASE,analyzer=null),alias=Identifier(this=found,quoted=false))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Cast(this=Literal(this=word,is_string=true),to=DataType(this=TEXT,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=c,quoted=false))],limit=null,exclude=null,operation_modifiers=null),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT c MATCH_PHRASE 'word' AS found FROM (SELECT CAST('word' AS STRING) AS c) AS t",
+      "executable": "SELECT c MATCH_PHRASE 'word' AS found FROM (SELECT CAST('word' AS STRING) AS c) AS t",
+      "original": {
+        "stdout": "LogicalResultSink[14] ( outputExprs=[found#2] )\n+--LogicalProject[13] ( distinct=false, projects=[(c#1 MATCH_PHRASE 'word') AS `found`#2] )\n   +--LogicalSubQueryAlias ( qualifier=[t] )\n      +--LogicalOneRowRelation ( projects=[cast('word' as TEXT) AS `c`#1] )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "LogicalResultSink[14] ( outputExprs=[found#2] )\n+--LogicalProject[13] ( distinct=false, projects=[(c#1 MATCH_PHRASE 'word') AS `found`#2] )\n   +--LogicalSubQueryAlias ( qualifier=[t] )\n      +--LogicalOneRowRelation ( projects=[cast('word' as TEXT) AS `c`#1] )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "normalized_plans_equal": true,
+      "classification": "FE plan/binding evidence, not backend value/index/analyzer execution"
+    },
+    {
+      "level": "ANALYZED",
+      "sql": "SELECT c MATCH_PHRASE_PREFIX 'word' AS found FROM (SELECT CAST('word' AS STRING) AS c) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Match(this=Column(this=Identifier(this=c,quoted=false)),expression=Literal(this=word,is_string=true),kind=PHRASE_PREFIX,analyzer=null),alias=Identifier(this=found,quoted=false))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Cast(this=Literal(this=word,is_string=true),to=DataType(this=TEXT,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=c,quoted=false))],limit=null,exclude=null,operation_modifiers=null),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT c MATCH_PHRASE_PREFIX 'word' AS found FROM (SELECT CAST('word' AS STRING) AS c) AS t",
+      "executable": "SELECT c MATCH_PHRASE_PREFIX 'word' AS found FROM (SELECT CAST('word' AS STRING) AS c) AS t",
+      "original": {
+        "stdout": "LogicalResultSink[14] ( outputExprs=[found#2] )\n+--LogicalProject[13] ( distinct=false, projects=[(c#1 MATCH_PHRASE_PREFIX 'word') AS `found`#2] )\n   +--LogicalSubQueryAlias ( qualifier=[t] )\n      +--LogicalOneRowRelation ( projects=[cast('word' as TEXT) AS `c`#1] )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "LogicalResultSink[14] ( outputExprs=[found#2] )\n+--LogicalProject[13] ( distinct=false, projects=[(c#1 MATCH_PHRASE_PREFIX 'word') AS `found`#2] )\n   +--LogicalSubQueryAlias ( qualifier=[t] )\n      +--LogicalOneRowRelation ( projects=[cast('word' as TEXT) AS `c`#1] )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "normalized_plans_equal": true,
+      "classification": "FE plan/binding evidence, not backend value/index/analyzer execution"
+    },
+    {
+      "level": "ANALYZED",
+      "sql": "SELECT c MATCH_PHRASE_EDGE 'word' AS found FROM (SELECT CAST('word' AS STRING) AS c) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Match(this=Column(this=Identifier(this=c,quoted=false)),expression=Literal(this=word,is_string=true),kind=PHRASE_EDGE,analyzer=null),alias=Identifier(this=found,quoted=false))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Cast(this=Literal(this=word,is_string=true),to=DataType(this=TEXT,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=c,quoted=false))],limit=null,exclude=null,operation_modifiers=null),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT c MATCH_PHRASE_EDGE 'word' AS found FROM (SELECT CAST('word' AS STRING) AS c) AS t",
+      "executable": "SELECT c MATCH_PHRASE_EDGE 'word' AS found FROM (SELECT CAST('word' AS STRING) AS c) AS t",
+      "original": {
+        "stdout": "LogicalResultSink[14] ( outputExprs=[found#2] )\n+--LogicalProject[13] ( distinct=false, projects=[(c#1 MATCH_PHRASE_EDGE 'word') AS `found`#2] )\n   +--LogicalSubQueryAlias ( qualifier=[t] )\n      +--LogicalOneRowRelation ( projects=[cast('word' as TEXT) AS `c`#1] )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "LogicalResultSink[14] ( outputExprs=[found#2] )\n+--LogicalProject[13] ( distinct=false, projects=[(c#1 MATCH_PHRASE_EDGE 'word') AS `found`#2] )\n   +--LogicalSubQueryAlias ( qualifier=[t] )\n      +--LogicalOneRowRelation ( projects=[cast('word' as TEXT) AS `c`#1] )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "normalized_plans_equal": true,
+      "classification": "FE plan/binding evidence, not backend value/index/analyzer execution"
+    },
+    {
+      "level": "ANALYZED",
+      "sql": "SELECT c MATCH_REGEXP 'word' AS found FROM (SELECT CAST('word' AS STRING) AS c) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Match(this=Column(this=Identifier(this=c,quoted=false)),expression=Literal(this=word,is_string=true),kind=REGEXP,analyzer=null),alias=Identifier(this=found,quoted=false))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Cast(this=Literal(this=word,is_string=true),to=DataType(this=TEXT,expressions=null,nested=false),format=null,safe=null,action=null,default=null),alias=Identifier(this=c,quoted=false))],limit=null,exclude=null,operation_modifiers=null),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT c MATCH_REGEXP 'word' AS found FROM (SELECT CAST('word' AS STRING) AS c) AS t",
+      "executable": "SELECT c MATCH_REGEXP 'word' AS found FROM (SELECT CAST('word' AS STRING) AS c) AS t",
+      "original": {
+        "stdout": "LogicalResultSink[14] ( outputExprs=[found#2] )\n+--LogicalProject[13] ( distinct=false, projects=[(c#1 MATCH_REGEXP 'word') AS `found`#2] )\n   +--LogicalSubQueryAlias ( qualifier=[t] )\n      +--LogicalOneRowRelation ( projects=[cast('word' as TEXT) AS `c`#1] )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "LogicalResultSink[14] ( outputExprs=[found#2] )\n+--LogicalProject[13] ( distinct=false, projects=[(c#1 MATCH_REGEXP 'word') AS `found`#2] )\n   +--LogicalSubQueryAlias ( qualifier=[t] )\n      +--LogicalOneRowRelation ( projects=[cast('word' as TEXT) AS `c`#1] )\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "normalized_plans_equal": true,
+      "classification": "FE plan/binding evidence, not backend value/index/analyzer execution"
+    }
+  ],
+  "outbound_refusals": [
+    {
+      "source": "doris",
+      "target": "mysql",
+      "sql": "SELECT c MATCH_ALL 'word' USING ANALYZER 'standard' FROM t",
+      "preview": "SELECT c MATCH 'word' FROM t",
+      "status": "unsupported: Doris full-text MATCH variants/analyzers have no qualified execution mapping in mysql"
+    },
+    {
+      "source": "doris",
+      "target": "starrocks",
+      "sql": "SELECT c MATCH_ALL 'word' USING ANALYZER 'standard' FROM t",
+      "preview": "SELECT c MATCH 'word' FROM t",
+      "status": "unsupported: Doris full-text MATCH variants/analyzers have no qualified execution mapping in starrocks"
+    },
+    {
+      "source": "doris",
+      "target": "postgres",
+      "sql": "SELECT c MATCH_ALL 'word' USING ANALYZER 'standard' FROM t",
+      "preview": "SELECT c MATCH 'word' FROM t",
+      "status": "unsupported: Doris full-text MATCH variants/analyzers have no qualified execution mapping in postgres"
+    },
+    {
+      "source": "doris",
+      "target": "duckdb",
+      "sql": "SELECT c MATCH_ALL 'word' USING ANALYZER 'standard' FROM t",
+      "preview": "SELECT c MATCH 'word' FROM t",
+      "status": "unsupported: Doris full-text MATCH variants/analyzers have no qualified execution mapping in duckdb"
+    },
+    {
+      "source": "doris",
+      "target": "trino",
+      "sql": "SELECT c MATCH_ALL 'word' USING ANALYZER 'standard' FROM t",
+      "preview": "SELECT c MATCH 'word' FROM t",
+      "status": "unsupported: Doris full-text MATCH variants/analyzers have no qualified execution mapping in trino"
+    },
+    {
+      "source": "doris",
+      "target": "clickhouse",
+      "sql": "SELECT c MATCH_ALL 'word' USING ANALYZER 'standard' FROM t",
+      "preview": "SELECT c MATCH 'word' FROM t",
+      "status": "unsupported: Doris full-text MATCH variants/analyzers have no qualified execution mapping in clickhouse"
+    },
+    {
+      "source": "doris",
+      "target": "bigquery",
+      "sql": "SELECT c MATCH_ALL 'word' USING ANALYZER 'standard' FROM t",
+      "preview": "SELECT c MATCH 'word' FROM t",
+      "status": "unsupported: Doris full-text MATCH variants/analyzers have no qualified execution mapping in bigquery"
+    },
+    {
+      "source": "doris",
+      "target": "spark",
+      "sql": "SELECT c MATCH_ALL 'word' USING ANALYZER 'standard' FROM t",
+      "preview": "SELECT c MATCH 'word' FROM t",
+      "status": "unsupported: Doris full-text MATCH variants/analyzers have no qualified execution mapping in spark"
+    }
+  ]
+}

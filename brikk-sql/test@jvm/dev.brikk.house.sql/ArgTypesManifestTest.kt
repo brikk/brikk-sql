@@ -56,6 +56,11 @@ class ArgTypesManifestTest {
                 assertEquals(listOf("expressions" to true, "alias" to false, "order" to false,
                     "limit" to false, "offset" to false), expected, "Reconcile SG29-012 schema extension with the new pin")
                 expected = expected + ("pivots" to false)
+            } else if (name == "Match") {
+                // SG29-013/#8585: exact optional suffix, not a global schema refresh.
+                assertEquals(listOf("this" to true, "expression" to true), expected,
+                    "Reconcile SG29-013 schema extension with the new pin")
+                expected = expected + listOf("kind" to false, "analyzer" to false)
             }
             val actual = node.argTypes.entries.map { (k, v) -> k to v }
             if (expected != actual) {

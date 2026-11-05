@@ -351,7 +351,14 @@ class Glob(initArgs: Args = emptyMap()) : Binary(initArgs), Predicate
 class Kwarg(initArgs: Args = emptyMap()) : Binary(initArgs)
 
 // sqlglot: core.Match(Expression, Binary, Predicate)
-class Match(initArgs: Args = emptyMap()) : Binary(initArgs), Predicate
+class Match(initArgs: Args = emptyMap()) : Binary(initArgs), Predicate {
+    // Bounded SG29-013/#8585 schema port; both legacy constructors are unchanged.
+    override val argTypes get() = ARG_TYPES
+    companion object {
+        private val ARG_TYPES = argTypesOf("this" to true, "expression" to true,
+            "kind" to false, "analyzer" to false)
+    }
+}
 
 // sqlglot: core.NestedJSONSelect(Expression, Binary)
 class NestedJSONSelect(initArgs: Args = emptyMap()) : Binary(initArgs)

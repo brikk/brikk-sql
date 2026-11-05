@@ -4146,6 +4146,14 @@ open class Generator(
     // sqlglot: Generator.not_sql
     open fun notSql(expression: Not): String = "NOT ${sql(expression, "this")}"
 
+    open fun matchSql(expression: Match): String {
+        if (expression.args["kind"] != null || expression.args["analyzer"] != null ||
+            expression.metaOrNull?.get("doris_full_text") == true) {
+            unexecutable("Doris full-text MATCH variants/analyzers have no qualified execution mapping in $targetName")
+        }
+        return binary(expression, "MATCH")
+    }
+
     // sqlglot: Generator.alias_sql
     open fun aliasSql(expression: Alias): String {
         var alias = sql(expression, "alias")
