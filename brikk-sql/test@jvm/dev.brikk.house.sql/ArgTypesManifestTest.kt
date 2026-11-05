@@ -47,8 +47,16 @@ class ArgTypesManifestTest {
                 continue
             }
 
-            val expected = obj.getValue("arg_types").jsonObject
+            var expected = obj.getValue("arg_types").jsonObject
                 .entries.map { (k, v) -> k to v.jsonPrimitive.boolean }
+            if (name == "Values") {
+                // SG29-012/#8876 bounded optional schema port, not a manifest refresh.
+                // Keep checking the entire frozen base and the exact appended shape;
+                // fail on a later oracle refresh so this disposition must be reconciled.
+                assertEquals(listOf("expressions" to true, "alias" to false, "order" to false,
+                    "limit" to false, "offset" to false), expected, "Reconcile SG29-012 schema extension with the new pin")
+                expected = expected + ("pivots" to false)
+            }
             val actual = node.argTypes.entries.map { (k, v) -> k to v }
             if (expected != actual) {
                 failures.add("$name:\n  expected ${expected.toMap()}\n  actual   ${actual.toMap()}")

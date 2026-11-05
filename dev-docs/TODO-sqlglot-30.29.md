@@ -161,11 +161,17 @@ baseline explain the bounded drift. No global oracle refresh or release follows.
 
 ## Batch D: supported syntax and dialect features
 
-- [ ] **SG29-012: Support PIVOT after VALUES.** Port
+- [x] **SG29-012: Support PIVOT after VALUES.** Port
   [#8876](https://github.com/tobymao/sqlglot/pull/8876), `90659e63`.
   Our DuckDB probe rejects this form. Cover alias lists, pivot output columns,
   scope/type/lineage, serialization and targets that lower VALUES to SELECT/UNION.
   Preserve VALUES ORDER/LIMIT/OFFSET when wrapping or lowering.
+  [Evidence](../vendor/data/sqlglot-sg29-012/README.md) includes native DuckDB
+  and forced SELECT/UNION lowering controls, proper pivot-result qualification,
+  homogeneous INTEGER/MAX output typing and lineage. The exact optional Values
+  schema suffix is separately gated without refreshing the frozen manifest.
+  Build, 2,556 JVM tests and all 827 IntelliJ tests pass. Native audit and existing
+  baseline are unchanged. Ready for approved commit/push before SG29-013.
 - [ ] **SG29-013: Add Doris full-text operator support.** Review `f3a6eb95` and
   `a0cc28b9`. Our MATCH_ALL with a quoted analyzer rejects. Preserve operands,
   MATCH variants, negation, analyzer strings and implicit aliases. Native grammar

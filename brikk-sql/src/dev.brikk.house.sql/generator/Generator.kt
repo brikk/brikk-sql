@@ -2654,12 +2654,15 @@ open class Generator(
             val argsSql = expressions(expression)
             val alias = sql(expression, "alias")
             var values = "VALUES${seg("")}$argsSql"
+            // VALUES-local pagination belongs inside the derived relation, before
+            // its alias and PIVOT. It must not become outer SELECT pagination.
+            values = queryModifiers(expression, values)
             values = if (
                 wrapDerivedValues &&
                 (alias.isNotEmpty() || expression.parent is From || expression.parent is Table)
             ) "($values)" else values
-            values = queryModifiers(expression, values)
-            return if (alias.isNotEmpty()) "$values AS $alias" else values
+            val pivots = expressions(expression, key = "pivots", sep = "", flat = true)
+            return (if (alias.isNotEmpty()) "$values AS $alias" else values) + pivots
         }
 
         // Converts `VALUES...` expression into a series of select unions.
@@ -2668,10 +2671,13 @@ open class Generator(
 
         val selects = mutableListOf<Expression>()
         for ((i, tup) in expression.expressionsArg.withIndex()) {
-            var row = (tup as Tuple).expressionsArg
+            var row = (tup as Tuple).expressionsArg.map { (it as Expression).copy() }
             if (i == 0 && columnNames.isNotEmpty()) {
-                row = row.zip(columnNames) { value, columnName ->
-                    Alias(args("this" to value, "alias" to columnName))
+                if (row.size != columnNames.size) {
+                    unexecutable("VALUES-to-SELECT lowering requires a complete matching alias column list")
+                }
+                row = row.mapIndexed { index, value ->
+                    columnNames.getOrNull(index)?.let { Alias(args("this" to value, "alias" to (it as Expression).copy())) } ?: value
                 }
             }
             selects.add(Select(args("expressions" to row)))
@@ -2679,7 +2685,8 @@ open class Generator(
 
         val alias = if (aliasNode != null) " AS ${sql(aliasNode, "this")}" else ""
         val unions = selects.joinToString(" UNION ALL ") { sql(it) }
-        return "($unions)$alias"
+        val pivots = expressions(expression, key = "pivots", sep = "", flat = true)
+        return "(${queryModifiers(expression, unions)})$alias$pivots"
     }
 
     // sqlglot: Generator.var_sql

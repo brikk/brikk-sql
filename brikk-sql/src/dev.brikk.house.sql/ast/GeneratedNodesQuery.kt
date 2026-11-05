@@ -964,6 +964,8 @@ class Values(initArgs: Args = emptyMap()) : Expression(initArgs), UDTF {
         private val ARG_TYPES = argTypesOf(
             "expressions" to true, "alias" to false, "order" to false, "limit" to false,
             "offset" to false,
+            // Bounded SG29-012/#8876 schema addition; constructor/JVM shape unchanged.
+            "pivots" to false,
         )
     }
 }

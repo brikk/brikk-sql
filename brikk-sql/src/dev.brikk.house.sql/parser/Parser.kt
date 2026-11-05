@@ -2945,7 +2945,10 @@ open class Parser(
         if (unnest != null) return unnest
 
         val values = parseDerivedTableValues()
-        if (values != null) return values
+        if (values != null) {
+            values.set("pivots", parsePivots())
+            return values
+        }
 
         val subquery = parseSelect(table = true, consumePipe = consumePipe)
         if (subquery != null) {

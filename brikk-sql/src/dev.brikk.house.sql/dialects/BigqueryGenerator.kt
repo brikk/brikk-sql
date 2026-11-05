@@ -207,6 +207,10 @@ open class BigqueryGenerator(
 
     // sqlglot: generators.bigquery._derived_table_values_to_unnest
     override fun valuesSql(expression: Values, valuesAsTableParam: Boolean): String {
+        if ((expression.args["pivots"] as? List<*>)?.isNotEmpty() == true) {
+            unexecutable("BigQuery VALUES-to-UNNEST with PIVOT is not qualified; pivot must not disappear")
+            return super.valuesSql(expression, valuesAsTableParam)
+        }
         if (expression.findAncestor(From::class, Join::class) == null) {
             return super.valuesSql(expression, valuesAsTableParam)
         }

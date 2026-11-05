@@ -622,6 +622,14 @@ class TypeAnnotator(
         }
 
         // Iterate through all the expressions of the current scope in post-order, and annotate
+        if (scope.expression is dev.brikk.house.sql.ast.Values &&
+            !(scope.expression.args["pivots"] as? List<*>).isNullOrEmpty()) {
+            // SG29-012: pivot operands may resolve through this VALUES scope. Infer
+            // row cells before a pivot lookup caches their source-column types.
+            for (row in scope.expression.expressionsArg.filterIsInstance<Expression>()) {
+                annotateExpression(row, scope)
+            }
+        }
         annotateExpression(scope.expression, scope)
         fixupOrderByAliases(scope)
         // Cache reconciled types before NULL placeholders become dialect defaults.
