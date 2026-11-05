@@ -9466,7 +9466,7 @@ open class Parser(
                 }
 
                 val currentThis = current.args["this"]
-                if (currentThis is Column) {
+                if (!parseMap && currentThis is Column) {
                     currentThis.replace(currentThis.args["this"])
                 }
             } else {

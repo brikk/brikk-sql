@@ -30,6 +30,8 @@ import dev.brikk.house.sql.ast.PercentileDisc
 import dev.brikk.house.sql.ast.Pivot
 import dev.brikk.house.sql.ast.PivotAlias
 import dev.brikk.house.sql.ast.Predicate
+import dev.brikk.house.sql.ast.Struct
+import dev.brikk.house.sql.ast.PropertyEQ
 import dev.brikk.house.sql.ast.Query
 import dev.brikk.house.sql.ast.Select
 import dev.brikk.house.sql.ast.SetOperation
@@ -1907,6 +1909,26 @@ class TypeAnnotator(
     private fun annotateToMap(expression: Expression): Expression {
         val mapType = DataType(args("this" to DType.MAP))
         val arg = expression.thisArg as Expression
+        if (expression.metaOrNull?.get("starrocks_map_literal") == true && arg is Struct) {
+            // A native MAP{expr:value} key is not a VARCHAR struct-field name.
+            // Bind only homogeneous known types, leaving mixed/unknown domains
+            // conservative instead of claiming a general coercion policy.
+            val entries = arg.expressionsArg.filterIsInstance<PropertyEQ>()
+            fun homogeneous(values: List<Expression?>): DataType? {
+                if (values.isEmpty()) return null
+                val types = values.map { it?.type as? DataType }
+                if (types.any { it == null || it.isType(DType.UNKNOWN) }) return null
+                val concrete = types.filterNotNull().filterNot { it.isType(DType.NULL) }
+                return concrete.firstOrNull()?.takeIf { first -> concrete.all { it == first } }?.copy() as? DataType
+            }
+            val keys = homogeneous(entries.map { it.thisArg as? Expression })
+            val values = homogeneous(entries.map { it.expressionArg as? Expression })
+            if (entries.size == arg.expressionsArg.size && keys != null && values != null) {
+                mapType.set("expressions", listOf(keys, values)); mapType.set("nested", true)
+            }
+            setType(expression, mapType)
+            return expression
+        }
         if (arg.isType(DType.STRUCT)) {
             for (coldef in (arg.type as DataType).expressionsArg.filterIsInstance<Expression>()) {
                 val kind = coldef.args["kind"]

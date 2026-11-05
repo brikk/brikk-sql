@@ -1,0 +1,568 @@
+{
+  "scope": "Finite native StarRocks LIKE/map original/generated value and type witnesses, not general map coercion or cross-engine null/duplicate semantics.",
+  "image": "starrocks/allin1-ubuntu@sha256:5c0a65390daa18ea5db9251f4bed2c6d9cdba174363fb289b58af180ea680a14",
+  "version": {
+    "stdout": "4.1.4-4a9848e\tONLY_FULL_GROUP_BY\n",
+    "stderr": "",
+    "returncode": 0
+  },
+  "observations": [
+    {
+      "case": "like",
+      "sql": "SELECT LIKE('xyz','x%') AS v, TYPEOF(LIKE('xyz','x%')) AS engine_type",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Like(this=Literal(this=xyz,is_string=true),expression=Literal(this=x%,is_string=true)),alias=Identifier(this=v,quoted=false)),Alias(this=Typeof(this=Like(this=Literal(this=xyz,is_string=true),expression=Literal(this=x%,is_string=true))),alias=Identifier(this=engine_type,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT 'xyz' LIKE 'x%' AS v, TYPEOF('xyz' LIKE 'x%') AS engine_type",
+      "executable": "SELECT 'xyz' LIKE 'x%' AS v, TYPEOF('xyz' LIKE 'x%') AS engine_type",
+      "original": {
+        "stdout": "1\tboolean\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "1\tboolean\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT LIKE('xyz','x%') AS v, TYPEOF(LIKE('xyz','x%')) AS engine_type\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     1\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\nField   2:  `engine_type`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 7\nDecimals:   0\nFlags:      \n\n\n+------+-------------+\n| v    | engine_type |\n+------+-------------+\n|    1 | boolean     |\n+------+-------------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT 'xyz' LIKE 'x%' AS v, TYPEOF('xyz' LIKE 'x%') AS engine_type\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     1\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\nField   2:  `engine_type`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 7\nDecimals:   0\nFlags:      \n\n\n+------+-------------+\n| v    | engine_type |\n+------+-------------+\n|    1 | boolean     |\n+------+-------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "case": "like-reverse",
+      "sql": "SELECT LIKE('x%','xyz') AS v, TYPEOF(LIKE('x%','xyz')) AS engine_type",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Like(this=Literal(this=x%,is_string=true),expression=Literal(this=xyz,is_string=true)),alias=Identifier(this=v,quoted=false)),Alias(this=Typeof(this=Like(this=Literal(this=x%,is_string=true),expression=Literal(this=xyz,is_string=true))),alias=Identifier(this=engine_type,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT 'x%' LIKE 'xyz' AS v, TYPEOF('x%' LIKE 'xyz') AS engine_type",
+      "executable": "SELECT 'x%' LIKE 'xyz' AS v, TYPEOF('x%' LIKE 'xyz') AS engine_type",
+      "original": {
+        "stdout": "0\tboolean\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "0\tboolean\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT LIKE('x%','xyz') AS v, TYPEOF(LIKE('x%','xyz')) AS engine_type\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     1\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\nField   2:  `engine_type`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 7\nDecimals:   0\nFlags:      \n\n\n+------+-------------+\n| v    | engine_type |\n+------+-------------+\n|    0 | boolean     |\n+------+-------------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT 'x%' LIKE 'xyz' AS v, TYPEOF('x%' LIKE 'xyz') AS engine_type\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     1\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\nField   2:  `engine_type`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 7\nDecimals:   0\nFlags:      \n\n\n+------+-------------+\n| v    | engine_type |\n+------+-------------+\n|    0 | boolean     |\n+------+-------------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "case": "like-null",
+      "sql": "SELECT LIKE(NULL,'x%') AS v, TYPEOF(LIKE(NULL,'x%')) AS engine_type",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Like(this=Null(),expression=Literal(this=x%,is_string=true)),alias=Identifier(this=v,quoted=false)),Alias(this=Typeof(this=Like(this=Null(),expression=Literal(this=x%,is_string=true))),alias=Identifier(this=engine_type,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT NULL LIKE 'x%' AS v, TYPEOF(NULL LIKE 'x%') AS engine_type",
+      "executable": "SELECT NULL LIKE 'x%' AS v, TYPEOF(NULL LIKE 'x%') AS engine_type",
+      "original": {
+        "stdout": "NULL\tboolean\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "NULL\tboolean\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT LIKE(NULL,'x%') AS v, TYPEOF(LIKE(NULL,'x%')) AS engine_type\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     1\nMax_length: 0\nDecimals:   0\nFlags:      NUM \n\nField   2:  `engine_type`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 7\nDecimals:   0\nFlags:      \n\n\n+------+-------------+\n| v    | engine_type |\n+------+-------------+\n| NULL | boolean     |\n+------+-------------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT NULL LIKE 'x%' AS v, TYPEOF(NULL LIKE 'x%') AS engine_type\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     1\nMax_length: 0\nDecimals:   0\nFlags:      NUM \n\nField   2:  `engine_type`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 7\nDecimals:   0\nFlags:      \n\n\n+------+-------------+\n| v    | engine_type |\n+------+-------------+\n| NULL | boolean     |\n+------+-------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "case": "like-null-pattern",
+      "sql": "SELECT LIKE('xyz',NULL) AS v, TYPEOF(LIKE('xyz',NULL)) AS engine_type",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Like(this=Literal(this=xyz,is_string=true),expression=Null()),alias=Identifier(this=v,quoted=false)),Alias(this=Typeof(this=Like(this=Literal(this=xyz,is_string=true),expression=Null())),alias=Identifier(this=engine_type,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT 'xyz' LIKE NULL AS v, TYPEOF('xyz' LIKE NULL) AS engine_type",
+      "executable": "SELECT 'xyz' LIKE NULL AS v, TYPEOF('xyz' LIKE NULL) AS engine_type",
+      "original": {
+        "stdout": "NULL\tboolean\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "NULL\tboolean\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT LIKE('xyz',NULL) AS v, TYPEOF(LIKE('xyz',NULL)) AS engine_type\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     1\nMax_length: 0\nDecimals:   0\nFlags:      NUM \n\nField   2:  `engine_type`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 7\nDecimals:   0\nFlags:      \n\n\n+------+-------------+\n| v    | engine_type |\n+------+-------------+\n| NULL | boolean     |\n+------+-------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT 'xyz' LIKE NULL AS v, TYPEOF('xyz' LIKE NULL) AS engine_type\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     1\nMax_length: 0\nDecimals:   0\nFlags:      NUM \n\nField   2:  `engine_type`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 7\nDecimals:   0\nFlags:      \n\n\n+------+-------------+\n| v    | engine_type |\n+------+-------------+\n| NULL | boolean     |\n+------+-------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "case": "like-empty",
+      "sql": "SELECT LIKE('','') AS v, TYPEOF(LIKE('','')) AS engine_type",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Like(this=Literal(this=,is_string=true),expression=Literal(this=,is_string=true)),alias=Identifier(this=v,quoted=false)),Alias(this=Typeof(this=Like(this=Literal(this=,is_string=true),expression=Literal(this=,is_string=true))),alias=Identifier(this=engine_type,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT '' LIKE '' AS v, TYPEOF('' LIKE '') AS engine_type",
+      "executable": "SELECT '' LIKE '' AS v, TYPEOF('' LIKE '') AS engine_type",
+      "original": {
+        "stdout": "1\tboolean\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "1\tboolean\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT LIKE('','') AS v, TYPEOF(LIKE('','')) AS engine_type\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     1\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\nField   2:  `engine_type`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 7\nDecimals:   0\nFlags:      \n\n\n+------+-------------+\n| v    | engine_type |\n+------+-------------+\n|    1 | boolean     |\n+------+-------------+\n1 row in set (0.02 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT '' LIKE '' AS v, TYPEOF('' LIKE '') AS engine_type\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     1\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\nField   2:  `engine_type`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 7\nDecimals:   0\nFlags:      \n\n\n+------+-------------+\n| v    | engine_type |\n+------+-------------+\n|    1 | boolean     |\n+------+-------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "case": "like-columns",
+      "sql": "SELECT LIKE(t.value,t.pattern) AS v, TYPEOF(LIKE(t.value,t.pattern)) AS engine_type FROM (SELECT 'xyz' value,'x%' pattern) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Like(this=Column(this=Identifier(this=value,quoted=false),table=Identifier(this=t,quoted=false)),expression=Column(this=Identifier(this=pattern,quoted=false),table=Identifier(this=t,quoted=false))),alias=Identifier(this=v,quoted=false)),Alias(this=Typeof(this=Like(this=Column(this=Identifier(this=value,quoted=false),table=Identifier(this=t,quoted=false)),expression=Column(this=Identifier(this=pattern,quoted=false),table=Identifier(this=t,quoted=false)))),alias=Identifier(this=engine_type,quoted=false))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Literal(this=xyz,is_string=true),alias=Identifier(this=value,quoted=false)),Alias(this=Literal(this=x%,is_string=true),alias=Identifier(this=pattern,quoted=false))],limit=null,exclude=null,operation_modifiers=null),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT t.value LIKE t.pattern AS v, TYPEOF(t.value LIKE t.pattern) AS engine_type FROM (SELECT 'xyz' AS value, 'x%' AS pattern) AS t",
+      "executable": "SELECT t.value LIKE t.pattern AS v, TYPEOF(t.value LIKE t.pattern) AS engine_type FROM (SELECT 'xyz' AS value, 'x%' AS pattern) AS t",
+      "original": {
+        "stdout": "1\tboolean\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "1\tboolean\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT LIKE(t.value,t.pattern) AS v, TYPEOF(LIKE(t.value,t.pattern)) AS engine_type FROM (SELECT 'xyz' value,'x%' pattern) t\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     1\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\nField   2:  `engine_type`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 7\nDecimals:   0\nFlags:      \n\n\n+------+-------------+\n| v    | engine_type |\n+------+-------------+\n|    1 | boolean     |\n+------+-------------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT t.value LIKE t.pattern AS v, TYPEOF(t.value LIKE t.pattern) AS engine_type FROM (SELECT 'xyz' AS value, 'x%' AS pattern) AS t\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     1\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\nField   2:  `engine_type`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 7\nDecimals:   0\nFlags:      \n\n\n+------+-------------+\n| v    | engine_type |\n+------+-------------+\n|    1 | boolean     |\n+------+-------------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "case": "map-int",
+      "sql": "SELECT MAP{1:2} AS v, TYPEOF(MAP{1:2}) AS engine_type",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=ToMap(this=Struct(expressions=[PropertyEQ(this=Literal(this=1,is_string=false),expression=Literal(this=2,is_string=false))])),alias=Identifier(this=v,quoted=false)),Alias(this=Typeof(this=ToMap(this=Struct(expressions=[PropertyEQ(this=Literal(this=1,is_string=false),expression=Literal(this=2,is_string=false))]))),alias=Identifier(this=engine_type,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT MAP{1:2} AS v, TYPEOF(MAP{1:2}) AS engine_type",
+      "executable": "SELECT MAP{1:2} AS v, TYPEOF(MAP{1:2}) AS engine_type",
+      "original": {
+        "stdout": "{1:2}\tmap<tinyint,tinyint>\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "{1:2}\tmap<tinyint,tinyint>\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT MAP{1:2} AS v, TYPEOF(MAP{1:2}) AS engine_type\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     60\nMax_length: 5\nDecimals:   0\nFlags:      \n\nField   2:  `engine_type`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 20\nDecimals:   0\nFlags:      \n\n\n+-------+----------------------+\n| v     | engine_type          |\n+-------+----------------------+\n| {1:2} | map<tinyint,tinyint> |\n+-------+----------------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT MAP{1:2} AS v, TYPEOF(MAP{1:2}) AS engine_type\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     60\nMax_length: 5\nDecimals:   0\nFlags:      \n\nField   2:  `engine_type`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 20\nDecimals:   0\nFlags:      \n\n\n+-------+----------------------+\n| v     | engine_type          |\n+-------+----------------------+\n| {1:2} | map<tinyint,tinyint> |\n+-------+----------------------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "case": "map-cast-int",
+      "sql": "SELECT MAP{CAST(1 AS INT):CAST(2 AS INT)} AS v, TYPEOF(MAP{CAST(1 AS INT):CAST(2 AS INT)}) AS engine_type",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=ToMap(this=Struct(expressions=[PropertyEQ(this=Cast(this=Literal(this=1,is_string=false),to=DataType(this=INT,expressions=null,nested=false),format=null,safe=null,action=null,default=null),expression=Cast(this=Literal(this=2,is_string=false),to=DataType(this=INT,expressions=null,nested=false),format=null,safe=null,action=null,default=null))])),alias=Identifier(this=v,quoted=false)),Alias(this=Typeof(this=ToMap(this=Struct(expressions=[PropertyEQ(this=Cast(this=Literal(this=1,is_string=false),to=DataType(this=INT,expressions=null,nested=false),format=null,safe=null,action=null,default=null),expression=Cast(this=Literal(this=2,is_string=false),to=DataType(this=INT,expressions=null,nested=false),format=null,safe=null,action=null,default=null))]))),alias=Identifier(this=engine_type,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT MAP{CAST(1 AS INT):CAST(2 AS INT)} AS v, TYPEOF(MAP{CAST(1 AS INT):CAST(2 AS INT)}) AS engine_type",
+      "executable": "SELECT MAP{CAST(1 AS INT):CAST(2 AS INT)} AS v, TYPEOF(MAP{CAST(1 AS INT):CAST(2 AS INT)}) AS engine_type",
+      "original": {
+        "stdout": "{1:2}\tmap<int,int>\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "{1:2}\tmap<int,int>\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT MAP{CAST(1 AS INT):CAST(2 AS INT)} AS v, TYPEOF(MAP{CAST(1 AS INT):CAST(2 AS INT)}) AS engine_type\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     60\nMax_length: 5\nDecimals:   0\nFlags:      \n\nField   2:  `engine_type`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 12\nDecimals:   0\nFlags:      \n\n\n+-------+--------------+\n| v     | engine_type  |\n+-------+--------------+\n| {1:2} | map<int,int> |\n+-------+--------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT MAP{CAST(1 AS INT):CAST(2 AS INT)} AS v, TYPEOF(MAP{CAST(1 AS INT):CAST(2 AS INT)}) AS engine_type\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     60\nMax_length: 5\nDecimals:   0\nFlags:      \n\nField   2:  `engine_type`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 12\nDecimals:   0\nFlags:      \n\n\n+-------+--------------+\n| v     | engine_type  |\n+-------+--------------+\n| {1:2} | map<int,int> |\n+-------+--------------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "case": "map-empty",
+      "sql": "SELECT MAP{} AS v, TYPEOF(MAP{}) AS engine_type",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=ToMap(this=Struct(expressions=[])),alias=Identifier(this=v,quoted=false)),Alias(this=Typeof(this=ToMap(this=Struct(expressions=[]))),alias=Identifier(this=engine_type,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT MAP{} AS v, TYPEOF(MAP{}) AS engine_type",
+      "executable": "SELECT MAP{} AS v, TYPEOF(MAP{}) AS engine_type",
+      "original": {
+        "stdout": "{}\tmap<null_type,null_type>\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "{}\tmap<null_type,null_type>\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT MAP{} AS v, TYPEOF(MAP{}) AS engine_type\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     60\nMax_length: 2\nDecimals:   0\nFlags:      \n\nField   2:  `engine_type`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 24\nDecimals:   0\nFlags:      \n\n\n+------+--------------------------+\n| v    | engine_type              |\n+------+--------------------------+\n| {}   | map<null_type,null_type> |\n+------+--------------------------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT MAP{} AS v, TYPEOF(MAP{}) AS engine_type\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     60\nMax_length: 2\nDecimals:   0\nFlags:      \n\nField   2:  `engine_type`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 24\nDecimals:   0\nFlags:      \n\n\n+------+--------------------------+\n| v    | engine_type              |\n+------+--------------------------+\n| {}   | map<null_type,null_type> |\n+------+--------------------------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "case": "map-null-key",
+      "sql": "SELECT MAP{NULL:1} AS v, TYPEOF(MAP{NULL:1}) AS engine_type",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=ToMap(this=Struct(expressions=[PropertyEQ(this=Null(),expression=Literal(this=1,is_string=false))])),alias=Identifier(this=v,quoted=false)),Alias(this=Typeof(this=ToMap(this=Struct(expressions=[PropertyEQ(this=Null(),expression=Literal(this=1,is_string=false))]))),alias=Identifier(this=engine_type,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT MAP{NULL:1} AS v, TYPEOF(MAP{NULL:1}) AS engine_type",
+      "executable": "SELECT MAP{NULL:1} AS v, TYPEOF(MAP{NULL:1}) AS engine_type",
+      "original": {
+        "stdout": "{null:1}\tmap<null_type,tinyint>\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "{null:1}\tmap<null_type,tinyint>\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT MAP{NULL:1} AS v, TYPEOF(MAP{NULL:1}) AS engine_type\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     60\nMax_length: 8\nDecimals:   0\nFlags:      \n\nField   2:  `engine_type`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 22\nDecimals:   0\nFlags:      \n\n\n+----------+------------------------+\n| v        | engine_type            |\n+----------+------------------------+\n| {null:1} | map<null_type,tinyint> |\n+----------+------------------------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT MAP{NULL:1} AS v, TYPEOF(MAP{NULL:1}) AS engine_type\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     60\nMax_length: 8\nDecimals:   0\nFlags:      \n\nField   2:  `engine_type`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 22\nDecimals:   0\nFlags:      \n\n\n+----------+------------------------+\n| v        | engine_type            |\n+----------+------------------------+\n| {null:1} | map<null_type,tinyint> |\n+----------+------------------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "case": "map-duplicate",
+      "sql": "SELECT MAP{'a':1,'a':2} AS v, TYPEOF(MAP{'a':1,'a':2}) AS engine_type",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=ToMap(this=Struct(expressions=[PropertyEQ(this=Literal(this=a,is_string=true),expression=Literal(this=1,is_string=false)),PropertyEQ(this=Literal(this=a,is_string=true),expression=Literal(this=2,is_string=false))])),alias=Identifier(this=v,quoted=false)),Alias(this=Typeof(this=ToMap(this=Struct(expressions=[PropertyEQ(this=Literal(this=a,is_string=true),expression=Literal(this=1,is_string=false)),PropertyEQ(this=Literal(this=a,is_string=true),expression=Literal(this=2,is_string=false))]))),alias=Identifier(this=engine_type,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT MAP{'a':1, 'a':2} AS v, TYPEOF(MAP{'a':1, 'a':2}) AS engine_type",
+      "executable": "SELECT MAP{'a':1, 'a':2} AS v, TYPEOF(MAP{'a':1, 'a':2}) AS engine_type",
+      "original": {
+        "stdout": "{\"a\":2}\tmap<varchar,tinyint>\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "{\"a\":2}\tmap<varchar,tinyint>\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT MAP{'a':1,'a':2} AS v, TYPEOF(MAP{'a':1,'a':2}) AS engine_type\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     60\nMax_length: 7\nDecimals:   0\nFlags:      \n\nField   2:  `engine_type`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 20\nDecimals:   0\nFlags:      \n\n\n+---------+----------------------+\n| v       | engine_type          |\n+---------+----------------------+\n| {\"a\":2} | map<varchar,tinyint> |\n+---------+----------------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT MAP{'a':1, 'a':2} AS v, TYPEOF(MAP{'a':1, 'a':2}) AS engine_type\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     60\nMax_length: 7\nDecimals:   0\nFlags:      \n\nField   2:  `engine_type`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 20\nDecimals:   0\nFlags:      \n\n\n+---------+----------------------+\n| v       | engine_type          |\n+---------+----------------------+\n| {\"a\":2} | map<varchar,tinyint> |\n+---------+----------------------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "case": "map-lookup",
+      "sql": "SELECT MAP{1:2,3:NULL}[1] AS v, TYPEOF(MAP{1:2,3:NULL}[1]) AS engine_type",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Bracket(this=ToMap(this=Struct(expressions=[PropertyEQ(this=Literal(this=1,is_string=false),expression=Literal(this=2,is_string=false)),PropertyEQ(this=Literal(this=3,is_string=false),expression=Null())])),expressions=[Literal(this=1,is_string=false)]),alias=Identifier(this=v,quoted=false)),Alias(this=Typeof(this=Bracket(this=ToMap(this=Struct(expressions=[PropertyEQ(this=Literal(this=1,is_string=false),expression=Literal(this=2,is_string=false)),PropertyEQ(this=Literal(this=3,is_string=false),expression=Null())])),expressions=[Literal(this=1,is_string=false)])),alias=Identifier(this=engine_type,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT MAP{1:2, 3:NULL}[1] AS v, TYPEOF(MAP{1:2, 3:NULL}[1]) AS engine_type",
+      "executable": "SELECT MAP{1:2, 3:NULL}[1] AS v, TYPEOF(MAP{1:2, 3:NULL}[1]) AS engine_type",
+      "original": {
+        "stdout": "2\ttinyint\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "2\ttinyint\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT MAP{1:2,3:NULL}[1] AS v, TYPEOF(MAP{1:2,3:NULL}[1]) AS engine_type\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\nField   2:  `engine_type`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 7\nDecimals:   0\nFlags:      \n\n\n+------+-------------+\n| v    | engine_type |\n+------+-------------+\n|    2 | tinyint     |\n+------+-------------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT MAP{1:2, 3:NULL}[1] AS v, TYPEOF(MAP{1:2, 3:NULL}[1]) AS engine_type\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\nField   2:  `engine_type`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 7\nDecimals:   0\nFlags:      \n\n\n+------+-------------+\n| v    | engine_type |\n+------+-------------+\n|    2 | tinyint     |\n+------+-------------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "case": "map-missing",
+      "sql": "SELECT MAP{1:2}[9] AS v, TYPEOF(MAP{1:2}[9]) AS engine_type",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Bracket(this=ToMap(this=Struct(expressions=[PropertyEQ(this=Literal(this=1,is_string=false),expression=Literal(this=2,is_string=false))])),expressions=[Literal(this=9,is_string=false)]),alias=Identifier(this=v,quoted=false)),Alias(this=Typeof(this=Bracket(this=ToMap(this=Struct(expressions=[PropertyEQ(this=Literal(this=1,is_string=false),expression=Literal(this=2,is_string=false))])),expressions=[Literal(this=9,is_string=false)])),alias=Identifier(this=engine_type,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT MAP{1:2}[9] AS v, TYPEOF(MAP{1:2}[9]) AS engine_type",
+      "executable": "SELECT MAP{1:2}[9] AS v, TYPEOF(MAP{1:2}[9]) AS engine_type",
+      "original": {
+        "stdout": "NULL\ttinyint\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "NULL\ttinyint\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT MAP{1:2}[9] AS v, TYPEOF(MAP{1:2}[9]) AS engine_type\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 0\nDecimals:   0\nFlags:      NUM \n\nField   2:  `engine_type`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 7\nDecimals:   0\nFlags:      \n\n\n+------+-------------+\n| v    | engine_type |\n+------+-------------+\n| NULL | tinyint     |\n+------+-------------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT MAP{1:2}[9] AS v, TYPEOF(MAP{1:2}[9]) AS engine_type\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 0\nDecimals:   0\nFlags:      NUM \n\nField   2:  `engine_type`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 7\nDecimals:   0\nFlags:      \n\n\n+------+-------------+\n| v    | engine_type |\n+------+-------------+\n| NULL | tinyint     |\n+------+-------------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "case": "map-nested",
+      "sql": "SELECT MAP{1:MAP{2:10},3:NULL}[1][2] AS v, TYPEOF(MAP{1:MAP{2:10},3:NULL}[1][2]) AS engine_type",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Bracket(this=Bracket(this=ToMap(this=Struct(expressions=[PropertyEQ(this=Literal(this=1,is_string=false),expression=ToMap(this=Struct(expressions=[PropertyEQ(this=Literal(this=2,is_string=false),expression=Literal(this=10,is_string=false))]))),PropertyEQ(this=Literal(this=3,is_string=false),expression=Null())])),expressions=[Literal(this=1,is_string=false)]),expressions=[Literal(this=1,is_string=false)]),alias=Identifier(this=v,quoted=false)),Alias(this=Typeof(this=Bracket(this=Bracket(this=ToMap(this=Struct(expressions=[PropertyEQ(this=Literal(this=1,is_string=false),expression=ToMap(this=Struct(expressions=[PropertyEQ(this=Literal(this=2,is_string=false),expression=Literal(this=10,is_string=false))]))),PropertyEQ(this=Literal(this=3,is_string=false),expression=Null())])),expressions=[Literal(this=1,is_string=false)]),expressions=[Literal(this=1,is_string=false)])),alias=Identifier(this=engine_type,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT MAP{1:MAP{2:10}, 3:NULL}[1][2] AS v, TYPEOF(MAP{1:MAP{2:10}, 3:NULL}[1][2]) AS engine_type",
+      "executable": "SELECT MAP{1:MAP{2:10}, 3:NULL}[1][2] AS v, TYPEOF(MAP{1:MAP{2:10}, 3:NULL}[1][2]) AS engine_type",
+      "original": {
+        "stdout": "10\ttinyint\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "10\ttinyint\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT MAP{1:MAP{2:10},3:NULL}[1][2] AS v, TYPEOF(MAP{1:MAP{2:10},3:NULL}[1][2]) AS engine_type\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 2\nDecimals:   0\nFlags:      NUM \n\nField   2:  `engine_type`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 7\nDecimals:   0\nFlags:      \n\n\n+------+-------------+\n| v    | engine_type |\n+------+-------------+\n|   10 | tinyint     |\n+------+-------------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT MAP{1:MAP{2:10}, 3:NULL}[1][2] AS v, TYPEOF(MAP{1:MAP{2:10}, 3:NULL}[1][2]) AS engine_type\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 2\nDecimals:   0\nFlags:      NUM \n\nField   2:  `engine_type`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 7\nDecimals:   0\nFlags:      \n\n\n+------+-------------+\n| v    | engine_type |\n+------+-------------+\n|   10 | tinyint     |\n+------+-------------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "case": "map-array",
+      "sql": "SELECT MAP{1:[10,20]}[1][2] AS v, TYPEOF(MAP{1:[10,20]}[1][2]) AS engine_type",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Bracket(this=Bracket(this=ToMap(this=Struct(expressions=[PropertyEQ(this=Literal(this=1,is_string=false),expression=Array(expressions=[Literal(this=10,is_string=false),Literal(this=20,is_string=false)],value_constructor=false))])),expressions=[Literal(this=1,is_string=false)]),expressions=[Literal(this=1,is_string=false)]),alias=Identifier(this=v,quoted=false)),Alias(this=Typeof(this=Bracket(this=Bracket(this=ToMap(this=Struct(expressions=[PropertyEQ(this=Literal(this=1,is_string=false),expression=Array(expressions=[Literal(this=10,is_string=false),Literal(this=20,is_string=false)],value_constructor=false))])),expressions=[Literal(this=1,is_string=false)]),expressions=[Literal(this=1,is_string=false)])),alias=Identifier(this=engine_type,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT MAP{1:[10, 20]}[1][2] AS v, TYPEOF(MAP{1:[10, 20]}[1][2]) AS engine_type",
+      "executable": "SELECT MAP{1:[10, 20]}[1][2] AS v, TYPEOF(MAP{1:[10, 20]}[1][2]) AS engine_type",
+      "original": {
+        "stdout": "20\ttinyint\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "20\ttinyint\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT MAP{1:[10,20]}[1][2] AS v, TYPEOF(MAP{1:[10,20]}[1][2]) AS engine_type\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 2\nDecimals:   0\nFlags:      NUM \n\nField   2:  `engine_type`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 7\nDecimals:   0\nFlags:      \n\n\n+------+-------------+\n| v    | engine_type |\n+------+-------------+\n|   20 | tinyint     |\n+------+-------------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT MAP{1:[10, 20]}[1][2] AS v, TYPEOF(MAP{1:[10, 20]}[1][2]) AS engine_type\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 2\nDecimals:   0\nFlags:      NUM \n\nField   2:  `engine_type`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 7\nDecimals:   0\nFlags:      \n\n\n+------+-------------+\n| v    | engine_type |\n+------+-------------+\n|   20 | tinyint     |\n+------+-------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "case": "map-expression",
+      "sql": "SELECT MAP{1+2:10}[3] AS v, TYPEOF(MAP{1+2:10}[3]) AS engine_type",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Bracket(this=ToMap(this=Struct(expressions=[PropertyEQ(this=Add(this=Literal(this=1,is_string=false),expression=Literal(this=2,is_string=false)),expression=Literal(this=10,is_string=false))])),expressions=[Literal(this=3,is_string=false)]),alias=Identifier(this=v,quoted=false)),Alias(this=Typeof(this=Bracket(this=ToMap(this=Struct(expressions=[PropertyEQ(this=Add(this=Literal(this=1,is_string=false),expression=Literal(this=2,is_string=false)),expression=Literal(this=10,is_string=false))])),expressions=[Literal(this=3,is_string=false)])),alias=Identifier(this=engine_type,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT MAP{1 + 2:10}[3] AS v, TYPEOF(MAP{1 + 2:10}[3]) AS engine_type",
+      "executable": "SELECT MAP{1 + 2:10}[3] AS v, TYPEOF(MAP{1 + 2:10}[3]) AS engine_type",
+      "original": {
+        "stdout": "10\ttinyint\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "10\ttinyint\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT MAP{1+2:10}[3] AS v, TYPEOF(MAP{1+2:10}[3]) AS engine_type\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 2\nDecimals:   0\nFlags:      NUM \n\nField   2:  `engine_type`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 7\nDecimals:   0\nFlags:      \n\n\n+------+-------------+\n| v    | engine_type |\n+------+-------------+\n|   10 | tinyint     |\n+------+-------------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT MAP{1 + 2:10}[3] AS v, TYPEOF(MAP{1 + 2:10}[3]) AS engine_type\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 2\nDecimals:   0\nFlags:      NUM \n\nField   2:  `engine_type`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 7\nDecimals:   0\nFlags:      \n\n\n+------+-------------+\n| v    | engine_type |\n+------+-------------+\n|   10 | tinyint     |\n+------+-------------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "case": "map-qualified",
+      "sql": "SELECT MAP{t.k:10}[1] AS v, TYPEOF(MAP{t.k:10}[1]) AS engine_type FROM (SELECT 1 k) t CROSS JOIN (SELECT 2 k) u",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Bracket(this=ToMap(this=Struct(expressions=[PropertyEQ(this=Column(this=Identifier(this=k,quoted=false),table=Identifier(this=t,quoted=false),db=null,catalog=null),expression=Literal(this=10,is_string=false))])),expressions=[Literal(this=1,is_string=false)]),alias=Identifier(this=v,quoted=false)),Alias(this=Typeof(this=Bracket(this=ToMap(this=Struct(expressions=[PropertyEQ(this=Column(this=Identifier(this=k,quoted=false),table=Identifier(this=t,quoted=false),db=null,catalog=null),expression=Literal(this=10,is_string=false))])),expressions=[Literal(this=1,is_string=false)])),alias=Identifier(this=engine_type,quoted=false))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Literal(this=1,is_string=false),alias=Identifier(this=k,quoted=false))],limit=null,exclude=null,operation_modifiers=null),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)),joins=[Join(this=Subquery(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Literal(this=2,is_string=false),alias=Identifier(this=k,quoted=false))],limit=null,exclude=null,operation_modifiers=null),alias=TableAlias(this=Identifier(this=u,quoted=false),columns=null),sample=null),kind=CROSS,pivots=null)])",
+      "preview": "SELECT MAP{t.k:10}[1] AS v, TYPEOF(MAP{t.k:10}[1]) AS engine_type FROM (SELECT 1 AS k) AS t CROSS JOIN (SELECT 2 AS k) AS u",
+      "executable": "SELECT MAP{t.k:10}[1] AS v, TYPEOF(MAP{t.k:10}[1]) AS engine_type FROM (SELECT 1 AS k) AS t CROSS JOIN (SELECT 2 AS k) AS u",
+      "original": {
+        "stdout": "10\ttinyint\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "10\ttinyint\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT MAP{t.k:10}[1] AS v, TYPEOF(MAP{t.k:10}[1]) AS engine_type FROM (SELECT 1 k) t CROSS JOIN (SELECT 2 k) u\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 2\nDecimals:   0\nFlags:      NUM \n\nField   2:  `engine_type`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 7\nDecimals:   0\nFlags:      \n\n\n+------+-------------+\n| v    | engine_type |\n+------+-------------+\n|   10 | tinyint     |\n+------+-------------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT MAP{t.k:10}[1] AS v, TYPEOF(MAP{t.k:10}[1]) AS engine_type FROM (SELECT 1 AS k) AS t CROSS JOIN (SELECT 2 AS k) AS u\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 2\nDecimals:   0\nFlags:      NUM \n\nField   2:  `engine_type`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 7\nDecimals:   0\nFlags:      \n\n\n+------+-------------+\n| v    | engine_type |\n+------+-------------+\n|   10 | tinyint     |\n+------+-------------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "case": "map-columns",
+      "sql": "SELECT MAP{t.k:t.v}['a'] AS v, TYPEOF(MAP{t.k:t.v}['a']) AS engine_type FROM (SELECT 'a' k,10 v) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Bracket(this=ToMap(this=Struct(expressions=[PropertyEQ(this=Column(this=Identifier(this=k,quoted=false),table=Identifier(this=t,quoted=false),db=null,catalog=null),expression=Column(this=Identifier(this=v,quoted=false),table=Identifier(this=t,quoted=false)))])),expressions=[Literal(this=a,is_string=true)]),alias=Identifier(this=v,quoted=false)),Alias(this=Typeof(this=Bracket(this=ToMap(this=Struct(expressions=[PropertyEQ(this=Column(this=Identifier(this=k,quoted=false),table=Identifier(this=t,quoted=false),db=null,catalog=null),expression=Column(this=Identifier(this=v,quoted=false),table=Identifier(this=t,quoted=false)))])),expressions=[Literal(this=a,is_string=true)])),alias=Identifier(this=engine_type,quoted=false))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Literal(this=a,is_string=true),alias=Identifier(this=k,quoted=false)),Alias(this=Literal(this=10,is_string=false),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT MAP{t.k:t.v}['a'] AS v, TYPEOF(MAP{t.k:t.v}['a']) AS engine_type FROM (SELECT 'a' AS k, 10 AS v) AS t",
+      "executable": "SELECT MAP{t.k:t.v}['a'] AS v, TYPEOF(MAP{t.k:t.v}['a']) AS engine_type FROM (SELECT 'a' AS k, 10 AS v) AS t",
+      "original": {
+        "stdout": "10\ttinyint\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "10\ttinyint\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT MAP{t.k:t.v}['a'] AS v, TYPEOF(MAP{t.k:t.v}['a']) AS engine_type FROM (SELECT 'a' k,10 v) t\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 2\nDecimals:   0\nFlags:      NUM \n\nField   2:  `engine_type`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 7\nDecimals:   0\nFlags:      \n\n\n+------+-------------+\n| v    | engine_type |\n+------+-------------+\n|   10 | tinyint     |\n+------+-------------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT MAP{t.k:t.v}['a'] AS v, TYPEOF(MAP{t.k:t.v}['a']) AS engine_type FROM (SELECT 'a' AS k, 10 AS v) AS t\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 2\nDecimals:   0\nFlags:      NUM \n\nField   2:  `engine_type`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 7\nDecimals:   0\nFlags:      \n\n\n+------+-------------+\n| v    | engine_type |\n+------+-------------+\n|   10 | tinyint     |\n+------+-------------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "case": "map-function-regression",
+      "sql": "SELECT MAP('a',10,'b',20)['b'] AS v, TYPEOF(MAP('a',10,'b',20)['b']) AS engine_type",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Bracket(this=VarMap(keys=Array(expressions=[Literal(this=a,is_string=true),Literal(this=b,is_string=true)]),values=Array(expressions=[Literal(this=10,is_string=false),Literal(this=20,is_string=false)])),expressions=[Literal(this=b,is_string=true)]),alias=Identifier(this=v,quoted=false)),Alias(this=Typeof(this=Bracket(this=VarMap(keys=Array(expressions=[Literal(this=a,is_string=true),Literal(this=b,is_string=true)]),values=Array(expressions=[Literal(this=10,is_string=false),Literal(this=20,is_string=false)])),expressions=[Literal(this=b,is_string=true)])),alias=Identifier(this=engine_type,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT MAP('a', 10, 'b', 20)['b'] AS v, TYPEOF(MAP('a', 10, 'b', 20)['b']) AS engine_type",
+      "executable": "SELECT MAP('a', 10, 'b', 20)['b'] AS v, TYPEOF(MAP('a', 10, 'b', 20)['b']) AS engine_type",
+      "original": {
+        "stdout": "20\ttinyint\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "20\ttinyint\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT MAP('a',10,'b',20)['b'] AS v, TYPEOF(MAP('a',10,'b',20)['b']) AS engine_type\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 2\nDecimals:   0\nFlags:      NUM \n\nField   2:  `engine_type`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 7\nDecimals:   0\nFlags:      \n\n\n+------+-------------+\n| v    | engine_type |\n+------+-------------+\n|   20 | tinyint     |\n+------+-------------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT MAP('a', 10, 'b', 20)['b'] AS v, TYPEOF(MAP('a', 10, 'b', 20)['b']) AS engine_type\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 2\nDecimals:   0\nFlags:      NUM \n\nField   2:  `engine_type`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 7\nDecimals:   0\nFlags:      \n\n\n+------+-------------+\n| v    | engine_type |\n+------+-------------+\n|   20 | tinyint     |\n+------+-------------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    }
+  ],
+  "map_execution_refusals": [
+    {
+      "source": "starrocks",
+      "target": "duckdb",
+      "sql": "SELECT MAP{'a':1}",
+      "preview": "SELECT MAP {'a': 1}",
+      "status": "unsupported: StarRocks map literal null/duplicate-key and type contracts have no qualified cross-engine execution mapping"
+    },
+    {
+      "source": "starrocks",
+      "target": "postgres",
+      "sql": "SELECT MAP{'a':1}",
+      "preview": "SELECT MAP STRUCT(1 AS a)",
+      "status": "unsupported: StarRocks map literal null/duplicate-key and type contracts have no qualified cross-engine execution mapping"
+    },
+    {
+      "source": "starrocks",
+      "target": "mysql",
+      "sql": "SELECT MAP{'a':1}",
+      "preview": "SELECT MAP STRUCT(1 AS a)",
+      "status": "unsupported: StarRocks map literal null/duplicate-key and type contracts have no qualified cross-engine execution mapping"
+    },
+    {
+      "source": "starrocks",
+      "target": "trino",
+      "sql": "SELECT MAP{'a':1}",
+      "preview": "SELECT MAP CAST(ROW(1) AS ROW('a' INTEGER))",
+      "status": "unsupported: StarRocks map literal null/duplicate-key and type contracts have no qualified cross-engine execution mapping"
+    },
+    {
+      "source": "starrocks",
+      "target": "clickhouse",
+      "sql": "SELECT MAP{'a':1}",
+      "preview": "SELECT MAP tuple('a' := 1)",
+      "status": "unsupported: StarRocks map literal null/duplicate-key and type contracts have no qualified cross-engine execution mapping"
+    },
+    {
+      "source": "duckdb",
+      "target": "starrocks",
+      "sql": "SELECT MAP {'a':1}",
+      "preview": "SELECT MAP{'a':1}",
+      "status": "unsupported: Map literal key/null/duplicate/coercion contracts are not qualified across StarRocks engines"
+    }
+  ]
+}

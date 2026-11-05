@@ -1,6 +1,10 @@
 package dev.brikk.house.sql.dialects
 
 import dev.brikk.house.sql.ast.Create
+import dev.brikk.house.sql.ast.Bracket
+import dev.brikk.house.sql.ast.Column
+import dev.brikk.house.sql.ast.ToMap
+import dev.brikk.house.sql.ast.Like
 import dev.brikk.house.sql.ast.DateAdd
 import dev.brikk.house.sql.ast.DateDiff
 import dev.brikk.house.sql.ast.DateSub
@@ -112,6 +116,23 @@ open class StarrocksParser(
 
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.STARROCKS
+
+    override val mapKeysAreArbitraryExpressions: Boolean get() = true
+
+    // #8682: wrap the literal itself, not the subscripts following it. Its keys
+    // remain expressions, including qualified columns, rather than struct names.
+    override fun parseBracket(this_: Expression?): Expression? {
+        val literal = this_ is Column && this_.table.isEmpty() && this_.name.equals("MAP", true) &&
+            match(TokenType.L_BRACE, advance = false)
+        val bracket = super.parseBracket(this_) ?: return null
+        if (!literal) return bracket
+        var struct = bracket
+        while (struct is Bracket) struct = struct.thisArg as? Expression ?: return bracket
+        val map = expression(ToMap(args("this" to struct.copy()))).also { it.meta["starrocks_map_literal"] = true }
+        if (struct === bracket) return map
+        struct.replace(map)
+        return bracket
+    }
 
     // brikk-native: SELECT ... INTO OUTFILE ends a query (see parseDorisOutfile).
     override val queryModifierParsers: Map<TokenType, (Parser) -> Pair<String, kotlin.Any?>>
@@ -348,6 +369,11 @@ object StarrocksParserTables {
             )
         }
         put("ARRAY_FLATTEN") { a -> Flatten(args("this" to seqGet(a, 0))) }
+        // #8645: unlike the base LIKE(pattern,value) function, StarRocks is value first.
+        put("LIKE") { a ->
+            if (a.size != 2) throw ParseError("StarRocks LIKE() requires exactly two arguments")
+            Like(args("this" to a[0], "expression" to a[1]))
+        }
         put("REGEXP") { a ->
             RegexpLike(
                 args(

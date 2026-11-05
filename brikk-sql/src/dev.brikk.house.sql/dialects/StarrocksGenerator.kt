@@ -188,6 +188,23 @@ open class StarrocksGenerator(
         return func("MAP", *argsList.toTypedArray())
     }
 
+    // #8682: map literals are not structs or MySQL's generic map conversion.
+    open fun starrocksToMapSql(expression: ToMap): String {
+        if (expression.metaOrNull?.get("starrocks_map_literal") != true && sourceDialect?.equals("starrocks", true) != true) {
+            unexecutable("Map literal key/null/duplicate/coercion contracts are not qualified across StarRocks engines")
+        }
+        val struct = expression.thisArg as? Expression
+        if (struct !is Struct) return "MAP ${sql(struct)}"
+        return "MAP{" + struct.expressionsArg.filterIsInstance<Expression>().joinToString(", ") {
+            "${sql(it, "this")}:${sql(it, "expression")}"
+        } + "}"
+    }
+
+    override fun bracketOffsetExpressions(expression: Bracket, indexOffset: Int?): List<kotlin.Any?> =
+        // Offset preparation may annotate the receiver. Keep copy=false generation
+        // from adding types/parents to the caller's new map-literal subtree.
+        super.bracketOffsetExpressions(expression.copy() as Bracket, indexOffset)
+
     // sqlglot: dialect.inline_array_sql
     open fun inlineArraySql(expression: Expression): String =
         "[${expressions(expression, dynamic = true, newLine = true, skipFirst = true, skipLast = true)}]"
@@ -432,6 +449,7 @@ open class StarrocksGenerator(
             reg(JSONExtract::class) { e -> sg().starrocksArrowJsonExtractSql(e as Binary) }
             // Both MAP forms generate StarRocks' variadic MAP(k1, v1, k2, v2, ...)
             reg(MapNode::class) { e -> sg().starrocksVarMapSql(e) }
+            reg(ToMap::class) { e -> sg().starrocksToMapSql(e as ToMap) }
             reg(Property::class) { e ->
                 "${propertyName(e as Property, stringKey = true)}=${sql(e, "value")}"
             }

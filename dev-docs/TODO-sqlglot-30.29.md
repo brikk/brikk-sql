@@ -5,7 +5,9 @@ Status: Batches A and B approved, implemented and verified in worktree `sqlglot-
 SG29-009 on 2026-11-04, including authorized commit/push of the accumulated branch.
 SG29-010 is separately approved, implemented and verified on 2026-11-04. The owner
 approved SG29-011 through SG29-013 in order, with commit/push between items; all
-three are now implemented and verified on 2026-11-05.
+three are now implemented and verified on 2026-11-05. The owner subsequently
+approved only the SG29-014 LIKE/map wrong-result pair, with commit/push at the end;
+that bounded round is now implemented and verified.
 Remaining items
 in Batches C through F remain proposed, not authorized. Publication and
 downstream adoption require their own authorization.
@@ -189,6 +191,15 @@ baseline explain the bounded drift. No global oracle refresh or release follows.
   rendering/static outputs, aggregate-key/HLL DDL, materialized-view refresh
   options and administrative command preservation. Split into tested sub-rounds;
   opaque Command preservation must not be called structured semantic support.
+  - [x] **SG29-014-A: LIKE argument order.** Native value/pattern order is fixed,
+    including NULLs, without changing the base pattern-first builder.
+  - [x] **SG29-014-B: Map literals.** Preserve expression/qualified keys, nested
+    lookups and map identity rather than struct fields; keep native NULL/duplicate
+    key behavior and refuse unqualified cross-engine map execution.
+  [Evidence](../vendor/data/sqlglot-sg29-014-wrong-results/README.md): 19 paired
+  native StarRocks value/type controls and six map refusals; build, 2,570 JVM
+  tests and 827 IntelliJ tests pass. Native audit and global pin are unchanged.
+  The parent item remains open for the remaining, unauthorized feature reviews.
 - [ ] **SG29-015: Fix Spark/Hive string aggregation and ALTER forms.** Review
   `ab043477`/`2748f82e`, `0b001782` and `03744a2a`. Our Spark LISTAGG DISTINCT
   emits an extra separator argument. Test ALL/DISTINCT, ordering, separators,
@@ -250,14 +261,17 @@ accumulated branch after SG29-009 validation, completed as `70a9f1c0` on
 `origin/sqlglot-30-29-batch-a`. SG29-010 JSON-valued ClickHouse extraction is
 separately approved. The owner subsequently approved SG29-011, SG29-012 and
 SG29-013 in order, with commit/push after each. Commit/push SG29-010 first to
-keep the new items separate. SG29-014 onward is not authorized.
+keep the new items separate. Only the SG29-014 LIKE argument-order and map-literal
+wrong-result pair is now approved, with commit/push after validation. Other
+SG29-014 features and SG29-015 onward are not authorized.
 
 SG29-010 through SG29-013 are complete, with the three requested items validated
-and committed/pushed separately. Proposed next is **SG29-014**, StarRocks fixes
-and features, pending separate authorization. Seven items remain open.
+and committed/pushed separately. The bounded SG29-014 wrong-result pair is
+complete, with commit/push authorized. Its parent item remains open until the other separately scoped
+StarRocks work is reviewed. Seven parent items remain open.
 
 Implementation is isolated on branch/worktree `sqlglot-30-29-batch-a`. The
 planning request initially added this TODO and its index links; later approvals
-cover the implementation and evidence for SG29-001 through SG29-013. Earlier
+cover the implementation/evidence through SG29-013 and the two SG29-014 fixes. Earlier
 guides' uncommitted-status statements describe their original checkpoints.
 Publication, consumer adoption and PR creation remain unrequested.
