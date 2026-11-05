@@ -1,6 +1,18 @@
 {
     "cases": [
         {
+            "id": "assertion:v1:sha256:e6e630a59bffc6284af16a9665e6334e21f4e7f983554dde8249e0a021570aa8:1",
+            "case": "write|trino|SELECT DATEDIFF('day', t1.\"A\", t1.\"B\") FROM \"table\" AS t1",
+            "signature": "sql-mismatch:v1:sha256:e6e624476e7cb853ca8ce2a4d76097049e5a8cfcd6e8d790370427dbbf9edcb6",
+            "reason": "SG29-011/#8810/991d6ce5: DuckDB DATEDIFF counts DAY boundaries. Its new canonical flag activates Trino's existing endpoint truncation. Only DATE_TRUNC('DAY', ...) wrappers change. Preview provenance, not new native Trino equivalence; strict DuckDB cross-target temporal execution remains refused. Exact row; remove with SG29-020 refresh."
+        },
+        {
+            "id": "assertion:v1:sha256:065facbe285cac2aad65499d9e1dc68e3cd43730d33a26dec35ba13b37391340:1",
+            "case": "write|trino|SELECT DATE_DIFF('day', DATE '2020-01-01', DATE '2020-01-05')",
+            "signature": "sql-mismatch:v1:sha256:fb0fce19275fd289c8ae792e05c0f531c867c2ec95dcd749ad3e704a64812af3",
+            "reason": "SG29-011/#8810/991d6ce5: the canonical DAY boundary flag activates Trino's existing DATE_TRUNC endpoint wrappers, including already-date operands. Preview-only frozen-pin difference, not a native Trino qualification. Existing DuckDB temporal refusals remain. Exact row; remove with SG29-020 refresh."
+        },
+        {
             "id": "assertion:v1:sha256:5844a49a437a49bac5ca23379cb63990f25d13f63fbb121f7566bd409be5baf7:1",
             "case": "write|presto|SELECT UNNEST(ARRAY[1, 2, 3]), UNNEST(ARRAY[4, 5]), UNNEST(ARRAY[6])",
             "reason": "brikk extension ASTRA-002-ZIP: empty-safe zipped UNNEST uses left joins and a zero-length series guard. Protected correctness divergence; docs/brikk-extensions.md #20, OuterExplodeResultTest.zippedInputsPadEmptyNullAndUnequalLengths.",

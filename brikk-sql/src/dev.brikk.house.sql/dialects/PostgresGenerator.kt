@@ -566,17 +566,22 @@ open class PostgresGenerator(
         val unit = ((expression.args["unit"] as? Expression)?.name ?: "DAY").uppercase()
         if (unit == "DAY" && expression.args["date_part_boundary"] == true) {
             val endDate = Cast(
-                args("this" to expression.thisArg, "to" to DataType(args("this" to DType.DATE)))
+                args("this" to (expression.thisArg as? Expression)?.copy(), "to" to DataType(args("this" to DType.DATE)))
             )
             val startDate = Cast(
-                args("this" to expression.args["expression"], "to" to DataType(args("this" to DType.DATE)))
+                args("this" to (expression.args["expression"] as? Expression)?.copy(), "to" to DataType(args("this" to DType.DATE)))
             )
             return sql(Paren(args("this" to Sub(args("this" to endDate, "expression" to startDate)))))
         }
         val factor = DATE_DIFF_FACTOR[unit]
 
-        val end = "CAST(${sql(expression, "this")} AS TIMESTAMP)"
-        val start = "CAST(${sql(expression, "expression")} AS TIMESTAMP)"
+        var end = "CAST(${sql(expression, "this")} AS TIMESTAMP)"
+        var start = "CAST(${sql(expression, "expression")} AS TIMESTAMP)"
+        if (expression.args["date_part_boundary"] == true && unit in setOf(
+                "MICROSECOND", "MILLISECOND", "SECOND", "MINUTE", "HOUR", "MONTH", "QUARTER", "YEAR")) {
+            end = "DATE_TRUNC('${unit.lowercase()}', $end)"
+            start = "DATE_TRUNC('${unit.lowercase()}', $start)"
+        }
 
         if (factor != null) {
             return "CAST(EXTRACT(epoch FROM $end - $start)$factor AS BIGINT)"
@@ -1039,6 +1044,16 @@ open class PostgresGenerator(
         return func("SHA$length", expression.thisArg)
     }
 
+    // #8755: the last case flag wins. Other/dynamic flags cannot be silently lost.
+    open fun postgresRegexpLikeSql(expression: RegexpLike): String {
+        val flag = expression.args["flag"] as? Expression ?: return binary(expression, "~")
+        val flags = if (flag.isString) flag.name else ""
+        if (!flag.isString || flags.any { it != 'i' && it != 'c' }) {
+            unexecutable("PostgreSQL regex operator translation supports only literal case flags i and c")
+        }
+        return binary(expression, if (flags.lastIndexOf('i') > flags.lastIndexOf('c')) "~*" else "~")
+    }
+
     // sqlglot: dialect.timestrtotime_sql (include_precision=false)
     open fun timestrtotimeSql(expression: TimeStrToTime): String {
         val dtype = if (expression.args["zone"] != null) DType.TIMESTAMPTZ else DType.TIMESTAMP
@@ -1330,7 +1345,7 @@ open class PostgresGenerator(
             reg(PercentileDisc::class) { e -> pg().addWithinGroupForPercentilesSql(e) }
             reg(Pivot::class) { e -> pg().noPivotSql(e as Pivot) }
             reg(Rand::class) { e -> pg().renameFuncSql("RANDOM", e) }
-            reg(RegexpLike::class) { e -> binary(e as Binary, "~") }
+            reg(RegexpLike::class) { e -> pg().postgresRegexpLikeSql(e as RegexpLike) }
             reg(RegexpILike::class) { e -> binary(e as Binary, "~*") }
             reg(RegexpReplace::class) { e ->
                 func(
@@ -1351,7 +1366,7 @@ open class PostgresGenerator(
                 s = eliminateQualify(s)
                 selectSql(s as Select)
             }
-            reg(SHA2::class) { e -> pg().sha256Sql(e as SHA2) }
+            reg(SHA2::class) { e -> func("ENCODE", pg().sha256Sql(e as SHA2), Literal.string("hex")) }
             reg(SHA2Digest::class) { e -> pg().sha2DigestSql(e as SHA2Digest) }
             reg(StrPosition::class) { e -> pg().strpositionSql(e as StrPosition) }
             reg(StrToDate::class) { e -> func("TO_DATE", e.thisArg, formatTime(e)) }

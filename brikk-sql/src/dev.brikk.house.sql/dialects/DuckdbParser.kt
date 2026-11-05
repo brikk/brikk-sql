@@ -144,7 +144,10 @@ private fun buildArrayPrependDuckdb(a: List<Expression?>): Expression =
 // sqlglot: parsers.duckdb._build_date_diff
 private fun buildDateDiff(a: List<Expression?>): Expression =
     applyTimeUnitCoercion(
-        DateDiff(args("this" to seqGet(a, 2), "expression" to seqGet(a, 1), "unit" to seqGet(a, 0)))
+        DateDiff(args("this" to seqGet(a, 2), "expression" to seqGet(a, 1), "unit" to seqGet(a, 0),
+            "date_part_boundary" to seqGet(a, 0)?.let { unit ->
+                if ((unit is Literal || unit is Var) && unit.name.uppercase() !in setOf("WEEK", "WEEKS", "W")) true else null
+            }))
     )
 
 // sqlglot: parsers.duckdb._build_generate_series

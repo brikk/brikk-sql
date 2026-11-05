@@ -1,6 +1,12 @@
 {
     "cases": [
         {
+            "id": "assertion:v1:sha256:e9bff597219f06bf08905b93785e44419e35ec29e256fe9b902ccffff5586aa2:1",
+            "sql": "SHA384(x)",
+            "signature": "type-mismatch:v1:sha256:1521d24f5526b7f59234aaf22d731993cc818eae6c65af6d180676e7305c164a",
+            "reason": "SG29-011/#8764/78b24a74: native SHA384 now parses as SHA2Digest with binary typing rather than hex SHA2/VARCHAR. PostgreSQL bytea metadata and byte comparisons cover 256/384/512. Exact frozen-pin type row; remove with SG29-020 refresh."
+        },
+        {
             "id": "assertion:v1:sha256:685e0de1067a98237658b09b1ce67fb31970392cc9f74d06a6d559de8b899fec:1",
             "sql": "SELECT JSON_VALUE(j, '$.a' RETURNING BIGINT) FROM t",
             "signature": "type-mismatch:v1:sha256:9bd36d7359fba81f84ec177d025966f9309df34a8602c5485481bad1c579767d",

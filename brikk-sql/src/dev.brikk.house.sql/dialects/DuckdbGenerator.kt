@@ -859,7 +859,7 @@ open class DuckdbGenerator(
         if (hashFunc == "SHA256") {
             val length = expression.text("length").ifEmpty { "256" }
             if (length != "256") {
-                unsupported("DuckDB only supports SHA256 hashing algorithm.")
+                unexecutable("DuckDB only supports SHA256 hashing algorithm.")
             }
         }
 
@@ -1522,7 +1522,9 @@ open class DuckdbGenerator(
             if (valueRaw == null) continue
             val value = if (valueRaw is Kwarg) valueRaw.args["expression"] else valueRaw
             val unit = if (valueRaw is Kwarg) {
-                (valueRaw.thisArg as? Expression)?.name?.lowercase() ?: argKey.lowercase()
+                val name = (valueRaw.thisArg as? Expression)?.name?.lowercase() ?: argKey.lowercase()
+                mapOf("years" to "year", "months" to "month", "weeks" to "week", "days" to "day",
+                    "hours" to "hour", "mins" to "minute", "secs" to "second")[name] ?: name
             } else {
                 argKey.lowercase()
             }

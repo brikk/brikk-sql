@@ -68,6 +68,10 @@ open class PostgresDialect : Dialect() {
             "FMSS" to "%-S", // Second
             "HH12" to "%I", // 09
             "HH24" to "%H", // 09
+            "iw" to "%V",
+            "IW" to "%V",
+            "iyyy" to "%G",
+            "IYYY" to "%G",
             "mi" to "%M", // zero padded minute
             "MI" to "%M", // zero padded minute
             "mm" to "%m", // 01

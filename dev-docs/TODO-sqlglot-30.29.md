@@ -147,12 +147,17 @@ baseline explain the bounded drift. No global oracle refresh or release follows.
   JVM tests and all 827 IntelliJ tests pass. Native coverage, fixtures, ledgers,
   existing baseline and oracle pin remain unchanged. Commit/push is now authorized
   before beginning the next three items.
-- [ ] **SG29-011: Qualify PostgreSQL interval/date mappings.** Review named
+- [x] **SG29-011: Qualify PostgreSQL interval/date mappings.** Review named
   MAKE_INTERVAL arguments and anonymous-call preservation, `5739cd6c`/`53ccce9f`;
   boundary-counting DATEDIFF, `8709510f`/`991d6ce5`; ISO week/year formats,
   `1e5c649c`; digest versus hex SHA2, `78b24a74`; and regex case flags,
   `eb03a972`. Keep these as separately verified sub-rounds. Do not weaken
-  DuckDB executable temporal/regex refusals or infer general engine equivalence.
+   DuckDB executable temporal/regex refusals or infer general engine equivalence.
+  [Evidence](../vendor/data/sqlglot-sg29-011/README.md) covers five separate native
+  sub-rounds. Strict DuckDB SHA384/512 generation also refuses algorithm loss.
+  Five exact parity rows and three unsupported-size preview origins are reviewed;
+  all other native origins and local dispositions are unchanged. Build, 2,549
+  JVM tests and 827 IntelliJ tests pass. SG29-011 is ready for its approved commit/push.
 
 ## Batch D: supported syntax and dialect features
 

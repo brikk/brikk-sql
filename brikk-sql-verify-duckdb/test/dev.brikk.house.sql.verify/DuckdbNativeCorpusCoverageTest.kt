@@ -149,7 +149,12 @@ internal class DuckdbNativeCorpusCoverageTest {
         // dispositions, engine/JDBC/settings and all other inventory rows are identical.
         // Restoring that one file hash reproduces the complete prior inventory hash.
         // See vendor/data/sqlglot-sg29-009/native-coverage-review.json. Keep B's baseline.
-        val baseline=NativeCorpusAudit.root.resolve("brikk-sql-verify-duckdb/testResources/native-coverage-baseline-sg29-009.json")
+        // SG29-011: three current-parser SHA384 origins now emit binary UNHEX(SHA256)
+        // previews instead of hex SHA256. They retain the SAME unsupported-size warning;
+        // strict SHA384/512 execution is refused, not qualified by syntax acceptance.
+        // Other 24603 native origins and every local disposition are unchanged. Four
+        // exact ledger file hashes account for inventory drift. See sg29-011 audit review.
+        val baseline=NativeCorpusAudit.root.resolve("brikk-sql-verify-duckdb/testResources/native-coverage-baseline-sg29-011.json")
         assertTrue(Files.isRegularFile(baseline),"Review build/duckdb-parser-audit/native-coverage.json before adding a baseline")
         assertEquals(Json.parseToJsonElement(Files.readString(baseline)),summary,"Investigate coverage changes; never refresh parity ledgers from native syntax outcomes")
         println("DDB20-050 $summary")

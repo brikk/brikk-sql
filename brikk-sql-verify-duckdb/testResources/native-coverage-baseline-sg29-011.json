@@ -1,0 +1,17 @@
+{
+  "files": 181,
+  "inputs": 24606,
+  "unique_sql": 5419,
+  "native_counts": {"accepted": 13608, "rejected": 7749, "unverified": 3249},
+  "native_fingerprint": "79437a00fab07678b159a47dc2f37c62749d21958eff156c8257e7b72296b12b",
+  "local_counts": {
+    "excluded-or-non-sql-expectation": 65,
+    "expected-unsupported": 9,
+    "foreign-analysis-input": 121,
+    "opaque-command": 398,
+    "unsupported": 235,
+    "unsupported-warning": 1563
+  },
+  "local_fingerprint": "0337333b39b0e3c9aefa3e6e2b1c040c5b7f1f89871103c3667f7d010109c410",
+  "inventory_fingerprint": "c390b2294a4484083d4ee8032bcd71f5d1332fbb6bf75fce26f3fc1b8011e068"
+}
