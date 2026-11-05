@@ -10,10 +10,10 @@ a platform test fails on any other use). SQL PSI hooks live in
 `com.intellij.sql.resolveExtension` interface from `com.intellij.sql.psi.impl`, which carries
 no internal-API annotation.
 
-The current Maven Central release is **0.4.0** for common support, the optional
+The current Maven Central release is **0.4.1** for common support, the optional
 `brikk-sql-intellij-jdbc-support` adapter and `brikk-sql-intellij-test-support`.
 It references SQL core/metadata/verification API **0.23.0**. See the
-[release record](../docs/sql-0.23.0.md) for qualification and dependency details.
+[patch release record](../docs/intellij-support-0.4.1.md) for qualification and dependency details.
 
 ## API
 
@@ -790,10 +790,8 @@ dialect and a `PgFamilyDialect`), so Trino and DuckDB need none of this.
 
 ### Live function catalog
 
-The owner-authorized local SNAPSHOT candidate fixes forget/refresh and out-of-order
-refresh races in released `0.4.0`. See [recording policy, engine impact and consumer
-verification boundaries](../docs/live-catalog-refresh-ordering.md). This is not a
-public final-library release.
+Released `0.4.1` fixes forget/refresh and out-of-order refresh races in `0.4.0`.
+See [recording policy, engine impact and consumer verification boundaries](../docs/live-catalog-refresh-ordering.md).
 
 What the connected server reports about its functions, harvested per data source and served to
 completion. A plugin implements one `LiveCatalogProfile` (minimum: `dbms`, `productLabel`, bundled

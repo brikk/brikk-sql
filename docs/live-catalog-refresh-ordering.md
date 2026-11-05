@@ -1,8 +1,10 @@
 # Live catalog refresh ordering
 
-The local integration candidate fixes two `LiveCatalogService` races in released
-IntelliJ support `0.4.0`: a harvest could recreate an inventory after `forget`, and
+Released IntelliJ support **0.4.1** fixes two `LiveCatalogService` races in
+`0.4.0`: a harvest could recreate an inventory after `forget`, and
 an older helper result could replace a newer complete result for the same source.
+All three support artifacts are [publicly verified on Maven Central](intellij-support-0.4.1.md)
+and retain released SQL `0.23.0` dependencies.
 
 ## Recording policy
 
@@ -35,19 +37,23 @@ The consumer's confirmed failing reproducers cover **DataFusion 55.2.0** and
 Those products share `DatafusionCatalogProfile` / `SpiceCatalogProfile` and are
 directly affected by both fixes.
 
-The fix is engine-independent. The built-in **Trino** live-function profile also
-uses this service. **DuckDB** is exercised by upstream tests using SDK-opened
-helper connections and native collection. Any ClickHouse, Doris or other consumer
-that subclasses `LiveCatalogService` receives the same lifecycle fix, but this is
-not a claim that every such plugin uses it or has passed integration tests.
+Read-only inspection of the current consumer sources confirms that all five database
+plugins use this service: **DataFusion & Spice**, **DuckDB**, **Trino**, **ClickHouse**
+and **Doris**. Trino explicitly enables its live catalog. These plugins should adopt
+`0.4.1`; that is not a claim that every consumer has completed integration qualification.
+The SQL Transpiler's current source has no direct `LiveCatalogService` use.
+
+**DuckDB** is exercised by upstream tests using SDK-opened helper connections and
+native collection. The separate DataFusion/Spice consumer matrix qualified the
+accepted snapshot, whose binary/source JARs are identical to the public release.
 
 No SQL core, metadata, verification API, engine parser, Flight protocol or native
 harvester semantics change. Consumers not using `LiveCatalogService` are unaffected.
 
-## Local candidate and verification boundary
+## Historical local candidate and verification boundary
 
-The three IntelliJ artifacts are aligned at a uniquely named
-`0.4.1-livecatalog-races-20261104-g<source-commit>-SNAPSHOT` in Maven Local only:
+Before the final release, the three IntelliJ artifacts were aligned at the uniquely named
+`0.4.1-livecatalog-races-20261104-g2a46bd08efcd-SNAPSHOT` in Maven Local only:
 `brikk-sql-intellij-support`, `brikk-sql-intellij-jdbc-support` and
 `brikk-sql-intellij-test-support`, all in group `dev.brikk.house`.
 Their SQL dependencies remain the released `0.23.0` coordinates.
@@ -67,7 +73,11 @@ The same tests can run against the immutable `0.4.0` JAR to retain red evidence.
 
 The consumer owns Spice/DataFusion reproducers and IDE/DataGrip, Kotlin mode,
 credentials, TLS/auth, console, cancellation and packaged-plugin verification.
-This is an owner-authorized SNAPSHOT candidate, not a stable or public release.
-No sibling plugin is edited. Public publication, release tags and Marketplace
-publication are not authorized. Consumer-verification acknowledgement is required
-before considering any further final-library release step.
+It explicitly accepted that snapshot for local qualification/dogfood, not as a stable
+release. The owner subsequently authorized public shared-library publication on
+2026-11-05. Stable `0.4.1` was then released from that exact accepted source.
+
+No sibling plugin was edited upstream. The DataFusion/Spice agent received the
+verified stable handoff; the owner is coordinating the other database plugins.
+Marketplace publication still needs separate authorization, and a candidate-only
+qualification ZIP must not simply be relabelled as a final plugin release.
