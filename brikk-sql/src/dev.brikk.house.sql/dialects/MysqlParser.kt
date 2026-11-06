@@ -432,6 +432,11 @@ open class MysqlParser(
 
     // sqlglot: MySQLParser._parse_primary_key_part
     override fun parsePrimaryKeyPart(): Expression? {
+        val ordered = parseOrdered { parsePrimaryKeyColumn() } as? Ordered ?: return null
+        return if (ordered.args["desc"] == null) ordered.thisArg as? Expression else ordered
+    }
+
+    private fun parsePrimaryKeyColumn(): Expression? {
         val this_ = parseIdVar()
         if (!match(TokenType.L_PAREN)) {
             return this_
@@ -445,7 +450,7 @@ open class MysqlParser(
     // sqlglot: MySQLParser._parse_index_constraint_part
     private fun parseIndexConstraintPart(): Expression? =
         if (!match(TokenType.L_PAREN, advance = false) && nextToken.tokenType == TokenType.L_PAREN) {
-            parsePrimaryKeyPart()
+            parsePrimaryKeyColumn()
         } else {
             parseDisjunction()
         }

@@ -50,6 +50,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 
 /** Which connections harvest. A refresh always does. */
 public enum class HarvestTrigger {
@@ -157,7 +159,7 @@ public sealed interface RefreshOutcome {
     /** Connected, but the harvest failed, timed out or read an incomplete inventory; the previous catalog stays. */
     public data class HarvestFailed(val outcome: HarvestOutcome) : RefreshOutcome
 
-    /** The data source's connection identity changed while the harvest ran; nothing was stored. */
+    /** Forgotten, reconnected, changed identity or overtaken by a newer successful harvest; nothing was stored. */
     public data object Superseded : RefreshOutcome
 
     /** The session is in a transaction, which a failing harvest query could abort; nothing was harvested. */
@@ -191,6 +193,30 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
     private val debouncer by lazy { RefreshDebouncer(scope, profile.refreshDelay) }
     private val inFlight = ConcurrentHashMap.newKeySet<Pair<String, ConnectionIdentity>>()
 
+    /** One recording lock per source, never held while connecting or harvesting. */
+    private class HarvestState {
+        var epoch: Any = Any()
+        var issued: Long = 0
+        var sharedAccepted: Long = 0
+        val sessionsAccepted = WeakHashMap<Any, Long>()
+    }
+
+    private class HarvestTicket(val sourceId: String, val state: HarvestState, val epoch: Any, val order: Long) {
+        var cancelled: Boolean = false // guarded by state
+    }
+
+    // Retain the fence after forget: removing it could let an old ticket become current again.
+    private val harvestStates = ConcurrentHashMap<String, HarvestState>()
+
+    private fun harvestState(sourceId: String): HarvestState = harvestStates.computeIfAbsent(sourceId) { HarvestState() }
+
+    private fun beginHarvest(sourceId: String): HarvestTicket {
+        val state = harvestState(sourceId)
+        return synchronized(state) { HarvestTicket(sourceId, state, state.epoch, ++state.issued) }
+    }
+
+    private fun current(ticket: HarvestTicket): Boolean = ticket.epoch === ticket.state.epoch && !ticket.cancelled
+
     /** A console connection and the identity of the server it reached. */
     private class ConsoleConnection(connection: DatabaseConnectionCore, val identity: ConnectionIdentity) {
         private val reference = WeakReference(connection)
@@ -216,7 +242,9 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
     /** The catalog of [dataSource] by the store's selection rule, with [session]'s facts. */
     public fun selection(dataSource: LocalDataSource, session: DatabaseSession? = null): LiveCatalogSelection {
         if (!profile.enabled) return LiveCatalogSelection.BUNDLED
-        return store.select(dataSource.uniqueId, profile.identity(dataSource), session?.let { sessionRequestors[it]?.get() })
+        return synchronized(harvestState(dataSource.uniqueId)) {
+            store.select(dataSource.uniqueId, profile.identity(dataSource), session?.let { sessionRequestors[it]?.get() })
+        }
     }
 
     /**
@@ -256,11 +284,15 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
         if (isHelperRequestor(requestor)) return
         val dataSource = connection.connectionPoint.dataSource
         val identity = profile.identity(dataSource)
+        val ticket = beginHarvest(dataSource.uniqueId)
         val console = requestor is DataProducer
         if (console) {
-            synchronized(consoleConnections) {
-                if (profile.sessionScopedInventory) store.storeSession(requestor, dataSource.uniqueId, identity, SessionFacts.NONE)
-                consoleConnections[requestor] = ConsoleConnection(connection, identity)
+            synchronized(ticket.state) {
+                if (!current(ticket)) return
+                synchronized(consoleConnections) {
+                    if (profile.sessionScopedInventory) store.storeSession(requestor, dataSource.uniqueId, identity, SessionFacts.NONE)
+                    consoleConnections[requestor] = ConsoleConnection(connection, identity)
+                }
             }
             // A new connection starts outside any transaction.
             synchronized(sessionRequestors) { sessionRequestors.filterValues { it.get() === requestor }.keys.toList() }.forEach(explicitTransactions::remove)
@@ -276,7 +308,8 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
         if (claim != null && !inFlight.add(claim)) return
         try {
             val outcome = runHarvest(profile.harvester, profile.deadline) { RemoteCatalogRows(connection, it) }
-            record(dataSource, identity, outcome, requestor.takeIf { console }, connection)
+            currentCoroutineContext().ensureActive()
+            record(dataSource, identity, outcome, requestor.takeIf { console }, connection, ticket)
         } finally {
             claim?.let(inFlight::remove)
         }
@@ -285,11 +318,18 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
     /**
      * Harvests [dataSource] over a helper connection of its own, which the interceptor skips and which
      * runs no startup script ([HelperConnectionPoint]), and stores the shared inventory; console
-     * sessions' facts stay. Cancellation propagates.
+     * sessions' facts stay. Cancellation propagates. A forget invalidates work already requested,
+     * including connecting helpers. Among complete results the newest-started accepted harvest wins;
+     * failed, partial, timed-out and cancelled requests do not advance that ordering fence.
      */
     public suspend fun refresh(project: Project, dataSource: LocalDataSource): RefreshOutcome {
+        return refresh(project, dataSource, beginHarvest(dataSource.uniqueId))
+    }
+
+    private suspend fun refresh(project: Project, dataSource: LocalDataSource, ticket: HarvestTicket): RefreshOutcome {
         val profile = profile
         if (!profile.enabled) return RefreshOutcome.Disabled
+        if (!synchronized(ticket.state) { current(ticket) }) return RefreshOutcome.Superseded
         val identity = profile.identity(dataSource)
         val ref = try {
             // The identity is taken before connecting, so a change while connecting cannot be mislabelled.
@@ -302,8 +342,9 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
         } ?: return RefreshOutcome.ConnectFailed(null)
         return ref.use { connection ->
             val outcome = runHarvest(profile.harvester, profile.deadline) { RemoteCatalogRows(connection.get(), it) }
+            currentCoroutineContext().ensureActive()
             when {
-                !record(dataSource, identity, outcome, session = null) -> RefreshOutcome.Superseded
+                !record(dataSource, identity, outcome, session = null, ticket = ticket) -> RefreshOutcome.Superseded
                 outcome is HarvestOutcome.Complete -> RefreshOutcome.Refreshed(outcome.harvest.shared)
                 else -> RefreshOutcome.HarvestFailed(outcome)
             }
@@ -319,16 +360,20 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
      * cancelled before the session ran it does not run.
      */
     public suspend fun refresh(project: Project, session: DatabaseSession): RefreshOutcome {
+        return refresh(project, session, beginHarvest(session.connectionPoint.dataSource.uniqueId))
+    }
+
+    private suspend fun refresh(project: Project, session: DatabaseSession, ticket: HarvestTicket): RefreshOutcome {
         if (!profile.enabled) return RefreshOutcome.Disabled
         val dataSource = session.connectionPoint.dataSource
-        if (!session.isConnected) return refresh(project, dataSource)
+        if (!session.isConnected) return refresh(project, dataSource, ticket)
         // A request outside the session's transaction would make the engine end it; such a session is left alone.
         if (profile.clientTransactions && (session.currentTx != DataRequest.AUTO_COMMIT || session in explicitTransactions)) return RefreshOutcome.SessionInTransaction
         val result = CompletableDeferred<RefreshOutcome>()
         val request = object : DataRequest.RawRequest(session) {
             override fun processRaw(context: DataRequest.Context, connection: DatabaseConnectionCore) {
                 if (result.isCompleted) return
-                result.complete(harvestSession(dataSource, session, context.producer, connection))
+                result.complete(harvestSession(dataSource, session, context.producer, connection, ticket))
             }
         }
         request.promise.onError { error ->
@@ -339,26 +384,31 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
             session.messageBus.dataProducer.processRequest(request)
             return result.await()
         } finally {
-            result.cancel()
+            synchronized(ticket.state) {
+                result.cancel()
+                if (result.isCancelled) ticket.cancelled = true
+            }
         }
     }
 
     /** [refresh] in the background, over [session]'s connection when it is given, then [onRefreshed]. */
     public fun refreshInBackground(project: Project, dataSource: LocalDataSource, session: DatabaseSession? = null) {
+        val ticket = beginHarvest(dataSource.uniqueId)
         scope.launch {
-            val outcome = if (session != null) refresh(project, session) else refresh(project, dataSource)
+            val outcome = if (session != null) refresh(project, session, ticket) else refresh(project, dataSource, ticket)
             onRefreshed(project, dataSource, outcome, RefreshReason.Manual)
         }
     }
 
     /** Harvests over a session's [connection] on its engine's thread, which [requestor] runs. */
-    private fun harvestSession(dataSource: LocalDataSource, session: DatabaseSession, requestor: Any?, connection: DatabaseConnectionCore): RefreshOutcome {
+    private fun harvestSession(dataSource: LocalDataSource, session: DatabaseSession, requestor: Any?, connection: DatabaseConnectionCore, ticket: HarvestTicket): RefreshOutcome {
         requestor?.let { learnSession(session, it) }
         val identity = requestor?.let { consoleConnections[it] }?.identity ?: profile.identity(dataSource)
-        return harvestOver(dataSource, connection, identity, requestor, session)
+        return harvestOver(dataSource, connection, identity, requestor, session, ticket)
     }
 
-    private fun harvestOver(dataSource: LocalDataSource, connection: DatabaseConnectionCore, identity: ConnectionIdentity, requestor: Any?, session: DatabaseSession): RefreshOutcome {
+    private fun harvestOver(dataSource: LocalDataSource, connection: DatabaseConnectionCore, identity: ConnectionIdentity, requestor: Any?, session: DatabaseSession, ticket: HarvestTicket = beginHarvest(dataSource.uniqueId)): RefreshOutcome {
+        if (!synchronized(ticket.state) { current(ticket) }) return RefreshOutcome.Superseded
         if (identity != profile.identity(dataSource)) {
             LOG.info("Not harvesting ${dataSource.name} over a connection to the server it named before")
             return RefreshOutcome.Superseded
@@ -369,7 +419,7 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
         }
         val outcome = runHarvestBlocking(profile.harvester, profile.deadline) { RemoteCatalogRows(connection, it) }
         return when {
-            !record(dataSource, identity, outcome, requestor, connection) -> RefreshOutcome.Superseded
+            !record(dataSource, identity, outcome, requestor, connection, ticket) -> RefreshOutcome.Superseded
             outcome is HarvestOutcome.Complete -> RefreshOutcome.Refreshed(outcome.harvest.shared, requestor?.let { outcome.harvest.session } ?: SessionFacts.NONE)
             else -> RefreshOutcome.HarvestFailed(outcome)
         }
@@ -393,7 +443,10 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
         val console = requestor?.let { consoleConnections[it] }
         val connection = console?.connection
         if (!sessionFacts || connection == null || ApplicationManager.getApplication().isDispatchThread) {
-            debouncer.submit(dataSource.uniqueId) { onRefreshed(project, dataSource, refresh(project, dataSource), reason) }
+            val ticket = beginHarvest(dataSource.uniqueId)
+            synchronized(ticket.state) {
+                if (current(ticket)) debouncer.submit(dataSource.uniqueId) { onRefreshed(project, dataSource, refresh(project, dataSource, ticket), reason) }
+            }
             return
         }
         onRefreshed(project, dataSource, harvestOver(dataSource, connection, console.identity, requestor, session), reason)
@@ -419,8 +472,15 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
 
     /** Forgets [dataSourceId] everywhere, persisted harvests included. */
     public fun forget(dataSourceId: String) {
-        store.forget(dataSourceId)
-        completions.clear()
+        synchronized(harvestState(dataSourceId)) {
+            val state = harvestState(dataSourceId)
+            state.epoch = Any()
+            state.sharedAccepted = 0
+            state.sessionsAccepted.clear()
+            debouncer.forget(dataSourceId)
+            store.forget(dataSourceId)
+            completions.clear()
+        }
     }
 
     /**
@@ -448,7 +508,7 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
             }
             is RefreshOutcome.ConnectFailed -> NotificationType.WARNING to "Could not connect to ${dataSource.name}" + (outcome.detail?.let { ": ${it.take(200)}" } ?: ".")
             is RefreshOutcome.HarvestFailed -> NotificationType.WARNING to "Reading the functions of ${dataSource.name} failed; the previous catalog stays."
-            RefreshOutcome.Superseded -> NotificationType.WARNING to "${dataSource.name} changed while its functions were read; refresh again."
+            RefreshOutcome.Superseded -> NotificationType.WARNING to "${dataSource.name}: the catalog read was superseded or forgotten; its result was discarded."
             RefreshOutcome.SessionInTransaction -> NotificationType.WARNING to "Not read: the console's session is in a transaction. Refresh after it ends."
             RefreshOutcome.Disabled -> return
         }
@@ -456,25 +516,46 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
     }
 
     /**
-     * Stores [outcome], harvested from [identity]; false when the data source names another server now, and
-     * nothing was stored.
+     * A complete result advances only the shared/session lanes it actually updates. A newer failure
+     * never fences out an older success. Session lanes are independent of helper and peer-console work.
+     * Forget and recording use the same source lock through the disk write/delete, not just the check.
      */
-    private fun record(dataSource: LocalDataSource, identity: ConnectionIdentity, outcome: HarvestOutcome, session: Any?, connection: DatabaseConnectionCore? = null): Boolean {
-        synchronized(consoleConnections) {
-            if (profile.sessionScopedInventory && session != null && consoleConnections[session]?.let { it.connection !== connection } == true) {
-                LOG.info("The console reconnected while its catalog was being read; discarded")
+    private fun record(dataSource: LocalDataSource, identity: ConnectionIdentity, outcome: HarvestOutcome, session: Any?, connection: DatabaseConnectionCore? = null, ticket: HarvestTicket): Boolean {
+        synchronized(ticket.state) {
+            if (!current(ticket) || ticket.sourceId != dataSource.uniqueId) {
+                LOG.info("The live catalog read was forgotten or cancelled; discarded")
                 return false
             }
             if (profile.identity(dataSource) != identity) {
                 LOG.info("The live catalog harvest of ${dataSource.name} is from the server it named before; discarded")
                 return false
             }
+            if (outcome !is HarvestOutcome.Complete && session != null && profile.sessionScopedInventory) synchronized(consoleConnections) {
+                if (consoleConnections[session]?.let { it.connection !== connection } == true) {
+                    LOG.info("The console reconnected while its catalog was being read; discarded")
+                    return false
+                }
+            }
             when (outcome) {
                 is HarvestOutcome.Complete -> {
-                    if (session == null || !profile.sessionScopedInventory) store.store(dataSource.uniqueId, identity, outcome.harvest.shared)
-                    session?.let {
-                        val facts = if (profile.sessionScopedInventory) outcome.harvest.session.copy(inventory = outcome.harvest.shared) else outcome.harvest.session
-                        store.storeSession(it, dataSource.uniqueId, identity, facts)
+                    val shared = (session == null || !profile.sessionScopedInventory) && ticket.order > ticket.state.sharedAccepted
+                    val ownSession = session != null && ticket.order > (ticket.state.sessionsAccepted[session] ?: 0)
+                    if (!shared && !ownSession) return false
+                    if (session != null) synchronized(consoleConnections) {
+                        if (profile.sessionScopedInventory && consoleConnections[session]?.let { it.connection !== connection } == true) {
+                            LOG.info("The console reconnected while its catalog was being read; discarded")
+                            return false
+                        }
+                        if (ownSession) {
+                            val facts = if (profile.sessionScopedInventory) outcome.harvest.session.copy(inventory = outcome.harvest.shared) else outcome.harvest.session
+                            store.storeSession(session, dataSource.uniqueId, identity, facts)
+                            ticket.state.sessionsAccepted[session] = ticket.order
+                        }
+                    }
+                    // No global console lock during disk IO: unrelated sources can record independently.
+                    if (shared) {
+                        store.store(dataSource.uniqueId, identity, outcome.harvest.shared)
+                        ticket.state.sharedAccepted = ticket.order
                     }
                 }
                 is HarvestOutcome.Failed -> LOG.info("The live catalog harvest of ${dataSource.name} failed; the previous catalog stays", outcome.error)
@@ -565,12 +646,15 @@ internal class RefreshDebouncer(private val scope: CoroutineScope, private val d
         if (pending.putIfAbsent(key, token) != null) return false
         val job = scope.launch {
             delay(delay)
-            pending.remove(key, token)
+            if (!pending.remove(key, token)) return@launch
             action()
         }
         job.invokeOnCompletion { pending.remove(key, token) }
         return true
     }
+
+    /** Invalidates a waiting action; a new submission need not wait for its old timer. */
+    fun forget(key: Any) { pending.remove(key) }
 }
 
 /**

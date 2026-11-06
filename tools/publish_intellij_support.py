@@ -12,12 +12,22 @@ from release_config import development_version, validate_version, release_templa
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("version", type=validate_version)
+    parser.add_argument("version")
     parser.add_argument("--core-version", type=validate_version)
     parser.add_argument("--skip-core-publication", action="store_true",
                         help="Use --core-version in metadata but publish only support, its JDBC adapter and test kit")
     parser.add_argument("--local", action="store_true", help="Publish only to Maven Local, without signing")
+    parser.add_argument("--snapshot", action="store_true",
+                        help="Allow a named -SNAPSHOT candidate; requires --local, --core-version and --skip-core-publication")
     args = parser.parse_args()
+    if args.snapshot:
+        if not (args.local and args.core_version and args.skip_core_publication):
+            parser.error("--snapshot requires --local, --core-version and --skip-core-publication")
+        if not args.version.endswith("-SNAPSHOT"):
+            parser.error("--snapshot requires a version ending in -SNAPSHOT")
+        validate_version(args.version.removesuffix("-SNAPSHOT"))
+    else:
+        validate_version(args.version)
     if args.skip_core_publication and not args.core_version:
         parser.error("--skip-core-publication requires --core-version")
     if not args.local and not args.core_version:

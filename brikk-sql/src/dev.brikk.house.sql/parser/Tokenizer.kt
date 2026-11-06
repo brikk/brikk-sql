@@ -846,7 +846,10 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
                 } else {
                     break
                 }
-            } else if (asciiUpper(peek) == 'E' && scientific == 0) {
+            } else if (asciiUpper(peek) == 'E' && scientific == 0 &&
+                (current + 1 >= size || !(sql[current + 1].isLetter() || sql[current + 1] == '_'))) {
+                // E starts an exponent only when it is not the start of a word
+                // such as END. Keep incomplete exponents intact for validation.
                 scientific += 1
                 advance()
             } else if (peek == '_' && config.numbersCanBeUnderscoreSeparated) {

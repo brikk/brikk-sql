@@ -268,6 +268,11 @@ class StreamingCancelTest : BasePlatformTestCase() {
         assertFalse("the successor runs on a new connection, out of the running cancel's reach",
             steps("@next") == steps("@${SlowStreamDriver.HELD}"))
         Files.createFile(Path.of("$log.release"))
+        // The retired connection's cancel is deliberately still running. Do not destroy its driver
+        // process in teardown before it observes release: that leaks an RMI EOF into the next test.
+        PlatformTestUtil.waitWithEventsDispatching("the retired connection's cancel returns", {
+            "cancel returns" in steps(SlowStreamDriver.HELD)
+        }, 10)
         console.run("SELECT 42")
     }
 

@@ -8,6 +8,18 @@ moment upstream publishes.
 This is distinct from `reference/` (gitignored full clones of upstream repos used as porting
 oracles) — `vendor/` contents are committed and shipped-adjacent.
 
+## Test-expansion source harvest
+
+`data/test-expansion/` contains unmodified, commit-pinned regression sources from
+Polyglot, DuckDB and ClickHouse. Polyglot-authored regressions are adapted into
+Kotlin tests with attribution. Engine SQL and expected results come directly from
+the engine repositories, not through Polyglot. See the directory's `README.md`,
+`manifest.json` and per-project licenses, plus root `ATTRIBUTIONS.md`.
+
+Verify locally with `python3 tools/test_expansion_sources.py`. Use `--fetch` to
+restore exact locked bytes. Only a reviewed source refresh should use `--record`,
+after updating the pinned revisions and reviewing every changed fixture.
+
 ## DataFusion and Spice reference evidence
 
 `data/datafusion/55.2.0/` and `data/spice/2.4.0/` hold the initial version-pinned

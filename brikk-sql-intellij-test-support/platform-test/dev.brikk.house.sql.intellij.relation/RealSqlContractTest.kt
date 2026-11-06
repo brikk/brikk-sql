@@ -63,7 +63,7 @@ class RealSqlContractTest : RelationTestCase() {
     }
 
     /** A data source of [dbms] holding [content]; MySQL has no catalogs, so its paths drop the first part. */
-    private fun dataSource(dbms: Dbms, driver: String, content: RealSqlModel = RealSqlModel.STANDARD): LocalDataSource {
+    private fun dataSource(dbms: Dbms, driver: String, content: RealSqlModel = RealSqlModel.STANDARD, initialize: (BasicModel) -> Unit = {}): LocalDataSource {
         val model = ModelFactory.BLACK_HOLE.createModel(dbms)
         val pg = model.root is PgRoot
         /** [path] as the model's levels see it. */
@@ -87,6 +87,8 @@ class RealSqlContractTest : RelationTestCase() {
                 is MysqlRoot -> names.firstOrNull()?.let(root.schemas::createOrGet)
             }
         }
+        // Registration publishes the model to background SDK readers, which may freeze it.
+        initialize(model as BasicModel)
         val source = LocalDataSource().apply {
             name = "real sql ${UUID.randomUUID()}"
             databaseDriver = checkNotNull(DatabaseDriverManager.getInstance().getDriver(driver))
@@ -278,12 +280,13 @@ class RealSqlContractTest : RelationTestCase() {
 
     /** Completes `SELECT <caret> FROM orders o` over typed physical columns, as name to presentation. */
     private fun typedColumns(): Map<String, LookupElementPresentation> {
-        val source = dataSource(Dbms.POSTGRES, "postgresql")
-        val orders = ((source.model as BasicModel).root as PgRoot).databases.createOrGet("shop").schemas.createOrGet("sales").tables.createOrGet("orders")
-        fun type(name: String) = DasTypeSystems.getTypeSystem(Dbms.POSTGRES).createDasType(DataTypeFactory.of(name))
-        orders.columns.createOrGet("amount").storedType = type("numeric(20)")
-        orders.columns.createOrGet("status").storedType = type("varchar(16)")
-        orders.columns.createOrGet("order_id").apply { storedType = type("bigint"); setNotNull(true) }
+        val source = dataSource(Dbms.POSTGRES, "postgresql", initialize = { model ->
+            val orders = (model.root as PgRoot).databases.createOrGet("shop").schemas.createOrGet("sales").tables.createOrGet("orders")
+            fun type(name: String) = DasTypeSystems.getTypeSystem(Dbms.POSTGRES).createDasType(DataTypeFactory.of(name))
+            orders.columns.createOrGet("amount").storedType = type("numeric(20)")
+            orders.columns.createOrGet("status").storedType = type("varchar(16)")
+            orders.columns.createOrGet("order_id").apply { storedType = type("bigint"); setNotNull(true) }
+        })
         DbPsiFacade.getInstance(project).clearCaches()
         val file = myFixture.configureByText("stock-${UUID.randomUUID()}.sql", "SELECT <caret> FROM orders o").virtualFile
         setSqlDialectMapping(project, file, postgres as SqlLanguageDialect, testRootDisposable)

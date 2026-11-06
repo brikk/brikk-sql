@@ -40,6 +40,36 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
+## Polyglot regression test harvest
+
+The `Polyglot*HarvestTest.kt` tests adapt selected SQL inputs and assertions from
+[Polyglot](https://github.com/tobilg/polyglot), release `v0.14.0`, commit
+`a62f5b8f5c64f2d30e1072237f5586c98f799066`. The unmodified Rust test sources and
+full MIT license are retained under `vendor/data/test-expansion/polyglot/`.
+
+Copyright (c) 2026 TobiLG <github@tobilg.com>.
+
+The permission, notice-retention requirement, and warranty disclaimer in that
+MIT license apply to these adapted tests. Each Kotlin test names its source.
+The source manifest records exact upstream paths and SHA-256 checksums. Brikk's
+AST, UTF-16 positions, supported nesting limits and semantic policies replace
+implementation-specific expectations; Polyglot is not used as an execution oracle.
+
+## Engine-owned regression fixtures
+
+`vendor/data/test-expansion/duckdb/` contains unchanged DuckDB `v2.0.0` test files
+and its MIT license, pinned to `d54cbbe3df17e8e5ce68312f483b4155836112aa`.
+Copyright 2018-2026 Stichting DuckDB Foundation. The full permission and warranty
+notice is retained in that directory's `LICENSE`.
+
+`vendor/data/test-expansion/clickhouse/` contains unchanged ClickHouse
+`v26.10.2.103-stable` SQL tests, reference outputs and its Apache License 2.0,
+pinned to `c6428ebcc39fdff48bb0f50e128b2078701901d5`. Source:
+[ClickHouse/ClickHouse](https://github.com/ClickHouse/ClickHouse). Original file
+contents and any embedded notices are retained. These are test data, not bundled
+ClickHouse binaries. Source identities and checksums are in
+`vendor/data/test-expansion/manifest.json`.
+
 ## Spice SQL reference adapter
 
 `tools/datafusion-reference/src/spice.rs` adapts the statement-level CLUSTER BY parser

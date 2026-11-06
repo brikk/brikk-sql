@@ -32,7 +32,7 @@ and the oracle require Java 25. See [Java 17 embedding](docs/java17-compatibilit
 for dependency guidance.
 
 Latest core, metadata, verify and oracle release: **`0.23.0`**. SQL IntelliJ
-support is independently versioned at **`0.4.0`**.
+support is independently versioned at **`0.4.1`**.
 
 ```kotlin
 repositories { mavenCentral() }
@@ -84,6 +84,7 @@ integrations. See the [support guide](docs/datafusion-spice-support.md) and
 - [Source-preserving SQL lowering](docs/source-preserving-lowering.md)
 - [IntelliJ integration](brikk-sql-intellij-support/README.md)
 - [SQL 0.23.0 and IntelliJ 0.4.0 release record](docs/sql-0.23.0.md)
+- [IntelliJ 0.4.1 catalog-race fix](docs/intellij-support-0.4.1.md)
 - [Dialect differences and extensions](docs/brikk-extensions.md)
 - [Building, testing and publishing](dev-docs/CONTRIBUTING.md)
 - [Developer work list](dev-docs/README.md)

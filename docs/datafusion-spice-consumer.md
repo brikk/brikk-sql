@@ -121,18 +121,19 @@ it does not supply missing native schemas or qualify another transport.
 
 These final coordinates are published and verified on Maven Central. All artifacts use group
 `dev.brikk.house`. Use `mavenCentral()`; no Maven Local or snapshot repository is needed.
-See [the release record](sql-0.23.0.md).
+See [the SQL release record](sql-0.23.0.md) and the
+[IntelliJ 0.4.1 catalog-race fix](intellij-support-0.4.1.md).
 
 | Artifact | Release version | Consumer use |
 | --- | --- | --- |
 | `brikk-sql-jvm` | `0.23.0` | Core, Java 17 |
 | `brikk-sql-metadata-jvm` | `0.23.0` | Metadata, Java 17 |
 | `brikk-sql-verify-api` | `0.23.0` | Verification contracts, Java 17 |
-| `brikk-sql-intellij-support` | `0.4.0` | Embedded support, Java 21 |
-| `brikk-sql-intellij-jdbc-support` | `0.4.0` | Optional reviewed generic JDBC gate |
-| `brikk-sql-intellij-test-support` | `0.4.0` | Consumer test dependency only |
+| `brikk-sql-intellij-support` | `0.4.1` | Embedded support, Java 21 |
+| `brikk-sql-intellij-jdbc-support` | `0.4.1` | Optional reviewed generic JDBC gate |
+| `brikk-sql-intellij-test-support` | `0.4.1` | Consumer test dependency only |
 
-Keep the SQL family at `0.23.0` and the three support artifacts at `0.4.0` together.
+Keep the SQL family at `0.23.0` and the three support artifacts at `0.4.1` together.
 The support POM exports core, metadata and verification API.
 Do not package the heavy verifier aggregate or Kotlin IDE plugin just
 to use these profiles. Shared jars contain no plugin descriptor or consumer fixture classes.

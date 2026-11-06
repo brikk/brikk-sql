@@ -95,5 +95,29 @@ class ScopedReleaseTest(unittest.TestCase):
         self.assertFalse((self.root / 'calls.json').exists())
         self.assert_restored()
 
+    def test_named_snapshot_requires_explicit_local_only_opt_in_and_keeps_core_released(self):
+        version = '0.4.1-livecatalog-g123abc-SNAPSHOT'
+        result = subprocess.run(['python3', 'tools/publish_intellij_support.py', version, '--snapshot', '--local',
+                                 '--core-version', '0.23.0', '--skip-core-publication'],
+                                cwd=self.root, capture_output=True, text=True)
+        self.assertEqual(0, result.returncode, result.stderr)
+        for observed in ('observed-module', 'observed-jdbc-module', 'observed-test-module'):
+            self.assertIn('version: ' + version, (self.root / observed).read_text())
+        self.assertIn('version: "0.23.0"', (self.root / 'observed-template').read_text())
+        self.assertEqual(['publish', 'mavenLocal', '-m', 'brikk-sql-intellij-support',
+                          '-m', 'brikk-sql-intellij-jdbc-support', '-m', 'brikk-sql-intellij-test-support', '--non-transitive'],
+                         json.loads((self.root / 'calls.json').read_text()))
+        self.assert_restored()
+
+    def test_snapshot_opt_in_cannot_publish_remotely_or_republish_core(self):
+        for options in ([], ['--local'], ['--local', '--core-version', '0.23.0'],
+                        ['--core-version', '0.23.0', '--skip-core-publication']):
+            result = subprocess.run(['python3', 'tools/publish_intellij_support.py',
+                                     '0.4.1-races-SNAPSHOT', '--snapshot', *options],
+                                    cwd=self.root, capture_output=True)
+            self.assertNotEqual(0, result.returncode)
+            self.assertFalse((self.root / 'calls.json').exists())
+            self.assert_restored()
+
 
 if __name__ == '__main__': unittest.main()

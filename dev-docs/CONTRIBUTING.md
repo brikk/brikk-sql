@@ -1,7 +1,7 @@
 # Building and publishing
 
 Use the pinned Kotlin Toolchain 0.13.0 wrapper and Kotlin 2.4.10.
-Current development versions are SQL `0.24.0-SNAPSHOT` and IntelliJ support `0.4.1-SNAPSHOT`.
+Current development versions are SQL `0.24.0-SNAPSHOT` and IntelliJ support `0.4.2-SNAPSHOT`.
 Published versions are listed in the [root README](../README.md).
 
 ## Build and test

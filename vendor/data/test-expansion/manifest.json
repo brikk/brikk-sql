@@ -1,0 +1,165 @@
+{
+  "format": 1,
+  "files": [
+    {
+      "project": "polyglot",
+      "repository": "tobilg/polyglot",
+      "revision": "a62f5b8f5c64f2d30e1072237f5586c98f799066",
+      "tag": "v0.14.0",
+      "source_path": "LICENSE",
+      "local_path": "polyglot/LICENSE",
+      "url": "https://raw.githubusercontent.com/tobilg/polyglot/a62f5b8f5c64f2d30e1072237f5586c98f799066/LICENSE",
+      "sha256": "1e63f135949fa11c4557ca23d40cc0d6ad944be21ecfa665284c35b87dbdd709"
+    },
+    {
+      "project": "polyglot",
+      "repository": "tobilg/polyglot",
+      "revision": "a62f5b8f5c64f2d30e1072237f5586c98f799066",
+      "tag": "v0.14.0",
+      "source_path": "crates/polyglot-sql/tests/numeric_exponent_boundaries.rs",
+      "local_path": "polyglot/crates/polyglot-sql/tests/numeric_exponent_boundaries.rs",
+      "url": "https://raw.githubusercontent.com/tobilg/polyglot/a62f5b8f5c64f2d30e1072237f5586c98f799066/crates/polyglot-sql/tests/numeric_exponent_boundaries.rs",
+      "sha256": "85c6ac3144b9ceb2a150c4750f0517ca1fc2ce34ccb6eab19baaee0f7ca8cb84"
+    },
+    {
+      "project": "polyglot",
+      "repository": "tobilg/polyglot",
+      "revision": "a62f5b8f5c64f2d30e1072237f5586c98f799066",
+      "tag": "v0.14.0",
+      "source_path": "crates/polyglot-sql/tests/quoted_relation_columns.rs",
+      "local_path": "polyglot/crates/polyglot-sql/tests/quoted_relation_columns.rs",
+      "url": "https://raw.githubusercontent.com/tobilg/polyglot/a62f5b8f5c64f2d30e1072237f5586c98f799066/crates/polyglot-sql/tests/quoted_relation_columns.rs",
+      "sha256": "d4f389171456f1738221bcb193c8164fc4daa2b50c410a2669b3fc5fcf65aa3c"
+    },
+    {
+      "project": "polyglot",
+      "repository": "tobilg/polyglot",
+      "revision": "a62f5b8f5c64f2d30e1072237f5586c98f799066",
+      "tag": "v0.14.0",
+      "source_path": "crates/polyglot-sql/tests/query_analysis_regression.rs",
+      "local_path": "polyglot/crates/polyglot-sql/tests/query_analysis_regression.rs",
+      "url": "https://raw.githubusercontent.com/tobilg/polyglot/a62f5b8f5c64f2d30e1072237f5586c98f799066/crates/polyglot-sql/tests/query_analysis_regression.rs",
+      "sha256": "c35ad6d6d0d605cd2cd11b33882b79dff247a5c99cc6c5772f826cac63883437"
+    },
+    {
+      "project": "polyglot",
+      "repository": "tobilg/polyglot",
+      "revision": "a62f5b8f5c64f2d30e1072237f5586c98f799066",
+      "tag": "v0.14.0",
+      "source_path": "crates/polyglot-sql/tests/deep_nesting_regression.rs",
+      "local_path": "polyglot/crates/polyglot-sql/tests/deep_nesting_regression.rs",
+      "url": "https://raw.githubusercontent.com/tobilg/polyglot/a62f5b8f5c64f2d30e1072237f5586c98f799066/crates/polyglot-sql/tests/deep_nesting_regression.rs",
+      "sha256": "d22f952a70a826ac54311bca17f4311ef47bfc35903e18c79930aaec99f5226e"
+    },
+    {
+      "project": "polyglot",
+      "repository": "tobilg/polyglot",
+      "revision": "a62f5b8f5c64f2d30e1072237f5586c98f799066",
+      "tag": "v0.14.0",
+      "source_path": "crates/polyglot-sql/tests/unicode_token_ranges.rs",
+      "local_path": "polyglot/crates/polyglot-sql/tests/unicode_token_ranges.rs",
+      "url": "https://raw.githubusercontent.com/tobilg/polyglot/a62f5b8f5c64f2d30e1072237f5586c98f799066/crates/polyglot-sql/tests/unicode_token_ranges.rs",
+      "sha256": "4d07d081b01b1bfc17133fb5b25d2214997301a6b2334534571b655331f399c3"
+    },
+    {
+      "project": "duckdb",
+      "repository": "duckdb/duckdb",
+      "revision": "d54cbbe3df17e8e5ce68312f483b4155836112aa",
+      "tag": "v2.0.0",
+      "source_path": "LICENSE",
+      "local_path": "duckdb/LICENSE",
+      "url": "https://raw.githubusercontent.com/duckdb/duckdb/d54cbbe3df17e8e5ce68312f483b4155836112aa/LICENSE",
+      "sha256": "075c33400ffcb0c586dd106a029d3e733e9da3693f8fcb9cebfc651c8a2f14e3"
+    },
+    {
+      "project": "duckdb",
+      "repository": "duckdb/duckdb",
+      "revision": "d54cbbe3df17e8e5ce68312f483b4155836112aa",
+      "tag": "v2.0.0",
+      "source_path": "test/sql/json/scalar/test_json_arrow_expr.test",
+      "local_path": "duckdb/test/sql/json/scalar/test_json_arrow_expr.test",
+      "url": "https://raw.githubusercontent.com/duckdb/duckdb/d54cbbe3df17e8e5ce68312f483b4155836112aa/test/sql/json/scalar/test_json_arrow_expr.test",
+      "sha256": "08cb7ebbd4e0a2acf78427b3f583f0b22c8a6971ba8e715bf08405aedf95e037"
+    },
+    {
+      "project": "duckdb",
+      "repository": "duckdb/duckdb",
+      "revision": "d54cbbe3df17e8e5ce68312f483b4155836112aa",
+      "tag": "v2.0.0",
+      "source_path": "test/sql/parser/nested_join_backtracking.test",
+      "local_path": "duckdb/test/sql/parser/nested_join_backtracking.test",
+      "url": "https://raw.githubusercontent.com/duckdb/duckdb/d54cbbe3df17e8e5ce68312f483b4155836112aa/test/sql/parser/nested_join_backtracking.test",
+      "sha256": "036c8325f7e4902a45f5f878da106e018a35f2b242651f4a3083f2082a87b8d9"
+    },
+    {
+      "project": "clickhouse",
+      "repository": "ClickHouse/ClickHouse",
+      "revision": "c6428ebcc39fdff48bb0f50e128b2078701901d5",
+      "tag": "v26.10.2.103-stable",
+      "source_path": "LICENSE",
+      "local_path": "clickhouse/LICENSE",
+      "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/c6428ebcc39fdff48bb0f50e128b2078701901d5/LICENSE",
+      "sha256": "af5d33e7f3dbbd25e889d8bdc61c83562c257d20c22386bb04106cd22937341a"
+    },
+    {
+      "project": "clickhouse",
+      "repository": "ClickHouse/ClickHouse",
+      "revision": "c6428ebcc39fdff48bb0f50e128b2078701901d5",
+      "tag": "v26.10.2.103-stable",
+      "source_path": "tests/queries/0_stateless/00157_aliases_and_lambda_formal_parameters.sql",
+      "local_path": "clickhouse/tests/queries/0_stateless/00157_aliases_and_lambda_formal_parameters.sql",
+      "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/c6428ebcc39fdff48bb0f50e128b2078701901d5/tests/queries/0_stateless/00157_aliases_and_lambda_formal_parameters.sql",
+      "sha256": "79fdf335b5512502b378514a90afee4d4045448f37068838417690d626088f02"
+    },
+    {
+      "project": "clickhouse",
+      "repository": "ClickHouse/ClickHouse",
+      "revision": "c6428ebcc39fdff48bb0f50e128b2078701901d5",
+      "tag": "v26.10.2.103-stable",
+      "source_path": "tests/queries/0_stateless/00157_aliases_and_lambda_formal_parameters.reference",
+      "local_path": "clickhouse/tests/queries/0_stateless/00157_aliases_and_lambda_formal_parameters.reference",
+      "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/c6428ebcc39fdff48bb0f50e128b2078701901d5/tests/queries/0_stateless/00157_aliases_and_lambda_formal_parameters.reference",
+      "sha256": "a843814236f2ec154f0e5f1a11281927a72c3e54067691a7e312a6148818b883"
+    },
+    {
+      "project": "clickhouse",
+      "repository": "ClickHouse/ClickHouse",
+      "revision": "c6428ebcc39fdff48bb0f50e128b2078701901d5",
+      "tag": "v26.10.2.103-stable",
+      "source_path": "tests/queries/0_stateless/01960_lambda_precedence.sql",
+      "local_path": "clickhouse/tests/queries/0_stateless/01960_lambda_precedence.sql",
+      "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/c6428ebcc39fdff48bb0f50e128b2078701901d5/tests/queries/0_stateless/01960_lambda_precedence.sql",
+      "sha256": "1de6e797d79532993674c6e119e2cf0acacdd48ab698afa753e4b5751f390ee0"
+    },
+    {
+      "project": "clickhouse",
+      "repository": "ClickHouse/ClickHouse",
+      "revision": "c6428ebcc39fdff48bb0f50e128b2078701901d5",
+      "tag": "v26.10.2.103-stable",
+      "source_path": "tests/queries/0_stateless/01960_lambda_precedence.reference",
+      "local_path": "clickhouse/tests/queries/0_stateless/01960_lambda_precedence.reference",
+      "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/c6428ebcc39fdff48bb0f50e128b2078701901d5/tests/queries/0_stateless/01960_lambda_precedence.reference",
+      "sha256": "4617b05233adba6455c632711bbdfb7d0f5a2ff99bae468f2f5adcadf211ebcd"
+    },
+    {
+      "project": "clickhouse",
+      "repository": "ClickHouse/ClickHouse",
+      "revision": "c6428ebcc39fdff48bb0f50e128b2078701901d5",
+      "tag": "v26.10.2.103-stable",
+      "source_path": "tests/queries/0_stateless/01915_json_extract_raw_string.sql",
+      "local_path": "clickhouse/tests/queries/0_stateless/01915_json_extract_raw_string.sql",
+      "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/c6428ebcc39fdff48bb0f50e128b2078701901d5/tests/queries/0_stateless/01915_json_extract_raw_string.sql",
+      "sha256": "d3090106b2bd737de35d81ed77de2c197518f38a64a06de0b727e79acc18f69f"
+    },
+    {
+      "project": "clickhouse",
+      "repository": "ClickHouse/ClickHouse",
+      "revision": "c6428ebcc39fdff48bb0f50e128b2078701901d5",
+      "tag": "v26.10.2.103-stable",
+      "source_path": "tests/queries/0_stateless/01915_json_extract_raw_string.reference",
+      "local_path": "clickhouse/tests/queries/0_stateless/01915_json_extract_raw_string.reference",
+      "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/c6428ebcc39fdff48bb0f50e128b2078701901d5/tests/queries/0_stateless/01915_json_extract_raw_string.reference",
+      "sha256": "7cd6949dfffb8a3bb376f880f0e2c13de847f3aab2a2bf8494765f47a751f250"
+    }
+  ]
+}

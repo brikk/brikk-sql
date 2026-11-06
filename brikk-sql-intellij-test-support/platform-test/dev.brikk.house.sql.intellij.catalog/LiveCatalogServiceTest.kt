@@ -182,6 +182,85 @@ class LiveCatalogServiceTest : BasePlatformTestCase() {
         assertFalse("old_connection" in offered(fileA))
     }
 
+    fun testForgetAlsoFencesAnInFlightConsoleInventoryAndSessionFacts() {
+        newService(object : LiveCatalogProfile by LiveProfile(harvester, HarvestTrigger.EVERY_CONSOLE_CONNECT, deadline = 30.seconds) {
+            override val sessionScopedInventory = true
+        })
+        val entered = CountDownLatch(1)
+        val release = CountDownLatch(1)
+        harvester.answer = { rows ->
+            DuckdbTestHarvester.harvest(rows).also { entered.countDown(); assertTrue(release.await(20, TimeUnit.SECONDS)) }
+        }
+        runBlocking {
+            val old = async(Dispatchers.IO) { connect(0, engines[0]) }
+            try {
+                assertTrue(entered.await(10, TimeUnit.SECONDS))
+                service.forget(dataSource.uniqueId)
+            } finally { release.countDown() }
+            old.await()
+        }
+        link(consoleA, engines[0])
+        assertNull(service.completion(fileA).selection.inventory)
+        assertNull(LiveCatalogStore(dir).select(dataSource.uniqueId, service.profile.identity(dataSource)).inventory)
+    }
+
+    fun testAReconnectedConsoleAlsoSupersedesItsOlderFailedHarvest() {
+        newService(object : LiveCatalogProfile by LiveProfile(harvester, HarvestTrigger.EVERY_CONSOLE_CONNECT, deadline = 30.seconds) {
+            override val sessionScopedInventory = true
+        })
+        connect(0, engines[0])
+        val entered = CountDownLatch(1)
+        val release = CountDownLatch(1)
+        val first = AtomicBoolean(true)
+        harvester.answer = {
+            if (first.getAndSet(false)) {
+                entered.countDown()
+                assertTrue(release.await(20, TimeUnit.SECONDS))
+                null
+            } else Harvest(inventory(liveFunction("replacement")))
+        }
+        runBlocking {
+            val old = async(Dispatchers.IO) { changed(consoleA, engines[0]) }
+            try {
+                assertTrue(entered.await(10, TimeUnit.SECONDS))
+                connect(1, engines[0])
+            } finally { release.countDown() }
+            old.await()
+        }
+        assertEquals(RefreshOutcome.Superseded, service.refreshed.last())
+        link(consoleA, engines[0])
+        assertTrue("replacement" in offered(fileA))
+    }
+
+    fun testANewerSharedResultDoesNotSuppressAnOlderConsolesIndependentInventory() {
+        newService(object : LiveCatalogProfile by LiveProfile(harvester, HarvestTrigger.EVERY_CONSOLE_CONNECT, deadline = 30.seconds) {
+            override val sessionScopedInventory = true
+        })
+        val entered = CountDownLatch(1)
+        val release = CountDownLatch(1)
+        val first = AtomicBoolean(true)
+        harvester.answer = {
+            if (first.getAndSet(false)) {
+                val result = Harvest(inventory(liveFunction("own_console")))
+                entered.countDown()
+                assertTrue(release.await(20, TimeUnit.SECONDS))
+                result
+            } else Harvest(inventory(liveFunction("shared_helper")))
+        }
+        runBlocking {
+            val old = async(Dispatchers.IO) { connect(0, engines[0]) }
+            try {
+                assertTrue(entered.await(10, TimeUnit.SECONDS))
+                connect(2, otherRequestor())
+            } finally { release.countDown() }
+            old.await()
+        }
+        link(consoleA, engines[0])
+        assertTrue("own_console" in offered(fileA))
+        assertFalse("shared_helper" in offered(fileA))
+        assertEquals(listOf("shared_helper"), service.selection(dataSource).inventory!!.functions.map { it.def.name })
+    }
+
     fun testARegistryAliasOfTheDbmsIsAccepted() {
         registerDbms(CatalogTestDbms.TRINO_BRIKK, testRootDisposable)
         newService(LiveProfile(harvester, dbms = CatalogTestDbms.TRINO_BRIKK))

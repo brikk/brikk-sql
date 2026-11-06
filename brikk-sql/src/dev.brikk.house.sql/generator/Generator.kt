@@ -2698,7 +2698,7 @@ open class Generator(
                 (alias.isNotEmpty() || expression.parent is From || expression.parent is Table)
             ) "($values)" else values
             val pivots = expressions(expression, key = "pivots", sep = "", flat = true)
-            return (if (alias.isNotEmpty()) "$values AS $alias" else values) + pivots
+            return (if (alias.isNotEmpty()) "$values AS $alias" else values) + pivots + valuesRelationsSql(expression)
         }
 
         // Converts `VALUES...` expression into a series of select unions.
@@ -2722,8 +2722,14 @@ open class Generator(
         val alias = if (aliasNode != null) " AS ${sql(aliasNode, "this")}" else ""
         val unions = selects.joinToString(" UNION ALL ") { sql(it) }
         val pivots = expressions(expression, key = "pivots", sep = "", flat = true)
-        return "(${queryModifiers(expression, unions)})$alias$pivots"
+        return "(${queryModifiers(expression, unions)})$alias$pivots${valuesRelationsSql(expression)}"
     }
+
+    // A join's conditions must see the VALUES alias, not an alias on the whole join.
+    private fun valuesRelationsSql(expression: Values): String =
+        listOf("joins", "laterals").joinToString("") { key ->
+            (expression.args[key] as? List<*>).orEmpty().joinToString("") { sql(it) }
+        }
 
     // sqlglot: Generator.var_sql
     open fun varSql(expression: Var): String = sql(expression, "this")
@@ -3342,9 +3348,10 @@ open class Generator(
 
         val parts = mutableListOf<String>()
         parts.addAll(sqls)
-        for (join in (expression.args["joins"] as? List<*>).orEmpty()) parts.add(sql(join))
+        // VALUES relations are rendered after their alias by valuesSql.
+        if (expression !is Values) for (join in (expression.args["joins"] as? List<*>).orEmpty()) parts.add(sql(join))
         parts.add(sql(expression, "match"))
-        for (lateral in (expression.args["laterals"] as? List<*>).orEmpty()) parts.add(sql(lateral))
+        if (expression !is Values) for (lateral in (expression.args["laterals"] as? List<*>).orEmpty()) parts.add(sql(lateral))
         parts.add(sql(expression, "prewhere"))
         parts.add(sql(expression, "where"))
         parts.add(sql(expression, "connect"))
