@@ -212,7 +212,6 @@ public abstract class AutoIntrospectService(protected val project: Project, priv
         LOG.info("Auto-introspection: ${dataSource.name}: ${path.joinToString(".")} marked loaded by the dialect")
     }
 
-    /** Logs why [label] starts nothing; false. */
     private fun skipped(label: String, why: String): Boolean {
         LOG.info("Auto-introspection skipped $label: $why")
         return false

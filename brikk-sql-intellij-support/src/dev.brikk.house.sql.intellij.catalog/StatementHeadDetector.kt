@@ -49,7 +49,6 @@ public class StatementRule(public val pattern: String, public val effect: Statem
         data object End : Element
     }
 
-    /** This rule with [notifies] set. */
     public fun notifying(): StatementRule = StatementRule(pattern, effect, notifies = true)
 
     override fun toString(): String = "$pattern -> $effect"

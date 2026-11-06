@@ -24,7 +24,6 @@ import kotlinx.coroutines.withTimeoutOrNull
 public sealed interface HarvestOutcome {
     public data class Complete(val harvest: Harvest) : HarvestOutcome
 
-    /** The harvester read an incomplete inventory. */
     public data object Incomplete : HarvestOutcome
 
     public data class Failed(val error: Exception) : HarvestOutcome
@@ -33,7 +32,6 @@ public sealed interface HarvestOutcome {
     public data object TimedOut : HarvestOutcome
 }
 
-/** The end of a harvest's time budget. */
 internal class HarvestDeadline(val budget: Duration, timeSource: TimeSource = TimeSource.Monotonic) {
     private val end = timeSource.markNow() + budget
 

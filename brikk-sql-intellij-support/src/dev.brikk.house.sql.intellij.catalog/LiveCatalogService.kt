@@ -139,7 +139,6 @@ public interface LiveCatalogProfile {
 
 /** Why a refresh ran. */
 public sealed interface RefreshReason {
-    /** The user asked for it. */
     public data object Manual : RefreshReason
 
     /** Executed statements changed the function inventory; [notify] when a matched rule asks for the result to be shown. */
@@ -151,7 +150,6 @@ public sealed interface RefreshOutcome {
     /** The server's [inventory], and the facts of the [session] whose connection was harvested (none over a helper connection). */
     public data class Refreshed(val inventory: LiveInventory, val session: SessionFacts = SessionFacts.NONE) : RefreshOutcome
 
-    /** The profile is not enabled. */
     public data object Disabled : RefreshOutcome
 
     public data class ConnectFailed(val detail: String?) : RefreshOutcome

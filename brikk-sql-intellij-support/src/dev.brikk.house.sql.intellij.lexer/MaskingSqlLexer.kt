@@ -137,8 +137,6 @@ public abstract class MaskingSqlLexer(
         resetStatement()
     }
 
-    // --- context ---------------------------------------------------------------------------
-
     /** Records [token] as the last meaningful one; the first letter-led token becomes the head. */
     protected fun note(token: String) {
         if (statementHead == null && token.firstOrNull()?.isLetter() == true) statementHead = token
@@ -173,7 +171,7 @@ public abstract class MaskingSqlLexer(
         }
     }
 
-    // --- probes: raw buffer, non-consuming ----------------------------------------------------
+    // Probes: read the raw buffer, consuming nothing.
 
     /** The offset of the first non-whitespace character at or after [from]. */
     protected fun offsetAfterWhitespace(base: Lexer, from: Int): Int {
@@ -212,9 +210,8 @@ public abstract class MaskingSqlLexer(
         return buffer.subSequence(offset, end).toString()
     }
 
-    // --- consumers: advance the base lexer without emitting -----------------------------------
+    // Consumers: advance the base lexer without emitting.
 
-    /** Advances over whitespace tokens. */
     protected fun skipWhitespaceTokens(base: Lexer) {
         while (base.tokenType != null && base.tokenText.isBlank()) base.advance()
     }
@@ -240,7 +237,7 @@ public abstract class MaskingSqlLexer(
         }
     }
 
-    // --- spans: emit everything consumed in this lookahead as one token ----------------------
+    // Spans: emit everything consumed in this lookahead as one token.
 
     /** Emits the text consumed since the last emitted token as one [type] token, noting [note] if given. */
     protected fun span(base: Lexer, type: IElementType, note: String?) {

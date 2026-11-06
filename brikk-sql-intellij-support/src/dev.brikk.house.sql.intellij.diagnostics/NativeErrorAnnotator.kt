@@ -278,7 +278,6 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
     /** A source's diagnostics, positioned in its script, and whether every verdict in them is final. */
     private class Check(val diagnostics: List<SqlDiagnostic>, val final: Boolean)
 
-    /** The diagnostics of one source. */
     private fun check(source: Source, deadline: Long?): Check {
         val script = source.script
         val statements = when (profile.unit) {
