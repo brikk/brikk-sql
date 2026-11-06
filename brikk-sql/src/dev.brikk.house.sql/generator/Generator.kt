@@ -374,9 +374,6 @@ open class Generator(
         // sqlglot: Generator.SENTINEL_LINE_BREAK
         const val SENTINEL_LINE_BREAK = "__SQLGLOT__LB__"
 
-        // sqlglot: expressions.core.SAFE_IDENTIFIER_RE
-        internal val SAFE_IDENTIFIER_RE = Regex("^[_a-zA-Z]\\w*$")
-
         // sqlglot: expressions.datatypes.DataType.INTEGER_TYPES
         val INTEGER_TYPES: Set<DType> = setOf(
             DType.BIGINT, DType.INT, DType.INT128, DType.INT256, DType.MEDIUMINT,

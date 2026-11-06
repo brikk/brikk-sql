@@ -145,12 +145,11 @@ import dev.brikk.house.sql.parser.applyTimeUnitCoercion
 import dev.brikk.house.sql.parser.buildVarMap
 import dev.brikk.house.sql.parser.buildTrim
 import dev.brikk.house.sql.parser.fromArgList
+import dev.brikk.house.sql.parser.seqGet
 import dev.brikk.house.sql.metadata.CLICKHOUSE_FUNCTION_CATALOG
 import dev.brikk.house.sql.metadata.CLICKHOUSE_26_5_1_1_FUNCTION_CATALOG
 import dev.brikk.house.sql.metadata.FunctionKind
 import dev.brikk.house.sql.ast.Array as ArrayNode
-
-private fun seqGet(argsList: List<Expression?>, index: Int): Expression? = argsList.getOrNull(index)
 
 // sqlglot: helper.is_int
 private fun isInt(text: String): Boolean = text.toLongOrNull() != null

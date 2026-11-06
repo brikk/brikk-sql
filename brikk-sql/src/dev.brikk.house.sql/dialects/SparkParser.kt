@@ -37,8 +37,7 @@ import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.TokenizerConfig
 import dev.brikk.house.sql.parser.applyTimeUnitCoercion
 import dev.brikk.house.sql.parser.fromArgList
-
-private fun seqGet(a: List<Expression?>, index: Int): Expression? = a.getOrNull(index)
+import dev.brikk.house.sql.parser.seqGet
 
 // sqlglot: parsers.spark._build_datediff — 2-arg (this, expr) or 3-arg (unit, this, expr)
 private fun buildSparkDatediff(a: List<Expression?>): Expression {

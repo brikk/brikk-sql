@@ -66,6 +66,7 @@ import dev.brikk.house.sql.ast.PartitionList
 import dev.brikk.house.sql.ast.PartitionRange
 import dev.brikk.house.sql.ast.RenameIndex
 import dev.brikk.house.sql.ast.Schema
+import dev.brikk.house.sql.ast.SAFE_IDENTIFIER_RE
 import dev.brikk.house.sql.ast.SchemaCommentProperty
 import dev.brikk.house.sql.ast.SetItem
 import dev.brikk.house.sql.ast.Show
@@ -91,6 +92,7 @@ import dev.brikk.house.sql.parser.Parser
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.TokenizerConfig
 import dev.brikk.house.sql.parser.formatTimeString
+import dev.brikk.house.sql.parser.seqGet
 
 // sqlglot: parsers.mysql.TIME_SPECIFIERS — specifiers for time (vs date) parts
 private val TIME_SPECIFIERS = setOf('f', 'H', 'h', 'I', 'i', 'k', 'l', 'p', 'r', 'S', 's', 'T')
@@ -107,8 +109,6 @@ private fun hasTimeSpecifier(dateFormat: String): Boolean {
     }
     return false
 }
-
-private fun seqGet(argsList: List<Expression?>, index: Int): Expression? = argsList.getOrNull(index)
 
 // sqlglot: Dialect["mysql"].format_time on a parsed expression
 private fun mysqlFormatTime(expression: Expression?): Expression? {
@@ -859,8 +859,6 @@ open class MysqlParser(
     }
 
     companion object {
-        // sqlglot: expressions.SAFE_IDENTIFIER_RE
-        private val SAFE_IDENTIFIER_RE = Regex("^[_a-zA-Z][\\w]*$")
     }
 }
 

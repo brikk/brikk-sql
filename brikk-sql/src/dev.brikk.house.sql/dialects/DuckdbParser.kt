@@ -130,8 +130,7 @@ import dev.brikk.house.sql.parser.applyTimeUnitCoercion
 import dev.brikk.house.sql.parser.binaryRangeParser
 import dev.brikk.house.sql.parser.fromArgList
 import dev.brikk.house.sql.parser.parseJsonPath
-
-private fun seqGet(argsList: List<Expression?>, index: Int): Expression? = argsList.getOrNull(index)
+import dev.brikk.house.sql.parser.seqGet
 
 // sqlglot: parsers.duckdb._build_sort_array_desc
 private fun buildSortArrayDesc(a: List<Expression?>): Expression =

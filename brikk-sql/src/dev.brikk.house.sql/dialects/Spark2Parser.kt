@@ -33,8 +33,7 @@ import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.TokenizerConfig
 import dev.brikk.house.sql.parser.buildTrim
 import dev.brikk.house.sql.parser.fromArgList
-
-private fun seqGet(argsList: List<Expression?>, index: Int): Expression? = argsList.getOrNull(index)
+import dev.brikk.house.sql.parser.seqGet
 
 // sqlglot: parsers.spark2.build_as_cast(to_type) — CAST(x AS <to_type>)
 private fun buildAsCast(toType: String): (List<Expression?>) -> Expression = { a ->

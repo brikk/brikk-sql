@@ -64,8 +64,7 @@ import dev.brikk.house.sql.parser.TokenizerConfig
 import dev.brikk.house.sql.parser.applyTimeUnitCoercion
 import dev.brikk.house.sql.parser.formatTimeString
 import dev.brikk.house.sql.parser.fromArgList
-
-private fun seqGet(argsList: List<Expression?>, index: Int): Expression? = argsList.getOrNull(index)
+import dev.brikk.house.sql.parser.seqGet
 
 // sqlglot: Dialect["presto"].format_time (Presto.TIME_MAPPING = MySQL.TIME_MAPPING)
 private fun prestoFormatTime(expression: Expression?): Expression? {

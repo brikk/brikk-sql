@@ -84,8 +84,7 @@ import dev.brikk.house.sql.parser.Parser
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.Tokenizer
 import dev.brikk.house.sql.parser.TokenizerConfig
-
-private fun seqGet(argsList: List<Expression?>, index: Int): Expression? = argsList.getOrNull(index)
+import dev.brikk.house.sql.parser.seqGet
 
 // sqlglot: dialect.build_date_delta_with_interval (default_unit="DAY")
 private fun buildDateDeltaWithIntervalDefaultDay(
@@ -1195,4 +1194,3 @@ private fun buildDorisGroupConcat(a: List<Expression?>): Expression {
     val separator = values[1] as? Expression
     return GroupConcat(args("this" to value, "separator" to (order?.let { Order(args("this" to separator, "expressions" to it.expressionsArg)) } ?: separator)))
 }
-

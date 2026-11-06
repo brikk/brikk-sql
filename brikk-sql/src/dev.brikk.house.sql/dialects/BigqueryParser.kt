@@ -14,13 +14,12 @@ import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.TokenizerConfig
 import dev.brikk.house.sql.parser.formatTimeString
 import dev.brikk.house.sql.parser.parseJsonPath
+import dev.brikk.house.sql.parser.seqGet
 import kotlin.Boolean
 import kotlin.String
 import kotlin.collections.List
 import kotlin.collections.Map
 import kotlin.collections.Set
-
-private fun seqGet(a: List<Expression?>, index: kotlin.Int): Expression? = a.getOrNull(index)
 
 // sqlglot: dialect.build_formatted_time applied with BigQuery's TIME_MAPPING.
 internal fun bqFormatTime(expression: Expression?): Expression? {

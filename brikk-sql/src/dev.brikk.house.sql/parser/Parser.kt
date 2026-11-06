@@ -1,5 +1,6 @@
 package dev.brikk.house.sql.parser
 
+import dev.brikk.house.sql.ast.SAFE_IDENTIFIER_RE
 import dev.brikk.house.sql.ast.column
 
 import dev.brikk.house.sql.ast.Add
@@ -363,9 +364,6 @@ open class Parser(
 
         // sqlglot: expressions.SQLGLOT_ANONYMOUS
         const val SQLGLOT_ANONYMOUS: String = "sqlglot.anonymous"
-
-        // sqlglot: expressions.SAFE_IDENTIFIER_RE
-        private val SAFE_IDENTIFIER_RE = Regex("^[_a-zA-Z][\\w]*$")
 
         // sqlglot: expressions.INTERVAL_STRING_RE
         private val INTERVAL_STRING_RE = Regex("\\s*(-?[0-9]+(?:\\.[0-9]+)?)\\s*([a-zA-Z]+)\\s*")

@@ -61,8 +61,7 @@ import dev.brikk.house.sql.parser.TokenizerConfig
 import dev.brikk.house.sql.parser.buildVarMap
 import dev.brikk.house.sql.parser.formatTimeString
 import dev.brikk.house.sql.parser.fromArgList
-
-private fun seqGet(argsList: List<Expression?>, index: Int): Expression? = argsList.getOrNull(index)
+import dev.brikk.house.sql.parser.seqGet
 
 // sqlglot: Dialect["hive"].format_time (Hive.TIME_MAPPING)
 internal fun hiveFormatTime(expression: Expression?): Expression? {

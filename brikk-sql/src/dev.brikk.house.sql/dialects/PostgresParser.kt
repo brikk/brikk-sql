@@ -73,8 +73,7 @@ import dev.brikk.house.sql.parser.applyTimeUnitCoercion
 import dev.brikk.house.sql.parser.binaryRangeParser
 import dev.brikk.house.sql.parser.formatTimeString
 import dev.brikk.house.sql.parser.fromArgList
-
-private fun seqGet(argsList: List<Expression?>, index: Int): Expression? = argsList.getOrNull(index)
+import dev.brikk.house.sql.parser.seqGet
 
 // sqlglot: helper.is_int
 private fun isInt(text: String): Boolean = text.toLongOrNull() != null

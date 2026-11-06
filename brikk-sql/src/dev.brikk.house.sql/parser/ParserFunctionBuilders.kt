@@ -10,7 +10,8 @@ import dev.brikk.house.sql.ast.args
 // Parser.FUNCTIONS. Dialect-dependent flags use base-dialect defaults; dialects
 // can override the whole `functions` provider on Parser.
 
-private fun seqGet(argsList: List<Expression?>, index: Int): Expression? = argsList.getOrNull(index)
+// sqlglot: helper.seq_get
+internal fun <T> seqGet(argsList: List<T>?, index: Int): T? = argsList?.getOrNull(index)
 
 // sqlglot: parser.build_var_map
 internal fun buildVarMap(argsList: List<Expression?>): Expression {

@@ -4,6 +4,7 @@ import dev.brikk.house.sql.ast.DType
 import dev.brikk.house.sql.ast.DataType
 import dev.brikk.house.sql.ast.Expression
 import dev.brikk.house.sql.ast.Identifier
+import dev.brikk.house.sql.ast.SAFE_IDENTIFIER_RE
 import dev.brikk.house.sql.ast.Table
 import dev.brikk.house.sql.ast.args
 import dev.brikk.house.sql.dialects.Dialect
@@ -25,9 +26,6 @@ class SchemaError(message: String) : RuntimeException(message)
 
 // sqlglot: exp.TABLE_PARTS
 val TABLE_PARTS: List<String> = listOf("this", "db", "catalog")
-
-// sqlglot: core.SAFE_IDENTIFIER_RE
-private val SAFE_IDENTIFIER_RE = Regex("^[_a-zA-Z][a-zA-Z0-9_]*$")
 
 // sqlglot: schema.Schema (abstract base class for database schemas)
 interface Schema {

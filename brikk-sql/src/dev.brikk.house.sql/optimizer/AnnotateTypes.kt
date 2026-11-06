@@ -32,6 +32,7 @@ import dev.brikk.house.sql.ast.PivotAlias
 import dev.brikk.house.sql.ast.Predicate
 import dev.brikk.house.sql.ast.Query
 import dev.brikk.house.sql.ast.Select
+import dev.brikk.house.sql.ast.SAFE_IDENTIFIER_RE
 import dev.brikk.house.sql.ast.SetOperation
 import dev.brikk.house.sql.ast.Slice
 import dev.brikk.house.sql.ast.Subquery
@@ -73,6 +74,7 @@ import dev.brikk.house.sql.dialects.duckdbNativeSumType
 import dev.brikk.house.sql.dialects.duckdbTemporalCastType
 import dev.brikk.house.sql.ast.Sum
 import dev.brikk.house.sql.dialects.isDuckdbVariantFunction
+import dev.brikk.house.sql.parser.seqGet
 
 /**
  * Port of sqlglot's type annotator (reference/sqlglot/sqlglot/optimizer/annotate_types.py).
@@ -82,9 +84,6 @@ import dev.brikk.house.sql.dialects.isDuckdbVariantFunction
  *    [DataType]/[DType] (helpers accept `Any?` and normalize like Python's _set_type);
  *  - id()-keyed caches use [Expression.objectId].
  */
-
-// sqlglot: helper.seq_get
-private fun <T> seqGet(seq: List<T>?, index: Int): T? = seq?.getOrNull(index)
 
 /** Column alignment shared by type and nullability summaries of a set operation. */
 internal fun setOperationColumnPairs(
@@ -163,9 +162,6 @@ internal fun isIsoDatetime(text: String): Boolean {
     )
     return time.matches(timePart)
 }
-
-// sqlglot: core.SAFE_IDENTIFIER_RE (for exp.to_identifier)
-private val SAFE_IDENTIFIER_RE = Regex("^[_a-zA-Z][a-zA-Z0-9_]*$")
 
 // Python int(text) acceptance for number-literal texts (Literal.is_int)
 private val INT_RE = Regex("^[+-]?\\d+$")
