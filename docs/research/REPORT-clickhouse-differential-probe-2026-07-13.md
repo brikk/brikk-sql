@@ -15,7 +15,7 @@ results over a divergence-pressure corpus, never doc-reading.
 | Trino | not run live — trino↔clickhouse verdicts are **composed**: live ClickHouse results joined with the probe-verified Trino behavior in `trino-duckdb-hazards.json`. Every such row's provenance is tagged `composed: clickhouse-live + trino-duckdb-hazards`; a live-Trino agent can upgrade provenance later. |
 | Session | Both engines pinned to **UTC** before every probe (`SET TimeZone='UTC'` / `SETTINGS session_timezone='UTC'`) — ClickHouse DateTime is timezone-typed, so this is mandatory for apples-to-apples datetime results. |
 
-- Harness: file-driven, both engines in-process (`/tmp/opencode/harness.py`). Values are
+- The original uncommitted harness ran both engines in-process. Values are
   codepoint-rendered; SAME/DIFF is numeric/bool-normalised (so `1`≡`true`, `3`≡`3.0`) with
   the raw type preserved for adjudication.
 - **Raw evidence** (mandatory data-capture): `docs/research/probe-runs/*.batch` (inputs) +

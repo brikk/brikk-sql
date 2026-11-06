@@ -154,13 +154,15 @@ They are not counted as unavailable simply because an older engine rejects them.
 Release-inapplicable cases, such as the new division setting, are counted
 separately. Error checks require the server code and category, not any failure.
 
+Set `REVIEW_DIR` to a private output directory for fresh observations.
+
 ```sh
-./kotlin test --jvm-args="-Dbrikk.clickhouseAuditCases=$PWD/vendor/data/clickhouse-2026-audit/batch4-cases.json -Dbrikk.clickhouseAuditOut=/tmp/opencode/clickhouse-batch4.json"
+./kotlin test --jvm-args="-Dbrikk.clickhouseAuditCases=$PWD/vendor/data/clickhouse-2026-audit/batch4-cases.json -Dbrikk.clickhouseAuditOut=$REVIEW_DIR/clickhouse-batch4.json"
 python3 tools/probe_clickhouse_2026.py \
   --cases vendor/data/clickhouse-2026-audit/batch4-cases.json \
   --task CH26-007 --task CH26-008 \
-  --brikk /tmp/opencode/clickhouse-batch4.json \
-  --output /tmp/opencode/clickhouse-batch4-native
+  --brikk "$REVIEW_DIR/clickhouse-batch4.json" \
+  --output "$REVIEW_DIR/clickhouse-batch4-native"
 python3 -m unittest discover -s tools -p 'test_*clickhouse*.py'
 ```
 

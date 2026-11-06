@@ -54,9 +54,12 @@ Catalog omissions/removals are a separate CH26-003 inventory. Do not treat the o
 
 ## Reproduction
 
+Set `REVIEW_DIR` to a private output directory. Current observation outputs are
+scratch results, not citations for the committed historical captures.
+
 1. Read `engines.json` and explicitly pull the two exact Docker tags. Confirm their resolved digests match the file. The runner uses the digest, never the moving tag, and refuses implicit image pulls.
-2. Run `python3 tools/probe_clickhouse_2026.py --output /tmp/opencode/clickhouse-2026-native`.
-3. Run `./kotlin test -m brikk-sql --include-classes='*Clickhouse2026AuditTest'`. This checks the corrected fixtures and writes all current Brikk observations to `build/reports/clickhouse-2026/brikk.json`. To choose an absolute output path add `--jvm-args='-Dbrikk.clickhouseAuditOut=/tmp/opencode/clickhouse-2026-after.json'`. The standalone `tools/clickhouse_2026_audit.kts` provides the same observations when run with built core/metadata and kotlinx-serialization on its classpath; it was used for the pre-fix capture.
+2. Run `python3 tools/probe_clickhouse_2026.py --output "$REVIEW_DIR/clickhouse-2026-native"`.
+3. Run `./kotlin test -m brikk-sql --include-classes='*Clickhouse2026AuditTest' --jvm-args="-Dbrikk.clickhouseAuditOut=$REVIEW_DIR/clickhouse-2026-after.json"`. The standalone `tools/clickhouse_2026_audit.kts` supplies the same observations with built core/metadata and kotlinx-serialization on its classpath. The saved pre-fix capture remains separate.
 4. Pass that observation file as `--brikk <file>` to the Python runner. This executes both the original finite fixtures and Brikk's generated SQL against both pinned engines and checks exact expected results.
 
 The Python probe runs `formatQueryOrNull(unhex(...))` for the audit SQL. It never executes the token, handler, DDL or hypothetical-index audit statements. Only the separate execution fixtures run, inside task-owned, network-disabled containers with no host mounts. Native queries have a five-second execution limit and containers have a 30-second host deadline plus unconditional task-owned-container cleanup. Every streaming execution fixture uses BOUNDED and LIMIT, with `enable_streaming_queries = 1`. Production generation never injects that setting.
@@ -85,7 +88,7 @@ Other dialects refuse STREAM and Tuple-combinator execution rather than silently
 - `./kotlin test -m brikk-sql --include-classes='*Clickhouse2026CatchupTest'`: seven focused tests passed.
 - Final `./kotlin test`: **1,707 passed, 61 assumption-aborted optional tests, zero failures**, across 1,768 discovered tests. This includes the new audit-fixture gate, AST registry/manifest, serde, binary/runtime compatibility, corpus, scope, typing, lineage and source-preserving tests. The initial full run caught the missing native-node allowlist entries; those were registered without changing any SQLGlot manifests or failure ledgers.
 - `python3 -m unittest discover -s tools -p test_probe_clickhouse_2026.py`: two probe-isolation/deadline tests passed.
-- `python3 tools/probe_clickhouse_2026.py --output /tmp/opencode/clickhouse-2026-native --brikk /tmp/opencode/clickhouse-2026-after.json`: passed on both pinned targets. Per target: 45 native parser observations, seven generated correction-query parser checks, six original finite-result checks and six generated finite-result checks. The standalone and test-generated Brikk observation JSON files match.
+- `tools/probe_clickhouse_2026.py` passed on both pinned targets. Per target, the committed `vendor/data/clickhouse-2026-audit/native/` captures contain 45 native parser observations, seven generated correction-query parser checks, six original finite-result checks and six generated finite-result checks. The standalone and test-generated Brikk observation JSON files match.
 - `git diff --check`: clean. Task-owned probe containers were removed.
 
 The 61 optional test aborts are for unconfigured live ClickHouse HTTP, Trino,

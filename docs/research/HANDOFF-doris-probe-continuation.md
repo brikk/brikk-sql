@@ -23,9 +23,10 @@ IDENTICAL/`none` scalar tail + the array / aggregate / datetime families).
 
 ## The harness — recreate it, then DELETE it when done
 Put this at `jvm/doris-ducklake/test/src/dev/brikk/ducklake/doris/corpus/DifferentialProbe.kt`.
-It is file-driven: reads `fn<TAB>expr` lines from `/tmp/opencode/probe-batch.txt`,
+It is file-driven and reads `fn<TAB>expr` lines from an explicit `probe.in` path,
 evaluates each on both engines, writes `fn\texpr\tSAME|DIFF\tduckdb\tdoris`
-(codepoint-rendered) to `/tmp/opencode/probe-results.tsv`.
+with code-point-rendered values at an explicit `probe.out` path. Use a new output
+file for each batch. Checked-in inputs and results are in `docs/research/probe-runs/`.
 
 ```kotlin
 package dev.brikk.ducklake.doris.corpus
@@ -34,8 +35,8 @@ import java.sql.Connection
 import java.sql.DriverManager
 import org.junit.jupiter.api.Test
 internal class DifferentialProbe {
-    private val inPath = System.getProperty("probe.in", "/tmp/opencode/probe-batch.txt")
-    private val outPath = System.getProperty("probe.out", "/tmp/opencode/probe-results.tsv")
+    private val inPath = requireNotNull(System.getProperty("probe.in"))
+    private val outPath = requireNotNull(System.getProperty("probe.out"))
     @Test fun probe() {
         val batch = File(inPath).readLines().map { it.trim() }
             .filter { it.isNotEmpty() && !it.startsWith("#") && it.contains('\t') }
@@ -62,7 +63,8 @@ internal class DifferentialProbe {
     }
 }
 ```
-Run: `JAVA_HOME=<jdk25> ./gradlew :doris-ducklake:test --tests "*DifferentialProbe*" --rerun-tasks -q` (from `jvm/`).
+Run the test from `jvm/` with `probe.in` and `probe.out` forwarded to its test JVM.
+The archived Gradle command alone does not configure that forwarding.
 
 **CRITICAL:** it is a `@Test` that is NOT excluded from `:doris-ducklake:test` and
 needs the live cluster + batch file, so it will break the headless suite. **Delete
@@ -130,16 +132,12 @@ doubt mark `unclear` — never claim equivalence you didn't verify.
   Doris-NULL vs Trino-NaN (domain) → divergent. Provenance still says "Doris live; Trino
   from prior evidence".
 
-## Tooling added this session
-- `/tmp/opencode/add_pairs.py <duckdb|trino> <spec.json>` — appends a JSON array of pair
-  objects to the right hazard file, dedup-by-side-name, writes indent=2. Use it instead of
-  hand-editing the JSON.
-- `/tmp/opencode/WORKER-BRIEF.md` — self-contained brief for delegating one family to a
-  worker subagent (probe→adjudicate→append→report→regen→commit). Dispatch workers ONE AT A
-  TIME (the Doris FE + file-driven harness is a shared singleton; probing cannot parallelize).
-- A python `duckdb` is available in `/tmp/opencode/venv` (activate it) to get DuckDB's REAL
-  error message when the JDBC wrapper says the unhelpful "Attempting to execute an
-  unsuccessful operation" (= a bind/catalog failure).
+## Tooling
+
+Edit the versioned hazard JSON files and run `tools/generate_hazards_registry.py`.
+The original append helper and worker brief were not committed. The file-driven
+harness and Doris FE share one batch at a time. A separate Python oracle must
+report its actual DuckDB version before its errors are used as engine evidence.
 
 ## State at handoff (updated 2026-07-13) — WORKLIST COMPLETE
 - brikk-house committed through `474cd50` (batches 1–10). **duckdb→doris 186 pairs**
@@ -220,10 +218,8 @@ as a generator bug. Bucket D + reverse remain untouched (documented as out of sc
 
 # DATA CAPTURE (MANDATORY) — the raw matrix is the reuse asset, do not lose it
 
-Raw probe data written only to `/tmp/opencode/probe-*.txt|tsv` is **overwritten
-every batch and lost on reboot** — yet the per-engine input→output matrix is
-exactly what makes a FUTURE engine O(N) instead of a full re-probe (see the
-behavior-matrix discussion). So:
+Scratch-only probe data can be overwritten or lost. Preserve input/output
+matrices under `docs/research/probe-runs/` with unique batch names.
 
 1. **Persist every batch durably, before the next batch.** Write into the repo,
    not just /tmp:
@@ -237,8 +233,8 @@ behavior-matrix discussion). So:
 3. **Pin + record session state** for datetime/timezone probes: `SET time_zone`
    (Doris) / `SET TimeZone` (DuckDB) to UTC on BOTH before probing, and record the
    pin. Otherwise those results are non-reproducible / not apples-to-apples.
-4. **FINAL HARVEST (end of run):** sweep anything left in `/tmp/opencode/probe-*`
-   into `docs/research/probe-runs/`, confirm nothing precious remains only in /tmp,
+4. Copy remaining scratch inputs/results into `docs/research/probe-runs/`,
+   confirm no evidence exists only in scratch,
    commit. Then (optional, recommended) consolidate all run TSVs into the
    structured `brikk-sql/testResources/semantics/results/{engine}.json` behavior
    matrix so pairwise hazards become a derived artifact and the Nth engine is cheap.
