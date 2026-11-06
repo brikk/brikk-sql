@@ -18,7 +18,12 @@ class DuckdbOverlayTest {
         ColumnFact("n", "BIGINT", nullability = Nullability.NULLABLE), ColumnFact("u", "VARCHAR", nullability = Nullability.UNKNOWN))
     private val facts = RelationFacts(tables = mapOf("strings" to RelationFact(fields)), catalog = CatalogKnowledge.CLOSED)
     private val catalog = ShapeCatalog(mapOf("strings" to Shape(fields.map { ColumnShape(it.name, it.sqlType!!,
-        when (it.nullability) { Nullability.NON_NULL -> false; Nullability.NULLABLE -> true; else -> null }) })))
+        when (it.nullability) { Nullability.NON_NULL ->
+            false
+            Nullability.NULLABLE -> true
+            else -> null
+        })
+    })))
 
     @Test
     fun keywordAndCommaFormsUseTheExistingNodeAndPreserveCopySerdeAndExpressions() {
@@ -68,7 +73,11 @@ class DuckdbOverlayTest {
             assertTrue(scope.diagnostics.isEmpty(), scope.diagnostics.toString())
             val output = assertNotNull(scope.output).columns.single()
             assertEquals("VARCHAR", output.sqlType, call)
-            assertEquals(when (nullable) { true -> Nullability.NULLABLE; false -> Nullability.NON_NULL; null -> Nullability.UNKNOWN }, output.nullability, call)
+            assertEquals(when (nullable) { true ->
+                Nullability.NULLABLE
+                false -> Nullability.NON_NULL
+                null -> Nullability.UNKNOWN
+            }, output.nullability, call)
             assertEquals(ColumnOrigin.COMPUTED, output.origin)
             assertNull(output.provenance)
             val shape = SqlFragment(sql, "duckdb").outputShape(catalog).columns.single()

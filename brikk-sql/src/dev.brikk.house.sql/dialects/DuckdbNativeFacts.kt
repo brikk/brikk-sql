@@ -9,7 +9,7 @@ import dev.brikk.house.sql.parser.ErrorLevel
  */
 fun nativeDuckdbAnalysisDialect(): DuckdbDialect = NativeDuckdbFacts
 
-private object NativeDuckdbFacts : DuckdbDialect() {
+private object NativeDuckdbFacts: DuckdbDialect() {
     override val tokenizerConfig get() = nativeDuckdbTokenizerConfig
     override val supportsNullType: Boolean get() = true
     override val defaultNullType: DType get() = DType.NULL

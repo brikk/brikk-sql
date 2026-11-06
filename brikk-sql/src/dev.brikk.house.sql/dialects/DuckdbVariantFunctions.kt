@@ -18,12 +18,18 @@ internal fun Expression.duckdbVariantReturnType(): DataType? {
         }
         "VARIANT_TYPEOF", "VARIANT_NORMALIZE", "VARIANT_COMPARATOR", "VARIANT_BYTES_TO_VARIANT", "VARIANT_GROUP_ARRAY" -> {
             if (arguments.size != 1) return null
-            when (name) { "VARIANT_TYPEOF" -> DType.VARCHAR; "VARIANT_COMPARATOR" -> DType.BINARY; else -> DType.VARIANT }
+            when (name) { "VARIANT_TYPEOF" ->
+                DType.VARCHAR
+                "VARIANT_COMPARATOR" -> DType.BINARY
+                else -> DType.VARIANT
+            }
         }
         "VARIANT_TYPE", "VARIANT_EXTRACT_STRING", "VARIANT_KEYS", "VARIANT_EXISTS", "VARIANT_ARRAY_LENGTH" -> {
             if (arguments.size !in 1..2 || arguments.size == 1 && name in setOf("VARIANT_EXTRACT_STRING", "VARIANT_EXISTS")) return null
             when (name) { "VARIANT_KEYS", "VARIANT_TYPE", "VARIANT_EXTRACT_STRING" -> DType.VARCHAR
-                "VARIANT_EXISTS" -> DType.BOOLEAN; else -> DType.UBIGINT }
+                "VARIANT_EXISTS" -> DType.BOOLEAN
+                else -> DType.UBIGINT
+            }
         }
         else -> return null // In particular, variant_to_parquet_variant returns engine-bound ANY.
     }
@@ -34,7 +40,7 @@ internal fun Expression.duckdbVariantReturnType(): DataType? {
         val type = path.type as? DataType
         when {
             path is ArrayNode && path.expressionsArg.all { it is Null || it is Literal && it.isString } ||
-                type?.isType(DType.ARRAY)==true && (type.expressionsArg.singleOrNull() as? DataType)?.thisArg in DataType.TEXT_TYPES ->
+                type?.isType(DType.ARRAY) == true && (type.expressionsArg.singleOrNull() as? DataType)?.thisArg in DataType.TEXT_TYPES ->
                 result = DataType(args("this" to DType.ARRAY, "expressions" to listOf(result), "nested" to true))
             path is Literal && path.isString || type?.thisArg in DataType.TEXT_TYPES -> Unit
             else -> return null

@@ -14,7 +14,10 @@ import kotlin.test.*
 
 internal class DuckdbOverlayResultTest {
     private fun render(sql: String) = assertIs<Expression>(Serde.load(Serde.dump(Dialects.DUCKDB.parseOne(sql).copy()))).sql("duckdb")
-    private fun Connection.execute(sql: String) = createStatement().use { it.execute(sql); Unit }
+    private fun Connection.execute(sql: String) = createStatement().use {
+        it.execute(sql)
+        Unit
+    }
     private fun Connection.rows(sql: String): List<List<String?>> = createStatement().use { s ->
         s.queryTimeout = 5
         s.executeQuery(sql).use { r -> buildList { while (r.next()) add((1..r.metaData.columnCount).map { r.getString(it) }) } }
@@ -39,7 +42,8 @@ internal class DuckdbOverlayResultTest {
                 listOf("hello", "", "3", null, "hello"), listOf("", "", "1", null, ""),
                 listOf("abc", "X", "10", null, "abcX"), listOf("abc", "XY", "5", null, "abcXY"),
             )) {
-                val s = quote(source!!); val r = quote(replacement!!)
+                val s = quote(source!!)
+                val r = quote(replacement!!)
                 c.check("SELECT overlay($s PLACING $r FROM $start${count?.let { " FOR $it" }.orEmpty()})", listOf(listOf(expected)))
                 c.check("SELECT overlay($s,$r,$start${count?.let { ",$it" }.orEmpty()})", listOf(listOf(expected)))
             }
@@ -92,7 +96,14 @@ internal class DuckdbOverlayResultTest {
     fun exactNativeOverloadsBinderErrorsAndQualifiedUserFunctionsAreKeptSeparate() {
         DriverManager.getConnection("jdbc:duckdb:").use { c ->
             c.createStatement().use { s -> s.executeQuery("SELECT parameter_types,return_type FROM duckdb_functions() WHERE function_name='overlay' AND database_name='system' AND internal").use { r ->
-                val signatures = buildSet { while (r.next()) { assertEquals("VARCHAR", r.getString(2)); add((r.getArray(1).array as Array<*>).map { it.toString() }) } }
+                val signatures = buildSet {
+                        while (r.next()) {
+                            assertEquals("VARCHAR", r.getString(2))
+                            add((r.getArray(1).array as Array<*>).map {
+                                it.toString()
+                            })
+                        }
+                    }
                 assertEquals(DUCKDB_METADATA.default.functions["overlay"]!!.overloads.map { it.argTypes }.toSet(), signatures)
             } }
             for (sql in listOf("SELECT overlay('abc')", "SELECT overlay('abc','X')", "SELECT overlay('abc','X',2,1,99)",
@@ -119,9 +130,15 @@ internal class DuckdbOverlayResultTest {
             c.prepareStatement(if (generated) render(sql) else sql).use { p ->
                 val count = if (sql.contains(" FOR ")) 4 else 3
                 assertEquals(count, p.parameterMetaData.parameterCount)
-                p.setString(1, "café"); p.setString(2, "X"); p.setLong(3, 4)
+                p.setString(1, "café")
+                p.setString(2, "X")
+                p.setLong(3, 4)
                 if (count == 4) p.setNull(4, Types.BIGINT)
-                p.executeQuery().use { r -> assertTrue(r.next()); assertEquals(if (count == 4) null else "cafX", r.getString(1)); assertEquals("VARCHAR", r.metaData.getColumnTypeName(1)) }
+                p.executeQuery().use { r ->
+                    assertTrue(r.next())
+                    assertEquals(if (count == 4) null else "cafX", r.getString(1))
+                    assertEquals("VARCHAR", r.metaData.getColumnTypeName(1))
+                }
             }
         }
         for (name in listOf("source_seq", "replacement_seq", "start_seq", "count_seq")) c.execute("CREATE SEQUENCE $name")

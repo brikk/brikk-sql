@@ -29,7 +29,10 @@ internal fun Expression.duckdbPathArguments(): List<Expression>? {
         val position = if (value is Kwarg || value is PropertyEQ) {
             named = true
             parameters.indexOf((value.thisArg as? Expression)?.name?.lowercase())
-        } else { if (named) return null; index }
+        } else {
+            if (named) return null
+            index
+        }
         if (position !in bound.indices || bound[position] != null) return null
         bound[position] = if (value is Kwarg || value is PropertyEQ) value.expressionArg as? Expression else value
     }

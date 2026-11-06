@@ -16,7 +16,7 @@ import dev.brikk.house.sql.parser.TokenizerConfig
  * [parseDuckdbNativeOne] or SqlFragment for native DuckDB 2.0 operator execution.
  */
 // sqlglot: dialects.duckdb.DuckDB
-open class DuckdbDialect : Dialect() {
+open class DuckdbDialect: Dialect() {
     // brikk-native PIPE evidence: DuckDB 2.0.0 ran every lowered stage below.
     override val pipeRunnableStages: Set<String> get() = PIPE_STAGES_RUN_EVERYWHERE + setOf(
         "CALL", "DROP", "SET", "RENAME", "PIVOT", "UNPIVOT", "TABLESAMPLE", "UNION", "ASOF JOIN", "NATURAL JOIN", "POSITIONAL JOIN",

@@ -185,7 +185,10 @@ internal class DuckdbExplainResultTest {
             RelationScope.analyze(sql, "duckdb", RelationFacts())
             val helper = c.duplicate()
             val guarded = Proxy.newProxyInstance(javaClass.classLoader, arrayOf(Connection::class.java)) { _, method, args ->
-                if (method.name == "prepareStatement") { prepares.incrementAndGet(); throw AssertionError("EXPLAIN validation must never prepare") }
+                if (method.name == "prepareStatement") {
+                    prepares.incrementAndGet()
+                    throw AssertionError("EXPLAIN validation must never prepare")
+                }
                 try { method.invoke(helper, *(args ?: emptyArray())) } catch (e: InvocationTargetException) { throw e.targetException }
             } as Connection
             DuckdbVerifier({ guarded }).use { assertIs<VerifyResult.Unverified>(it.verify(sql)) }

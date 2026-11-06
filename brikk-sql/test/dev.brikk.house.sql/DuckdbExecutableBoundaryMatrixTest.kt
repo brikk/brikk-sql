@@ -8,7 +8,7 @@ import kotlin.test.*
 
 class DuckdbExecutableBoundaryMatrixTest {
     @Test fun everyRegisteredForeignTargetRefusesUnqualifiedNativeFeatureSemantics() {
-        val cases=linkedMapOf(
+        val cases = linkedMapOf(
             "nearest" to "SELECT * FROM q JOIN p NEAREST 2 BY DISTANCE abs(q.x-p.x)",
             "using-key" to "WITH RECURSIVE t(x) USING KEY(x) AS (SELECT 1 UNION SELECT x+1 FROM t WHERE x<2) SELECT * FROM t",
             "secure-view" to "CREATE SECURE VIEW v AS SELECT 1",
@@ -53,23 +53,24 @@ class DuckdbExecutableBoundaryMatrixTest {
             "date-boundaries" to "SELECT date_diff('month',DATE '2026-01-31',DATE '2026-02-01')",
             "date-trunc-type" to "SELECT date_trunc('day',DATE '2026-01-31')",
         )
-        val targets=Dialects.NAMES.map(Dialects::forName).distinctBy { it.name }.filter { it.name!="duckdb" }
-        val failures=mutableListOf<String>()
-        for((feature,sql)in cases) {
+        val targets = Dialects.NAMES.map(Dialects::forName).distinctBy { it.name }.filter { it.name != "duckdb" }
+        val failures = mutableListOf<String>()
+        for ((feature, sql) in cases) {
             // Parsing is asserted independently: parser errors cannot satisfy a refusal.
-            val fragment=SqlFragment(sql,"duckdb");assertNotNull(fragment.ast,feature)
-            for(target in targets)try {
-                val result=fragment.toExecutable(target.name.ifEmpty { "sqlglot" })
-                failures+="$feature -> ${target.name}: emitted ${result.sql}"
-            }catch(e:UnsupportedError) {
-                assertTrue(e.message.orEmpty().isNotBlank(),"$feature -> ${target.name}")
-            }catch(e:Exception) { failures+="$feature -> ${target.name}: unexpected ${e::class.simpleName}: ${e.message}" }
+            val fragment = SqlFragment(sql, "duckdb")
+            assertNotNull(fragment.ast, feature)
+            for (target in targets) try {
+                val result = fragment.toExecutable(target.name.ifEmpty { "sqlglot" })
+                failures += "$feature -> ${target.name}: emitted ${result.sql}"
+            } catch (e: UnsupportedError) {
+                assertTrue(e.message.orEmpty().isNotBlank(), "$feature -> ${target.name}")
+            } catch (e: Exception) { failures += "$feature -> ${target.name}: unexpected ${e::class.simpleName}: ${e.message}" }
         }
-        assertTrue(failures.isEmpty(),failures.joinToString("\n"))
+        assertTrue(failures.isEmpty(), failures.joinToString("\n"))
         println("DDB20-055 ${cases.size} feature families x ${targets.size} target dialects explicitly refuse")
     }
     @Test fun reviewedLossyUpstreamCandidatesRefuseRatherThanSilentlyDroppingMeaning() {
-        val cases=listOf(
+        val cases = listOf(
             "duckdb" to "SELECT INTERVAL '1.5 days'",
             "duckdb" to "SELECT json_extract('{}','$.x','$.y')",
             "postgres" to "SELECT U&'d\\0061ta'",
@@ -78,26 +79,27 @@ class DuckdbExecutableBoundaryMatrixTest {
             "trino" to "SELECT array_join(ARRAY[1,NULL],',','missing')",
             "trino" to "SELECT date_diff('month',DATE '2026-01-31',DATE '2026-02-01')",
         )
-        for((source,sql)in cases) {
-            val fragment=SqlFragment(sql,source);assertNotNull(fragment.ast,sql)
+        for ((source, sql) in cases) {
+            val fragment = SqlFragment(sql, source)
+            assertNotNull(fragment.ast, sql)
             assertFailsWith<UnsupportedError>(sql) { fragment.toExecutable("duckdb") }
         }
     }
     @Test fun programmaticSqlJsonOptionsRefuseBeforeExecutableRendering() {
-        for(node in listOf(JSONArray(args("expressions" to listOf(Literal.number("1")),"null_handling" to "ABSENT ON NULL")),
+        for (node in listOf(JSONArray(args("expressions" to listOf(Literal.number("1")), "null_handling" to "ABSENT ON NULL")),
             JSONObject(args("null_handling" to "ABSENT ON NULL")),
-            Base64Encode(args("this" to Literal.string("data"),"alphabet" to Literal.string("/+"))))) {
-            val generator=Dialects.DUCKDB.generator(sourceDialect="trino").apply { forExecution=true }
+            Base64Encode(args("this" to Literal.string("data"), "alphabet" to Literal.string("/+"))))) {
+            val generator = Dialects.DUCKDB.generator(sourceDialect = "trino").apply { forExecution = true }
             assertFailsWith<UnsupportedError> { generator.generate(node) }
         }
     }
     @Test fun ordinarySqlAndSameTargetNativeFeaturesAreNotBlanketDisabled() {
-        for(target in Dialects.NAMES.map(Dialects::forName).distinctBy { it.name }) {
-            val result=SqlFragment("SELECT CAST(2 AS INTEGER)+1 AS x","duckdb").toExecutable(target.name.ifEmpty { "sqlglot" })
-            assertTrue(result.unsupportedMessages.isEmpty(),target.name)
+        for (target in Dialects.NAMES.map(Dialects::forName).distinctBy { it.name }) {
+            val result = SqlFragment("SELECT CAST(2 AS INTEGER)+1 AS x", "duckdb").toExecutable(target.name.ifEmpty { "sqlglot" })
+            assertTrue(result.unsupportedMessages.isEmpty(), target.name)
         }
-        assertEquals(1,SqlFragment("SELECT CAST(? AS INTEGER)+1 AS x","duckdb").toExecutable("duckdb").sql.count { it=='?' })
-        for(sql in listOf("SELECT 'abc' ~ 'b'","SELECT X'0041'","SELECT 7//2","SELECT CAST(NULL AS INTEGER)","SELECT overlay('abcdef','xy',2,3)"))
-            assertTrue(SqlFragment(sql,"duckdb").toExecutable("duckdb").unsupportedMessages.isEmpty(),sql)
+        assertEquals(1, SqlFragment("SELECT CAST(? AS INTEGER)+1 AS x", "duckdb").toExecutable("duckdb").sql.count { it == '?' })
+        for (sql in listOf("SELECT 'abc' ~ 'b'", "SELECT X'0041'", "SELECT 7//2", "SELECT CAST(NULL AS INTEGER)", "SELECT overlay('abcdef','xy',2,3)"))
+            assertTrue(SqlFragment(sql, "duckdb").toExecutable("duckdb").unsupportedMessages.isEmpty(), sql)
     }
 }

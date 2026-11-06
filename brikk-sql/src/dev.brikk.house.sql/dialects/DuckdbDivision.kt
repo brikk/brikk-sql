@@ -2,14 +2,14 @@ package dev.brikk.house.sql.dialects
 
 import dev.brikk.house.sql.ast.*
 
-private fun Expression.smallIntegralConstant(): Long? = when(this) {
+private fun Expression.smallIntegralConstant(): Long? = when (this) {
     is Literal -> takeIf { isInt }?.name?.toLongOrNull()
     is Paren -> (thisArg as? Expression)?.smallIntegralConstant()
     is Neg -> (thisArg as? Expression)?.smallIntegralConstant()?.takeIf { it != Long.MIN_VALUE }?.let { -it }
     else -> null
 }
 
-private fun Expression.numericAtom(): Literal? = when(this) {
+private fun Expression.numericAtom(): Literal? = when (this) {
     is Literal -> takeIf { isNumber }
     is Paren, is Neg -> (thisArg as? Expression)?.numericAtom()
     else -> null
@@ -33,7 +33,13 @@ internal fun Expression.duckdbKnownNonZeroDivisor(): kotlin.Boolean = when (this
     is Cast -> {
         val value = (thisArg as? Expression)?.smallIntegralConstant()
         val type = (args["to"] as? DataType)?.thisArg
-        val limit = when(type) { DType.TINYINT -> 127L; DType.SMALLINT -> 32767L; DType.INT -> 2147483647L; DType.BIGINT, DType.INT128 -> 9007199254740991L; else -> 0L }
+        val limit = when (type) { DType.TINYINT ->
+            127L
+            DType.SMALLINT -> 32767L
+            DType.INT -> 2147483647L
+            DType.BIGINT, DType.INT128 -> 9007199254740991L
+            else -> 0L
+        }
         value != null && value != 0L && value in -limit..limit
     }
     else -> false
@@ -67,22 +73,23 @@ internal fun Binary.duckdbDivisionResultType(): DataType {
     if (l.isType(DType.UNKNOWN) || r.isType(DType.UNKNOWN)) return unknown()
     // Parity annotates every bare integer atom INT, even wide native BIGINT/HUGEINT
     // values. Do not promote that approximation into an exact native arithmetic fact.
-    if (listOf(left,right).any { operand -> operand.numericAtom()?.isInt == true &&
+    if (listOf(left, right).any { operand -> operand.numericAtom()?.isInt == true &&
             operand.smallIntegralConstant()?.let { it in Int.MIN_VALUE.toLong()..Int.MAX_VALUE.toLong() } != true }) return unknown()
-    if (l.isType(DType.NULL) && r.isType(DType.NULL)) return DataType.build(if(this is Div)DType.DOUBLE else DType.BIGINT)
+    if (l.isType(DType.NULL) && r.isType(DType.NULL)) return DataType.build(if (this is Div) DType.DOUBLE else DType.BIGINT)
     if (l.isType(DType.NULL)) l = r
     if (r.isType(DType.NULL)) r = l
-    val numeric = (DataType.INTEGER_TYPES - DType.BIT) + setOf(DType.FLOAT,DType.DOUBLE,DType.DECIMAL)
+    val numeric = (DataType.INTEGER_TYPES - DType.BIT) + setOf(DType.FLOAT, DType.DOUBLE, DType.DECIMAL)
     if (l.thisArg !in numeric || r.thisArg !in numeric) return unknown()
     // The parity literal annotator calls decimal-text atoms DOUBLE. Do not claim an
     // exact native decimal modulo precision from that approximate input fact.
-    val decimalAtom = listOf(left,right).any { it.numericAtom()?.let { atom -> !atom.isInt && !atom.name.contains('e',true) } == true }
-    if(decimalAtom && (this is Mod || l.isType(DType.FLOAT) || r.isType(DType.FLOAT))) return unknown()
+    val decimalAtom = listOf(left, right).any { it.numericAtom()?.let { atom -> !atom.isInt && !atom.name.contains('e', true) } == true }
+    if (decimalAtom && (this is Mod || l.isType(DType.FLOAT) || r.isType(DType.FLOAT))) return unknown()
     if (l.isType(DType.DOUBLE) || r.isType(DType.DOUBLE)) return DataType.build(DType.DOUBLE)
     if (l.isType(DType.FLOAT) || r.isType(DType.FLOAT)) return DataType.build(DType.FLOAT)
     if (this is Div || this is IntDiv && (l.isType(DType.DECIMAL) || r.isType(DType.DECIMAL))) return DataType.build(DType.DOUBLE)
     if (l == r) return l.copy() as DataType
-    val signed = listOf(DType.TINYINT,DType.SMALLINT,DType.INT,DType.BIGINT,DType.INT128)
-    val a = signed.indexOf(l.thisArg); val b = signed.indexOf(r.thisArg)
-    return if(a >= 0 && b >= 0)DataType.build(signed[maxOf(a,b)])else unknown()
+    val signed = listOf(DType.TINYINT, DType.SMALLINT, DType.INT, DType.BIGINT, DType.INT128)
+    val a = signed.indexOf(l.thisArg)
+    val b = signed.indexOf(r.thisArg)
+    return if (a >= 0 && b >= 0) DataType.build(signed[maxOf(a, b)]) else unknown()
 }

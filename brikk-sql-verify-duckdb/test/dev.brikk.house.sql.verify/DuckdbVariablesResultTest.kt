@@ -119,7 +119,10 @@ internal class DuckdbVariablesResultTest {
             // A separate explicit-binding control, not a retry of a potentially executed statement.
             c.prepareStatement("SELECT ?").use { bound ->
                 bound.setInt(1, 8)
-                bound.executeQuery().use { r -> assertTrue(r.next()); assertEquals(8, r.getInt(1)) }
+                bound.executeQuery().use { r ->
+                    assertTrue(r.next())
+                    assertEquals(8, r.getInt(1))
+                }
             }
             c.prepareStatement("SELECT \$x").use { named ->
                 named.setInt(1, 8)

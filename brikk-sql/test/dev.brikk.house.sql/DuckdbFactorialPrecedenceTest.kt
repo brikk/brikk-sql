@@ -17,7 +17,7 @@ class DuckdbFactorialPrecedenceTest {
         assertIs<Factorial>(assertIs<Pow>(Dialects.DUCKDB.parseOne("2 ^ 3!")).expressionArg)
         assertIs<Factorial>(assertIs<Cast>(Dialects.DUCKDB.parseOne("3!::VARCHAR")).thisArg)
         assertIs<Cast>(assertIs<Factorial>(Dialects.DUCKDB.parseOne("3::INTEGER!")).thisArg)
-        for(sql in listOf("3!!","3!+1","3!*2","3!^2"))assertFails { Dialects.DUCKDB.parseOne(sql) }
+        for (sql in listOf("3!!", "3!+1", "3!*2", "3!^2")) assertFails { Dialects.DUCKDB.parseOne(sql) }
     }
     @Test fun copySerdeGenerationParametersAndScalarFactsPreserveTheFactorialOperand() {
         for (body in listOf("2 * 3!", "(2 * 3)!", "-3!", "(-3)!", "2 ^ 3!", "3! ^ 2", "~3!", "3!::VARCHAR", "NULL!", "40!", "3 ! !")) {
@@ -30,17 +30,17 @@ class DuckdbFactorialPrecedenceTest {
             }
         }
         val sql = "SELECT CAST(? AS INTEGER)! + CAST(? AS INTEGER)!"
-        assertEquals(sql.indices.filter { sql[it]=='?' }, parseParameterOccurrences(sql,"duckdb").map { it.range.start })
-        assertEquals(2,SqlFragment(sql,"duckdb").toExecutable("duckdb").sql.count { it=='?' })
-        assertEquals("INT128",SqlFragment("SELECT 3! AS result","duckdb").outputShape().columns.single().type)
-        assertEquals("INT128",RelationScope.analyze("SELECT 3! AS result","duckdb",RelationFacts()).output!!.columns.single().sqlType)
-        assertEquals(true,SqlFragment("SELECT NULL! AS result","duckdb").outputShape().columns.single().nullable)
+        assertEquals(sql.indices.filter { sql[it] == '?' }, parseParameterOccurrences(sql, "duckdb").map { it.range.start })
+        assertEquals(2, SqlFragment(sql, "duckdb").toExecutable("duckdb").sql.count { it == '?' })
+        assertEquals("INT128", SqlFragment("SELECT 3! AS result", "duckdb").outputShape().columns.single().type)
+        assertEquals("INT128", RelationScope.analyze("SELECT 3! AS result", "duckdb", RelationFacts()).output!!.columns.single().sqlType)
+        assertEquals(true, SqlFragment("SELECT NULL! AS result", "duckdb").outputShape().columns.single().nullable)
     }
     @Test fun crossTargetExecutionRefusesUnprovedWidthsAndErrorsWithoutChangingOtherDialects() {
-        for(target in listOf("trino","postgres","doris","clickhouse","bigquery","mysql"))
-            assertFailsWith<UnsupportedError> { SqlFragment("SELECT 3!","duckdb").toExecutable(target) }
-        assertEquals("SELECT NOT TRUE",Dialects.MYSQL.parseOne("SELECT !TRUE").sql("mysql"))
-        assertEquals("SELECT NOT REGEXP_FULL_MATCH(a, b)",Dialects.DUCKDB.parseOne("SELECT a !~ b").sql("duckdb"))
-        assertTrue("!~" in SqlFragment("SELECT a !~ b","duckdb").toExecutable("duckdb").sql)
+        for (target in listOf("trino", "postgres", "doris", "clickhouse", "bigquery", "mysql"))
+            assertFailsWith<UnsupportedError> { SqlFragment("SELECT 3!", "duckdb").toExecutable(target) }
+        assertEquals("SELECT NOT TRUE", Dialects.MYSQL.parseOne("SELECT !TRUE").sql("mysql"))
+        assertEquals("SELECT NOT REGEXP_FULL_MATCH(a, b)", Dialects.DUCKDB.parseOne("SELECT a !~ b").sql("duckdb"))
+        assertTrue("!~" in SqlFragment("SELECT a !~ b", "duckdb").toExecutable("duckdb").sql)
     }
 }

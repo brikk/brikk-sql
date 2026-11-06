@@ -90,7 +90,7 @@ internal class ConnectionDuckdbVerifierTest {
         val opening = CountDownLatch(1)
         val release = CountDownLatch(1)
         val closed = CountDownLatch(1)
-        val helper = object : DuckdbQueryConnection {
+        val helper = object: DuckdbQueryConnection {
             override fun queryString(sql: String, timeoutSeconds: Int): String? = error("SQL submitted after cancellation")
             override fun cancel() = Unit
             override fun close() { closed.countDown() }
@@ -121,7 +121,7 @@ internal class ConnectionDuckdbVerifierTest {
 
     @Test
     fun cancellationAndDeadlineRequestDriverCancelAndCloseTheHelper() {
-        fun blockingHelper(started: CountDownLatch, canceled: CountDownLatch, closed: CountDownLatch) = object : DuckdbQueryConnection {
+        fun blockingHelper(started: CountDownLatch, canceled: CountDownLatch, closed: CountDownLatch) = object: DuckdbQueryConnection {
             override fun queryString(sql: String, timeoutSeconds: Int): String? {
                 started.countDown()
                 canceled.await(5, TimeUnit.SECONDS)
@@ -152,7 +152,7 @@ internal class ConnectionDuckdbVerifierTest {
         assertTrue(timedClosed.await(5, TimeUnit.SECONDS))
     }
 
-    private class StubConnection(private val response: () -> String?) : DuckdbQueryConnection {
+    private class StubConnection(private val response: () -> String?): DuckdbQueryConnection {
         val closed = AtomicBoolean()
         override fun queryString(sql: String, timeoutSeconds: Int): String? = response()
         override fun cancel() = Unit

@@ -13,12 +13,12 @@ internal fun AtTimeZone.duckdbNativeTimeZoneType(): DataType {
             DataType(args("this" to DType.USERDEFINED, "kind" to "TIMESTAMPTZ_NS"))
         input?.isType(DType.TIMESTAMP, DType.TIMESTAMPNTZ, DType.TIMESTAMP_S, DType.TIMESTAMP_MS) == true -> type(DType.TIMESTAMPTZ)
         input?.isType(DType.TIMESTAMPTZ) == true -> type(DType.TIMESTAMP)
-        input?.thisArg == DType.USERDEFINED && input.text("kind").equals("TIMESTAMPTZ_NS",true) -> type(DType.TIMESTAMP_NS)
+        input?.thisArg == DType.USERDEFINED && input.text("kind").equals("TIMESTAMPTZ_NS", true) -> type(DType.TIMESTAMP_NS)
         input?.isType(DType.TIMETZ) == true -> type(DType.TIMETZ)
         else -> type(DType.UNKNOWN)
     }
 }
 
 internal fun Expression.hasDuckdbZoneOrCollation(): Boolean = walk().any {
-    it is AtTimeZone || it is Collate || it is DataType && it.text("kind").equals("TIMESTAMPTZ_NS",true)
+    it is AtTimeZone || it is Collate || it is DataType && it.text("kind").equals("TIMESTAMPTZ_NS", true)
 }

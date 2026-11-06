@@ -12,7 +12,10 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 internal class DuckdbNearestJoinResultTest {
-    private fun Connection.execute(sql: String) = createStatement().use { it.execute(sql); Unit }
+    private fun Connection.execute(sql: String) = createStatement().use {
+        it.execute(sql)
+        Unit
+    }
     private fun Connection.rows(sql: String): List<List<String?>> = createStatement().use { statement ->
         statement.executeQuery(sql).use { result ->
             val count = result.metaData.columnCount

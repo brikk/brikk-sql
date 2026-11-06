@@ -188,7 +188,10 @@ internal class DuckdbExtensionRepositoryResultTest {
                 // One owned helper, not a new duplicate for each method call.
                 val helper = user.duplicate()
                 val guarded = Proxy.newProxyInstance(javaClass.classLoader, arrayOf(Connection::class.java)) { _, method, args ->
-                    if (method.name == "prepareStatement") { prepares.incrementAndGet(); throw AssertionError("Management validation must never prepare") }
+                    if (method.name == "prepareStatement") {
+                        prepares.incrementAndGet()
+                        throw AssertionError("Management validation must never prepare")
+                    }
                     try { method.invoke(helper, *(args ?: emptyArray())) } catch (e: InvocationTargetException) { throw e.targetException }
                 } as Connection
                 DuckdbVerifier({ guarded }).use { assertIs<VerifyResult.Unverified>(it.verify(sql)) }
