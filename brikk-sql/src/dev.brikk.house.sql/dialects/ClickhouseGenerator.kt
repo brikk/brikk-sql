@@ -18,26 +18,6 @@ import kotlin.collections.Map
 import kotlin.collections.Set
 import kotlin.reflect.KClass
 
-// sqlglot: dialect.unit_to_str
-private fun unitToStr(expression: Expression, default: String = "DAY"): Expression? {
-    val unit = expression.args["unit"] as? Expression
-        ?: return if (default.isNotEmpty()) Literal.string(default) else null
-
-    if (unit is Placeholder || (unit !is Var && unit !is Literal)) return unit
-
-    return Literal.string(unit.name)
-}
-
-// sqlglot: dialect.unit_to_var
-private fun unitToVar(expression: Expression, default: String = "DAY"): Expression? {
-    val unit = expression.args["unit"] as? Expression
-
-    if (unit is Var || unit is Placeholder || unit is WeekStart || unit is Column) return unit
-
-    val value = unit?.name ?: default
-    return if (value.isNotEmpty()) Var(args("this" to value)) else null
-}
-
 // sqlglot: generators.clickhouse._lower_func
 private fun lowerFunc(sql: String): String {
     val index = sql.indexOf("(")

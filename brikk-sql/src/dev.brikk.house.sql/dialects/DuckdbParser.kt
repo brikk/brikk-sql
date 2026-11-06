@@ -130,8 +130,7 @@ import dev.brikk.house.sql.parser.applyTimeUnitCoercion
 import dev.brikk.house.sql.parser.binaryRangeParser
 import dev.brikk.house.sql.parser.fromArgList
 import dev.brikk.house.sql.parser.parseJsonPath
-
-private fun seqGet(argsList: List<Expression?>, index: Int): Expression? = argsList.getOrNull(index)
+import dev.brikk.house.sql.parser.seqGet
 
 // sqlglot: parsers.duckdb._build_sort_array_desc
 private fun buildSortArrayDesc(a: List<Expression?>): Expression =
@@ -150,7 +149,8 @@ private fun buildDateDiff(a: List<Expression?>): Expression =
 // sqlglot: parsers.duckdb._build_generate_series
 private fun buildGenerateSeries(endExclusive: Boolean = false): (List<Expression?>) -> Expression =
     { a ->
-        // DuckDB uses 0 as a default for the series' start when it's omitted
+        // Unlike PostgreSQL's row-exploding series, DuckDB's scalar series returns a list
+        // and defaults a missing start to zero.
         val argsList = if (a.size == 1) listOf(Literal.number("0")) + a else a
 
         val genSeries = fromArgList(

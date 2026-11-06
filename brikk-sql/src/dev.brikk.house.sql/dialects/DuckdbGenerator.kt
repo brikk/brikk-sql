@@ -19,16 +19,6 @@ import kotlin.collections.Map
 import kotlin.collections.Set
 import kotlin.reflect.KClass
 
-// sqlglot: dialect.unit_to_str
-private fun unitToStr(expression: Expression, default: String = "DAY"): Expression? {
-    val unit = expression.args["unit"] as? Expression
-        ?: return if (default.isNotEmpty()) Literal.string(default) else null
-
-    if (unit is Placeholder || (unit !is Var && unit !is Literal)) return unit
-
-    return Literal.string(unit.name)
-}
-
 /**
  * Port of sqlglot's DuckDBGenerator (reference/sqlglot/sqlglot/generators/duckdb.py).
  * TRANSFORMS entries live in [TRANSFORMS] (a dispatch-map overlay handed to the base
@@ -1408,16 +1398,6 @@ open class DuckdbGenerator(
         return "${sql(this_)} $op ${sql(interval)}"
     }
 
-    // sqlglot: dialect.unit_to_var
-    private fun unitToVar(expression: Expression, default: String = "DAY"): Expression? {
-        val unit = expression.args["unit"] as? Expression
-
-        if (unit is Var || unit is Placeholder || unit is WeekStart || unit is Column) return unit
-
-        val value = unit?.name ?: default
-        return if (value.isNotEmpty()) Var(args("this" to value)) else null
-    }
-
     // sqlglot: generators.duckdb._date_from_parts_sql
     open fun datefrompartsSql(expression: DateFromParts): String {
         val yearExpr = expression.args["year"]
@@ -2403,7 +2383,7 @@ open class DuckdbGenerator(
         return arg
     }
 
-    // sqlglot: generators.duckdb._week_unit_to_dow
+    // brikk: Resolve explicit week starts and ISOWEEK; bare WEEK keeps native DuckDB semantics.
     protected open fun weekUnitToDow(unit: Expression?): Int? {
         if ((unit is Var || unit is Literal) && unit.name.uppercase() == "ISOWEEK") return 1
         if (unit is WeekStart) return WEEK_START_DAY_TO_DOW[unit.name.uppercase()]

@@ -17,16 +17,6 @@ import kotlin.collections.Map
 import kotlin.collections.Set
 import kotlin.reflect.KClass
 
-// sqlglot: dialect.unit_to_str
-private fun unitToStr(expression: Expression, default: String = "DAY"): Expression? {
-    val unit = expression.args["unit"] as? Expression
-        ?: return if (default.isNotEmpty()) Literal.string(default) else null
-
-    if (unit is Placeholder || (unit !is Var && unit !is Literal)) return unit
-
-    return Literal.string(unit.name)
-}
-
 /**
  * Port of sqlglot's StarRocksGenerator (reference/sqlglot/sqlglot/generators/starrocks.py
  * class StarRocksGenerator(MySQLGenerator)). TRANSFORMS entries live in [TRANSFORMS],
@@ -365,9 +355,6 @@ open class StarrocksGenerator(
             "MONDAY" to 1, "TUESDAY" to 2, "WEDNESDAY" to 3, "THURSDAY" to 4,
             "FRIDAY" to 5, "SATURDAY" to 6, "SUNDAY" to 7,
         )
-
-        // sqlglot: dialect.week_offset_to_dow (WEEK_OFFSET 0 => Sunday's dow=7)
-        private fun weekOffsetToDow(weekOffset: Int): Int = ((weekOffset + 6) % 7) + 1
 
         // sqlglot: StarRocksGenerator.TYPE_MAPPING
         val TYPE_MAPPING: Map<DType, String> = MysqlGenerator.TYPE_MAPPING + mapOf(

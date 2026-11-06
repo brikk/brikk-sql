@@ -71,22 +71,8 @@ import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.TokenizerConfig
 import dev.brikk.house.sql.parser.applyTimeUnitCoercion
 import dev.brikk.house.sql.parser.binaryRangeParser
-import dev.brikk.house.sql.parser.formatTimeString
 import dev.brikk.house.sql.parser.fromArgList
-
-private fun seqGet(argsList: List<Expression?>, index: Int): Expression? = argsList.getOrNull(index)
-
-// sqlglot: helper.is_int
-private fun isInt(text: String): Boolean = text.toLongOrNull() != null
-
-// sqlglot: Dialect["postgres"].format_time on a parsed expression
-private fun postgresFormatTime(expression: Expression?): Expression? {
-    if (expression is Literal && expression.isString) {
-        val converted = formatTimeString(expression.thisArg as? String, PostgresDialect.TIME_MAPPING)
-        return Literal(args("this" to converted, "is_string" to true))
-    }
-    return expression
-}
+import dev.brikk.house.sql.parser.seqGet
 
 // sqlglot: exp.INTERVAL_STRING_RE (used by exp.to_interval through maybe_parse)
 private val INTERVAL_STRING_RE = Regex("\\s*(-?[0-9]+(?:\\.[0-9]+)?)\\s*([a-zA-Z]+)\\s*")
@@ -108,8 +94,8 @@ private fun toInterval(text: String): Expression {
 
 // sqlglot: parsers.postgres._build_generate_series
 private fun buildGenerateSeries(a: List<Expression?>): Expression {
-    // The goal is to convert step values like '1 day' or INTERVAL '1 day' into INTERVAL '1' day
-    // Note: postgres allows calls with just two arguments -- the "step" argument defaults to 1
+    // Unlike DuckDB's zero-start scalar series, PostgreSQL explodes rows and accepts string interval steps.
+    // PostgreSQL allows two arguments: the step defaults to 1.
     val argsList = a.toMutableList()
     val step = seqGet(argsList, 2)
     if (step != null) {
@@ -135,7 +121,7 @@ private fun buildToTimestamp(a: List<Expression?>): Expression {
     }
 
     // sqlglot: build_formatted_time(exp.StrToTime)
-    return StrToTime(args("this" to seqGet(a, 0), "format" to postgresFormatTime(seqGet(a, 1))))
+    return StrToTime(args("this" to seqGet(a, 0), "format" to Dialects.POSTGRES.formatTime(seqGet(a, 1))))
 }
 
 // sqlglot: parsers.postgres._build_regexp_replace — the annotate_types call is
@@ -548,10 +534,10 @@ object PostgresParserTables {
         put("REGEXP_REPLACE", ::buildRegexpReplace)
         // sqlglot: build_formatted_time(exp.TimeToStr) / (exp.StrToDate)
         put("TO_CHAR") { a ->
-            TimeToStr(args("this" to seqGet(a, 0), "format" to postgresFormatTime(seqGet(a, 1))))
+            TimeToStr(args("this" to seqGet(a, 0), "format" to Dialects.POSTGRES.formatTime(seqGet(a, 1))))
         }
         put("TO_DATE") { a ->
-            StrToDate(args("this" to seqGet(a, 0), "format" to postgresFormatTime(seqGet(a, 1))))
+            StrToDate(args("this" to seqGet(a, 0), "format" to Dialects.POSTGRES.formatTime(seqGet(a, 1))))
         }
         put("TO_TIMESTAMP", ::buildToTimestamp)
         put("UNNEST", fromArgList(listOf("this", "expressions"), true) { Explode(it) })

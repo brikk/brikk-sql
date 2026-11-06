@@ -59,19 +59,8 @@ import dev.brikk.house.sql.parser.Parser
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.TokenizerConfig
 import dev.brikk.house.sql.parser.buildVarMap
-import dev.brikk.house.sql.parser.formatTimeString
 import dev.brikk.house.sql.parser.fromArgList
-
-private fun seqGet(argsList: List<Expression?>, index: Int): Expression? = argsList.getOrNull(index)
-
-// sqlglot: Dialect["hive"].format_time (Hive.TIME_MAPPING)
-internal fun hiveFormatTime(expression: Expression?): Expression? {
-    if (expression is Literal && expression.isString) {
-        val converted = formatTimeString(expression.thisArg as? String, HiveDialect.TIME_MAPPING)
-        return Literal(args("this" to converted, "is_string" to true))
-    }
-    return expression
-}
+import dev.brikk.house.sql.parser.seqGet
 
 // sqlglot: parsers.hive.build_with_ignore_nulls — FIRST/FIRST_VALUE/LAST/LAST_VALUE with an
 // ignore-nulls boolean 2nd arg. IgnoreNulls wraps the target when the flag is true.
@@ -97,7 +86,7 @@ private fun buildFormattedTime(
         val f = if (default == true) HiveDialect.TIME_FORMAT else default as? String
         fmt = f?.let { Literal(args("this" to it.trim('\''), "is_string" to true)) }
     }
-    factory(args("this" to seqGet(a, 0), "format" to hiveFormatTime(fmt)))
+    factory(args("this" to seqGet(a, 0), "format" to Dialects.HIVE.formatTime(fmt)))
 }
 
 // sqlglot: dialect.build_regexp_extract(expr) with Hive.REGEXP_EXTRACT_DEFAULT_GROUP=1
@@ -115,7 +104,7 @@ private fun hiveBuildRegexpExtract(all: Boolean): (List<Expression?>) -> Express
 // sqlglot: parsers.hive._build_to_date (safe TsOrDsToDate)
 private fun buildToDate(a: List<Expression?>): Expression =
     TsOrDsToDate(
-        args("this" to seqGet(a, 0), "format" to hiveFormatTime(seqGet(a, 1)), "safe" to true)
+        args("this" to seqGet(a, 0), "format" to Dialects.HIVE.formatTime(seqGet(a, 1)), "safe" to true)
     )
 
 // sqlglot: parsers.hive._build_named_struct — named_struct('k', v, ...) -> Struct of PropertyEQ.
@@ -471,7 +460,7 @@ object HiveParserTables {
             TimeToStr(
                 args(
                     "this" to TimeStrToTime(args("this" to seqGet(a, 0))),
-                    "format" to hiveFormatTime(seqGet(a, 1)),
+                    "format" to Dialects.HIVE.formatTime(seqGet(a, 1)),
                 )
             )
         }

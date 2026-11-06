@@ -145,18 +145,14 @@ import dev.brikk.house.sql.parser.applyTimeUnitCoercion
 import dev.brikk.house.sql.parser.buildVarMap
 import dev.brikk.house.sql.parser.buildTrim
 import dev.brikk.house.sql.parser.fromArgList
+import dev.brikk.house.sql.parser.seqGet
 import dev.brikk.house.sql.metadata.CLICKHOUSE_FUNCTION_CATALOG
 import dev.brikk.house.sql.metadata.CLICKHOUSE_26_5_1_1_FUNCTION_CATALOG
 import dev.brikk.house.sql.metadata.FunctionKind
 import dev.brikk.house.sql.ast.Array as ArrayNode
 
-private fun seqGet(argsList: List<Expression?>, index: Int): Expression? = argsList.getOrNull(index)
-
-// sqlglot: helper.is_int
-private fun isInt(text: String): Boolean = text.toLongOrNull() != null
-
-// sqlglot: Dialect["clickhouse"].format_time — the TIME_MAPPING is empty, so string
-// literals pass through unchanged (rebuilt as fresh Literals like the Python original).
+// brikk: Keep the raw literal payload, including empty strings; Dialect.formatTime
+// normalizes empty strings to null even with ClickHouse's empty TIME_MAPPING.
 private fun clickhouseFormatTime(expression: Expression?): Expression? {
     if (expression is Literal && expression.isString) {
         return Literal(args("this" to expression.thisArg, "is_string" to true))
@@ -184,6 +180,7 @@ private fun buildCountIf(a: List<Expression?>): Expression {
 }
 
 // sqlglot: parsers.clickhouse._build_str_to_date
+// Unlike MySQL's format-based dispatch, ClickHouse casts to DATETIME and keeps the three-arg call anonymous.
 private fun buildStrToDate(a: List<Expression?>): Expression {
     if (a.size == 3) return Anonymous(args("this" to "STR_TO_DATE", "expressions" to a))
 
@@ -222,6 +219,7 @@ private fun buildSplitByChar(a: List<Expression?>): Expression {
 }
 
 // sqlglot: dialect.build_date_delta (default_unit=None)
+// Unlike MySQL, the two-argument form has no unit; four arguments may supply a timezone.
 private fun buildDateDelta(
     factory: (Args) -> Expression,
     supportsTimezone: Boolean = false,
@@ -229,7 +227,6 @@ private fun buildDateDelta(
     val unitBased = a.size >= 3
     val hasTimezone = a.size == 4
     val this_ = if (unitBased) a[2] else seqGet(a, 0)
-    // default_unit=None: unit is only set in the unit-based form
     val unit = if (unitBased) a[0] else null
     // sqlglot: exp.TimeUnit.__init__ — DateAdd & co. extend TimeUnit, whose constructor
     // converts var-like unit args into Vars

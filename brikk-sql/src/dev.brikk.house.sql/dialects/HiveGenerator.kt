@@ -832,7 +832,6 @@ open class HiveGenerator(
         // sqlglot: HiveGenerator.PROPERTIES_LOCATION
         val PROPERTIES_LOCATION: Map<KClass<out Expression>, GeneratorTables.PropLocation> = buildMap {
             putAll(GeneratorTables.PROPERTIES_LOCATION)
-            @Suppress("UNUSED_EXPRESSION")
             put(FileFormatProperty::class, GeneratorTables.PropLocation.POST_SCHEMA)
             put(PartitionedByProperty::class, GeneratorTables.PropLocation.POST_SCHEMA)
             put(VolatileProperty::class, GeneratorTables.PropLocation.UNSUPPORTED)

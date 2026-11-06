@@ -33,8 +33,7 @@ import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.TokenizerConfig
 import dev.brikk.house.sql.parser.buildTrim
 import dev.brikk.house.sql.parser.fromArgList
-
-private fun seqGet(argsList: List<Expression?>, index: Int): Expression? = argsList.getOrNull(index)
+import dev.brikk.house.sql.parser.seqGet
 
 // sqlglot: parsers.spark2.build_as_cast(to_type) — CAST(x AS <to_type>)
 private fun buildAsCast(toType: String): (List<Expression?>) -> Expression = { a ->
@@ -170,7 +169,7 @@ object Spark2ParserTables {
             if (a.size == 1) {
                 buildAsCast("timestamp")(a)
             } else {
-                StrToTime(args("this" to seqGet(a, 0), "format" to hiveFormatTime(seqGet(a, 1))))
+                StrToTime(args("this" to seqGet(a, 0), "format" to Dialects.HIVE.formatTime(seqGet(a, 1))))
             }
         }
         put("TO_UNIX_TIMESTAMP") { a -> StrToUnix(args("this" to seqGet(a, 0), "format" to seqGet(a, 1))) }

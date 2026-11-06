@@ -66,6 +66,7 @@ import dev.brikk.house.sql.ast.PartitionList
 import dev.brikk.house.sql.ast.PartitionRange
 import dev.brikk.house.sql.ast.RenameIndex
 import dev.brikk.house.sql.ast.Schema
+import dev.brikk.house.sql.ast.SAFE_IDENTIFIER_RE
 import dev.brikk.house.sql.ast.SchemaCommentProperty
 import dev.brikk.house.sql.ast.SetItem
 import dev.brikk.house.sql.ast.Show
@@ -90,7 +91,7 @@ import dev.brikk.house.sql.parser.ParseError
 import dev.brikk.house.sql.parser.Parser
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.TokenizerConfig
-import dev.brikk.house.sql.parser.formatTimeString
+import dev.brikk.house.sql.parser.seqGet
 
 // sqlglot: parsers.mysql.TIME_SPECIFIERS — specifiers for time (vs date) parts
 private val TIME_SPECIFIERS = setOf('f', 'H', 'h', 'I', 'i', 'k', 'l', 'p', 'r', 'S', 's', 'T')
@@ -108,21 +109,11 @@ private fun hasTimeSpecifier(dateFormat: String): Boolean {
     return false
 }
 
-private fun seqGet(argsList: List<Expression?>, index: Int): Expression? = argsList.getOrNull(index)
-
-// sqlglot: Dialect["mysql"].format_time on a parsed expression
-private fun mysqlFormatTime(expression: Expression?): Expression? {
-    if (expression is Literal && expression.isString) {
-        val converted = formatTimeString(expression.thisArg as? String, MysqlDialect.TIME_MAPPING)
-        return Literal(args("this" to converted, "is_string" to true))
-    }
-    return expression
-}
-
 // sqlglot: parsers.mysql._str_to_date
+// MySQL chooses date or timestamp from the format; ClickHouse casts STR_TO_DATE to DATETIME.
 private fun buildStrToDate(argsList: List<Expression?>): Expression {
     val mysqlDateFormat = seqGet(argsList, 1)
-    val dateFormat = mysqlFormatTime(mysqlDateFormat)
+    val dateFormat = Dialects.MYSQL.formatTime(mysqlDateFormat)
     val this_ = seqGet(argsList, 0)
 
     if (mysqlDateFormat != null && hasTimeSpecifier(mysqlDateFormat.name)) {
@@ -163,18 +154,13 @@ private fun buildDateDeltaWithInterval(
             "this" to argsList[0],
             "expression" to interval.thisArg,
             // sqlglot: unit_to_str(interval), then TimeUnit.__init__ converts to Var
-            "unit" to normalizeTimeUnit(intervalUnitToStr(interval)),
+            "unit" to normalizeTimeUnit(unitToStr(interval)),
         )
     )
 }
 
-// sqlglot: dialect.unit_to_str for Interval nodes
-private fun intervalUnitToStr(interval: Interval): Expression? {
-    val unit = interval.args["unit"] as? Expression ?: return Literal.string("DAY")
-    return if (unit is Var || unit is Literal) Literal.string(unit.name) else unit
-}
-
 // sqlglot: dialect.build_date_delta (unit_mapping=None, default_unit="DAY")
+// Unlike ClickHouse, the two-argument MySQL form defaults to DAY and has no timezone argument.
 private fun buildDateDelta(factory: NodeFactory): (List<Expression?>) -> Expression = { argsList ->
     val unitBased = argsList.size >= 3
     val this_ = if (unitBased) argsList[2] else seqGet(argsList, 0)
@@ -866,8 +852,6 @@ open class MysqlParser(
     }
 
     companion object {
-        // sqlglot: expressions.SAFE_IDENTIFIER_RE
-        private val SAFE_IDENTIFIER_RE = Regex("^[_a-zA-Z][\\w]*$")
     }
 }
 
@@ -967,7 +951,7 @@ object MysqlParserTables {
             TimeToStr(
                 args(
                     "this" to TsOrDsToTimestamp(args("this" to seqGet(a, 0))),
-                    "format" to mysqlFormatTime(seqGet(a, 1)),
+                    "format" to Dialects.MYSQL.formatTime(seqGet(a, 1)),
                 )
             )
         }
@@ -980,7 +964,7 @@ object MysqlParserTables {
         // sqlglot: build_formatted_time(exp.UnixToTime) — no default format
         put("FROM_UNIXTIME") { a ->
             dev.brikk.house.sql.ast.UnixToTime(
-                args("this" to seqGet(a, 0), "format" to mysqlFormatTime(seqGet(a, 1)))
+                args("this" to seqGet(a, 0), "format" to Dialects.MYSQL.formatTime(seqGet(a, 1)))
             )
         }
         // sqlglot: parser FUNCTIONS[LEAST/GREATEST] with MySQL.LEAST_GREATEST_IGNORES_NULLS
