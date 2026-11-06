@@ -541,7 +541,7 @@ class Resolver(
                 }
             }
             // A set operation needs reconciled output types, not an arbitrary
-            // underlying arm's schema. The target deliberately defers that port.
+            // underlying arm's schema; that case is not ported, so the type stays unknown.
         }
 
         columnTypeFromScopeCache[cacheKey] = result

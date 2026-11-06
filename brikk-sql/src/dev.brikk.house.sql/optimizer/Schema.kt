@@ -12,8 +12,7 @@ import dev.brikk.house.sql.parser.ErrorLevel
 import dev.brikk.house.sql.parser.ParseError
 
 /**
- * Port of sqlglot/schema.py — database schema abstractions used by the optimizer
- * (and, next, annotate_types).
+ * Port of sqlglot/schema.py — database schema abstractions used by the optimizer.
  *
  * Python's nested `dict[str, t.Any]` schema mappings map to `Map<String, Any?>` here:
  * inner nodes are nested maps, leaves are column types (String or [DataType]).
@@ -709,11 +708,9 @@ private fun deepMutable(schema: Map<String, Any?>): MutableMap<String, Any?> {
     return out
 }
 
-// ---------------------------------------------------------------------------
 // String-part trie (sqlglot/trie.py). The parser's Trie.kt is char-keyed for keyword
 // scanning; the schema needs part-keyed tries with PREFIX/EXISTS results, so this is a
 // separate faithful port of the nested-dict shape (0 marks a terminal).
-// ---------------------------------------------------------------------------
 
 // sqlglot: trie.TrieResult
 enum class TrieResult { FAILED, PREFIX, EXISTS }

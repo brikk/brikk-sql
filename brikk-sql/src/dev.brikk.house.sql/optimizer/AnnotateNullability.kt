@@ -114,7 +114,6 @@ fun annotateNullability(
         emptyList()
     }
     if (scopes.isEmpty()) {
-        // Non-traversable expression (a bare scalar, etc.): evaluate it directly.
         pass.visitTree(expression, scope = null)
     } else {
         for (scope in scopes) pass.visitScope(scope)
@@ -198,7 +197,6 @@ private class NullabilityAnnotator(
         currentScope = null
     }
 
-    /** Evaluates a standalone expression tree with no scope context. */
     fun visitTree(expression: Expression, scope: Scope?) {
         currentScope = scope
         for (node in expression.walk(bfs = false).toList().asReversed()) visit(node)
@@ -228,44 +226,35 @@ private class NullabilityAnnotator(
             }
         }
         val verdict: Boolean? = when (node) {
-            // --- literals ---
             is Null -> true
             is Literal -> false
             is dev.brikk.house.sql.ast.DuckdbBinaryLiteral -> false
 
-            // --- alias / paren are pass-through wrappers ---
             is Alias -> get(node.thisArg as? Expression)
             is Paren -> get(node.thisArg as? Expression)
 
-            // --- IS NULL / IS NOT NULL / EXISTS: boolean predicate, never NULL ---
+            // IS NULL / IS NOT NULL / EXISTS are boolean predicates, never NULL.
             is Is -> false
             is Exists -> false
 
-            // --- column references ---
             is Column -> if (column != null) column(node) else columnNullability(node)
             is Dot, is Bracket -> if (dialect.name == "duckdb" && (node.thisArg as? Expression)?.isType(DType.VARIANT) == true) true else null
 
-            // --- CAST / TRY_CAST ---
             // TryCast must precede Cast (TryCast is a subclass of Cast).
             is TryCast -> true // TRY_CAST yields NULL on conversion failure.
             is Cast -> get(node.thisArg as? Expression)
 
-            // --- COALESCE / IFNULL / NVL ---
             is Coalesce -> coalesceNullability(node)
 
-            // --- CASE ---
             is Case -> caseNullability(node)
 
-            // --- string concat (`||`) is null-propagating like other binaries ---
+            // String concat (`||`) is null-propagating like other binaries.
             is DPipe -> operatorRule(operands(node))
 
-            // --- AND / OR: three-valued logic (see connectorRule) ---
             is Connector -> connectorRule(node)
 
-            // --- function calls (catalog profile + aggregate override) ---
             is Func -> functionNullability(node)
 
-            // --- generic null-propagating operators (arithmetic, comparison, unary) ---
             is dev.brikk.house.sql.ast.DuckdbRegexOperator -> {
                 // Quantified comparisons have empty-list and element-NULL semantics,
                 // not scalar strictness. Column selectors are not scalar predicates.
@@ -280,7 +269,6 @@ private class NullabilityAnnotator(
             is Binary -> operatorRule(operands(node))
             is Unary -> operatorRule(operands(node))
 
-            // --- anything else: unknown ---
             else -> null
         }
         put(node, verdict)
@@ -387,7 +375,6 @@ private class NullabilityAnnotator(
             }
         }
 
-        // No scope resolution — match the textual table name against the catalog.
         return declaredNullability(table, column.name)
     }
 
@@ -506,7 +493,6 @@ private class NullabilityAnnotator(
         val catalog = dialect.functionCatalog
         val def = catalog?.get(name)
 
-        // Aggregate override. Prefer the catalog kind; fall back to the AST marker.
         val isAggregate = def?.let { it.kind == FunctionKind.AGGREGATE }
             ?: (node is AggFunc)
         if (isAggregate) {

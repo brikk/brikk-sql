@@ -11,7 +11,7 @@ import kotlin.collections.Set
 private val clickhouseLambdaSyntaxNameKeys = setOf("alias", "table", "db", "catalog", "unit", "kind", "name", "field")
 
 /**
- * CHSEM-003 argument binding and CHSEM-005's separately proved value results.
+ * Lambda argument binding and exact value results backed by native proofs.
  * Visit its array inputs before entering the lambda, with independent lexical scopes
  * for explicit parameters and implicit placeholders. The ordinary annotator owns
  * physical columns and scalar fallbacks; exact results require separate native proofs.
@@ -110,7 +110,7 @@ internal class ClickhouseLambdaTyping(
                 }
             } else if (node is ClickhouseComposition) {
                 // Do not reuse initial array elements at a later stage. Its argument
-                // annotations come only from CHSEM-005's proved result overrides.
+                // annotations come only from the proved result overrides.
                 (node.args["expression"] as? Expression)?.let { stack.addLast(Frame(it, bindings = bindings)) }
                 (node.thisArg as? Expression)?.let { stack.addLast(Frame(it, bindings = bindings, arrayInputs = frame.arrayInputs)) }
             } else {

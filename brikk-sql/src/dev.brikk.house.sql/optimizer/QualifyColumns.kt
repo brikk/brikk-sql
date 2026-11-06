@@ -1196,23 +1196,19 @@ private fun expandStructStarsWithParens(expression: Dot): List<Alias> {
             continue
         }
 
-        // if parent is not a dot, then something is wrong
         if (parent !is Dot) {
             return emptyList()
         }
 
-        // if the rhs of the dot is star we are done
         val rhs = parent.right
         if (rhs is Star) {
             break
         }
 
-        // if it is not identifier, then something is wrong
         if (rhs !is Identifier) {
             return emptyList()
         }
 
-        // Check if current rhs identifier is in struct
         var matched = false
         for (structFieldDef in (startingStruct?.expressionsArg ?: emptyList())) {
             val fieldDef = structFieldDef as Expression
@@ -1230,7 +1226,6 @@ private fun expandStructStarsWithParens(expression: Dot): List<Alias> {
         parent = parent.parent
     }
 
-    // build new aliases to expand star
     val newSelections = mutableListOf<Alias>()
 
     // fetch the outermost parentheses for new aliases

@@ -5,7 +5,7 @@ import dev.brikk.house.sql.ast.ArrayFilter
 import dev.brikk.house.sql.ast.Expression
 import dev.brikk.house.sql.ast.Transform
 
-/** CHSEM-008, source-pinned FunctionArrayMapped and mapApply adapter contracts. */
+/** Higher-order call contracts pinned to ClickHouse source (FunctionArrayMapped and mapApply). */
 internal enum class ClickhouseHigherOrderKind(val function: String, val predicate: Boolean = false, val optionalLambda: Boolean = false) {
     MAP("arrayMap"), FILTER("arrayFilter", predicate = true),
     EXISTS("arrayExists", predicate = true, optionalLambda = true),

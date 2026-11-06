@@ -57,7 +57,8 @@ import dev.brikk.house.sql.parser.ParseError
  *    qualification can pre-qualify and pass a [Scope] via the `scope` parameter.
  */
 
-// sqlglot: errors.SqlglotError (lineage raises this; parent of the sqlglot error family)
+// sqlglot: errors.SqlglotError. In brikk only lineage raises it and no other error class extends it,
+// unlike sqlglot where it is the base of the error family.
 class SqlglotError(message: String) : RuntimeException(message)
 
 // sqlglot: lineage.Node
