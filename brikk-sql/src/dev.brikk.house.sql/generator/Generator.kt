@@ -213,6 +213,7 @@ open class Generator(
     open val valuesAsTable: Boolean get() = true
     open val alterTableIncludeColumnKeyword: Boolean get() = true
     open val unnestWithOrdinality: Boolean get() = true
+    @Deprecated("Not read by the generator; retained for downstream overrides and binary compatibility.")
     open val aggregateFilterSupported: Boolean get() = true
     open val semiAntiJoinWithSide: Boolean get() = true
     open val computedColumnWithType: Boolean get() = true
@@ -367,6 +368,7 @@ open class Generator(
     open val dialectByteStringIsBytesType: Boolean get() = false
     open val dialectArrayAggIncludesNulls: Boolean get() = true
     open val dialectIdentifiersCanStartWithDigit: Boolean get() = false
+    @Deprecated("Not read by the generator; retained for downstream overrides and binary compatibility.")
     open val dialectIdentifiersCanStartWithDollar: Boolean get() = false
     open val inverseCreatableKindMapping: Map<String, String> get() = emptyMap()
 

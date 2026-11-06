@@ -377,19 +377,6 @@ private fun hazardDetail(hazard: FunctionHazard): String {
 }
 
 /**
- * Conservative worst-first ordering for multi-key hazard collisions, mirroring the
- * registry's own collision policy (tools/generate_hazards_registry.py): DIVERGENT >
- * UNCLEAR > CONDITIONALLY_EQUIVALENT > NO_EQUIVALENT > IDENTICAL. Lower rank = worse.
- */
-private fun verdictRank(v: HazardVerdict): Int = when (v) {
-    HazardVerdict.DIVERGENT -> 0
-    HazardVerdict.UNCLEAR -> 1
-    HazardVerdict.CONDITIONALLY_EQUIVALENT -> 2
-    HazardVerdict.NO_EQUIVALENT -> 3
-    HazardVerdict.IDENTICAL -> 4
-}
-
-/**
  * The MULTI-KEY hazard key set (A) for one function [node] transpiling `dialect`→[target]:
  * every name the node can be known by for this pair, so a translated (cross-name) function
  * matches its verdict regardless of the surface name the entry is filed under.

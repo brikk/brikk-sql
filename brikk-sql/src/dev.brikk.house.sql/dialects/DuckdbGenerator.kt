@@ -2383,7 +2383,7 @@ open class DuckdbGenerator(
         return arg
     }
 
-    // sqlglot: generators.duckdb._week_unit_to_dow
+    // brikk: Resolve explicit week starts and ISOWEEK; bare WEEK keeps native DuckDB semantics.
     protected open fun weekUnitToDow(unit: Expression?): Int? {
         if ((unit is Var || unit is Literal) && unit.name.uppercase() == "ISOWEEK") return 1
         if (unit is WeekStart) return WEEK_START_DAY_TO_DOW[unit.name.uppercase()]

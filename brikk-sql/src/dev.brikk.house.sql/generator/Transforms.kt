@@ -296,20 +296,6 @@ private fun addWhere(select: Select, condition: Expression) {
     select.set("where", Where(args("this" to newCondition)))
 }
 
-// sqlglot: Query.join(join_expr, join_type=..., copy=False) — appends a Join.
-private fun addJoin(select: Select, joinThis: Expression, kind: String? = null, side: String? = null) {
-    select.append(
-        "joins",
-        Join(
-            args(
-                "this" to joinThis,
-                "kind" to kind,
-                "side" to side,
-            )
-        ),
-    )
-}
-
 /**
  * sqlglot: transforms.eliminate_semi_and_anti_joins — convert SEMI and ANTI joins into
  * equivalent forms that use EXISTS instead.

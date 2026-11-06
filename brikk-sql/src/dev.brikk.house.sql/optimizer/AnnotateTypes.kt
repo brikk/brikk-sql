@@ -768,7 +768,7 @@ class TypeAnnotator(
             return
         }
         // Function-valued nodes retain UNKNOWN here. The contextual pass applies
-        // CHSEM-005's separately proved value results after these generic node rules.
+        // separately verified ClickHouse value results after these generic node rules.
 
         when {
             duckdbTemporalCast != null -> setType(expr, duckdbTemporalCast)

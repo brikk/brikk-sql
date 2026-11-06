@@ -167,7 +167,7 @@ open class MysqlGenerator(
         return func(name, *flattened.toTypedArray())
     }
 
-    // sqlglot: generators.mysql._remove_ts_or_ds_to_date
+    // sqlglot: dialect.remove_ts_or_ds_to_date
     internal fun removeTsOrDsToDate(expression: Expression, vararg argKeys: String) {
         for (argKey in argKeys) {
             val arg = expression.args[argKey]

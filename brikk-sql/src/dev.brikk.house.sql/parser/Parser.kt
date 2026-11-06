@@ -482,6 +482,7 @@ open class Parser(
     open val supportsColumnJoinMarks: kotlin.Boolean get() = false
 
     // sqlglot: Parser.COLON_IS_VARIANT_EXTRACT
+    @Deprecated("Not read by the parser; retained for downstream overrides and binary compatibility.")
     open val colonIsVariantExtract: kotlin.Boolean get() = false
 
     // sqlglot: Parser.VALUES_FOLLOWED_BY_PAREN

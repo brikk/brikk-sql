@@ -356,9 +356,6 @@ open class StarrocksGenerator(
             "FRIDAY" to 5, "SATURDAY" to 6, "SUNDAY" to 7,
         )
 
-        // sqlglot: dialect.week_offset_to_dow (WEEK_OFFSET 0 => Sunday's dow=7)
-        private fun weekOffsetToDow(weekOffset: Int): Int = ((weekOffset + 6) % 7) + 1
-
         // sqlglot: StarRocksGenerator.TYPE_MAPPING
         val TYPE_MAPPING: Map<DType, String> = MysqlGenerator.TYPE_MAPPING + mapOf(
             DType.INT128 to "LARGEINT",
