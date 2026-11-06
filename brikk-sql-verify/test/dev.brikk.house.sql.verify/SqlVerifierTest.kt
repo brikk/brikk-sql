@@ -58,12 +58,9 @@ class SqlVerifierTest {
         }
     }
 
-    // -- registry --------------------------------------------------------------------------
-
     @Test
     fun forEngineReturnsVerifiersForSupportedEngines() {
-        // Fidelity tier (native, non-advisory) + advisory tier (ShardingSphere). Postgres now
-        // resolves to the advisory ShardingSphere oracle rather than embedded PG.
+        // Fidelity tier (native, non-advisory) + advisory tier (ShardingSphere, postgres included).
         for (engine in listOf("trino", "duckdb", "doris", "postgres", "mysql", "hive", "clickhouse")) {
             val verifier = SqlVerifiers.forEngine(engine)
             assertNotNull(verifier, "expected a verifier for $engine")
@@ -87,8 +84,6 @@ class SqlVerifierTest {
     fun forEngineReturnsNullForUnsupportedEngines() {
         assertNull(SqlVerifiers.forEngine("no-such-engine"))
     }
-
-    // -- trino ----------------------------------------------------------------------------
 
     @Test
     fun trinoAcceptsValidSql() {
@@ -196,8 +191,6 @@ class SqlVerifierTest {
         }
     }
 
-    // -- duckdb ---------------------------------------------------------------------------
-
     @Test
     fun duckdbAcceptsValidSql() {
         val verifier = SqlVerifiers.forEngine("duckdb")!!
@@ -222,8 +215,6 @@ class SqlVerifierTest {
         assertIs<VerifyResult.Accepted>(verifier.verifyExpression("x -> '$.family'"))
         assertFalse(verifier.verifyExpression("1 +") is VerifyResult.Accepted)
     }
-
-    // -- doris ----------------------------------------------------------------------------
 
     @Test
     fun dorisAcceptsValidSql() {
@@ -451,7 +442,7 @@ class SqlVerifierTest {
         }
     }
 
-    // -- function-semantics renderings (brikk-sql FunctionSemanticsTest) -------------------
+    // Function-semantics renderings (brikk-sql FunctionSemanticsTest).
 
     @Test
     fun duckdbAcceptsFunctionSemanticsRenderings() {
@@ -570,8 +561,6 @@ class SqlVerifierTest {
             assertIs<VerifyResult.Accepted>(result, "Doris FE parser rejected `$sql`: $result")
         }
     }
-
-    // -- doris (continued) ----------------------------------------------------------------
 
     @Test
     fun dorisAcceptsBrikkMaterializedViewColumnRendering() {

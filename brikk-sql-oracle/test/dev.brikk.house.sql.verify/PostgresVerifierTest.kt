@@ -34,8 +34,7 @@ class PostgresVerifierTest {
     @Test
     fun postgresAcceptsValidStatement() {
         val result = pg.verify("SELECT a FROM t WHERE b = 1")
-        // A valid SELECT prepares cleanly against the empty catalog? No — `t` is undefined, so
-        // this is a semantic (42P01) case: grammar accepted, catalog empty => accepted=true.
+        // `t` is undefined, a semantic (42P01) case: grammar accepted, catalog empty => accepted=true.
         assertIs<VerifyResult.Accepted>(result, "expected grammar acceptance, got: $result")
     }
 
