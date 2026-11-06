@@ -2,6 +2,8 @@ package dev.brikk.house.sql.dialects
 
 import dev.brikk.house.sql.ast.*
 
+private val FRACTIONAL_INTERVAL = Regex("^[+-]?(?:[0-9]+\\.[0-9]*|\\.[0-9]+|[0-9]+[eE][+-]?[0-9]+)$")
+
 /** Reviewed 2.0 gaps. Rendering a familiar name is not a proof of executable semantics. */
 internal fun Expression.duckdbExecutableBoundaryIssue(source: String?, target: String, strict: Boolean): String? {
     val from = source?.lowercase() ?: return null
@@ -22,7 +24,7 @@ internal fun Expression.duckdbExecutableBoundaryIssue(source: String?, target: S
         return "DuckDB regex option flags have no verified cross-target execution contract"
     if (target == "duckdb") {
         if (nodes.any { it is Interval && it.args["unit"] != null && (it.thisArg as? Literal)?.name?.let { value ->
-                Regex("^[+-]?(?:[0-9]+\\.[0-9]*|\\.[0-9]+|[0-9]+[eE][+-]?[0-9]+)$").matches(value.trim().substringBefore(' '))
+                FRACTIONAL_INTERVAL.matches(value.trim().substringBefore(' '))
             } == true }) return "Fractional interval string/unit preservation is not qualified for executable DuckDB generation"
         if (nodes.any { it is JSONExtract && it.expressionsArg.isNotEmpty() })
             return "Multi-path JSON extraction must not silently lose paths; executable DuckDB mapping is unqualified"
