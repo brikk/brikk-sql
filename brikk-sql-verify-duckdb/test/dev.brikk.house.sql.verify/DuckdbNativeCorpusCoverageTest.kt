@@ -158,7 +158,7 @@ internal class DuckdbNativeCorpusCoverageTest {
                     put("message", v.message)
             }) })
         })
-        val baseline = NativeCorpusAudit.root.resolve("brikk-sql-verify-duckdb/testResources/native-coverage-baseline-main-0572f6d.json")
+        val baseline = NativeCorpusAudit.root.resolve("brikk-sql-verify-duckdb/testResources/native-coverage-baseline.json")
         assertTrue(Files.isRegularFile(baseline), "Review build/duckdb-parser-audit/native-coverage.json before adding a baseline")
         assertEquals(Json.parseToJsonElement(Files.readString(baseline)), summary, "Investigate coverage changes; never refresh parity ledgers from native syntax outcomes")
         println("DDB20-050 $summary")
