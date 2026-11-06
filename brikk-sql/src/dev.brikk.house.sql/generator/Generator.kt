@@ -364,6 +364,8 @@ open class Generator(
     open val inverseCreatableKindMapping: Map<String, String> get() = emptyMap()
 
     companion object {
+        private val BACKSLASH_UNICODE_ESCAPE_RE = Regex("""\\(\d+)""")
+
         // sqlglot: Generator.SENTINEL_LINE_BREAK
         const val SENTINEL_LINE_BREAK = "__SQLGLOT__LB__"
 
@@ -1508,7 +1510,7 @@ open class Generator(
             val pattern = if (escape != null) {
                 Regex("${Regex.escape(escape.name)}(\\d+)")
             } else {
-                Regex("""\\(\d+)""")
+                BACKSLASH_UNICODE_ESCAPE_RE
             }
             text = pattern.replace(text) { "\\u${it.groupValues[1]}" }
         }

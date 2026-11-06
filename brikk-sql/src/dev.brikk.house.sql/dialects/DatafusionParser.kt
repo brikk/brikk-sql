@@ -312,7 +312,7 @@ open class DatafusionParser(
     override fun parseParameter(): Expression {
         val dollar = prevToken.text == "$"
         return super.parseParameter().also {
-            if (dollar && it.name.matches(Regex("[1-9][0-9]*"))) it.meta["numbered_dollar_parameter"] = true
+            if (dollar && it.name.matches(NUMBERED_PARAMETER_RE)) it.meta["numbered_dollar_parameter"] = true
         }
     }
 
@@ -456,6 +456,7 @@ open class DatafusionParser(
         get() = UNARY_PARSERS
 
     companion object {
+        private val NUMBERED_PARAMETER_RE = Regex("[1-9][0-9]*")
         private val UNARY_FUNCTIONS = setOf(
             "ABS", "ACOS", "ACOSH", "ASIN", "ASINH", "ATAN", "ATANH", "CBRT", "CEIL", "COS", "COSH",
             "COT", "DEGREES", "EXP", "FACTORIAL", "FLOOR", "LN", "LOG2", "LOG10", "RADIANS", "SIN",

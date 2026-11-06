@@ -25,6 +25,12 @@ private fun lowerFunc(sql: String): String {
     return sql.take(index).lowercase() + sql.substring(index)
 }
 
+private val ISO_TIMESTAMP_RE = Regex(
+    "^(\\d{4}-\\d{2}-\\d{2})" +
+        "(?:[T ](\\d{2}:\\d{2})(?::(\\d{2}))?(?:\\.(\\d{1,6}))?)?" +
+        "(?:[+-]\\d{2}:\\d{2}(?::\\d{2})?|Z)?$"
+)
+
 /**
  * sqlglot: generators.clickhouse._timestrtotime_sql's use of
  * datetime.datetime.fromisoformat(...).replace(tzinfo=None).isoformat(sep=" ") —
@@ -34,11 +40,7 @@ private fun lowerFunc(sql: String): String {
  * corpus inputs are always parseable).
  */
 private fun isoformatWithoutTimezone(tsString: String): String? {
-    val m = Regex(
-        "^(\\d{4}-\\d{2}-\\d{2})" +
-            "(?:[T ](\\d{2}:\\d{2})(?::(\\d{2}))?(?:\\.(\\d{1,6}))?)?" +
-            "(?:[+-]\\d{2}:\\d{2}(?::\\d{2})?|Z)?$"
-    ).find(tsString) ?: return null
+    val m = ISO_TIMESTAMP_RE.find(tsString) ?: return null
 
     val (date, hm, sec, frac) = m.destructured
     val time = if (hm.isEmpty()) "00:00:00" else "$hm:${sec.ifEmpty { "00" }}"

@@ -470,7 +470,7 @@ open class PrestoGenerator(
             val timestamp = expression is DatetimeDiff || expression is TimestampDiff
             if (value is Literal && value.isString) {
                 val zoned = expression is TimestampDiff && value.name.contains(':') &&
-                    Regex("(?:Z|UTC|GMT|[+-]\\d{2}(?::?\\d{2})?|[A-Za-z_]+/[A-Za-z_/]+)$").containsMatchIn(value.name)
+                    ZONE_SUFFIX_RE.containsMatchIn(value.name)
                 val type = DataType(args("this" to if (zoned) DType.TIMESTAMPTZ else if (timestamp) DType.TIMESTAMP else DType.DATE))
                 if (timestamp) type.set("expressions", listOf(DataTypeParam(args("this" to Literal.number("6")))))
                 val cast = Cast(args("this" to value, "to" to type))
@@ -482,7 +482,7 @@ open class PrestoGenerator(
             // TIMESTAMP cast would round across a boundary at millisecond precision.
             val literal = (value as? Cast)?.thisArg as? Literal
             val type = value.args["to"] as? DataType
-            if (timestamp && literal?.isString == true && Regex("\\.\\d{4,6}").containsMatchIn(literal.name) &&
+            if (timestamp && literal?.isString == true && SUB_MILLISECOND_FRACTION_RE.containsMatchIn(literal.name) &&
                 type?.expressionsArg?.isEmpty() == true && type.thisArg in setOf(DType.TIMESTAMP, DType.TIMESTAMPTZ, DType.DATETIME)) {
                 type.set("expressions", listOf(DataTypeParam(args("this" to Literal.number("6")))))
             }
@@ -1289,6 +1289,9 @@ open class PrestoGenerator(
 
         // sqlglot: Dialect.INITCAP_DEFAULT_DELIMITER_CHARS
         const val INITCAP_DEFAULT_DELIMITER_CHARS: String = " \t\n\r\u000b\u000c"
+
+        private val ZONE_SUFFIX_RE = Regex("(?:Z|UTC|GMT|[+-]\\d{2}(?::?\\d{2})?|[A-Za-z_]+/[A-Za-z_/]+)$")
+        private val SUB_MILLISECOND_FRACTION_RE = Regex("\\.\\d{4,6}")
 
         // sqlglot: time.subsecond_precision (regex approximation, mirrors MysqlGenerator)
         private val ISO_TIMESTAMP_RE = Regex(
