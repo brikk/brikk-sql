@@ -109,8 +109,8 @@ internal class DuckdbGroupFetchResultTest {
                 statement.executeQuery(Dialects.DUCKDB.parseOne(sql).sql("duckdb")).use { result ->
                     val metadata = result.metaData
                     assertEquals(listOf("tag", "n", "largest", "total"), (1..4).map(metadata::getColumnLabel))
-                    // The generic static SUM(INT)->BIGINT promotion is a separate known gap,
-                    // recorded in DDB20-073. Do not silently call it DuckDB return-type parity.
+            // The generic static SUM(INT)->BIGINT promotion is a separate known gap.
+            // Do not silently call it DuckDB return-type parity.
                     assertEquals(listOf("VARCHAR", "BIGINT", "INTEGER", "HUGEINT"), (1..4).map(metadata::getColumnTypeName))
                 }
             }
@@ -196,7 +196,6 @@ internal class DuckdbGroupFetchResultTest {
                 for (text in listOf(authored, Dialects.DUCKDB.parseOne(authored).sql("duckdb"))) {
                     c.prepareStatement(text).use { statement ->
                         for ((offset, count) in listOf(1 to 2, 3 to 1)) {
-                            // Exactly the same authored bindings, also for generated SQL.
                             statement.setInt(if (offsetFirst) 1 else 2, offset)
                             statement.setInt(if (offsetFirst) 2 else 1, count)
                             statement.executeQuery().use { result ->

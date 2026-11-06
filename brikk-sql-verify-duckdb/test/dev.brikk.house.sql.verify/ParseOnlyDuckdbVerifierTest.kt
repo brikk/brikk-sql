@@ -155,7 +155,6 @@ internal class ParseOnlyDuckdbVerifierTest {
         }
     }
 
-    /** Opens DuckDB connections through [connect] and keeps every one it returned. */
     private class RecordingDriver(
         private val connect: (String, Properties) -> Connection? = { url, settings -> DuckDBDriver().connect(url, settings) },
     ): Driver {

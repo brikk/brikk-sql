@@ -75,7 +75,6 @@ internal class ParseOnlyDuckdbSafetyTest {
         }
     }
 
-    /** Points the verifier's in-memory URL at [database], keeping the verifier's settings. */
     private class FileDriver(private val database: Path): Driver {
         override fun connect(url: String, info: Properties): Connection =
             DuckDBDriver().connect("jdbc:duckdb:$database", info)

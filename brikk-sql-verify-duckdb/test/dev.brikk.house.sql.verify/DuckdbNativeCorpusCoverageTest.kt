@@ -158,9 +158,6 @@ internal class DuckdbNativeCorpusCoverageTest {
                     put("message", v.message)
             }) })
         })
-        // Main's Trino authorization nodes refuse nine formerly opaque translations;
-        // its ClickHouse division policy adds five warnings. Native outcomes for every
-        // remaining origin are unchanged. Retain the original baseline as historical evidence.
         val baseline = NativeCorpusAudit.root.resolve("brikk-sql-verify-duckdb/testResources/native-coverage-baseline-main-0572f6d.json")
         assertTrue(Files.isRegularFile(baseline), "Review build/duckdb-parser-audit/native-coverage.json before adding a baseline")
         assertEquals(Json.parseToJsonElement(Files.readString(baseline)), summary, "Investigate coverage changes; never refresh parity ledgers from native syntax outcomes")

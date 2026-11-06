@@ -46,7 +46,6 @@ class DuckdbBinaryLiteralTest {
         assertEquals(1, rendered.sql.count { it == '?' })
         for (target in listOf("trino", "postgres", "doris", "clickhouse", "bigquery", "mysql"))
             assertFailsWith<UnsupportedError> { SqlFragment(sql, "duckdb").toExecutable(target) }
-        // Other dialect literal contracts and generated tokenizer tables are unchanged.
         assertIs<HexString>(Dialects.TRINO.parseOne("X'41'"))
     }
 }

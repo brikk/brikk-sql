@@ -14,7 +14,7 @@ import kotlin.test.assertTrue
 internal class DuckdbVariablesResultTest {
     private fun text(sql: String, generated: Boolean) = if (generated) Dialects.DUCKDB.parseOne(sql).sql("duckdb") else sql
     private fun Connection.execute(sql: String, generated: Boolean) = createStatement().use { statement ->
-        if (statement.execute(text(sql, generated))) statement.resultSet.use { while (it.next()) { /* drain once */ } }
+            if (statement.execute(text(sql, generated))) statement.resultSet.use { while (it.next()) {} }
     }
     private fun Connection.rows(sql: String, generated: Boolean = false): List<List<String?>> = createStatement().use { statement ->
         statement.executeQuery(text(sql, generated)).use { r -> buildList { while (r.next()) add((1..r.metaData.columnCount).map { r.getString(it) }) } }

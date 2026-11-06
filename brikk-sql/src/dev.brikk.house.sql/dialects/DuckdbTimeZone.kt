@@ -3,7 +3,7 @@ package dev.brikk.house.sql.dialects
 import dev.brikk.house.sql.ast.*
 
 /** Native 2.0 overload facts, separate from the historical SQLGlot annotation tables.
- * Keep the named nanosecond type losslessly; the broader precision audit is DDB20-077.
+ * Keep the named nanosecond type losslessly.
  */
 internal fun AtTimeZone.duckdbNativeTimeZoneType(): DataType {
     val input = (thisArg as? Expression)?.type as? DataType
