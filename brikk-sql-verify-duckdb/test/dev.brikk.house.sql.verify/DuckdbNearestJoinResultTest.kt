@@ -12,7 +12,10 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 internal class DuckdbNearestJoinResultTest {
-    private fun Connection.execute(sql: String) = createStatement().use { it.execute(sql); Unit }
+    private fun Connection.execute(sql: String) = createStatement().use {
+        it.execute(sql)
+        Unit
+    }
     private fun Connection.rows(sql: String): List<List<String?>> = createStatement().use { statement ->
         statement.executeQuery(sql).use { result ->
             val count = result.metaData.columnCount
@@ -78,7 +81,6 @@ internal class DuckdbNearestJoinResultTest {
             assertEquals(expected, c.generated(simple))
             assertEquals(expected, c.generated(simple, qualified = true))
             for (metric in listOf("abs(q.x-c.y)", "abs(q.x-c.y) + 2 * c.y")) {
-                // The oracle SQL goes straight to the engine, not through Brikk generation.
                 val oracle = "$projection FROM queries q JOIN LATERAL (SELECT * FROM points c WHERE ($metric) IS NOT NULL ORDER BY $metric LIMIT 2) p ON TRUE$ordering"
                 val actual = "$projection FROM queries q JOIN points p NEAREST 2 BY DISTANCE ${metric.replace("c.y", "p.y")}$ordering"
                 assertEquals(c.rows(oracle), c.generated(actual), metric)

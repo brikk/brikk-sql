@@ -104,7 +104,7 @@ internal class Binding(
 ) {
     /** Selectable/completable but not included in a star. Kept internal, never a public fact field. */
     var virtualColumns: List<ScopeColumn> = emptyList()
-    val allColumns: List<ScopeColumn> get() = columns + virtualColumns.filter { virtual -> columns.none { it.name.equals(virtual.name,true) } }
+    val allColumns: List<ScopeColumn> get() = columns + virtualColumns.filter { virtual -> columns.none { it.name.equals(virtual.name, true) } }
     val knowledge: Knowledge get() = relation.knowledge
 }
 
@@ -171,7 +171,7 @@ internal class ScopeEvaluator(
 
     /** Non-query statements normally contribute only their queries; DuckDB UPDATE/MERGE also have row scopes. */
     fun statement(node: Expression, env: Env): Boolean {
-        if(node.hasDuckdbRegexSelector())throw dev.brikk.house.sql.generator.UnsupportedError("Runtime regex column-selector schemas are not modeled")
+        if (node.hasDuckdbRegexSelector()) throw dev.brikk.house.sql.generator.UnsupportedError("Runtime regex column-selector schemas are not modeled")
         if (node.isDuckdbNameShow()) return true
         if (node is dev.brikk.house.sql.ast.DuckdbExplain) {
             (node.thisArg as? Expression)?.let { statement(it, env) }
@@ -362,7 +362,11 @@ internal class ScopeEvaluator(
         return when (val value = option.expressionArg) {
             null -> true
             is BooleanNode -> value.thisArg as? Boolean
-            is Literal -> when (value.name.lowercase()) { "true" -> true; "false" -> false; else -> null }
+            is Literal -> when (value.name.lowercase()) { "true" ->
+                true
+                "false" -> false
+                else -> null
+            }
             else -> null
         }
     }
@@ -421,7 +425,7 @@ internal class ScopeEvaluator(
     }
 
     fun query(node: Expression, env: Env, context: String = "SELECT"): Row {
-        if(node.hasDuckdbRegexSelector())throw dev.brikk.house.sql.generator.UnsupportedError("Runtime regex column-selector schemas are not modeled")
+        if (node.hasDuckdbRegexSelector()) throw dev.brikk.house.sql.generator.UnsupportedError("Runtime regex column-selector schemas are not modeled")
         // Recursion follows query nesting only, which the parser caps at its bracket depth.
         checkCanceled()
         val scoped = withClause(node, env)
@@ -481,7 +485,10 @@ internal class ScopeEvaluator(
         val columns = raw.columns.toMutableList()
         for (key in (cte.args["key_expressions"] as? List<*>).orEmpty().filterIsInstance<Expression>()) {
             checkCanceled()
-            if (key is Identifier) { record(key, null, unqualified(frame, key)); continue }
+            if (key is Identifier) {
+                record(key, null, unqualified(frame, key))
+                continue
+            }
             expression(key, frame, env.withOuter(null))
             val value = key.unwrapped()
             if (value is Column && key !is Alias) continue
@@ -744,12 +751,12 @@ internal class ScopeEvaluator(
     }
 
     private fun table(node: Table, env: Env, lateral: Frame): Binding {
-        if(dialect.name=="duckdb" && node.hasDuckdbSnapshot())throw dev.brikk.house.sql.generator.UnsupportedError("Snapshot table schemas are not current-table scope facts")
+        if (dialect.name == "duckdb" && node.hasDuckdbSnapshot()) throw dev.brikk.house.sql.generator.UnsupportedError("Snapshot table schemas are not current-table scope facts")
         val function = node.thisArg as? Anonymous
         if (function != null) return tableFunction(node, function, function.name, function.expressionsArg.filterIsInstance<Expression>(), env, lateral)
         // A function core parses as its own node (ClickHouse's format(...)): its arguments in order.
         val call = (node.thisArg as? Expression)?.takeIf { it is Func }
-        if (call != null) return tableFunction(node, call, if(call.isDuckdbParquetCall()) "read_parquet" else call.key, listOfNotNull(call.thisArg as? Expression) + call.expressionsArg.filterIsInstance<Expression>(), env, lateral)
+        if (call != null) return tableFunction(node, call, if (call.isDuckdbParquetCall()) "read_parquet" else call.key, listOfNotNull(call.thisArg as? Expression) + call.expressionsArg.filterIsInstance<Expression>(), env, lateral)
         val pathParts = node.parts
         if (pathParts.any { it !is Identifier }) return unknownRelation(node.name, RelationKind.OTHER)
         val parts = pathParts.filterIsInstance<Identifier>()
@@ -823,14 +830,14 @@ internal class ScopeEvaluator(
             !qualified && name in facts.calls -> Triple(RelationKind.CALL, name, facts.calls.getValue(name))
             else -> Triple(RelationKind.FUNCTION, null, null)
         }
-        val parquet = dialect.name=="duckdb" && !qualified && function.isDuckdbParquetCall()
-        val nativePairs=if(dialect.name=="duckdb" && !qualified && fact==null) {
-            if(parquet)function.duckdbParquetDeclaredColumns() else function.duckdbGeoJsonDeclaredColumns()
-        }else null
-        val nativeDeclared = nativePairs?.map { (column,type) ->
-            val parsed=try { dataTypeFromStr(type,dialect) } catch(_:ParseError) { return@map null }
-            ColumnFact(column,Dialects.BASE.generate(parsed),origin=ColumnOrigin.RELATION_CONTRACT)
-        }?.takeIf { it.all { column -> column!=null } }?.filterNotNull()?.map { it.visible(name,stored(name,false),RelationKind.FUNCTION) }
+        val parquet = dialect.name == "duckdb" && !qualified && function.isDuckdbParquetCall()
+        val nativePairs = if (dialect.name == "duckdb" && !qualified && fact == null) {
+            if (parquet) function.duckdbParquetDeclaredColumns() else function.duckdbGeoJsonDeclaredColumns()
+        } else null
+        val nativeDeclared = nativePairs?.map { (column, type) ->
+            val parsed = try { dataTypeFromStr(type, dialect) } catch (_: ParseError) { return@map null }
+            ColumnFact(column, Dialects.BASE.generate(parsed), origin = ColumnOrigin.RELATION_CONTRACT)
+        }?.takeIf { it.all { column -> column != null } }?.filterNotNull()?.map { it.visible(name, stored(name, false), RelationKind.FUNCTION) }
         val declared = nativeDeclared ?: if (fact == null && dialect.tableFunctionArgumentsDeclareColumns) declaredColumns(name, arguments, rows) else null
         val relation = ScopeRelation(name, kind, fact?.knowledge ?: if (declared != null) Knowledge.FULL else Knowledge.UNKNOWN, key, fact?.provenance)
         names.range(function)?.let { span ->
@@ -841,9 +848,9 @@ internal class ScopeEvaluator(
         val columns = declared ?: fact?.columns.orEmpty().map { it.visible(name, label, kind) }
         return Binding(label, true, relation.copy(name = label), columns).also { binding ->
             // Unknown file schemas can shadow these names. Require a full physical contract.
-            if(parquet && binding.knowledge==Knowledge.FULL)binding.virtualColumns=listOf("file_row_group_number" to "UBIGINT","file_row_number" to "BIGINT","filename" to "VARCHAR")
-                .map { (column,type) ->
-                    computed(column,Nullability.UNKNOWN,"PARQUET virtual column",type).through(label,kind)
+            if (parquet && binding.knowledge == Knowledge.FULL) binding.virtualColumns = listOf("file_row_group_number" to "UBIGINT", "file_row_number" to "BIGINT", "filename" to "VARCHAR")
+                .map { (column, type) ->
+                    computed(column, Nullability.UNKNOWN, "PARQUET virtual column", type).through(label, kind)
                 }
         }
     }
@@ -983,7 +990,7 @@ internal class ScopeEvaluator(
         val columns = named.map { it.through(if (qualifiable) name else "", binding.relation.kind) }
         val declaration = label?.let(::declared) ?: binding.relation.declaration
         return Binding(name, qualifiable, binding.relation.copy(name = name, declaration = declaration), columns).also {
-            it.virtualColumns=binding.virtualColumns.map { column -> column.through(if(qualifiable)name else "",binding.relation.kind) }
+            it.virtualColumns = binding.virtualColumns.map { column -> column.through(if (qualifiable) name else "", binding.relation.kind) }
         }
     }
 
@@ -999,7 +1006,7 @@ internal class ScopeEvaluator(
 
     private fun nullable(binding: Binding) =
         Binding(binding.name, binding.qualifiable, binding.relation, binding.columns.map { it.copy(nullability = Nullability.NULLABLE) }, binding.path).also {
-            it.virtualColumns=binding.virtualColumns.map { column -> column.copy(nullability=Nullability.NULLABLE) }
+            it.virtualColumns = binding.virtualColumns.map { column -> column.copy(nullability = Nullability.NULLABLE) }
         }
 
     /** DuckDB renames repeated output names of a derived table: the second `id` becomes `id_1`. */
@@ -1125,7 +1132,7 @@ internal class ScopeEvaluator(
     /** The type from the expression and its columns' exact SQL types, never from display types. */
     private fun sqlTypeOf(value: Expression): String? {
         val copy = value.copy()
-        if (dialect.name == "duckdb") for (node in copy.walk()) node.duckdbGeoJsonScalarType()?.let { node.typeSlot=it }
+        if (dialect.name == "duckdb") for (node in copy.walk()) node.duckdbGeoJsonScalarType()?.let { node.typeSlot = it }
         // Native shape evidence stays outside the SQLGlot-faithful annotation corpus.
         if (dialect.name == "duckdb") for (node in copy.walk()) if (node.duckdbRegexName() != null)
             node.typeSlot = node.duckdbRegexReturnType() ?: DataType(args("this" to DType.UNKNOWN))
@@ -1433,9 +1440,15 @@ internal class ScopeEvaluator(
             record(base, null, lookup)
             var nullability = source.nullability
             for (field in parts.drop(prefix + 1)) {
-                if (type.thisArg != DType.STRUCT) { record(field, null, Lookup(emptyList(), Knowledge.UNKNOWN)); return true }
+                if (type.thisArg != DType.STRUCT) {
+                    record(field, null, Lookup(emptyList(), Knowledge.UNKNOWN))
+                    return true
+                }
                 val match = type.expressionsArg.filterIsInstance<ColumnDef>().singleOrNull { it.name == field.name }
-                if (match == null) { record(field, null, Lookup(emptyList(), Knowledge.FULL)); return true }
+                if (match == null) {
+                    record(field, null, Lookup(emptyList(), Knowledge.FULL))
+                    return true
+                }
                 type = match.args["kind"] as? DataType ?: return true
                 if (type.args["nullable"] != false) nullability = Nullability.NULLABLE
                 val column = source.copy(name = field.name, sqlType = renderType(type, dialect), nullability = nullability)

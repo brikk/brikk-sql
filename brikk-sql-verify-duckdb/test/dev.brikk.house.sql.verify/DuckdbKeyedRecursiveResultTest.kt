@@ -19,7 +19,10 @@ internal class DuckdbKeyedRecursiveResultTest {
             while (result.next()) add((1..result.metaData.columnCount).map { result.getString(it) })
         } }
     }
-    private fun Connection.execute(sql: String) = createStatement().use { it.execute(sql); Unit }
+    private fun Connection.execute(sql: String) = createStatement().use {
+        it.execute(sql)
+        Unit
+    }
     private fun Connection.check(sql: String, expected: List<List<String?>>) {
         assertEquals(expected, rows(sql), "authored: $sql")
         assertEquals(expected, rows(Dialects.DUCKDB.parseOne(sql).sql("duckdb")), "generated: $sql")

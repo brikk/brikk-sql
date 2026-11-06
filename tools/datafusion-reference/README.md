@@ -55,8 +55,9 @@ Once it does, capture it separately instead of relabeling the older observations
 Download the v2.4.0 release asset to a disposable directory:
 
 ```sh
-curl -fL https://github.com/spiceai/spiceai/releases/download/v2.4.0/spiced_linux_x86_64.tar.gz -o /tmp/opencode/spiced-2.4.0-linux-x86_64.tar.gz
-sha256sum /tmp/opencode/spiced-2.4.0-linux-x86_64.tar.gz
+mkdir -p build
+curl -fL https://github.com/spiceai/spiceai/releases/download/v2.4.0/spiced_linux_x86_64.tar.gz -o build/spiced-2.4.0-linux-x86_64.tar.gz
+sha256sum build/spiced-2.4.0-linux-x86_64.tar.gz
 ```
 
 Expected archive SHA-256:
@@ -71,7 +72,7 @@ and checks `--version`. It does not install or replace a user's Spice executable
 ```sh
 python3 tools/probe_datafusion_spice.py --upstream build/datafusion-reference/debug/brikk-datafusion-reference --brikk vendor/data/datafusion-spice/brikk-observations.json --output vendor/data/datafusion/55.2.0/observations.json
 python3 tools/probe_datafusion_spice.py --spice-parser build/spice-parser-reference/debug/brikk-spice-parser-reference --brikk vendor/data/datafusion-spice/brikk-observations.json --output vendor/data/spice/2.4.0/parser-observations.json
-python3 tools/probe_datafusion_spice.py --spiced /tmp/opencode/spice-2.4.0-runtime/spiced --brikk vendor/data/datafusion-spice/brikk-observations.json --output vendor/data/spice/2.4.0/runtime-observations.json
+python3 tools/probe_datafusion_spice.py --spiced build/spice-2.4.0-runtime/spiced --brikk vendor/data/datafusion-spice/brikk-observations.json --output vendor/data/spice/2.4.0/runtime-observations.json
 python3 tools/capture_datafusion_spice_provenance.py
 ```
 
@@ -133,7 +134,7 @@ The Spice parser package reports this operation unavailable; capture its invento
 the released runtime instead.
 
 ```sh
-python3 tools/capture_datafusion_spice_metadata.py --upstream build/datafusion-reference/debug/brikk-datafusion-reference --spiced /tmp/opencode/spice-2.4.0-runtime/spiced
+python3 tools/capture_datafusion_spice_metadata.py --upstream build/datafusion-reference/debug/brikk-datafusion-reference --spiced build/spice-2.4.0-runtime/spiced
 python3 tools/generate_datafusion_metadata.py
 ```
 

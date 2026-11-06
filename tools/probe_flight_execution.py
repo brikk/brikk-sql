@@ -15,14 +15,16 @@ if __name__ == '__main__':
     parser.add_argument('--java-option', action='append', default=[])
     parser.add_argument('--classpath-file', type=Path, required=True)
     parser.add_argument('--datafusion-flight', type=Path)
-    parser.add_argument('--spiced', type=Path, default=Path('/tmp/opencode/spice-2.4.0-runtime/spiced'))
+    parser.add_argument('--spiced', type=Path, default=ROOT / 'build/spice-2.4.0-runtime/spiced')
+    parser.add_argument('--work-dir', type=Path, default=ROOT / 'build/flight-execution')
     parser.add_argument('--output', type=Path, help='New capture path; refuses to replace existing evidence')
     args = parser.parse_args()
     product = 'datafusion' if args.datafusion_flight else 'spice'
     out = args.output or ROOT / f'vendor/data/datafusion-spice/round10/{product}-execution.json'
     if out.exists():
         parser.error(f'Capture already exists: {out}; pass --output with a new path')
-    directory = Path('/tmp/opencode/dfs010'); directory.mkdir(exist_ok=True)
+    directory = args.work_dir.resolve()
+    directory.mkdir(parents=True, exist_ok=True)
     jar = driver(directory)
     paths = shlex.split(args.classpath_file.read_text())[1].split(':')
     cp = ':'.join(p for p in paths if '/_brikk-sql' in p and p.endswith('.jar') or '/org/jetbrains/kotlin' in p)
@@ -30,7 +32,7 @@ if __name__ == '__main__':
         str(ROOT / 'tools/datafusion-reference/FlightCatalogProbe.java'),
         str(ROOT / 'tools/datafusion-reference/FlightExecutionProbe.java')],capture_output=True,text=True)
     if compile.returncode: raise RuntimeError(compile.stderr)
-    fixture = datafusion_runtime(args.datafusion_flight,directory) if args.datafusion_flight else spice_runtime(args.spiced,flight=True)
+    fixture = datafusion_runtime(args.datafusion_flight,directory) if args.datafusion_flight else spice_runtime(args.spiced,flight=True,work_dir=directory)
     options = ['--add-opens=java.base/java.nio=ALL-UNNAMED', *args.java_option]
     checkpoint = directory / f'{product}-checkpoint.json'
     checkpoint.unlink(missing_ok=True)

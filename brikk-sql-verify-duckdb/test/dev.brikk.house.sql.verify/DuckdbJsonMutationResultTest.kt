@@ -215,10 +215,18 @@ internal class DuckdbJsonMutationResultTest {
                         statement.setString(1, "{}")
                         statement.setString(2, path)
                         statement.setString(3, value)
-                        statement.executeQuery().use { rows -> assertTrue(rows.next()); assertEquals(result, rows.getString(1)); assertFalse(rows.next()) }
+                        statement.executeQuery().use { rows ->
+                            assertTrue(rows.next())
+                            assertEquals(result, rows.getString(1))
+                            assertFalse(rows.next())
+                        }
                     }
                     statement.setNull(3, Types.VARCHAR)
-                    statement.executeQuery().use { rows -> assertTrue(rows.next()); assertEquals(null, rows.getString(1)); assertTrue(rows.wasNull()) }
+                    statement.executeQuery().use { rows ->
+                        assertTrue(rows.next())
+                        assertEquals(null, rows.getString(1))
+                        assertTrue(rows.wasNull())
+                    }
                 }
             }
         }

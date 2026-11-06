@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """DFS-006 bounded analysis controls; no search/model calls or user connections."""
+import argparse
 import json
 from pathlib import Path
 from probe_datafusion_spice import ROOT, run_reference, spice_runtime, spice_execute
@@ -47,13 +48,17 @@ def cases():
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--spiced', type=Path, default=ROOT / 'build/spice-2.4.0-runtime/spiced')
+    parser.add_argument('--work-dir', type=Path, default=ROOT / 'build/datafusion-analysis')
+    args = parser.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
     inputs = cases()
     (OUT / 'cases.json').write_text(json.dumps(inputs, indent=2) + '\n')
     requests = [dict(id=c['id'], operation='execute', sql=c['sql']) for c in inputs if not c['spice_only']]
     upstream = run_reference(ROOT / 'build/datafusion-reference/debug/brikk-datafusion-reference', requests, 'datafusion-55.2.0')
     (OUT / 'upstream.json').write_text(json.dumps(upstream, indent=2) + '\n')
-    with spice_runtime(Path('/tmp/opencode/spice-2.4.0-runtime/spiced')) as (url, profile):
+    with spice_runtime(args.spiced, work_dir=args.work_dir) as (url, profile):
         rows = {c['id']: spice_execute(url, c['sql']) for c in inputs}
     (OUT / 'spice.json').write_text(json.dumps(dict(profile=profile, cases=rows), indent=2) + '\n')
     for name, rows in [('upstream', upstream), ('spice', rows)]:

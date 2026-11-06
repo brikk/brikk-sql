@@ -47,8 +47,8 @@ Reproduction:
 
 ```sh
 ./kotlin test -m brikk-sql --include-classes='*ClickhouseScriptSettingsTest' \
-  --jvm-args='-Dbrikk.clickhouseScriptSettingsOut=/tmp/opencode/script-settings-brikk.json'
+  --jvm-args='-Dbrikk.clickhouseScriptSettingsOut=build/script-settings-brikk.json'
 python3 tools/probe_clickhouse_script_settings.py \
   --cases vendor/data/clickhouse-semantic/script-settings-cases.json \
-  --brikk /tmp/opencode/script-settings-brikk.json --output /tmp/opencode/script-settings-native
+  --brikk build/script-settings-brikk.json --output build/script-settings-native
 ```

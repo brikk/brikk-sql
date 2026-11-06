@@ -111,7 +111,7 @@ class DuckdbTriggerTest {
         val tree = Dialects.DUCKDB.parseOne(transition)
         val before = Serde.dump(tree)
         assertFailsWith<OptimizeError> { qualify(tree, dialect = Dialects.DUCKDB) }
-        assertFailsWith<OptimizeError> { qualifyColumns(tree, schema = emptyMap<String,String>(), dialect = Dialects.DUCKDB) }
+        assertFailsWith<OptimizeError> { qualifyColumns(tree, schema = emptyMap<String, String>(), dialect = Dialects.DUCKDB) }
         assertFailsWith<OptimizeError> { annotateTypes(tree, dialect = Dialects.DUCKDB) }
         assertEquals(before, Serde.dump(tree))
         assertFailsWith<SqlglotError> { lineageAll(transition, dialect = Dialects.DUCKDB) }

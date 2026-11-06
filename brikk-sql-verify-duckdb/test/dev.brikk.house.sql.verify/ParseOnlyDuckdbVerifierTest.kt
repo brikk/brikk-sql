@@ -114,7 +114,10 @@ internal class ParseOnlyDuckdbVerifierTest {
         )
         for ((reason, connect) in failures) {
             var attempts = 0
-            val verifier = ParseOnlyDuckdbVerifier(RecordingDriver { url, settings -> attempts += 1; connect(url, settings) })
+            val verifier = ParseOnlyDuckdbVerifier(RecordingDriver { url, settings ->
+                attempts += 1
+                connect(url, settings)
+            })
             repeat(2) {
                 assertContains(assertIs<VerifyResult.Unavailable>(verifier.verify("SELECT 1")).reason, reason)
             }
@@ -152,10 +155,9 @@ internal class ParseOnlyDuckdbVerifierTest {
         }
     }
 
-    /** Opens DuckDB connections through [connect] and keeps every one it returned. */
     private class RecordingDriver(
         private val connect: (String, Properties) -> Connection? = { url, settings -> DuckDBDriver().connect(url, settings) },
-    ) : Driver {
+    ): Driver {
         val connections = mutableListOf<Connection>()
 
         override fun connect(url: String, info: Properties): Connection? = connect.invoke(url, info)?.also { connections += it }

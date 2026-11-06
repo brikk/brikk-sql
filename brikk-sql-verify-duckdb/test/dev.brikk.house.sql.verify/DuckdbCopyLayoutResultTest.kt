@@ -29,7 +29,7 @@ internal class DuckdbCopyLayoutResultTest {
         s.executeQuery(sql).use { r -> buildList { while (r.next()) add((1..r.metaData.columnCount).map { r.getString(it) }) } }
     }
     private fun scratch(block: (Path) -> Unit) {
-        val parent = Files.createDirectories(Path.of(System.getProperty("java.io.tmpdir"), "opencode").toAbsolutePath())
+        val parent = Files.createDirectories(Path.of(System.getProperty("java.io.tmpdir"), "brikk-sql-tests").toAbsolutePath())
         val directory = Files.createTempDirectory(parent, "duckdb-copy-layout-")
         try { block(directory) } finally {
             Files.walk(directory).use { paths -> paths.sorted(Comparator.reverseOrder()).forEach(Files::deleteIfExists) }
@@ -53,7 +53,7 @@ internal class DuckdbCopyLayoutResultTest {
                 val sql = "COPY events TO ${literal(file)} (ORDER_BY ($order),FORMAT parquet)"
                 c.execute(if (generated) render(sql) else sql)
                 val expected = c.rows("SELECT id FROM events ORDER BY $order").map { it.single()!!.toInt() }
-                assertEquals(1,files(file).size)
+                assertEquals(1, files(file).size)
                 assertEquals(expected, ids(c, files(file).single()), sql)
                 assertEquals(10, ids(c, files(file).single()).size)
             }
@@ -75,8 +75,8 @@ internal class DuckdbCopyLayoutResultTest {
             assertEquals(listOf(listOf("10", "4")), c.rows(if (generated) render(sql) else sql))
             val paths = files(directory)
             assertEquals(4, paths.size)
-            val expected = mapOf("area=eu/day=1" to listOf(2,6), "area=eu/day=2" to listOf(7,4),
-                "area=us/day=1" to listOf(1,5,10,3), "area=us/day=2" to listOf(8,9))
+            val expected = mapOf("area=eu/day=1" to listOf(2, 6), "area=eu/day=2" to listOf(7, 4),
+                "area=us/day=1" to listOf(1, 5, 10, 3), "area=us/day=2" to listOf(8, 9))
             for (file in paths) {
                 assertEquals(expected[directory.relativize(file.parent).toString()], ids(c, file))
                 assertEquals(listOf("v", "id"), c.rows("DESCRIBE SELECT * FROM read_parquet(${literal(file)},hive_partitioning=false)").map { it.first() })
@@ -96,7 +96,7 @@ internal class DuckdbCopyLayoutResultTest {
             c.execute(if (generated) render(sql) else sql)
             assertEquals(3, files(directory).size)
             assertTrue(files(directory).any { "__HIVE_DEFAULT_PARTITION__" in it.toString() })
-            assertEquals(listOf(listOf("x","1","1"),listOf("x","2","2"),listOf(null,"1","3"),listOf(null,"1","4")),
+            assertEquals(listOf(listOf("x", "1", "1"), listOf("x", "2", "2"), listOf(null, "1", "3"), listOf(null, "1", "4")),
                 c.rows("SELECT * FROM read_parquet(${literal(directory.resolve("*/*/*.parquet"))},hive_partitioning=false) ORDER BY id"))
         }
     }
@@ -112,8 +112,8 @@ internal class DuckdbCopyLayoutResultTest {
                 val sql = "COPY events TO ${literal(file)} (FORMAT parquet,ORDER_BY ($order))"
                 c.execute(if (generated) render(sql) else sql)
                 val expected = c.rows("SELECT id FROM events ORDER BY $order").map { it.single()!!.toInt() }
-                assertEquals(expected, ids(c,file))
-                assertEquals(if (index == 0) listOf(3,9,7,2,1,10,6,8,4,5) else listOf(5,4,8,6,1,10,2,7,3,9), expected)
+                assertEquals(expected, ids(c, file))
+                assertEquals(if (index == 0) listOf(3, 9, 7, 2, 1, 10, 6, 8, 4, 5) else listOf(5, 4, 8, 6, 1, 10, 2, 7, 3, 9), expected)
             }
         }
     }
@@ -126,7 +126,7 @@ internal class DuckdbCopyLayoutResultTest {
                 val file = root.resolve("text-$generated-$index.parquet")
                 val sql = "COPY events TO ${literal(file)} (FORMAT parquet,ORDER_BY $order)"
                 c.execute(if (generated) render(sql) else sql)
-                val rows = ids(c,file)
+                val rows = ids(c, file)
                 val expected = c.rows("SELECT id FROM events ORDER BY ${if (index == 1) "v DESC NULLS FIRST" else "v"},id").map { it.single()!!.toInt() }
                 // Terms without a tie-breaker do not promise a stable order among equal keys.
                 assertEquals(expected.toSet(), rows.toSet())
@@ -136,7 +136,7 @@ internal class DuckdbCopyLayoutResultTest {
             val file = root.resolve("collation-$generated.parquet")
             val sql = "COPY (SELECT * FROM (VALUES ('B'),('a'),('C')) t(s)) TO ${literal(file)} (FORMAT parquet,ORDER_BY (s COLLATE nocase DESC))"
             c.execute(if (generated) render(sql) else sql)
-            assertEquals(listOf(listOf("C"),listOf("B"),listOf("a")), c.rows("SELECT s FROM read_parquet(${literal(file)},file_row_number=true) ORDER BY file_row_number"))
+            assertEquals(listOf(listOf("C"), listOf("B"), listOf("a")), c.rows("SELECT s FROM read_parquet(${literal(file)},file_row_number=true) ORDER BY file_row_number"))
             val parts = root.resolve("text-partitions-$generated")
             val partition = "COPY events TO ${literal(parts)} (FORMAT parquet,PARTITION_BY ('region','day'),ORDER_BY (id))"
             c.execute(if (generated) render(partition) else partition)
@@ -144,7 +144,7 @@ internal class DuckdbCopyLayoutResultTest {
             val qualified = root.resolve("qualified-partitions-$generated")
             val qualifiedSql = "COPY events TO ${literal(qualified)} (FORMAT parquet,PARTITION_BY events.region,ORDER_BY (id))"
             c.execute(if (generated) render(qualifiedSql) else qualifiedSql)
-            assertEquals(2,files(qualified).size)
+            assertEquals(2, files(qualified).size)
         }
     }
 
@@ -164,15 +164,15 @@ internal class DuckdbCopyLayoutResultTest {
                 val file = root.resolve("binder-$index")
                 val sql = "COPY events TO ${literal(file)} (FORMAT parquet,$option)"
                 // COPY parses, but json_serialize_sql deliberately cannot serialize it.
-                assertEquals("not implemented",assertIs<SerializedSql.Failed>(c.serializeSql(sql)).type)
-                for (text in listOf(sql,render(sql))) {
+                assertEquals("not implemented", assertIs<SerializedSql.Failed>(c.serializeSql(sql)).type)
+                for (text in listOf(sql, render(sql))) {
                     assertTrue(assertFailsWith<SQLException> { c.execute(text) }.message.orEmpty().contains("Binder Error"), text)
                     assertFalse(Files.exists(file))
                 }
             }
             val empty = root.resolve("empty-order")
             val emptySql = "COPY events TO ${literal(empty)} (FORMAT parquet,ORDER_BY ())"
-            assertEquals("not implemented",assertIs<SerializedSql.Failed>(c.serializeSql(emptySql)).type)
+            assertEquals("not implemented", assertIs<SerializedSql.Failed>(c.serializeSql(emptySql)).type)
             assertTrue(assertFailsWith<SQLException> { c.execute(emptySql) }.message.orEmpty().contains("Parser Error"))
             assertFalse(Files.exists(empty))
         }
@@ -187,21 +187,28 @@ internal class DuckdbCopyLayoutResultTest {
             val sql = "WITH copied AS (COPY (SELECT region,day,v+? AS value,id,nextval('copy_seq') AS invocation FROM events WHERE id>?) TO (?) " +
                 "(FORMAT parquet,PARTITION_BY (region,day),ORDER_BY (value*? ASC NULLS LAST,id ASC,nextval('sort_seq')),RETURN_FILES)) SELECT Count,len(Files) FROM copied"
             c.prepareStatement(if (generated) render(sql) else sql).use { p ->
-                assertEquals(4,p.parameterMetaData.parameterCount)
+                assertEquals(4, p.parameterMetaData.parameterCount)
                 for (iteration in 1..2) {
                     val directory = root.resolve("prepared-$generated-$iteration")
-                    p.setInt(1,100); p.setInt(2,2); p.setString(3,directory.toString())
-                    p.setInt(4,-1)
-                    p.executeQuery().use { r -> assertTrue(r.next()); assertEquals(8,r.getInt(1)); assertEquals(4,r.getInt(2)); assertFalse(r.next()) }
-                    assertEquals(listOf(listOf((iteration*8).toString())), c.rows("SELECT currval('copy_seq')"))
+                    p.setInt(1, 100)
+                    p.setInt(2, 2)
+                    p.setString(3, directory.toString())
+                    p.setInt(4, -1)
+                    p.executeQuery().use { r ->
+                        assertTrue(r.next())
+                        assertEquals(8, r.getInt(1))
+                        assertEquals(4, r.getInt(2))
+                        assertFalse(r.next())
+                    }
+                assertEquals(listOf(listOf((iteration * 8).toString())), c.rows("SELECT currval('copy_seq')"))
                     // Pinned native partitioned COPY evaluates its volatile sorting key twice
                     // per row in this plan. Do not promise once-only ORDER_BY evaluation.
-                    assertEquals(listOf(listOf((iteration*16).toString())), c.rows("SELECT currval('sort_seq')"))
-                    assertEquals(listOf(listOf("8","8")), c.rows("SELECT count(*),count(DISTINCT invocation) FROM read_parquet(${literal(directory.resolve("*/*/*.parquet"))})"))
+                assertEquals(listOf(listOf((iteration * 16).toString())), c.rows("SELECT currval('sort_seq')"))
+                    assertEquals(listOf(listOf("8", "8")), c.rows("SELECT count(*),count(DISTINCT invocation) FROM read_parquet(${literal(directory.resolve("*/*/*.parquet"))})"))
                     for (file in files(directory)) {
                         val rows = c.rows("SELECT value,id FROM read_parquet(${literal(file)},hive_partitioning=false,file_row_number=true) ORDER BY file_row_number")
                         val expected = c.rows("SELECT value,id FROM read_parquet(${literal(file)},hive_partitioning=false) ORDER BY value DESC NULLS LAST,id ASC")
-                        assertEquals(expected,rows)
+                        assertEquals(expected, rows)
                     }
                 }
             }
@@ -210,7 +217,7 @@ internal class DuckdbCopyLayoutResultTest {
 
     @Test
     fun rotationAndParallelPartitionWritesSortEachFileWithoutPromisingGlobalFileOrder() = scratch { root ->
-        for (generated in listOf(false,true)) DriverManager.getConnection("jdbc:duckdb:").use { c ->
+        for (generated in listOf(false, true)) DriverManager.getConnection("jdbc:duckdb:").use { c ->
             c.execute("SET threads=4")
             val directory = root.resolve("rotated-$generated")
             val sql = "COPY (SELECT i%3 AS p,(i*7919)%24000 AS v,i AS id FROM range(24000)t(i)) TO ${literal(directory)} " +
@@ -218,9 +225,9 @@ internal class DuckdbCopyLayoutResultTest {
             c.execute(if (generated) render(sql) else sql)
             assertTrue(files(directory).size > 3)
             val read = "read_parquet(${literal(directory.resolve("*/*.parquet"))},filename=true,file_row_number=true)"
-            assertEquals(listOf(listOf("0","24000")),c.rows("SELECT count(*) FILTER(WHERE previous<v),count(*) FROM " +
+            assertEquals(listOf(listOf("0", "24000")), c.rows("SELECT count(*) FILTER(WHERE previous<v),count(*) FROM " +
                 "(SELECT v,lag(v) OVER(PARTITION BY filename ORDER BY file_row_number) AS previous FROM $read)"))
-            assertEquals(listOf(listOf("24000","24000")),c.rows("SELECT count(*),count(DISTINCT id) FROM $read"))
+            assertEquals(listOf(listOf("24000", "24000")), c.rows("SELECT count(*),count(DISTINCT id) FROM $read"))
         }
     }
 
@@ -232,13 +239,13 @@ internal class DuckdbCopyLayoutResultTest {
             val directory = root.resolve("must-not-exist")
             val sql = "COPY (SELECT region,day,nextval('audit_seq') AS value FROM events) TO ${literal(directory)} (FORMAT parquet,PARTITION_BY (region,day),ORDER_BY (value DESC))"
             assertIs<Copy>(Dialects.DUCKDB.parseOne(sql))
-            assertTrue(RelationScope.analyze(sql,"duckdb",RelationFacts()).parsed)
-            SqlFragment(sql,"duckdb").toExecutable("duckdb")
+            assertTrue(RelationScope.analyze(sql, "duckdb", RelationFacts()).parsed)
+            SqlFragment(sql, "duckdb").toExecutable("duckdb")
             val verifier = ConnectionDuckdbVerifier({ JdbcDuckdbQueryConnection(c.duplicate()) })
             val result = verifier.verify(sql)
-            assertTrue(result is VerifyResult.Accepted || result is VerifyResult.Unverified,result.toString())
+            assertTrue(result is VerifyResult.Accepted || result is VerifyResult.Unverified, result.toString())
             assertFalse(Files.exists(directory))
-            assertEquals(listOf(listOf("1")),c.rows("SELECT nextval('audit_seq')"))
+            assertEquals(listOf(listOf("1")), c.rows("SELECT nextval('audit_seq')"))
         }
     }
 }

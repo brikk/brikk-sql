@@ -43,8 +43,8 @@ Reproduction:
 
 ```sh
 ./kotlin test -m brikk-sql --include-classes='*ClickhouseScientificBoundaryTest' \
-  --jvm-args='-Dbrikk.clickhouseScientificOut=/tmp/opencode/scientific-brikk.json'
+  --jvm-args='-Dbrikk.clickhouseScientificOut=build/scientific-brikk.json'
 python3 tools/probe_clickhouse_2026.py \
   --cases vendor/data/clickhouse-semantic/scientific-number-cases.json --task CHSEM-022 \
-  --brikk /tmp/opencode/scientific-brikk.json --output /tmp/opencode/scientific-native
+  --brikk build/scientific-brikk.json --output build/scientific-native
 ```

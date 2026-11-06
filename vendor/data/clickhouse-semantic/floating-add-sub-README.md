@@ -74,15 +74,15 @@ in dev-docs/TODO-clickhouse-semantic.md. No lexer/parity change is hidden inside
 
 ```sh
 python3 tools/probe_clickhouse_floating_add_sub.py \
-  --output /tmp/opencode/floating-add-sub-types-native
+  --output build/floating-add-sub-types-native
 ./kotlin test -m brikk-sql --include-classes='*ClickhouseFloatingAddSubTest' \
-  --jvm-args='-Dbrikk.clickhouseFloatingAddSubTypesOut=/tmp/opencode/floating-types-brikk.json -Dbrikk.clickhouseFloatingAddSubOut=/tmp/opencode/floating-brikk.json -Dbrikk.clickhouseFloatingAddSubScriptOut=/tmp/opencode/floating-script-brikk.json'
+  --jvm-args='-Dbrikk.clickhouseFloatingAddSubTypesOut=build/floating-types-brikk.json -Dbrikk.clickhouseFloatingAddSubOut=build/floating-brikk.json -Dbrikk.clickhouseFloatingAddSubScriptOut=build/floating-script-brikk.json'
 python3 tools/probe_clickhouse_2026.py \
   --cases vendor/data/clickhouse-semantic/floating-add-sub-cases.json --task CHSEM-021 \
-  --brikk /tmp/opencode/floating-brikk.json --output /tmp/opencode/floating-native
+  --brikk build/floating-brikk.json --output build/floating-native
 python3 tools/probe_clickhouse_script_settings.py \
   --cases vendor/data/clickhouse-semantic/floating-add-sub-script-cases.json \
-  --brikk /tmp/opencode/floating-script-brikk.json --output /tmp/opencode/floating-script-native
+  --brikk build/floating-script-brikk.json --output build/floating-script-native
 ```
 
 Both pins match 576 accepted types, 256 rejection controls, 31 original/generated

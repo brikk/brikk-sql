@@ -54,7 +54,8 @@ internal class DuckdbNestedSchemaResultTest {
             connection.createStatement().use { statement ->
                 fun execute(sql: String) = statement.execute(Dialects.DUCKDB.parseOne(sql).sql("duckdb"))
                 fun value(sql: String): Int = statement.executeQuery(Dialects.DUCKDB.parseOne(sql).sql("duckdb")).use {
-                    assertTrue(it.next()); it.getInt(1)
+                    assertTrue(it.next())
+                    it.getInt(1)
                 }
                 execute("CREATE SCHEMA finance")
                 execute("CREATE SCHEMA finance.reports")
@@ -82,7 +83,10 @@ internal class DuckdbNestedSchemaResultTest {
                     val error = assertFailsWith<SQLException> { connection.createStatement().use { it.execute(sql) } }
                     assertTrue(error.message.orEmpty().contains("nested schemas cannot be used in the search path"))
                 }
-                assertEquals("main", statement.executeQuery("SELECT current_schema()").use { it.next(); it.getString(1) })
+                assertEquals("main", statement.executeQuery("SELECT current_schema()").use {
+                    it.next()
+                    it.getString(1)
+                })
                 execute("DROP TABLE finance.reports.monthly.q3")
                 execute("DROP SCHEMA finance.reports.monthly")
                 assertEquals(11, value("SELECT revenue FROM finance.reports.q3"))

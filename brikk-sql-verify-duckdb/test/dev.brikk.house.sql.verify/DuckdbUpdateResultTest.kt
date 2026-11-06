@@ -12,7 +12,10 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 internal class DuckdbUpdateResultTest {
-    private fun Connection.execute(sql: String) = createStatement().use { it.execute(sql); Unit }
+    private fun Connection.execute(sql: String) = createStatement().use {
+        it.execute(sql)
+        Unit
+    }
     private fun Connection.generated(sql: String, qualify: Boolean = false) {
         val tree = Dialects.DUCKDB.parseOne(sql)
         execute((if (qualify) qualifyTables(tree, db = "main", catalog = "memory", dialect = Dialects.DUCKDB) else tree).sql("duckdb"))

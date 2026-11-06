@@ -106,12 +106,12 @@ generated-execution certification. Historical CHSEM-001/002/003 evidence is unto
 ./kotlin test -m brikk-sql \
   --include-classes='*ClickhouseCompositionValidationTest' \
   --include-classes='*ClickhouseCompositionFixturesTest' \
-  --jvm-args='-Dbrikk.clickhouseCompositionOut=/tmp/opencode/clickhouse-composition.json'
+  --jvm-args='-Dbrikk.clickhouseCompositionOut=build/clickhouse-composition.json'
 
 python3 tools/probe_clickhouse_2026.py \
   --cases vendor/data/clickhouse-semantic/composition-cases.json \
   --task CHSEM-004 \
-  --output /tmp/opencode/clickhouse-composition-native
+  --output build/clickhouse-composition-native
 
 python3 -m unittest discover -s tools -p 'test_*clickhouse*.py'
 ```

@@ -99,10 +99,6 @@ is asserted by numeric AST value rather than Polyglot's one-token representation
   execution gate is claimed. This branch deliberately retains the new red tests
   for follow-up fixes; it is not merge-ready as a green test-only change.
 
-Logs are `/var/tmp/jayson/opencode/test-expansion-core-final.log` and
-`/var/tmp/jayson/opencode/test-expansion-duckdb-final.log`. Earlier failed test
-adaptations remain in the first/focused logs rather than being presented as bugs.
-
 ## Reproduce
 
 ```sh

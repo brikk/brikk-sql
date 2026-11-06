@@ -66,11 +66,11 @@ still outside the researched families.
 
 ```sh
 ./kotlin test -m brikk-sql --include-classes='*ClickhouseHigherOrderContractsTest' \
-  --jvm-args='-Dbrikk.clickhouseHigherOrderOut=/tmp/opencode/clickhouse-higher-order.json'
+  --jvm-args='-Dbrikk.clickhouseHigherOrderOut=build/clickhouse-higher-order.json'
 python3 tools/probe_clickhouse_2026.py \
   --cases vendor/data/clickhouse-semantic/higher-order-cases.json --task CHSEM-008 \
-  --brikk /tmp/opencode/clickhouse-higher-order.json \
-  --output /tmp/opencode/clickhouse-higher-order-native
+  --brikk build/clickhouse-higher-order.json \
+  --output build/clickhouse-higher-order-native
 ```
 
 ## Validation

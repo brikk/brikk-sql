@@ -126,13 +126,13 @@ length(x)>0 fixture from the separate invalid identity-predicate unit control.
 
 ```sh
 ./kotlin test -m brikk-sql --include-classes='*ClickhouseOverloadTypingTest' \
-  --jvm-args='-Dbrikk.clickhouseOverloadOut=/tmp/opencode/clickhouse-overloads.json -Dbrikk.clickhouseLiteralTypesOut=/tmp/opencode/clickhouse-literal-types.json'
+  --jvm-args='-Dbrikk.clickhouseOverloadOut=build/clickhouse-overloads.json -Dbrikk.clickhouseLiteralTypesOut=build/clickhouse-literal-types.json'
 python3 tools/probe_clickhouse_2026.py \
   --cases vendor/data/clickhouse-semantic/overload-cases.json --task CHSEM-009 \
-  --brikk /tmp/opencode/clickhouse-overloads.json \
-  --output /tmp/opencode/clickhouse-overload-native
+  --brikk build/clickhouse-overloads.json \
+  --output build/clickhouse-overload-native
 python3 tools/probe_clickhouse_literal_types.py \
-  --output /tmp/opencode/clickhouse-literal-types-native
+  --output build/clickhouse-literal-types-native
 ```
 
 ## Validation

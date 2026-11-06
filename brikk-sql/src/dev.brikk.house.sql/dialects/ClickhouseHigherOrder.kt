@@ -4,6 +4,8 @@ import dev.brikk.house.sql.ast.*
 import kotlin.String
 import kotlin.collections.Set
 
+private val IMPLICIT_LAMBDA_ARGUMENT = Regex("_(?:[1-9][0-9]*)?")
+
 // system.functions.higher_order, pinned 26.10.2.103. These are argument-binding contexts,
 // not a claim that each function's result type or cross-engine semantics is known.
 internal val clickhouseHigherOrderNames = setOf(
@@ -25,7 +27,7 @@ internal fun clickhouseLiftLambda(input: Expression): Expression {
         (input.thisArg as? Expression)?.let { input.set("this", clickhouseLiftLambda(it)) }
         return input
     }
-    if (input is Column && input.args["table"] == null && !input.name.matches(Regex("_(?:[1-9][0-9]*)?"))) {
+    if (input is Column && input.args["table"] == null && !input.name.matches(IMPLICIT_LAMBDA_ARGUMENT)) {
         return ClickhouseFunctionReference(args("this" to input.thisArg))
     }
     var anonymous = 0
@@ -41,7 +43,7 @@ internal fun clickhouseLiftLambda(input: Expression): Expression {
         if (node is Column) {
             val first = (node.args["table"] ?: node.thisArg) as? Identifier
             val name = first?.name.orEmpty()
-            if (name !in bound && name.matches(Regex("_(?:[1-9][0-9]*)?"))) {
+            if (name !in bound && name.matches(IMPLICIT_LAMBDA_ARGUMENT)) {
                 val ordinal = if (name == "_") ++anonymous else name.drop(1).toIntOrNull() ?: 129
                 // Keep invalid native arities as syntax, but never allocate an unbounded parameter list.
                 ordinals.add(ordinal.coerceAtMost(129))

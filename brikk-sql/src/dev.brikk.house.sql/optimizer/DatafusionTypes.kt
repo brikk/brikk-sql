@@ -9,6 +9,8 @@ import kotlin.Boolean
 /** Arrow names are analysis data, not SQL cast syntax. Retain width, units, zones and container identity. */
 internal object DatafusionTypes {
     const val NATIVE = "datafusion_arrow_type"
+    private val ARROW_FIELD = Regex("^\"((?:[^\"]|\\\\.)*)\":\\s*(.*)$")
+    private val JSON_TOKEN = Regex("\"(?:[^\"\\\\]|\\\\.)*\"|[{}\\[\\],:]")
     private val primitive = mapOf(
         "Null" to DType.NULL, "Boolean" to DType.BOOLEAN,
         "Int8" to DType.TINYINT, "Int16" to DType.SMALLINT, "Int32" to DType.INT, "Int64" to DType.BIGINT,
@@ -75,7 +77,7 @@ internal object DatafusionTypes {
 
     private val UNITS = setOf("s", "ms", "us", "µs", "ns", "Second", "Millisecond", "Microsecond", "Nanosecond")
     private fun field(text: String, depth: Int): ColumnDef? {
-        val match = Regex("^\"((?:[^\"]|\\\\.)*)\":\\s*(.*)$").matchEntire(text) ?: return null
+        val match = ARROW_FIELD.matchEntire(text) ?: return null
         val name = try { Json.parseToJsonElement("\"${match.groupValues[1]}\"").jsonPrimitive.content } catch (_: Exception) { return null }
         val raw = match.groupValues[2]
         val type = parse(raw.removePrefix("non-null "), depth + 1) ?: return null
@@ -231,7 +233,7 @@ internal object DatafusionTypes {
     private fun duplicateJsonKeys(text: String): Boolean {
         class ObjectKeys(val keys: MutableSet<String> = mutableSetOf(), var expectingKey: Boolean = true)
         val stack = mutableListOf<ObjectKeys?>()
-        for (match in Regex("\"(?:[^\"\\\\]|\\\\.)*\"|[{}\\[\\],:]").findAll(text)) {
+        for (match in JSON_TOKEN.findAll(text)) {
             val token = match.value
             when (token) {
                 "{" -> stack.add(ObjectKeys())

@@ -20,7 +20,12 @@ internal class DuckdbQuackRoutingResultTest {
         s.executeQuery(sql).use { r -> buildList { while (r.next()) add((1..r.metaData.columnCount).map { r.getString(it) }) } }
     }
     private fun Connection.command(sql: String, generated: Boolean = false) {
-        try { createStatement().use { s -> s.queryTimeout = 5; s.execute(if (generated) Dialects.DUCKDB.parseOne(sql).sql("duckdb") else sql) } }
+        try {
+            createStatement().use { s ->
+                s.queryTimeout = 5
+                s.execute(if (generated) Dialects.DUCKDB.parseOne(sql).sql("duckdb") else sql)
+            }
+        }
         catch (_: SQLException) { throw AssertionError("Loopback routing fixture statement failed; credentials redacted") }
     }
 

@@ -96,18 +96,19 @@ printf '%s  %s\n' \
 
 ### Rebuilding / refreshing
 
-With Maven 3.9.16 and JDK 17 or later, create a disposable Doris checkout. The
+With Maven 3.9.16 and JDK 17 or later, create a disposable Doris checkout under `build/`. The
 script replaces its two grammar files with the exact release-tag files and writes
 the jar to `vendor/lib/`. Brikk itself still builds with Kotlin Toolchain.
 
 ```bash
+mkdir -p build
 git clone --filter=blob:none --no-checkout --depth 1 \
   --revision 2a58ad96ac3ca6330a6df3d0b90f437351f63701 \
-  https://github.com/apache/doris.git /tmp/opencode/doris-parser-build
-git -C /tmp/opencode/doris-parser-build sparse-checkout set fe/fe-sql-parser
-git -C /tmp/opencode/doris-parser-build checkout --detach 2a58ad96ac3ca6330a6df3d0b90f437351f63701
-git -C /tmp/opencode/doris-parser-build fetch --depth 1 origin 917b20be83878e98f94e3ebf7efccc80346e3e50
-mise exec maven@3.9.16 java@17.0.2 -- bash tools/build_doris_parser.sh /tmp/opencode/doris-parser-build
+  https://github.com/apache/doris.git build/doris-parser-build
+git -C build/doris-parser-build sparse-checkout set fe/fe-sql-parser
+git -C build/doris-parser-build checkout --detach 2a58ad96ac3ca6330a6df3d0b90f437351f63701
+git -C build/doris-parser-build fetch --depth 1 origin 917b20be83878e98f94e3ebf7efccc80346e3e50
+mise exec maven@3.9.16 java@17.0.2 -- bash tools/build_doris_parser.sh build/doris-parser-build
 ```
 
 The release grammar emits ANTLR warnings for its implicit GET_FORMAT token and

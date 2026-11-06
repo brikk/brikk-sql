@@ -1112,7 +1112,7 @@ Build the Linux amd64 fixture with an exact, clean DuckDB 2.0 source checkout:
 
 ```bash
 python3 tools/build_duckdb_window_fixture.py \
-  --source /path/to/duckdb-v2.0.0 --output /tmp/opencode/duckdb-window-fixture/build
+  --source /path/to/duckdb-v2.0.0 --output build/duckdb-window-fixture/build
 ```
 
 The tool verifies source revision `d54cbbe3df17e8e5ce68312f483b4155836112aa` and the official

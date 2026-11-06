@@ -77,15 +77,15 @@ not by editing its earlier captures or changing the generic annotator policy.
 
 ```sh
 python3 tools/probe_clickhouse_projection_types.py \
-  --output /tmp/opencode/projection-types-native
+  --output build/projection-types-native
 ./kotlin test -m brikk-sql --include-classes='*ClickhouseProjectionLiteralTypesTest' \
-  --jvm-args='-Dbrikk.clickhouseProjectionTypesOut=/tmp/opencode/projection-types-brikk.json -Dbrikk.clickhouseProjectionLiteralsOut=/tmp/opencode/projection-brikk.json -Dbrikk.clickhouseProjectionLiteralsScriptOut=/tmp/opencode/projection-script-brikk.json'
+  --jvm-args='-Dbrikk.clickhouseProjectionTypesOut=build/projection-types-brikk.json -Dbrikk.clickhouseProjectionLiteralsOut=build/projection-brikk.json -Dbrikk.clickhouseProjectionLiteralsScriptOut=build/projection-script-brikk.json'
 python3 tools/probe_clickhouse_2026.py \
   --cases vendor/data/clickhouse-semantic/projection-literal-cases.json --task CHSEM-019 \
-  --brikk /tmp/opencode/projection-brikk.json --output /tmp/opencode/projection-native
+  --brikk build/projection-brikk.json --output build/projection-native
 python3 tools/probe_clickhouse_script_settings.py \
   --cases vendor/data/clickhouse-semantic/projection-literal-script-cases.json \
-  --brikk /tmp/opencode/projection-script-brikk.json --output /tmp/opencode/projection-script-native
+  --brikk build/projection-script-brikk.json --output build/projection-script-native
 ```
 
 Both exact pins match all 84 matrix types, 44 original/generated finite outcomes

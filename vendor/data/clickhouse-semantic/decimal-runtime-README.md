@@ -64,13 +64,13 @@ refinement records the three previously unproved runtime findings at E24/E25/E46
 
 ```sh
 ./kotlin test -m brikk-sql --include-classes='*ClickhouseDecimalRuntimeOverflowTest' \
-  --jvm-args='-Dbrikk.clickhouseDecimalRuntimeOut=/tmp/opencode/decimal-runtime-brikk.json -Dbrikk.clickhouseDecimalRuntimeScriptOut=/tmp/opencode/decimal-runtime-script-brikk.json'
+  --jvm-args='-Dbrikk.clickhouseDecimalRuntimeOut=build/decimal-runtime-brikk.json -Dbrikk.clickhouseDecimalRuntimeScriptOut=build/decimal-runtime-script-brikk.json'
 python3 tools/probe_clickhouse_2026.py \
   --cases vendor/data/clickhouse-semantic/decimal-runtime-cases.json --task CHSEM-017 \
-  --brikk /tmp/opencode/decimal-runtime-brikk.json --output /tmp/opencode/decimal-runtime-native
+  --brikk build/decimal-runtime-brikk.json --output build/decimal-runtime-native
 python3 tools/probe_clickhouse_script_settings.py \
   --cases vendor/data/clickhouse-semantic/decimal-runtime-script-cases.json \
-  --brikk /tmp/opencode/decimal-runtime-script-brikk.json --output /tmp/opencode/decimal-runtime-script-native
+  --brikk build/decimal-runtime-script-brikk.json --output build/decimal-runtime-script-native
 ```
 
 All 56 original/generated finite outcomes and eight original/generated session

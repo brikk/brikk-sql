@@ -126,13 +126,13 @@ To regenerate the frontend reports into new paths:
 
 ```sh
 ./kotlin test -m brikk-sql --include-classes='*ClickhouseSemanticCloseoutTest' \
-  --jvm-args='-Dbrikk.clickhouseCloseoutOut=/tmp/opencode/closeout-brikk.json -Dbrikk.clickhouseCloseoutMissingOut=/tmp/opencode/closeout-missing-brikk.json'
+  --jvm-args='-Dbrikk.clickhouseCloseoutOut=build/closeout-brikk.json -Dbrikk.clickhouseCloseoutMissingOut=build/closeout-missing-brikk.json'
 python3 tools/probe_clickhouse_script_settings.py \
   --cases vendor/data/clickhouse-semantic/closeout-cases.json \
-  --brikk /tmp/opencode/closeout-brikk.json --output /tmp/opencode/closeout-native
+  --brikk build/closeout-brikk.json --output build/closeout-native
 python3 tools/probe_clickhouse_script_settings.py \
   --cases vendor/data/clickhouse-semantic/closeout-missing-cases.json \
-  --brikk /tmp/opencode/closeout-missing-brikk.json --output /tmp/opencode/closeout-missing-native
+  --brikk build/closeout-missing-brikk.json --output build/closeout-missing-native
 python3 -m unittest discover -s tools -p 'test_clickhouse_closeout.py'
 ```
 

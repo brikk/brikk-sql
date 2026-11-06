@@ -80,8 +80,8 @@ as `TrinoSetAuthorization` and DuckDB generation refuses them, instead of emitti
 opaque commands. All nine old emissions were native-rejected. Every common origin retains
 identical SQL, status and error type; no accepted input is lost. Five ClickHouse division
 warnings are also added by main. Inventory hashes include main's unchanged policy/ledger/
-semantic-report refreshes. Keep `native-coverage-baseline.json` intact; the integrated gate
-uses `native-coverage-baseline-main-0572f6d.json`. This remains syntax inventory, not semantics.
+semantic-report refreshes. The integrated gate uses the canonical
+`native-coverage-baseline.json`. This remains syntax inventory, not semantics.
 
 ### Release gate fixes
 

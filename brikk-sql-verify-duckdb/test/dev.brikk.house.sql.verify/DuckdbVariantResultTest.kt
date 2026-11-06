@@ -14,7 +14,10 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 internal class DuckdbVariantResultTest {
-    private fun Connection.execute(sql: String) = createStatement().use { it.execute(sql); Unit }
+    private fun Connection.execute(sql: String) = createStatement().use {
+        it.execute(sql)
+        Unit
+    }
     private fun Connection.rows(sql: String): List<List<String?>> = createStatement().use { statement ->
         statement.executeQuery(sql).use { r -> buildList { while (r.next()) add((1..r.metaData.columnCount).map { r.getString(it) }) } }
     }
@@ -30,7 +33,7 @@ internal class DuckdbVariantResultTest {
         c.execute("INSERT INTO events VALUES (1,'{\"Name\":\"Ada\",\"name\":\"lower\",\"a\":[10,20],\"n\":null}'::JSON::VARIANT), (2,'{\"Name\":\"Bob\"}'::JSON::VARIANT), (3,NULL)")
     }
     private fun scratch(block: (Path) -> Unit) {
-        val parent = Files.createDirectories(Path.of(System.getProperty("java.io.tmpdir"), "opencode").toAbsolutePath())
+        val parent = Files.createDirectories(Path.of(System.getProperty("java.io.tmpdir"), "brikk-sql-tests").toAbsolutePath())
         val directory = Files.createTempDirectory(parent, "duckdb-variant-")
         try { block(directory) } finally { Files.walk(directory).use { it.sorted(Comparator.reverseOrder()).forEach(Files::deleteIfExists) } }
     }

@@ -11,7 +11,10 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 internal class DuckdbMergeResultTest {
-    private fun Connection.execute(sql: String) = createStatement().use { it.execute(sql); Unit }
+    private fun Connection.execute(sql: String) = createStatement().use {
+        it.execute(sql)
+        Unit
+    }
     private fun Connection.generated(sql: String) = execute(Dialects.DUCKDB.parseOne(sql).sql("duckdb"))
     private fun Connection.rows(sql: String): List<List<String?>> = createStatement().use { statement ->
         statement.executeQuery(sql).use { result ->

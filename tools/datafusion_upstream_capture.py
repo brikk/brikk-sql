@@ -200,7 +200,7 @@ def ordered_edges(edges):
 
 
 @contextlib.contextmanager
-def runtime(binary, profile):
+def runtime(binary, profile, work_dir=ROOT / 'build/datafusion-upstream'):
     """Only a checksum-pinned binary and local reviewed views; no user endpoint argument."""
     pin = profile['runtime']
     if file_hash(binary) != pin['binary_sha256']:
@@ -208,8 +208,8 @@ def runtime(binary, profile):
     version = subprocess.check_output([str(binary.resolve()), '--version'], text=True, timeout=15).strip()
     if version != pin['reported_version']:
         raise ValueError('Spice runtime version mismatch')
-    parent = '/tmp/opencode' if Path('/tmp/opencode').is_dir() else None
-    with tempfile.TemporaryDirectory(prefix='brikk-upstream-spice-', dir=parent) as tmp:
+    work_dir.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix='brikk-upstream-spice-', dir=work_dir.resolve()) as tmp:
         pod = Path(tmp) / 'spicepod.yaml'
         fixture = profile['embedding']
         shutil.copyfile(pinned_file(fixture), pod)
@@ -320,7 +320,7 @@ def refresh_snapshot(args):
                          if key.startswith(profile['source']['repository'] + '/') and row.get('name') == 'sqlparser']
         if sqlparser_pins != [profile['keyword_capture']['package_pin']]:
             raise ValueError('Keyword capture must match the exact candidate sqlparser package, including patches')
-        with runtime(args.spiced, profile) as (url, details):
+        with runtime(args.spiced, profile, work_dir=args.work_dir) as (url, details):
             metadata = {'runtime': details, 'profile': profile['id'], 'keywords': keywords, 'registry': None,
                 'availability': 'Released candidate runtime; no models or external datasets configured',
                 'queries': {name: query_result(spice_sql(url, sql)) for name, sql in QUERIES.items()},

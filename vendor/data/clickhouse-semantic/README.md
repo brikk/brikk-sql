@@ -190,13 +190,13 @@ Do not overwrite the historical `brikk-before.json` during later implementation:
 ```sh
 ./kotlin test -m brikk-sql \
   --include-classes='*ClickhouseSemanticFixturesTest' \
-  --jvm-args='-Dbrikk.clickhouseSemanticOut=/tmp/opencode/clickhouse-semantic-current.json'
+  --jvm-args='-Dbrikk.clickhouseSemanticOut=build/clickhouse-semantic-current.json'
 
 python3 tools/probe_clickhouse_2026.py \
   --cases vendor/data/clickhouse-semantic/cases.json \
   --task CHSEM-001 \
-  --brikk /tmp/opencode/clickhouse-semantic-current.json \
-  --output /tmp/opencode/clickhouse-semantic-native
+  --brikk build/clickhouse-semantic-current.json \
+  --output build/clickhouse-semantic-native
 
 python3 -m unittest discover -s tools -p 'test_*clickhouse*.py'
 ```

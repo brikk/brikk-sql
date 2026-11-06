@@ -40,8 +40,8 @@ class DuckdbCopyLayoutTest {
         val tree = assertIs<Copy>(Dialects.DUCKDB.parseOne("COPY events TO 'out' (ORDER_BY (v,id ASC NULLS LAST,day DESC NULLS FIRST))"))
         val terms = assertIs<Tuple>(assertIs<CopyParameter>((tree.args["params"] as List<*>).single()).expressionArg).expressionsArg.map { assertIs<Ordered>(it) }
         assertNull(terms[0].args["desc"])
-        assertEquals(false,terms[0].args["nulls_first"])
-        assertEquals(true,terms[0].meta["duckdb_copy_default_null_order"])
+        assertEquals(false, terms[0].args["nulls_first"])
+        assertEquals(true, terms[0].meta["duckdb_copy_default_null_order"])
         assertEquals(false, terms[1].args["desc"])
         assertEquals(false, terms[1].args["nulls_first"])
         assertEquals(true, terms[2].args["desc"])
@@ -108,21 +108,21 @@ class DuckdbCopyLayoutTest {
         val fragment = SqlFragment(bound, "duckdb")
         assertEquals(4, fragment.scalarParams.sumOf { it.count })
         assertEquals(4, fragment.toExecutable("duckdb").sql.count { it == '?' })
-        val occurrences = parseParameterOccurrences(bound,"duckdb")
-        assertEquals(bound.indices.filter { bound[it]=='?' },occurrences.map { it.range.start })
-        assertTrue(occurrences.all { bound.substring(it.range.start,it.range.end)=="?" })
+        val occurrences = parseParameterOccurrences(bound, "duckdb")
+        assertEquals(bound.indices.filter { bound[it] == '?' }, occurrences.map { it.range.start })
+        assertTrue(occurrences.all { bound.substring(it.range.start, it.range.end) == "?" })
     }
 
     @Test
     fun opaqueLayoutScopeAndMalformedOrderingTermsRefuseInsteadOfInventingOrDroppingFacts() {
         for (option in listOf("ORDER_BY 'v DESC'", "PARTITION_BY ('region','day')", "PARTITION_BY getvariable('keys')", "PARTITION_BY events.region"))
-            assertFailsWith<UnsupportedError> { RelationScope.analyze("COPY events TO 'out' ($option)","duckdb",facts) }
+            assertFailsWith<UnsupportedError> { RelationScope.analyze("COPY events TO 'out' ($option)", "duckdb", facts) }
         val named = "COPY (SELECT v+\$amount AS value FROM events) TO (\$file) (ORDER_BY (value*\$factor))"
-        assertEquals(listOf("amount","file","factor"),parseParameterOccurrences(named,"duckdb").map { it.name })
-        val fragment = SqlFragment("COPY events TO 'out' (ORDER_BY (v,id))","duckdb")
+        assertEquals(listOf("amount", "file", "factor"), parseParameterOccurrences(named, "duckdb").map { it.name })
+        val fragment = SqlFragment("COPY events TO 'out' (ORDER_BY (v,id))", "duckdb")
         val tree = assertIs<Copy>(fragment.ast)
         val value = assertIs<Tuple>(assertIs<CopyParameter>((tree.args["params"] as List<*>).single()).expressionArg)
-        value.set("expressions",listOf(value.expressionsArg.first(),Literal.number(42)))
+        value.set("expressions", listOf(value.expressionsArg.first(), Literal.number(42)))
         assertFailsWith<UnsupportedError> { fragment.toExecutable("duckdb") }
     }
 }

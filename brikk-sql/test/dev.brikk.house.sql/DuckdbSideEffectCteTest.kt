@@ -57,7 +57,11 @@ class DuckdbSideEffectCteTest {
             val tree = Dialects.DUCKDB.parseOne(sql)
             assertEquals(tree, Serde.load(Serde.dump(tree)), sql)
             val cte = tree.findAll<CTE>().single()
-            assertEquals(when (hint) { "MATERIALIZED " -> true; "NOT MATERIALIZED " -> false; else -> null }, cte.args["materialized"], sql)
+            assertEquals(when (hint) { "MATERIALIZED " ->
+                true
+                "NOT MATERIALIZED " -> false
+                else -> null
+            }, cte.args["materialized"], sql)
             if (body.startsWith("COPY")) assertIs<Copy>(cte.thisArg)
             val generated = tree.sql("duckdb")
             assertEquals(generated, Dialects.DUCKDB.parseOne(generated).sql("duckdb"), sql)
