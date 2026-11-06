@@ -15,7 +15,7 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
-/** DDB-001: portable template markers are not DuckDB prefix-alias declarations. */
+/** Portable template markers are not DuckDB prefix-alias declarations. */
 class DuckdbTemplateParameterTest {
     @Test
     fun bareCastAndParenthesizedColonProjectionsKeepTheirTemplateContract() {

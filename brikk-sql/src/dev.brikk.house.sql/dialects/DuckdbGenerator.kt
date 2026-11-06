@@ -194,10 +194,6 @@ open class DuckdbGenerator(
     override fun isUnwrappedIntervalValue(thisArg: kotlin.Any?): Boolean =
         thisArg is Literal || thisArg is Paren
 
-    // ------------------------------------------------------------------
-    // Helpers
-    // ------------------------------------------------------------------
-
     // sqlglot: dialect.rename_func
     internal fun renameFuncSql(name: String, expression: Expression): String {
         val flattened = expression.args.values.flatMap { v ->
@@ -855,7 +851,6 @@ open class DuckdbGenerator(
             }
         }
 
-        // Cast if type is incompatible with DuckDB
         val argType = arg?.type?.thisArg as? DType
         if (argType != null && argType != DType.UNKNOWN &&
             argType !in TEXT_TYPES && argType !in BINARY_TYPES
@@ -2096,7 +2091,6 @@ open class DuckdbGenerator(
 
         var validatedFlags = validateRegexpFlags(modifiers, supportedFlags = "cimsg") ?: ""
 
-        // Handle occurrence (only literals supported)
         if (occurrence != null && !occurrence.isInt) {
             unsupported("REGEXP_REPLACE with non-literal occurrence")
         } else {
@@ -2116,7 +2110,6 @@ open class DuckdbGenerator(
             }
         }
 
-        // Handle position (only literals supported)
         var prefix: Expression? = null
         if (position != null && !position.isInt) {
             unsupported("REGEXP_REPLACE with non-literal position")
@@ -2467,7 +2460,6 @@ open class DuckdbGenerator(
 
         val concatExprs: List<Expression?>
         if (posValue == 0) {
-            // insert at beginning
             concatExprs = listOf(elementArray, this_)
         } else if (posValue > 0) {
             // Positive position: LIST_CONCAT(arr[1:pos], [elem], arr[pos+1:])

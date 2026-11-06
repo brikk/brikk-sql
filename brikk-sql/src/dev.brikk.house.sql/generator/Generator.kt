@@ -287,7 +287,7 @@ open class Generator(
 
     // brikk-native: previews may show flagged loss, but executable lowering must
     // not silently remove a row/column-changing query operator, nor return syntax the
-    // target rejects (#55). Additive state, not a constructor parameter: existing
+    // target rejects. Additive state, not a constructor parameter: existing
     // generator JVM signatures stay intact.
     internal var forExecution: Boolean = false
     /** SqlFragment previews opt in too; plain generators retain faithful syntax parity. */
@@ -295,10 +295,10 @@ open class Generator(
     /** Authored-sigil evidence, null when a caller supplies only a legacy ambiguous AST. */
     internal var duckdbSessionDefaults: Boolean? = null
 
-    /** brikk-native (#55): whether a lowered pipe CALL (a table function taking `(query)`) runs. */
+    /** brikk-native: whether a lowered pipe CALL (a table function taking `(query)`) runs. */
     protected open val executesPipeCall: Boolean get() = true
 
-    /** brikk-native (#55): join words the target rejects or reads as something else. */
+    /** brikk-native: join words the target rejects or reads as something else. */
     protected open val unexecutableJoinWords: Set<String> get() = emptySet()
 
     internal val targetName: String get() = dialect.name.ifBlank { "Target dialect" }
@@ -310,7 +310,7 @@ open class Generator(
     }
 
     /**
-     * brikk-native (#55): before rendering, refuses (or flags in a preview) constructs with no
+     * brikk-native: before rendering, refuses (or flags in a preview) constructs with no
      * verified executable translation into this target. DuckDB owns both directions: its
      * generator overrides this, and every other target checks DuckDB-only and DuckDB-sourced
      * semantics here.

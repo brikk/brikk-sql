@@ -8,7 +8,7 @@ import dev.brikk.house.sql.parser.TokenizerConfig
 
 /**
  * Port of sqlglot's MySQL dialect umbrella (reference/sqlglot/sqlglot/dialects/mysql.py
- * class MySQL). Tokenizer tables were generated earlier (MysqlTokenizerTables); the
+ * class MySQL). Tokenizer tables are generated (MysqlTokenizerTables); the
  * parser and generator subclasses live in MysqlParser.kt / MysqlGenerator.kt.
  */
 // sqlglot: dialects.mysql.MySQL

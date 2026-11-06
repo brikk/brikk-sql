@@ -227,10 +227,6 @@ open class DatafusionGenerator(
         return "string_agg(${sql(argument)}, ${sql(separator)}${order?.let { sql(it) }.orEmpty()})"
     }
 
-    // ------------------------------------------------------------------
-    // Renames for generic (Anonymous) function nodes
-    // ------------------------------------------------------------------
-
     // brikk: names that DataFusion spells differently and that BASE parses as generic
     // Anonymous functions (no dedicated AST node). Applied before lowercasing.
     override fun anonymousSql(expression: Anonymous): String {
