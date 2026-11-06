@@ -67,8 +67,7 @@ class PipeStagePhrasesTest : TestCase() {
     }
 
     fun testClickhouseNaturalJoinPhrasesKeepThePinnedLoweringEvidence() {
-        // Batch-4 native probes execute this authored pipe and its actual lowering on
-        // ClickHouse 26.8.34.13 and 26.10.2.103. NATURAL is no longer a refused stage.
+        // This authored pipe and its lowering run natively on ClickHouse 26.8.34.13 and 26.10.2.103.
         assertTrue("NATURAL JOIN" in pipeStagePhrases("clickhouse"))
         lowered("clickhouse", "NATURAL JOIN")
         val sql = "FROM numbers(2) |> AS a |> NATURAL LEFT JOIN (SELECT 0 number, 'R' r) b |> SELECT number,r |> ORDER BY number"

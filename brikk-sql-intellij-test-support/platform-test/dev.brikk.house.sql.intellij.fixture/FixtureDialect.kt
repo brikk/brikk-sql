@@ -118,7 +118,6 @@ abstract class FixtureTestCase : BasePlatformTestCase() {
         SyntaxHighlighterFactory.LANGUAGE_FACTORY.addExplicitExtension(FixtureDialect, FixtureHighlighterFactory(), testRootDisposable)
     }
 
-    /** Opens [text] in a fixture-dialect file; `<caret>` places the caret. */
     protected fun configureFixture(text: String) {
         val file = LightVirtualFile("fixture-${UUID.randomUUID()}.sql", FixtureDialect, text.replace("<caret>", ""))
         myFixture.configureFromExistingVirtualFile(file)

@@ -15,7 +15,6 @@ public interface RealSqlTarget {
     /** The key of the dialect's [RealSqlCase.variants], such as `postgres`, `mysql`, `doris`. */
     public val dialect: String
 
-    /** The syntax the dialect has. */
     public val features: Set<RealSqlFeature>
 
     public val fixture: CodeInsightTestFixture

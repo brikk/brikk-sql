@@ -102,7 +102,6 @@ public data class RealSqlCompletion(
     @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
     public fun copy(sql: String = this.sql, offered: Set<String> = this.offered): RealSqlCompletion = copy(sql, offered, notOffered, variants, once)
 
-    /** The SQL for [dialect]. */
     public fun sqlFor(dialect: String): String = variants[dialect] ?: sql
 }
 
@@ -150,7 +149,6 @@ public data class RealSqlCase(
         reported: Set<String> = this.reported,
     ): RealSqlCase = copy(name, sql, needs, variants, completions, reported, missed)
 
-    /** The SQL for [dialect]. */
     public fun sqlFor(dialect: String): String = variants[dialect] ?: sql
 }
 
@@ -421,7 +419,6 @@ public object RealSqlCases {
             "SELECT o.order_id, o.amount FROM shop.sales.orders o",
             needs = setOf(RealSqlFeature.THREE_PART_NAMES),
         ),
-        // Joins.
         RealSqlCase(
             "join-on",
             "SELECT o.order_id, u.name, i.sku FROM sales.orders o JOIN sales.users u ON u.user_id = o.user_id " +
@@ -451,7 +448,6 @@ public object RealSqlCases {
             "SELECT user_id FROM sales.orders INTERSECT SELECT user_id FROM sales.users EXCEPT SELECT user_id FROM sales.orders WHERE amount < 0",
             needs = setOf(RealSqlFeature.INTERSECT_EXCEPT),
         ),
-        // Windows.
         RealSqlCase(
             "window-partition-order",
             "SELECT order_id, row_number() OVER (PARTITION BY user_id ORDER BY created_at DESC) AS rn, " +
@@ -477,7 +473,6 @@ public object RealSqlCases {
             "SELECT amount * 2 AS doubled, doubled + 1 AS more FROM sales.orders",
             needs = setOf(RealSqlFeature.LATERAL_ALIAS),
         ),
-        // Subqueries.
         RealSqlCase(
             "correlated-exists",
             "SELECT u.name FROM sales.users u WHERE EXISTS (SELECT 1 FROM sales.orders o WHERE o.user_id = u.user_id AND o.amount > 10)",
@@ -502,7 +497,6 @@ public object RealSqlCases {
             "SELECT v.a, v.b FROM (VALUES (1, 'x'), (2, 'y')) AS v(a, b)",
             needs = setOf(RealSqlFeature.VALUES_COLUMN_ALIASES),
         ),
-        // Statements around queries.
         RealSqlCase(
             "insert-select",
             "INSERT INTO sales.archive SELECT * FROM sales.orders WHERE status = 'done'",
@@ -519,7 +513,6 @@ public object RealSqlCases {
             variants = mapOf("mysql" to "SELECT CASE WHEN amount > 10 THEN 'big' ELSE 'small' END AS size, " +
                 "CAST(amount AS DECIMAL(10, 2)) AS money, created_at + INTERVAL 1 DAY AS due FROM sales.orders"),
         ),
-        // Identifier case.
         RealSqlCase(
             "unquoted-case-folding",
             "SELECT O.ORDER_ID, o.User_Id FROM SALES.ORDERS o",

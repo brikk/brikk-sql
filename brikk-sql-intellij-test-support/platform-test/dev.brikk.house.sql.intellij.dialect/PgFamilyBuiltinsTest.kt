@@ -152,7 +152,6 @@ class PgFamilyBuiltinsTest : BasePlatformTestCase() {
     /** [reports] but `LANGUAGE sql`, which the fixture's catalog lacks: the routines' languages are beside the point. */
     private fun definitionReports(sql: String) = reports(sql).filterNot { it == "sql: Unable to resolve language 'sql'" }
 
-    /** The call of [name] in the open file. */
     private fun call(name: String) = PsiTreeUtil.findChildrenOfType(myFixture.file, SqlFunctionCallExpression::class.java).single { it.nameElement?.name == name }
 
     /** [call]'s name binds to its CREATE FUNCTION in the file alone: no engine placeholder, hidden or not. */
