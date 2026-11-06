@@ -35,7 +35,7 @@ internal class DuckdbSecureViewResultTest {
         for (generated in listOf(false, true)) DriverManager.getConnection("jdbc:duckdb:").use { block(it, generated) }
     }
     private fun scratch(block: (Path) -> Unit) {
-        val parent = Files.createDirectories(Path.of(System.getProperty("java.io.tmpdir"), "opencode").toAbsolutePath())
+        val parent = Files.createDirectories(Path.of(System.getProperty("java.io.tmpdir"), "brikk-sql-tests").toAbsolutePath())
         val directory = Files.createTempDirectory(parent, "duckdb-secure-view-")
         try { block(directory) } finally { Files.walk(directory).use { it.sorted(Comparator.reverseOrder()).forEach(Files::deleteIfExists) } }
     }

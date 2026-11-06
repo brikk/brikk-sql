@@ -29,7 +29,7 @@ internal class DuckdbCopyLayoutResultTest {
         s.executeQuery(sql).use { r -> buildList { while (r.next()) add((1..r.metaData.columnCount).map { r.getString(it) }) } }
     }
     private fun scratch(block: (Path) -> Unit) {
-        val parent = Files.createDirectories(Path.of(System.getProperty("java.io.tmpdir"), "opencode").toAbsolutePath())
+        val parent = Files.createDirectories(Path.of(System.getProperty("java.io.tmpdir"), "brikk-sql-tests").toAbsolutePath())
         val directory = Files.createTempDirectory(parent, "duckdb-copy-layout-")
         try { block(directory) } finally {
             Files.walk(directory).use { paths -> paths.sorted(Comparator.reverseOrder()).forEach(Files::deleteIfExists) }

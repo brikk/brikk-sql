@@ -71,7 +71,7 @@ internal class RepositoryFixture(val directory: Path) {
         }
         fun Connection.scalar(sql: String): String = rows(sql).single().single()!!
         fun scratch(block: (RepositoryFixture) -> Unit) {
-            val parent = Files.createDirectories(Path.of(System.getProperty("java.io.tmpdir"), "opencode").toAbsolutePath())
+            val parent = Files.createDirectories(Path.of(System.getProperty("java.io.tmpdir"), "brikk-sql-tests").toAbsolutePath())
             val directory = Files.createTempDirectory(parent, "duckdb-repositories-")
             try { block(RepositoryFixture(directory)) } finally { Files.walk(directory).use { it.sorted(Comparator.reverseOrder()).forEach(Files::deleteIfExists) } }
         }

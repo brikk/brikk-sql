@@ -27,7 +27,7 @@ internal class DuckdbParquetSchemaResultTest {
     }
     private fun Connection.rows(sql: String) = createStatement().use { s -> s.executeQuery(sql).use { r -> buildList { while (r.next()) add((1..r.metaData.columnCount).map { r.getString(it) }) } } }
     private fun scratch(block: (Path) -> Unit) {
-        val parent = Files.createDirectories(Path.of(System.getProperty("java.io.tmpdir"), "opencode"))
+        val parent = Files.createDirectories(Path.of(System.getProperty("java.io.tmpdir"), "brikk-sql-tests"))
         val root = Files.createTempDirectory(parent, "duckdb-parquet-schema-")
         try { block(root) } finally { Files.walk(root).use { it.sorted(Comparator.reverseOrder()).forEach(Files::deleteIfExists) } }
     }

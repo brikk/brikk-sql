@@ -26,7 +26,7 @@ internal class DuckdbParquetWriteResultTest {
     }
     private fun Connection.rows(sql: String) = createStatement().use { s -> s.executeQuery(sql).use { r -> buildList { while (r.next()) add((1..r.metaData.columnCount).map { r.getString(it) }) } } }
     private fun scratch(block: (Path) -> Unit) {
-        val root = Files.createTempDirectory(Files.createDirectories(Path.of(System.getProperty("java.io.tmpdir"), "opencode")), "duckdb-parquet-write-")
+        val root = Files.createTempDirectory(Files.createDirectories(Path.of(System.getProperty("java.io.tmpdir"), "brikk-sql-tests")), "duckdb-parquet-write-")
         try { block(root) } finally { Files.walk(root).use { it.sorted(Comparator.reverseOrder()).forEach(Files::deleteIfExists) } }
     }
     @Test fun codecsLevelsDictionaryBloomFieldIdsAndMetadataWriteRealParquetFiles() = scratch { root ->

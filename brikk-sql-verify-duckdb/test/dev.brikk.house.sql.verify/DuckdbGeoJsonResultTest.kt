@@ -37,7 +37,7 @@ internal class DuckdbGeoJsonResultTest {
         c.exec("INSERT INTO places VALUES(1,'alpha','POINT(1 2)'),(2,'beta','LINESTRING(0 0,1 1)'),(3,NULL,NULL)")
     }
     private fun scratch(block: (Path) -> Unit) {
-        val root = Files.createTempDirectory(Files.createDirectories(Path.of(System.getProperty("java.io.tmpdir"), "opencode")), "duckdb-geojson-")
+        val root = Files.createTempDirectory(Files.createDirectories(Path.of(System.getProperty("java.io.tmpdir"), "brikk-sql-tests")), "duckdb-geojson-")
         try { block(root) } finally { Files.walk(root).use { it.sorted(Comparator.reverseOrder()).forEach(Files::deleteIfExists) } }
     }
     private fun features(path: Path, collection: Boolean): List<JsonObject> = if (collection) Json.parseToJsonElement(Files.readString(path)).jsonObject.getValue("features").jsonArray.map { it.jsonObject }

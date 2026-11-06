@@ -15,7 +15,7 @@ import kotlin.test.*
 internal class DuckdbCoreExtensionTriageResultTest {
     private fun render(sql: String) = assertIs<Expression>(Serde.load(Serde.dump(Dialects.DUCKDB.parseOne(sql)))).sql("duckdb")
     @Test fun finalDocumentedAttachDdlAndSnapshotSyntaxParsesWithoutInstallingOrContactingProviders() {
-        val parent = Files.createDirectories(Path.of(System.getProperty("java.io.tmpdir"), "opencode"))
+        val parent = Files.createDirectories(Path.of(System.getProperty("java.io.tmpdir"), "brikk-sql-tests"))
         val root = Files.createTempDirectory(parent, "duckdb-extension-triage-")
         try {
             DriverManager.getConnection("jdbc:duckdb:", Properties().apply {

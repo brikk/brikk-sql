@@ -36,7 +36,7 @@ internal class DuckdbExternalResourceResultTest {
     private fun Connection.count(sequence: String): Long = scalar("SELECT coalesce(last_value,0) FROM duckdb_sequences() WHERE sequence_name='$sequence'").toLong()
 
     private fun fixture(block: (DuckDBConnection, Path) -> Unit) {
-        val parent = Files.createDirectories(Path.of(System.getProperty("java.io.tmpdir"), "opencode").toAbsolutePath())
+        val parent = Files.createDirectories(Path.of(System.getProperty("java.io.tmpdir"), "brikk-sql-tests").toAbsolutePath())
         val directory = Files.createTempDirectory(parent, "duckdb-external-resources-")
         try {
             (DriverManager.getConnection("jdbc:duckdb:", Properties().apply {

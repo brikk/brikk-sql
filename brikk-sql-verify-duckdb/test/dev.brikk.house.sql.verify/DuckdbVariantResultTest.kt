@@ -33,7 +33,7 @@ internal class DuckdbVariantResultTest {
         c.execute("INSERT INTO events VALUES (1,'{\"Name\":\"Ada\",\"name\":\"lower\",\"a\":[10,20],\"n\":null}'::JSON::VARIANT), (2,'{\"Name\":\"Bob\"}'::JSON::VARIANT), (3,NULL)")
     }
     private fun scratch(block: (Path) -> Unit) {
-        val parent = Files.createDirectories(Path.of(System.getProperty("java.io.tmpdir"), "opencode").toAbsolutePath())
+        val parent = Files.createDirectories(Path.of(System.getProperty("java.io.tmpdir"), "brikk-sql-tests").toAbsolutePath())
         val directory = Files.createTempDirectory(parent, "duckdb-variant-")
         try { block(directory) } finally { Files.walk(directory).use { it.sorted(Comparator.reverseOrder()).forEach(Files::deleteIfExists) } }
     }

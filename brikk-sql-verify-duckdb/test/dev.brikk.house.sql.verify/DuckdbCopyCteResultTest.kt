@@ -33,7 +33,7 @@ internal class DuckdbCopyCteResultTest {
         c.execute("INSERT INTO staging VALUES(1,'one'),(2,'two'),(3,'three')")
     }
     private fun scratch(block: (Path) -> Unit) {
-        val parent = Files.createDirectories(Path.of(System.getProperty("java.io.tmpdir"), "opencode").toAbsolutePath())
+        val parent = Files.createDirectories(Path.of(System.getProperty("java.io.tmpdir"), "brikk-sql-tests").toAbsolutePath())
         val directory = Files.createTempDirectory(parent, "duckdb-copy-cte-")
         try { block(directory) } finally {
             // Only this test's newly created, uniquely named directory and its own files.
