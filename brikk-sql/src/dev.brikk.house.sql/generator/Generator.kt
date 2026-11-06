@@ -2479,8 +2479,11 @@ open class Generator(
                 wrapDerivedValues &&
                 (alias.isNotEmpty() || expression.parent is From || expression.parent is Table)
             ) "($values)" else values
-            values = queryModifiers(expression, values)
-            return if (alias.isNotEmpty()) "$values AS $alias" else values
+            // brikk: the alias goes before the modifiers, as subquerySql does, so a nested join
+            // parked on this node (`a LEFT JOIN b JOIN c ON .. ON ..`) follows `AS t(b)` rather
+            // than splitting it from the VALUES. sqlglot appends the alias last.
+            val aliasSql = if (alias.isNotEmpty()) " AS $alias" else ""
+            return queryModifiers(expression, values, aliasSql)
         }
 
         // Converts `VALUES...` expression into a series of select unions.
