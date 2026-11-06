@@ -8,6 +8,7 @@
 - [SQL 0.23.0 and IntelliJ 0.4.0 release record](../docs/sql-0.23.0.md)
 - [IntelliJ 0.4.1 catalog-race fix](../docs/intellij-support-0.4.1.md)
 - [Main integration and regression fixes, 2026-11-06](main-integration-20261106.md)
+- [SQL and IntelliJ support 1.0.0 release record](../docs/sql-1.0.0.md)
 - [Transpile rewrites](TODO-BUGS-rewrites.md)
 - [BigQuery limitations](TODO-bigquery.md)
 - [Doris DDL](TODO-doris-ddl.md)

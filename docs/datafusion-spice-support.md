@@ -2,9 +2,10 @@
 
 This is the shared-library qualification for DFS-012. It covers the pinned profiles below
 and the tested consumer fixture. A production IntelliJ plugin still needs its own packaged
-integration and driver smoke tests. SQL `0.23.0` and IntelliJ support `0.4.1` are now
-[published and verified](intellij-support-0.4.1.md). This does not authorize production plugin publication
-or broaden the qualification below.
+integration and driver smoke tests. SQL and IntelliJ support `1.0.0` are now
+[published and verified](sql-1.0.0.md). This does not authorize production plugin publication
+or broaden the qualification below. Earlier consumer-candidate results retain
+their exact original versions; 1.0.0 publication is not a new consumer acceptance run.
 
 ## Qualified profiles
 
