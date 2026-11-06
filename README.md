@@ -34,6 +34,9 @@ for dependency guidance.
 Latest core, metadata, verify and oracle release: **`0.23.0`**. SQL IntelliJ
 support is independently versioned at **`0.4.1`**.
 
+The next planned release is **`1.0.0`** for all SQL and IntelliJ support artifacts.
+Development versions are aligned at `1.0.0-SNAPSHOT`; 1.0.0 is not published yet.
+
 ```kotlin
 repositories { mavenCentral() }
 dependencies {
