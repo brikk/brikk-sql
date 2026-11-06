@@ -41,9 +41,9 @@ internal data class ClickhouseCompositionUnknown(
 )
 
 /**
- * CHSEM-004's internal rule report, deliberately without an accepted/isValid flag.
+ * Internal rule report, deliberately without an accepted/isValid flag.
  * Empty errors are not acceptance: resolution, values, execution, array lengths and
- * unsupported forms can remain unchecked. CHSEM-006's diagnostics adapter exposes
+ * unsupported forms can remain unchecked. The diagnostics adapter exposes
  * these errors and unknowns separately with script positions.
  */
 internal data class ClickhouseCompositionValidation(
@@ -580,7 +580,8 @@ private class ClickhouseCompositionValidator(
             val body = node.thisArg as? Expression
             return rememberCallable(node, Callable(arity, body?.let { value(it, bound, depth + 1) } ?: Value()))
         }
-        // CHSEM-011: parenthesized explicit lambda operands currently become JSON arrows.
+        // A parenthesized lambda operand the parser did not bind as a Lambda (a JSON arrow,
+        // dotted or bare name) is a parser gap, not an invalid operand.
         if (node is JSONExtract || node is Dot || node is Column || node is Identifier) {
             unknown(node, ClickhouseCompositionUnknownReason.PARSER_GAP)
             return Callable()
@@ -732,8 +733,8 @@ private class ClickhouseCompositionValidator(
         }
         val result = clickhousePrimitiveMultiplicationResult(types[0], types[1])
         if (result != null) return nativeType(result)
-        // Keep pre-existing contextual Decimal contracts; this round does not qualify
-        // standalone Decimal dispatch or infer its error/overflow behavior.
+        // Only contextual Decimal contracts apply. Standalone Decimal dispatch and its
+        // error/overflow behavior are not modeled.
         if ((context.callableScope || depth > 0) && inputs.any { it.family == Family.DECIMAL }) {
             val legacy = facts("multiply", node, context)?.let { checkCall(node, it, inputs) }
             if (legacy?.type != null) return legacy

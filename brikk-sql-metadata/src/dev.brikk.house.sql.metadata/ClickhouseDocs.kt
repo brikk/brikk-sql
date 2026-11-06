@@ -38,7 +38,6 @@ val CLICKHOUSE_HISTORICAL_DOCS: EngineDocs = EngineDocs(
         DocsEntry("CHECK TABLE", "reference/statements/check-table", "CHECK TABLE"),
         DocsEntry("SYSTEM", "reference/statements/system", "SYSTEM"),
         DocsEntry("GRANT", "reference/statements/grant", "GRANT"),
-        // Clauses.
         DocsEntry("INTO OUTFILE", "reference/statements/select/into-outfile", "INTO OUTFILE", "Writes a query's result to a file on the client.", clause = true),
         DocsEntry("FORMAT", "reference/statements/select/format", "FORMAT", "Names the data format of a query's result or of inserted data.", clause = true),
         DocsEntry("SETTINGS", "concepts/features/configuration/settings/settings-query-level", "SETTINGS", "Sets settings for one query.", clause = true),

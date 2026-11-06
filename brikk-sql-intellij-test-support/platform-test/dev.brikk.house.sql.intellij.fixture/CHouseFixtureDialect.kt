@@ -49,15 +49,12 @@ abstract class CHouseFixtureTestCase : BasePlatformTestCase() {
         SyntaxHighlighterFactory.LANGUAGE_FACTORY.addExplicitExtension(CHouseFixtureDialect, CHouseFixtureHighlighterFactory(), testRootDisposable)
     }
 
-    /** The fixture dialect's parsing in this test. */
     protected open fun parserDefinition(): ParserDefinition = CHouseFixtureParserDefinition()
 
-    /** Opens [text] in a fixture-dialect file. */
     protected fun configureCHouse(text: String) {
         myFixture.configureFromExistingVirtualFile(LightVirtualFile("chouse-${UUID.randomUUID()}.sql", CHouseFixtureDialect, text))
         check(myFixture.file.language == CHouseFixtureDialect) { "${myFixture.file.language} is not the fixture dialect" }
     }
 
-    /** The file's top-level statements. */
     protected fun statements(): List<SqlStatement> = PsiTreeUtil.getChildrenOfTypeAsList(myFixture.file, SqlStatement::class.java)
 }

@@ -153,7 +153,6 @@ private object DocsRecognizer {
         return next.text.uppercase() in follows
     }
 
-    /** The bracket depth of token [index]. */
     private fun depth(tokens: List<Token>, index: Int): Int = tokens.take(index).sumOf {
         when (it.tokenType) {
             TokenType.L_PAREN -> 1

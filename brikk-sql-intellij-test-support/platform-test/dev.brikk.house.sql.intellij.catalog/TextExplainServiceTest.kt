@@ -392,7 +392,6 @@ class TextExplainServiceTest : BasePlatformTestCase() {
     }
 }
 
-/** [connection], recording every statement it executes in [executed]. */
 fun recordingStatements(connection: DatabaseConnectionCore, executed: MutableList<String>): DatabaseConnectionCore {
     fun <T : Any> proxy(type: Class<T>, target: T, call: (java.lang.reflect.Method, Array<Any?>) -> Any?): T =
         type.cast(Proxy.newProxyInstance(type.classLoader, arrayOf(type)) { _, method, args ->

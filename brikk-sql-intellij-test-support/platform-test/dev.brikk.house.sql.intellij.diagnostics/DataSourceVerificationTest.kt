@@ -100,7 +100,7 @@ class DataSourceVerificationTest : BasePlatformTestCase() {
         }
     }
 
-    /** DDB20-052: malformed editor text travels only inside the remote parse wrapper. */
+    /** Malformed editor text travels only inside the remote parse wrapper. */
     fun testMalformedNativeParseRequestsLeaveTheRemoteIdeConnectionUsable() {
         withIdeConnection(project, dataSource, otherRequestor()) { user ->
             user.remoteConnection.createStatement().execute("CREATE SEQUENCE robustness_marker")

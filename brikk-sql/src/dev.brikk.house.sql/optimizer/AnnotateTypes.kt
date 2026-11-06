@@ -767,8 +767,8 @@ class TypeAnnotator(
             })
             return
         }
-        // Function-valued nodes retain UNKNOWN here. The contextual pass applies
-        // separately verified ClickHouse value results after these generic node rules.
+        // Function-valued nodes retain UNKNOWN here. The ClickHouse contextual pass applies
+        // exact results backed by native proofs after these generic node rules.
 
         when {
             duckdbTemporalCast != null -> setType(expr, duckdbTemporalCast)
@@ -1345,7 +1345,7 @@ class TypeAnnotator(
         }
         val left = branchTypes(setop.left)
         val right = branchTypes(setop.right)
-        // brikk extension (ASTRA-004): reconcile children before moving to the parent. Flattening
+        // brikk extension: reconcile children before moving to the parent. Flattening
         // a whole subtree by alias loses types when nested branches rename columns.
         for ((name, l, r) in setOperationColumnPairs(setop, left.map { it.first }, right.map { it.first })) {
             val missingLeft = if (setop.args["by_name"] == true && left.none { it.first == "*" }) DType.NULL else DType.UNKNOWN

@@ -11,7 +11,6 @@ internal const val ERROR_MESSAGE_CONTEXT_DEFAULT = 100
 
 // sqlglot: errors.ErrorLevel
 enum class ErrorLevel {
-    /** Ignore all errors. */
     IGNORE,
 
     /** Log all errors. */

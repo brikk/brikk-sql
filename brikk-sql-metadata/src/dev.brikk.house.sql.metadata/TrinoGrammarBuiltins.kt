@@ -70,7 +70,7 @@ val TRINO_GRAMMAR_BUILTINS: Set<String> = setOf(
 )
 
 /*
- * Grammar forms for completion (DF-13): every name above plus the registered names whose
+ * Grammar forms for completion: every name above plus the registered names whose
  * SqlBase.g4 rule changes how they are written (reserved CURRENT_DATE is bare only; TRIM,
  * SUBSTRING, NORMALIZE take keyword arguments; LISTAGG needs WITHIN GROUP). From the 484
  * grammar rule cited for each name above.

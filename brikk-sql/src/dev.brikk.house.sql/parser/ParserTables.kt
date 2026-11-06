@@ -53,8 +53,7 @@ import dev.brikk.house.sql.ast.args
  * through open provider properties so that dialect subclasses can replace any of
  * them, mirroring Python's class-variable override mechanism.
  *
- * Only the SELECT-family subset is populated; omitted entries carry a
- * `not ported` note referencing the Python original.
+ * Omitted entries carry a `not ported` note referencing the Python original.
  */
 
 /** Factory building a node from Python-style kwargs (insertion order preserved). */
@@ -489,8 +488,7 @@ object BaseParserTables {
         TokenType.SEMICOLON, TokenType.SENTINEL, TokenType.WHERE,
     ) + SET_OPERATIONS + JOIN_KINDS + JOIN_METHODS + JOIN_SIDES
 
-    // sqlglot: Parser.LAMBDAS — Lambda/Kwarg nodes not in the catalog yet; empty map keeps
-    // Parser.parseLambda's structure faithful (the branches simply never fire).
+    // sqlglot: Parser.LAMBDAS
     val LAMBDAS: Map<TokenType, (Parser, List<Expression?>) -> Expression?> = mapOf(
         TokenType.ARROW to { parser, expressions ->
             parser.expression(
@@ -575,8 +573,7 @@ object BaseParserTables {
     // sqlglot: Parser.CAST_COLUMN_OPERATORS
     val CAST_COLUMN_OPERATORS: Set<TokenType> = setOf(TokenType.DCOLON, TokenType.DOTCOLON)
 
-    // sqlglot: Parser.STATEMENT_PARSERS — only SEMICOLON from the DDL/DML table is in
-    // scope for the SELECT-family subset; the other statements arrive with their nodes.
+    // sqlglot: Parser.STATEMENT_PARSERS
     val STATEMENT_PARSERS: Map<TokenType, (Parser) -> Expression> = mapOf(
         TokenType.ALTER to { p -> p.parseAlter() },
         TokenType.ANALYZE to { p -> p.parseAnalyze() },

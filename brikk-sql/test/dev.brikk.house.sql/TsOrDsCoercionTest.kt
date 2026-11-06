@@ -6,8 +6,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 
 /**
- * EVAL-01 (dev-docs/archive/TODO-rectify-from-eval.md): the base generator must render every internal
- * `TsOrDsTo{Time,Timestamp,Datetime,Date}` coercion node, never leak its pseudo-function
+ * The base generator must render every internal `TsOrDsTo{Time,Timestamp,Datetime,Date}`
+ * coercion node, never leak its pseudo-function
  * name (`TS_OR_DS_TO_*`) into target SQL.
  *
  * MySQL `DATE_FORMAT(x, fmt)` and BigQuery `DATETIME(x)` / `TIME(x)` / `FORMAT_*` parse to

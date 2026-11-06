@@ -263,7 +263,6 @@ object Serde {
         return root
     }
 
-    /** Typed convenience for the common case of loading a dumped Expression tree. */
     fun loadExpression(payloads: JsonArray): Expression = load(payloads) as Expression
 
     // sqlglot: serde._load
@@ -287,9 +286,8 @@ object Serde {
 
     /**
      * Comparison mode: strips "o" (comments) and "m" (meta) from every payload,
-     * recursing into nested "t" dumps. Since the parser gained position parity
-     * (Expression.updatePositions), the parser corpus gates compare UNSTRIPPED;
-     * this remains for callers that need structural-only comparison.
+     * recursing into nested "t" dumps, for callers that need structural-only comparison
+     * (the parser corpus gates compare unstripped).
      */
     fun stripMetaAndComments(payloads: JsonArray): JsonArray = JsonArray(
         payloads.map { element ->

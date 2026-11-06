@@ -14,7 +14,6 @@ import dev.brikk.house.sql.parser.sourceOffset
  */
 enum class DiagnosticSeverity { ERROR, WARNING }
 
-/** Which check a diagnostic comes from. */
 enum class DiagnosticSource {
     /** brikk-sql's parser for the dialect: offline and immediate, but it may reject what the engine accepts. */
     LOCAL_PARSER,

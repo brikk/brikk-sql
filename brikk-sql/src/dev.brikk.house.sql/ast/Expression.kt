@@ -24,7 +24,7 @@ fun args(vararg pairs: Pair<String, kotlin.Any?>): Args = linkedMapOf(*pairs)
 
 // Monotonic counter backing Expression.objectId. Atomic: trees are built concurrently by
 // independent callers of the shared Dialects singletons, and objectId is used as an identity
-// key (id()-keyed optimizer caches), so a racy `++` would hand two nodes the same id (EVAL-02).
+// key (id()-keyed optimizer caches), so a racy `++` would hand two nodes the same id.
 @OptIn(ExperimentalAtomicApi::class)
 private val nextObjectId = AtomicLong(0L)
 
@@ -37,7 +37,6 @@ val POSITION_META_KEYS: kotlin.Array<String> = arrayOf("line", "col", "start", "
 internal val BRIKK_POSITION_META_KEYS: kotlin.Array<String> =
     POSITION_META_KEYS + arrayOf("line_start", "col_start")
 
-/** Convenience builder for argTypes tables. */
 internal fun argTypesOf(vararg pairs: Pair<String, kotlin.Boolean>): Map<String, kotlin.Boolean> =
     linkedMapOf(*pairs)
 
@@ -584,13 +583,11 @@ abstract class Expression(initArgs: Args = emptyMap()) {
     }
 }
 
-// ---------------------------------------------------------------------------
 // Trait hierarchy. Python models Condition/Predicate/Binary/Unary/Connector/Func
 // as mixin "traits" with multiple inheritance (e.g. `class EQ(Expression, Binary,
 // Predicate)`). Kotlin has no multiple class inheritance, so pure markers become
 // interfaces while arg-carrying traits (Binary, Unary, Connector) become abstract
 // classes; nodes mixing Binary/Unary with Predicate/Func implement the interfaces.
-// ---------------------------------------------------------------------------
 
 // sqlglot: core.Condition ("Logical conditions like x AND y, or simply x")
 interface Condition

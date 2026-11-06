@@ -5,7 +5,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-/** Issue #1: VARCHAR and matching ASCII samples do not prove unrestricted Unicode identity. */
+/** VARCHAR and matching ASCII samples do not prove unrestricted Unicode identity. */
 class TrinoDorisCaseFoldCertificationTest {
     @Test
     fun unrestrictedCaseFoldingIsRefusedInBothDirections() {

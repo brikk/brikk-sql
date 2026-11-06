@@ -693,8 +693,6 @@ class SqlFragment(val sql: String, val dialect: String = "") {
             },
         )
 
-    // ------------------------------------------------------------------ internals
-
     private fun isPhysicalWriteTarget(table: Table): Boolean {
         var target: Expression = table
         val schema = target.parent as? dev.brikk.house.sql.ast.Schema
@@ -760,7 +758,6 @@ class SqlFragment(val sql: String, val dialect: String = "") {
         })
     }
 
-    /** Copy + desugar pipes + rewrite bound slots into plain table references. */
     private fun prepareTree(tree: Expression, inputs: ShapeCatalog): Expression {
         return bindSlots(desugarPipes(tree, dialectObj, copy = true), inputs)
     }

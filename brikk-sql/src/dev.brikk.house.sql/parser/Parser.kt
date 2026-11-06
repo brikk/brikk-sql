@@ -326,7 +326,7 @@ import dev.brikk.house.sql.ast.applyIndexOffset
 import dev.brikk.house.sql.ast.args
 
 /**
- * Faithful port of reference/sqlglot/sqlglot/parser.py `Parser`. Coverage now spans the
+ * Faithful port of reference/sqlglot/sqlglot/parser.py `Parser`. Coverage spans the
  * SELECT family (incl. pipe syntax), expression machinery (brackets/slices, intervals,
  * lambdas, windows incl. frame specs, values, lateral/unnest, grouping sets), DDL
  * (CREATE/DROP/ALTER with column defs, constraints and the property subsystem), DML
@@ -375,9 +375,7 @@ open class Parser(
         private val TIME_ZONE_RE = Regex(":.*?[a-zA-Z\\+\\-]")
     }
 
-    // -----------------------------------------------------------------------
     // Dialect-level flags (sqlglot: Dialect / Parser class vars; base defaults)
-    // -----------------------------------------------------------------------
 
     // sqlglot: Parser.dialect (the umbrella Dialect object; used by annotate_types-
     // driven parse paths like apply_index_offset)
@@ -824,9 +822,7 @@ open class Parser(
             "TIES" to emptyList(),
         )
 
-    // -----------------------------------------------------------------------
     // Table providers (sqlglot: Parser class-level tables; see BaseParserTables)
-    // -----------------------------------------------------------------------
 
     open val functions: Map<String, (List<Expression?>) -> Expression> get() = BaseParserTables.FUNCTIONS
     open val noParenFunctions: Map<TokenType, () -> Expression> get() = BaseParserTables.NO_PAREN_FUNCTIONS
@@ -897,9 +893,7 @@ open class Parser(
     open val historicalDataPrefix: Set<String> get() = BaseParserTables.HISTORICAL_DATA_PREFIX
     open val historicalDataKind: Set<String> get() = BaseParserTables.HISTORICAL_DATA_KIND
 
-    // -----------------------------------------------------------------------
     // State (sqlglot: Parser.__init__ / Parser.reset)
-    // -----------------------------------------------------------------------
 
     var errorLevel: ErrorLevel = errorLevel ?: ErrorLevel.IMMEDIATE
 
@@ -973,9 +967,7 @@ open class Parser(
         nodeCount = 0
     }
 
-    // -----------------------------------------------------------------------
     // Navigation / matchers
-    // -----------------------------------------------------------------------
 
     // sqlglot: Parser._advance
     /**
@@ -1105,9 +1097,7 @@ open class Parser(
         return null
     }
 
-    // -----------------------------------------------------------------------
     // Errors / validation
-    // -----------------------------------------------------------------------
 
     // sqlglot: Parser.raise_error
     fun raiseError(message: String, token: Token = SENTINEL): Nothing? {
@@ -1239,9 +1229,7 @@ open class Parser(
         }
     }
 
-    // -----------------------------------------------------------------------
     // Entry points
-    // -----------------------------------------------------------------------
 
     // sqlglot: Parser.parse
     fun parse(rawTokens: List<Token>, sql: String): List<Expression?> =
@@ -1357,9 +1345,7 @@ open class Parser(
     // sqlglot: Parser._warn_unsupported (logging dropped: no logger in scope yet)
     protected fun warnUnsupported() {}
 
-    // -----------------------------------------------------------------------
     // CSV / wrapped combinators
-    // -----------------------------------------------------------------------
 
     // sqlglot: Parser._parse_csv (Kotlin deviation: sep comes first so that parseMethod
     // can be passed as a trailing lambda)
@@ -1406,9 +1392,7 @@ open class Parser(
     open fun parseWrappedIdVars(optional: kotlin.Boolean = false): MutableList<Expression> =
         parseWrappedCsv({ parseIdVar() }, optional = optional)
 
-    // -----------------------------------------------------------------------
     // Expression ladder (sqlglot: _parse_expression .. _parse_unary)
-    // -----------------------------------------------------------------------
 
     // sqlglot: Parser._parse_expression
     open fun parseExpression(): Expression? = captureSyntax { parseAlias(parseAssignment()) }
@@ -1794,9 +1778,7 @@ open class Parser(
         )
     }
 
-    // -----------------------------------------------------------------------
     // Statement layer (sqlglot: _parse_statement + the SELECT machinery)
-    // -----------------------------------------------------------------------
 
     // sqlglot: Parser._parse_statement
     open fun parseStatement(): Expression? {
@@ -2525,9 +2507,7 @@ open class Parser(
         }
     }
 
-    // -----------------------------------------------------------------------
     // Joins / tables
-    // -----------------------------------------------------------------------
 
     // sqlglot: Parser._parse_join_parts
     protected open fun parseJoinParts(): Triple<Token?, Token?, Token?> = Triple(
@@ -2779,8 +2759,8 @@ open class Parser(
         }
 
         if (isDbReference) {
-            // A schema path can itself have more than two components. Shifting only db
-            // into catalog discarded the outermost name of CREATE/DROP SCHEMA a.b.c.
+            // A schema path can itself have more than two components; shifting only db
+            // into catalog would discard the outermost name of CREATE/DROP SCHEMA a.b.c.
             val parts = Table(args("this" to table, "db" to db, "catalog" to catalog)).parts
             catalog = parts.firstOrNull().takeIf { parts.size > 1 }
             db = if (parts.size > 2) Dot.build(parts.drop(1)) else parts.lastOrNull()
@@ -3663,9 +3643,7 @@ open class Parser(
         return acc
     }
 
-    // -----------------------------------------------------------------------
     // Clause layer (sqlglot: _parse_where .. _parse_offset, set operations)
-    // -----------------------------------------------------------------------
 
     // sqlglot: Parser._parse_where
     fun parseWhere(skipWhereToken: kotlin.Boolean = false): Expression? {
@@ -4102,9 +4080,7 @@ open class Parser(
         return current
     }
 
-    // -----------------------------------------------------------------------
     // Types (sqlglot: _parse_type / _parse_types)
-    // -----------------------------------------------------------------------
 
     // sqlglot: Parser._parse_type
     open fun parseType(
@@ -6042,7 +6018,7 @@ open class Parser(
 
         // sqlglot #7950: REPLACE WHERE ... / REPLACE USING (...) — both null when absent,
         // so (like upstream) they're omitted from the serialized node rather than emitted
-        // as `false` (which previously shifted downstream arg positions).
+        // as `false`, which would shift downstream arg positions.
         var replaceWhere: Expression? = null
         var replaceUsing: List<Expression>? = null
         if (match(TokenType.REPLACE)) {
@@ -6394,7 +6370,7 @@ open class Parser(
     // (open for DorisParser: REFRESH MATERIALIZED VIEW | CATALOG | DATABASE, docs/brikk-extensions.md #19)
     open fun parseRefresh(): Expression {
         // sqlglot 3c6d84248 (feat(starrocks): parse REFRESH EXTERNAL TABLE): the
-        // EXTERNAL TABLE branch is exercised by the StarRocks dialect (now ported).
+        // EXTERNAL TABLE branch is exercised by the StarRocks dialect.
         val kind = when {
             matchTextSeq("EXTERNAL", "TABLE") -> "EXTERNAL TABLE"
             match(TokenType.TABLE) -> "TABLE"
@@ -6512,7 +6488,6 @@ open class Parser(
 
         val partition = parsePartition()
 
-        // Fallback case
         if (currToken.exists) {
             return parseAsCommand(start)
         }
@@ -7069,9 +7044,7 @@ open class Parser(
         return set_
     }
 
-    // -----------------------------------------------------------------------
     // Properties (sqlglot: _parse_property and friends)
-    // -----------------------------------------------------------------------
 
     // sqlglot: Parser._parse_property
     open fun parseProperty(): kotlin.Any? {
@@ -8723,9 +8696,7 @@ open class Parser(
         )
     }
 
-    // -----------------------------------------------------------------------
     // Columns (sqlglot: _parse_column / _parse_column_ops)
-    // -----------------------------------------------------------------------
 
     // sqlglot: Parser._parse_column
     open fun parseColumn(): Expression? {
@@ -9037,9 +9008,7 @@ open class Parser(
         return expression(Slice(args("this" to this_, "expression" to end, "step" to step)))
     }
 
-    // -----------------------------------------------------------------------
     // Primary layer (sqlglot: _parse_primary / _parse_field / _parse_function)
-    // -----------------------------------------------------------------------
 
     // sqlglot: Parser._parse_paren
     fun parseParen(): Expression? {
@@ -10411,9 +10380,7 @@ open class Parser(
         return emptyList()
     }
 
-    // -----------------------------------------------------------------------
     // Aliases / identifiers / leaf parsers
-    // -----------------------------------------------------------------------
 
     // sqlglot: Parser._parse_alias
     open fun parseAlias(this_: Expression?, explicit: kotlin.Boolean = false): Expression? {
@@ -10691,12 +10658,10 @@ open class Parser(
             if (alias) parseAlias(parseAssignment(), explicit = true) else parseAssignment()
         ) ?: parseSelect()
 
-    // -----------------------------------------------------------------------
     // Pipe syntax (sqlglot: _parse_pipe_syntax_* — brikk DESIGN DIVERGENCE: instead of
     // desugaring into WITH __tmpN CTE chains at parse time, we build a first-class
     // PipeQuery node with one stage node per pipe operator. Desugaring is an explicit
     // transform: ast/PipeDesugar.kt `desugarPipes`.)
-    // -----------------------------------------------------------------------
 
     // sqlglot: Parser.PIPE_SYNTAX_TRANSFORM_PARSERS (keys) — plus the brikk-only
     // extended GoogleSQL operators sqlglot does not support: SET, DROP, RENAME, CALL,
@@ -10988,7 +10953,7 @@ open class Parser(
  * sqlglot: sqlglot.parse_one — tokenize + parse and return the single statement.
  * Routes through the [dev.brikk.house.sql.dialects.Dialects] registry; an unregistered
  * [dialect] throws [dev.brikk.house.sql.dialects.UnknownDialectException], the same as
- * [dev.brikk.house.sql.dialects.transpile] (EVAL-07 — there is no silent base-dialect fallback).
+ * [dev.brikk.house.sql.dialects.transpile] (there is no silent base-dialect fallback).
  */
 fun parseOne(sql: String, dialect: String = ""): Expression =
     dev.brikk.house.sql.dialects.Dialects.forName(dialect).parseOne(sql)

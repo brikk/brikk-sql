@@ -75,7 +75,6 @@ val DUCKDB_DOCS: EngineDocs = EngineDocs(
         DocsEntry("SET|RESET", "${STATEMENTS}set", "SET", "Changes a configuration option."),
         DocsEntry("BEGIN|COMMIT|ROLLBACK|ABORT|END [TRANSACTION]", "${STATEMENTS}transactions", "Transaction Management"),
         DocsEntry("START TRANSACTION", "${STATEMENTS}transactions", "Transaction Management"),
-        // Clauses.
         DocsEntry("PIVOT", "${STATEMENTS}pivot", "PIVOT", "Turns distinct values of a column into columns.", clause = true),
         DocsEntry("UNPIVOT", "${STATEMENTS}unpivot", "UNPIVOT", "Turns columns into rows.", clause = true),
     ),

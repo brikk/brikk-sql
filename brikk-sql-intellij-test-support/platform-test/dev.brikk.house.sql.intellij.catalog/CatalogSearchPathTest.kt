@@ -159,7 +159,6 @@ class CatalogSearchPathTest : BasePlatformTestCase() {
     private fun connection(engine: Connection) =
         databaseConnection(engine.also { connections += it }, LocalDataSource(), Dbms.POSTGRES, otherRequestor())
 
-    /** A connection whose every statement fails. */
     private fun failing() =
         databaseConnection(Proxy.newProxyInstance(Connection::class.java.classLoader, arrayOf(Connection::class.java)) { _, method, _ ->
             throw java.sql.SQLException("refused: ${method.name}")

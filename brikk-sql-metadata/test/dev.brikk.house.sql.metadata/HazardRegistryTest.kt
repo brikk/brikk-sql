@@ -7,9 +7,6 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class HazardRegistryTest {
-
-    // ------------------------------------------------------------ lookups
-
     @Test
     fun trinoDorisCaseFoldingRetainsTheVersionScopedUnicodeCounterexamples() {
         for ((source, target) in listOf("trino" to "doris", "doris" to "trino")) {
@@ -140,7 +137,7 @@ class HazardRegistryTest {
         )
     }
 
-    // ------------------------------------------------------- generated data structure
+    // The generated hazard data's structure.
 
     private data class PairRegistry(
         val source: String,

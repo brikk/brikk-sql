@@ -10,10 +10,7 @@ import kotlin.test.assertTrue
 /**
  * Regression pins for the generator function-mapping fixes filed in
  * docs/research/BUGS-doris-generator-mappings-2026-07-13.md. Each case asserts both the
- * corrected transpile-string rendering AND the post-fix certify behavior (the confident-
- * but-wrong P1 rows used to ship `ok=true` with WRONG SQL because the divergent hazards
- * were masked by the dedicated-renderer mitigation rule — after the fix the SQL is
- * correct and certify still returns ok=true, which is now honest).
+ * corrected transpile-string rendering AND the certify behavior.
  *
  * Grammar acceptance of these renderings against the real Doris FE parser is pinned in
  * brikk-sql-verify SqlVerifierTest (dorisAcceptsBrikkGeneratorMappingFixes).
@@ -92,7 +89,7 @@ class DorisGeneratorMappingBugsTest {
         val out = doris("SELECT strftime(ts, '%Y')", "duckdb")
         assertEquals("SELECT DATE_FORMAT(ts, '%Y')", out)
         assertTrue("TS_OR_DS_TO_TIMESTAMP" !in out)
-        // The false UNMAPPABLE refusal from the round-trip TsOrDsToTimestamp is gone.
+        // The round-trip TsOrDsToTimestamp must not raise a false UNMAPPABLE refusal.
         assertTrue(certifyOk("SELECT strftime(ts, '%Y')", "duckdb"))
     }
 
@@ -103,15 +100,12 @@ class DorisGeneratorMappingBugsTest {
             "SELECT CAST(s AS TIMESTAMPTZ(6))",
             doris("SELECT from_iso8601_timestamp_nanos(s)", "trino"),
         )
-        // BEHAVIOR CHANGE (certify policy #2, 2026-07-13): the `from_iso8601_timestamp_nanos
-        // -> CAST(... AS TIMESTAMPTZ(6))` hazard is honestly DIVERGENT (LOSSY — nanosecond
-        // precision dropped), and the mapping is a TRANSLATED function: Doris has a
-        // dedicated (Cast) renderer for the node. Under policy #2 a divergent-but-
-        // translated function is a NON-BLOCKING WARNING, not a refusal — the lossy cast is
-        // surfaced (no longer the silent ok=true the old renderer-skip produced) and the
-        // consumer owns the precision risk via okAccepting/hand-edit. So certify is ok=true
-        // BUT carries a WARNING SEMANTIC_HAZARD (see the TODO(certify-policy) note; the
-        // conservative option #1 would keep this a REFUSAL).
+        // The `from_iso8601_timestamp_nanos -> CAST(... AS TIMESTAMPTZ(6))` hazard is DIVERGENT
+        // (LOSSY — nanosecond precision dropped), and Doris has a dedicated (Cast) renderer for
+        // the node, so under certify policy #2 the translated function is a NON-BLOCKING
+        // WARNING, not a refusal: certify is ok=true BUT carries a WARNING SEMANTIC_HAZARD, and
+        // the consumer owns the precision risk via okAccepting/hand-edit (see the
+        // TODO(certify-policy) note; the conservative option #1 would keep this a REFUSAL).
         val report = SqlFragment("SELECT from_iso8601_timestamp_nanos(s)", "trino").certify("doris")
         assertTrue(report.ok)
         val hazard = report.findings.single { it.kind == dev.brikk.house.sql.shape.FindingKind.SEMANTIC_HAZARD }

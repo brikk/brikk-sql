@@ -393,12 +393,12 @@ public class PipeExecutionContract(
             }
         }
 
-        /** Runs [entry] on a statement whose `:id` parameter is prompted for, applying [change] in the dialog. */
         /** Makes [catalog].[schema] the console's current namespace, as the platform does after a switch or a read-back. */
         fun switchNamespace(catalog: String, schema: String) {
             recording.console.setSearchPath(SearchPath.of(ObjectPath.create(catalog, ObjectKind.DATABASE).append(schema, ObjectKind.SCHEMA)))
         }
 
+        /** Runs [entry] on a statement whose `:id` parameter is prompted for, applying [change] in the dialog. */
         fun whilePrompting(entry: Entry, change: () -> Unit) {
             var prompted = false
             UiInterceptors.register(object : UiInterceptors.UiInterceptor<DialogWrapper>(DialogWrapper::class.java) {

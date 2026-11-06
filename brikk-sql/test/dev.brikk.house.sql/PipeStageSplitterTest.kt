@@ -64,7 +64,6 @@ class PipeStageSplitterTest {
                 "\"raw_stages\"" in json &&
                 "\"dialect\":\"bigquery\"" in json,
         )
-        // round-trips
         assertEquals(doc, Json.decodeFromString(PipeStageDocument.serializer(), json))
     }
 
@@ -141,7 +140,7 @@ class PipeStageSplitterTest {
     @Test
     fun operatorsSqlglotDoesNotSupportStillSplit() {
         // SET / DROP / RENAME / CALL / TEE are GoogleSQL pipe operators that sqlglot cannot
-        // parse; Phase 0 stage-splitting handles them fine since it needs no grammar.
+        // parse; stage-splitting handles them fine since it needs no grammar.
         val sql = "FROM t |> SET x = 1 |> DROP y |> RENAME a AS b |> CALL f(z) |> TEE"
         val result = PipeStageSplitter.split(sql)
         assertEquals(

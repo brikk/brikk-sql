@@ -28,7 +28,7 @@ val DORIS_GRAMMAR_BUILTINS: Set<String> = setOf(
 )
 
 /*
- * Grammar forms for completion (DF-13): every name above plus the registered names with
+ * Grammar forms for completion: every name above plus the registered names with
  * their own DorisParser.g4 (4.1.5) primaryExpression rule. CURRENT_DATE and the other
  * datetime/user names are non-reserved there, so `name()` parses as a call as well.
  */

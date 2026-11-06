@@ -114,7 +114,6 @@ data class EngineDocs(
         require(base.endsWith("/")) { "Docs base must end with '/': $base" }
     }
 
-    /** The absolute URL of [path]. */
     fun url(path: String): String = base + path
 }
 

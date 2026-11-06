@@ -10,7 +10,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
-/** DDB-001: test portable templates without pretending :name is native DuckDB SQL. */
+/** Test portable templates without pretending :name is native DuckDB SQL. */
 class DuckdbTemplateBindingResultTest {
     @Test
     fun bareTemplateProjectionsExecuteAfterParameterOnlyJdbcAdaptation() {

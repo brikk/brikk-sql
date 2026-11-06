@@ -15,14 +15,14 @@ class StarrocksGrammarGapsTest {
         return once
     }
 
-    /** S1: an empty partition list (dynamic partitions), as Doris accepts it. */
+    /** An empty partition list (dynamic partitions), as Doris accepts it. */
     @Test
     fun emptyRangePartitionList() {
         val sql = "CREATE TABLE d.t (k BIGINT, ts DATETIME) DUPLICATE KEY (k) PARTITION BY RANGE (ts) () DISTRIBUTED BY HASH (k) BUCKETS 1 PROPERTIES ('replication_num'='1')"
         assertEquals(sql, roundTrip(sql))
     }
 
-    /** S2: administrative statements are commands, their text kept, as in Doris. */
+    /** Administrative statements are commands, their text kept, as in Doris. */
     @Test
     fun cancelAndAdminStatementsAreCommands() {
         for (sql in listOf("CANCEL LOAD FROM d WHERE LABEL = 'x'", "ADMIN ABORT TRANSACTION WHERE txn_id = 1")) {
@@ -31,7 +31,7 @@ class StarrocksGrammarGapsTest {
         }
     }
 
-    /** S3: StarRocks-only statements parse, at least as commands with their text kept. */
+    /** StarRocks-only statements parse, at least as commands with their text kept. */
     @Test
     fun starrocksOnlyStatementsParse() {
         for (sql in listOf(

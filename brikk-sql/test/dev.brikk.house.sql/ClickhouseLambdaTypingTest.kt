@@ -131,8 +131,7 @@ class ClickhouseLambdaTypingTest {
     fun compositionReceivesProvedResultsAtLaterStages() {
         val implicit = typed("SELECT arrayMap(toString(_) | toTypeName(_),CAST([1] AS Array(UInt8)))")
         assertEquals(listOf("UInt8", "String"), placeholders(implicit).map(::type))
-        // CHSEM-011 tracks the existing SQL parser gap for parenthesized explicit
-        // lambda operands. Correct caller-supplied Lambda ASTs still bind by context.
+        // Caller-supplied Lambda ASTs inside a composition bind by context.
         val explicit = parseOne("SELECT arrayMap(x -> toString(x),CAST([1] AS Array(UInt8)))", "clickhouse")
         val call = explicit.find<Transform>()!!
         val right = parseOne("SELECT arrayMap(y -> toTypeName(y),CAST(['a'] AS Array(String)))", "clickhouse").find<Lambda>()!!.copy()

@@ -172,7 +172,6 @@ class LiveService(scope: CoroutineScope, override val profile: LiveCatalogProfil
     }
 }
 
-/** The interceptor a plugin registers for [LiveService]. */
 class LiveInterceptor : HarvestConnectionInterceptor(LiveService::class.java)
 
 /** Hands [connection] to the registered [LiveService] as the platform does once it connected. */

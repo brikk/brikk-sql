@@ -164,10 +164,8 @@ class DorisDialectTest {
         )
     }
 
-    // ------------------------------------------------------------------
     // brikk extension (NOT sqlglot parity): FILTER -> CASE rewrite for Doris.
     // Doris has no FILTER clause; sqlglot passes it through (invalid Doris SQL).
-    // ------------------------------------------------------------------
 
     @Test
     fun filterCountStarRewritesToCaseOne() {
@@ -282,12 +280,10 @@ class DorisDialectTest {
         )
     }
 
-    // ------------------------------------------------------------------
     // brikk extension #19 (docs/brikk-extensions.md, NOT sqlglot parity): Doris DDL as
     // emitted by `SHOW CREATE TABLE`. sqlglot's Doris dialect fails or falls back to an
     // opaque Command on every case below. Engine-side acceptance of each rendering is
     // pinned in SqlVerifierTest.dorisAcceptsBrikkDdlRenderings (brikk-sql-verify).
-    // ------------------------------------------------------------------
 
     /** Parses as a real Create (not a Command fallback) and is stable across a re-parse. */
     private fun assertDdlRoundTrip(expected: String, input: String = expected) {
@@ -552,9 +548,7 @@ class DorisDialectTest {
         )
     }
 
-    // ------------------------------------------------------------------
-    // Statement-level Doris DDL a pipeline runtime issues (dev-docs/TODO-doris-ddl.md C1/C3).
-    // ------------------------------------------------------------------
+    // Statement-level Doris DDL a pipeline runtime issues.
 
     /** Parses to the given node class (never Command) and re-parses stably. */
     private inline fun <reified T : Expression> assertStatementRoundTrip(expected: String, input: String = expected): T {
@@ -651,8 +645,8 @@ class DorisDialectTest {
 
     @Test
     fun refreshMaterializedViewCatalogAndDatabase() {
-        // REFRESH is a sqlglot statement token the Doris tokenizer never received, so
-        // every REFRESH statement used to be a hard parse error.
+        // REFRESH is a sqlglot statement token the Doris tokenizer must receive; without
+        // it every REFRESH statement is a hard parse error.
         assertStatementRoundTrip<DorisRefresh>("REFRESH MATERIALIZED VIEW db.mv AUTO")
         assertStatementRoundTrip<DorisRefresh>("REFRESH MATERIALIZED VIEW mv COMPLETE")
         val r = assertStatementRoundTrip<DorisRefresh>(
@@ -776,9 +770,9 @@ class DorisDialectTest {
 
     @Test
     fun remainingAlterTableActions() {
-        // dev-docs/TODO-doris-ddl.md C2/C3: ADD COLUMN with a rollup target (was mis-parsed into a bogus
-        // second action), the parenthesized multi-column form, ORDER BY, ENABLE FEATURE,
-        // MODIFY DISTRIBUTION | ENGINE | COMMENT.
+        // ADD COLUMN with a rollup target (one action, not a bogus second one), the
+        // parenthesized multi-column form, ORDER BY, ENABLE FEATURE, MODIFY DISTRIBUTION |
+        // ENGINE | COMMENT.
         assertStatementRoundTrip<Alter>("ALTER TABLE t ADD COLUMN (c1 INT, c2 STRING) TO r1")
         assertStatementRoundTrip<Alter>("ALTER TABLE t ADD COLUMN (c1 INT, c2 STRING)")
         assertStatementRoundTrip<Alter>("ALTER TABLE t ADD COLUMN c INT NULL AFTER k TO r1 PROPERTIES ('timeout'='10')")
@@ -813,9 +807,7 @@ class DorisDialectTest {
         assertStatementRoundTrip<Show>("SHOW FULL COLUMNS FROM t FROM db")
     }
 
-    // ------------------------------------------------------------------
-        // dev-docs/TODO-doris-ddl.md group B: renderings the FE rejected when inherited from MySQL.
-    // ------------------------------------------------------------------
+    // Renderings the FE rejects when inherited from MySQL.
 
     @Test
     fun columnDefinitionRenderingsAreDorisNotMysql() {
@@ -883,7 +875,7 @@ class DorisDialectTest {
         }
     }
 
-    /** G2: Doris also takes the MySQL SEPARATOR form, which renders as its comma form. */
+    /** Doris also takes the MySQL SEPARATOR form, which renders as its comma form. */
     @Test
     fun groupConcatTakesASeparatorKeyword() {
         for ((sql, expected) in listOf(
@@ -898,7 +890,7 @@ class DorisDialectTest {
         }
     }
 
-    /** G1: Doris and StarRocks export a query's rows with SELECT ... INTO OUTFILE 'uri' [FORMAT AS f] [PROPERTIES (...)]. */
+    /** Doris and StarRocks export a query's rows with SELECT ... INTO OUTFILE 'uri' [FORMAT AS f] [PROPERTIES (...)]. */
     @Test
     fun selectIntoOutfile() {
         for (dialect in listOf("doris", "starrocks")) {

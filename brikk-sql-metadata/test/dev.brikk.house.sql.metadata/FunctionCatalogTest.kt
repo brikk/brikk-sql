@@ -9,9 +9,6 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class FunctionCatalogTest {
-
-    // ------------------------------------------------------------ clickhouse
-
     @Test
     fun clickhouseCatalogLoadsVendoredSystemFunctions() {
         val historical = CLICKHOUSE_26_5_1_1_FUNCTION_CATALOG
@@ -50,8 +47,6 @@ class FunctionCatalogTest {
         assertTrue("_CAST" in CLICKHOUSE_FUNCTION_CATALOG)
     }
 
-    // ---------------------------------------------------------------- doris
-
     @Test
     fun dorisCatalogLoadsWithExpectedSurface() {
         // Pinned to the Doris 4.1.5-release registry the generator ran against.
@@ -60,7 +55,6 @@ class FunctionCatalogTest {
         // alias lookup (SUBSTR/SUBSTRING/MID registered on one def)
         val substr = DORIS_FUNCTION_CATALOG["substr"]
         assertEquals(DORIS_FUNCTION_CATALOG["substring"], substr)
-        // case-insensitive
         assertEquals(DORIS_FUNCTION_CATALOG["abs"], DORIS_FUNCTION_CATALOG["ABS"])
     }
 
@@ -131,16 +125,12 @@ class FunctionCatalogTest {
         )
     }
 
-    // ---------------------------------------------------------------- starrocks
-
     @Test
     fun starrocksCatalogLoadsWithExpectedSurface() {
         // Pinned to StarRocks 4.1.4 (SHOW FULL BUILTIN FUNCTIONS live dump).
         assertEquals(820, STARROCKS_FUNCTION_CATALOG.size)
         assertTrue("ABS" in STARROCKS_FUNCTION_CATALOG)
-        // case-insensitive lookup
         assertEquals(STARROCKS_FUNCTION_CATALOG["abs"], STARROCKS_FUNCTION_CATALOG["ABS"])
-        // scalar/aggregate/window/table kinds are all represented
         assertEquals(FunctionKind.SCALAR, STARROCKS_FUNCTION_CATALOG["abs"]!!.kind)
         assertEquals(FunctionKind.AGGREGATE, STARROCKS_FUNCTION_CATALOG["sum"]!!.kind)
         assertEquals(FunctionKind.WINDOW, STARROCKS_FUNCTION_CATALOG["row_number"]!!.kind)
@@ -224,8 +214,6 @@ class FunctionCatalogTest {
         assertTrue(DORIS_FUNCTION_CATALOG["numbers"]!!.overloads.isEmpty())
     }
 
-    // ------------------------------------------------- doris semantic profiles
-
     @Test
     fun dorisNullPropagationIsPinnedAgainstTheSourceMarkers() {
         // Each verdict is pinned against the class declaration in the reference/doris
@@ -275,8 +263,6 @@ class FunctionCatalogTest {
         assertTrue(tableDefs.isNotEmpty())
         assertTrue(tableDefs.all { it.profile == null })
     }
-
-    // ---------------------------------------------------------------- duckdb
 
     @Test
     fun duckdbCatalogLoadsWithExpectedSurface() {
@@ -396,8 +382,6 @@ class FunctionCatalogTest {
         assertTrue(!DUCKDB_FUNCTION_CATALOG.isTableFunction("abs"))
     }
 
-    // ---------------------------------------------------------------- trino
-
     @Test
     fun trinoCatalogLoadsWithExpectedSurface() {
         // Stock trinodb/trino:484, including geospatial and ML plugins:
@@ -426,8 +410,6 @@ class FunctionCatalogTest {
         // generated header). concat accepts N args but the catalog must not claim so.
         assertTrue(TRINO_FUNCTION_CATALOG["concat"]!!.overloads.all { !it.variadic })
     }
-
-    // ------------------------------------------------------- grammar builtins
 
     @Test
     fun grammarBuiltinsAreKnownButNotRegistered() {
@@ -479,15 +461,12 @@ class FunctionCatalogTest {
         assertTrue("COALESCE" !in TRINO_FUNCTION_CATALOG.toJson())
     }
 
-    // ---------------------------------------------------------------- serde
-
     @Test
     fun jsonRoundTrip() {
         val json = DORIS_FUNCTION_CATALOG.toJson()
         val decoded = Json.decodeFromString(ListSerializer(FunctionDef.serializer()), json)
         assertEquals(DORIS_FUNCTION_CATALOG.functions, decoded)
         assertEquals(FunctionKind.SCALAR, decoded.first { it.name == "ABS" }.kind)
-        // Doris overloads survive the round trip.
         assertEquals(9, decoded.first { it.name == "ABS" }.overloads.size)
         assertTrue(decoded.first { it.name == "CONCAT" }.overloads.all { it.variadic })
     }
@@ -558,7 +537,6 @@ class FunctionCatalogTest {
         assertEquals(DUCKDB_FUNCTION_CATALOG.functions, decoded)
         assertEquals("macro", decoded.first { it.name == "pg_has_role" }.nativeKind)
         assertTrue(decoded.first { it.name == "concat" }.overloads.single().variadic)
-        // duckdb argNames survive the round trip.
         assertEquals(
             listOf("x", "precision"),
             decoded.first { it.name == "round" }

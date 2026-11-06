@@ -9,8 +9,7 @@ import kotlin.collections.Map
 /**
  * Hand-written port of the node subset from reference/sqlglot/sqlglot/expressions/.
  * Each class mirrors its Python twin's base classes and arg_types EXACTLY (see the
- * provenance comment on each class). This is the pattern-settling spike; the full
- * ~1000-class catalog is expected to be generated later.
+ * provenance comment on each class).
  *
  * NOTE: `Boolean` below shadows kotlin.Boolean inside this package, which is why
  * argTypes signatures spell out kotlin.Boolean.
@@ -43,9 +42,7 @@ internal val QUERY_MODIFIERS: Map<String, kotlin.Boolean> = argTypesOf(
     "for_" to false,
 )
 
-// ---------------------------------------------------------------------------
 // Leaf-ish nodes (sqlglot.expressions.core)
-// ---------------------------------------------------------------------------
 
 // sqlglot: core.Identifier(Expression) — is_primitive, _hash_raw_args
 class Identifier(initArgs: Args = emptyMap()) : Expression(initArgs) {
@@ -210,9 +207,7 @@ class Placeholder(initArgs: Args = emptyMap()) : Expression(initArgs), Condition
     }
 }
 
-// ---------------------------------------------------------------------------
 // Unary / binary operators and predicates (sqlglot.expressions.core)
-// ---------------------------------------------------------------------------
 
 // sqlglot: core.Not(Unary)
 class Not(initArgs: Args = emptyMap()) : Unary(initArgs)
@@ -402,9 +397,7 @@ class Pow(initArgs: Args = emptyMap()) : Binary(initArgs), Func {
     override val sqlNamesOverride get() = listOf("POWER", "POW")
 }
 
-// ---------------------------------------------------------------------------
 // Query clause nodes (sqlglot.expressions.query unless noted)
-// ---------------------------------------------------------------------------
 
 // sqlglot: query.TableAlias(Expression)
 class TableAlias(initArgs: Args = emptyMap()) : Expression(initArgs) {
@@ -760,9 +753,7 @@ class Except(initArgs: Args = emptyMap()) : SetOperation(initArgs)
 // sqlglot: query.Intersect(SetOperation)
 class Intersect(initArgs: Args = emptyMap()) : SetOperation(initArgs)
 
-// ---------------------------------------------------------------------------
 // Functions (sqlglot.expressions.functions / aggregate / core)
-// ---------------------------------------------------------------------------
 
 // sqlglot: functions.Cast(Expression, Func) — is_cast
 open class Cast(initArgs: Args = emptyMap()) : Expression(initArgs), Func {
@@ -890,9 +881,7 @@ class RowNumber(initArgs: Args = emptyMap()) : Expression(initArgs), Func {
     }
 }
 
-// ---------------------------------------------------------------------------
 // Misc (sqlglot.expressions.ddl)
-// ---------------------------------------------------------------------------
 
 // sqlglot: ddl.Command(Expression) — the parser's fallback node
 class Command(initArgs: Args = emptyMap()) : Expression(initArgs) {

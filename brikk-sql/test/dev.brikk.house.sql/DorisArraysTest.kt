@@ -19,8 +19,6 @@ class DorisArraysTest {
 
     private fun roundTrip(sqlText: String): String = parseOne(sqlText, "doris").sql("doris")
 
-    // -- literals ---------------------------------------------------------------------
-
     @Test
     fun arrayLiteralRoundTripsWithoutFlag() {
         val generator = Dialects.forName("doris").generator()
@@ -37,8 +35,6 @@ class DorisArraysTest {
         )
         assertEquals("SELECT ARRAY()", transpile("SELECT []", read = "duckdb", write = "doris"))
     }
-
-    // -- types / casts ----------------------------------------------------------------
 
     @Test
     fun castToArrayTypeUsesDorisAngleBracketSyntax() {
@@ -86,8 +82,6 @@ class DorisArraysTest {
         assertEquals("SELECT arr[1] FROM t", roundTrip("SELECT arr[1] FROM t"))
         assertEquals("SELECT ARRAY(1, 2, 3)[1]", roundTrip("SELECT ARRAY(1, 2, 3)[1]"))
     }
-
-    // -- unnest -----------------------------------------------------------------------
 
     @Test
     fun tableUnnestIsRenderedForDoris() {

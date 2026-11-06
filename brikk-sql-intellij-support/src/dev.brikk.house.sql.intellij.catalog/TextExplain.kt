@@ -68,7 +68,6 @@ public interface TextExplainProfile {
     /** Core dialect name, as `prepareTextExplain` accepts it (Trino and Doris explain; others refuse). */
     public val dialect: String
 
-    /** Unused: text explain no longer checks which functions a query calls. */
     @Deprecated("Unused: text explain no longer checks which functions a query calls; remove the override.")
     public val builtinFunctions: FunctionCatalog? get() = null
 

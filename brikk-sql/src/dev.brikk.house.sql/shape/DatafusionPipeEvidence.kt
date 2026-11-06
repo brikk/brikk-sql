@@ -3,7 +3,7 @@ package dev.brikk.house.sql.shape
 import dev.brikk.house.sql.ast.*
 import kotlin.String
 
-/** Bounded native execution controls in round10; these describe Brikk lowering, not native pipe grammar. */
+/** Pipe stages with a qualified Brikk lowering; these describe Brikk lowering, not native pipe grammar. */
 val DATAFUSION_PIPE_STAGES: Set<String> = setOf("SELECT", "WHERE", "EXTEND", "AS", "AGGREGATE", "DISTINCT", "ORDER BY", "LIMIT", "OFFSET", "WINDOW")
 val SPICE_PIPE_STAGES: Set<String> = DATAFUSION_PIPE_STAGES.toSet()
 

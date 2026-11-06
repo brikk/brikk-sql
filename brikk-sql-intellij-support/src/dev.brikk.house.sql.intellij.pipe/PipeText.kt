@@ -11,7 +11,6 @@ public class PipeText private constructor(
     public val text: String,
     private val injection: InjectedLanguageManager?,
 ) {
-    /** The offset in [text] of [fileOffset]. */
     public fun textOffset(fileOffset: Int): Int = injection?.mapInjectedOffsetToUnescaped(file, fileOffset) ?: fileOffset
 
     /**

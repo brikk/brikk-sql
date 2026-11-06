@@ -32,8 +32,6 @@ internal class ShardingSphereVerifierTest {
         }
     }
 
-    // -- postgres -------------------------------------------------------------------------
-
     @Test
     fun postgresAcceptsValidAndRejectsInvalid() {
         val v = verifier("postgres")
@@ -41,16 +39,12 @@ internal class ShardingSphereVerifierTest {
         assertIs<VerifyResult.Rejected>(v.verify("SELECT FROM WHERE"))
     }
 
-    // -- mysql ----------------------------------------------------------------------------
-
     @Test
     fun mysqlAcceptsValidAndRejectsInvalid() {
         val v = verifier("mysql")
         assertIs<VerifyResult.Accepted>(v.verify("SELECT `col` FROM t LIMIT 5"))
         assertIs<VerifyResult.Rejected>(v.verify("SELECT FROM WHERE"))
     }
-
-    // -- hive -----------------------------------------------------------------------------
 
     @Test
     fun hiveAcceptsValidAndRejectsInvalid() {
@@ -66,8 +60,6 @@ internal class ShardingSphereVerifierTest {
         )
     }
 
-    // -- clickhouse -----------------------------------------------------------------------
-
     @Test
     fun clickhouseAcceptsValidAndIsAdvisory() {
         // Advisory limitation: the ClickHouse grammar false-ACCEPTS invalid `SELECT FROM WHERE`,
@@ -82,8 +74,6 @@ internal class ShardingSphereVerifierTest {
         assertIs<VerifyResult.Accepted>(v.verifyExpression("metadata->>'role'"))
         assertIs<VerifyResult.Rejected>(v.verifyExpression("1 +"))
     }
-
-    // -- registry -------------------------------------------------------------------------
 
     @Test
     fun everyEngineIsAdvisoryAndUnknownEnginesHaveNone() {

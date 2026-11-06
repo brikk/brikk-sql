@@ -5,9 +5,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
- * The gate API requested by the Doris corpus agent: throw-vs-passthrough detection for
- * Class 2 (semantic) / Class 3 (capability) cases. Cases are the agent's own examples;
- * transpile outputs verified against the Python oracle where translation occurs.
+ * The gate API: throw-vs-passthrough detection for Class 2 (semantic) / Class 3
+ * (capability) cases. Transpile outputs verified against the Python oracle where
+ * translation occurs.
  */
 class TranspileGateApiTest {
 

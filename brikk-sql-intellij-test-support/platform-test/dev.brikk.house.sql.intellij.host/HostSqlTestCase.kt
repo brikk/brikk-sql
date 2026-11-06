@@ -43,11 +43,9 @@ abstract class HostSqlTestCase : BasePlatformTestCase() {
         myFixture.configureDialect("MySQL", if ("<caret>" in text) text else "$text<caret>")
     }
 
-    /** The [nth] string literal of the open file. */
     protected fun host(nth: Int = 0): PsiLanguageInjectionHost =
         PsiTreeUtil.findChildrenOfType(myFixture.file, SqlStringLiteralExpression::class.java).elementAt(nth) as PsiLanguageInjectionHost
 
-    /** The SQL injected into [host], or null. */
     protected fun injected(host: PsiLanguageInjectionHost = host()): PsiFile? =
         InjectedLanguageManager.getInstance(project).getInjectedPsiFiles(host)?.map { it.first.containingFile }?.distinct()?.single()
 }

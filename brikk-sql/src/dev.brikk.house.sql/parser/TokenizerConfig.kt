@@ -4,9 +4,8 @@ package dev.brikk.house.sql.parser
  * Immutable tokenizer configuration for one dialect.
  *
  * sqlglot: the class-level tables of tokens.Tokenizer (plus the dialect-level flags
- * that tokens.Tokenizer._init_core pulls from the Dialect). Dialects will provide
- * their own instances of this in later phases; defaults are the base "sqlglot"
- * dialect tables from [BaseTokenizerTables].
+ * that tokens.Tokenizer._init_core pulls from the Dialect). Defaults are the base
+ * "sqlglot" dialect tables from [BaseTokenizerTables].
  */
 class TokenizerConfig(
     val singleTokens: Map<Char, TokenType> = BaseTokenizerTables.SINGLE_TOKENS,

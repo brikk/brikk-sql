@@ -7,7 +7,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
 
-/** ASTRA-001: execute the generated SQL, not just its upstream string oracle. */
+/** Execute the generated SQL, not just its upstream string oracle. */
 class QualifyLoweringResultTest {
     private fun assertEquivalent(sql: String, expected: List<List<Int>>, target: String = "presto") {
         val lowered = Dialects.forName(target).generate(Dialects.forName("duckdb").parseOne(sql))

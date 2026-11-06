@@ -20,7 +20,7 @@ import kotlin.test.assertEquals
  * GoogleSQL's sequential semantics read them. Core's executable lowering must return the same rows
  * (a multiset, in order where the pipe ends with ORDER BY) or fail where the oracle fails, and the
  * editor's scope must agree with execution: clean with the same columns, or diagnosed where it
- * fails or is refused. The pipes include Fable's P5 round-2 parity set.
+ * fails or is refused.
  */
 class PipeLoweringParityTest {
     private val tables = mapOf(

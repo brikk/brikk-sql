@@ -33,7 +33,7 @@ class SourcePreservingLoweringTest {
     fun nativeCastAndCommentSurviveBindingBeforeLowering() {
         val source = "FROM (select /* keep */ 2::integer as id) AS raw |> WHERE id = :n |> SELECT id"
         val parameter = SqlFragment(source, "duckdb").toSourcePreservingExecutable().parameterOccurrences.single()
-        // Engine binds source before constructing the lowering fragment, as the handoff specifies.
+        // Engine binds source before constructing the lowering fragment.
         val bound = source.substring(0, parameter.range.start) + "2" + source.substring(parameter.range.end)
         val result = SqlFragment(bound, "duckdb").toSourcePreservingExecutable()
         assertTrue("select /* keep */ 2::integer as id" in result.sql, result.sql)

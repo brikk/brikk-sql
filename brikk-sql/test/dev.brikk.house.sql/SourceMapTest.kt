@@ -19,8 +19,8 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
- * brikk-native: position meta on parsed nodes (Part A, Expression.updatePositions)
- * and Generator emit-span tracking / SourceMap queries (Part B).
+ * brikk-native: position meta on parsed nodes (Expression.updatePositions)
+ * and Generator emit-span tracking / SourceMap queries.
  */
 class SourceMapTest {
 
@@ -440,8 +440,8 @@ class SourceMapTest {
         assertEquals(listOf("g", "flagged"), shapes[0].columns.map { it.name })
         // Stage 1 = after WHERE (shape-preserving): still the source columns.
         assertEquals(listOf("g", "flagged"), shapes[1].columns.map { it.name })
-        // Stage 2 = after AGGREGATE: the alias `c` enters scope HERE, not before (the
-        // over-offer fix) — it is absent from every earlier stage's shape.
+        // Stage 2 = after AGGREGATE: the alias `c` enters scope HERE, not before — it is
+        // absent from every earlier stage's shape.
         assertEquals(listOf("g", "c"), shapes[2].columns.map { it.name })
         assertFalse(shapes[0].columns.any { it.name == "c" }, "c not in scope after FROM")
         assertFalse(shapes[1].columns.any { it.name == "c" }, "c not in scope after WHERE")

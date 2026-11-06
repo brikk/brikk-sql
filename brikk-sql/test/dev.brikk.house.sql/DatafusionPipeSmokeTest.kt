@@ -12,8 +12,7 @@ import kotlin.test.assertTrue
  * Pipe-syntax smoke test for the brikk-native `datafusion` dialect (NO sqlglot oracle).
  *
  * The `|>` cases are lifted from DataFusion's real-engine pipe_operator.slt
- * (reference/datafusion — Apache-2.0). For each we assert the three shapes the task
- * asks for:
+ * (reference/datafusion — Apache-2.0). Each case:
  *   1. parses under "datafusion" into a first-class [PipeQuery] (stages not desugared
  *      at parse time),
  *   2. regenerates the `|>` surface under "datafusion",
