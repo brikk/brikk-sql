@@ -64,6 +64,7 @@ import dev.brikk.house.sql.parser.fromArgList
 import dev.brikk.house.sql.parser.toJsonPath
 
 private val FRACTIONAL_SECONDS_RE = Regex(":\\d+\\.(\\d+)")
+private val DECIMAL_LITERAL_RE = Regex("[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+")
 
 /**
  * Port of sqlglot's TrinoParser (reference/sqlglot/sqlglot/parsers/trino.py).
@@ -91,7 +92,7 @@ open class TrinoParser(
             // DECIMAL '1.20' is decimal(3,2), not CAST('1.20' AS DECIMAL), whose
             // default scale is zero. 484's JSON model makes that lost scale visible.
             val text = literal?.name.orEmpty().removePrefix("+").removePrefix("-")
-            if (text.matches(Regex("[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+"))) {
+            if (text.matches(DECIMAL_LITERAL_RE)) {
                 val scale = text.substringAfter('.', "").length
                 val precision = text.count { it.isDigit() }.coerceAtLeast(1)
                 dataType.set("expressions", listOf(precision, scale).map {

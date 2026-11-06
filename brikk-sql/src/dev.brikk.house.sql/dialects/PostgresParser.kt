@@ -377,11 +377,9 @@ open class PostgresParser(
             advance()
         }
 
-        // Parse parameter name and type
         val paramName = parseIdVar()
         val columnDef = parseColumnDef(paramName, computedColumn = false)
 
-        // Attach mode as constraint
         if (paramMode != null && columnDef != null) {
             val constraint = createModeConstraint(paramMode)
             val constraints =

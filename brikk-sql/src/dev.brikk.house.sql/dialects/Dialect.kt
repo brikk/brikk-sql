@@ -356,7 +356,7 @@ private val KEYWORD_PHRASE = Regex("[A-Za-z][A-Za-z0-9_]*( [A-Za-z][A-Za-z0-9_]*
  * Thrown by every public entry point ([Dialects.forName], [transpile], [Expression.sql],
  * [dev.brikk.house.sql.parser.parseOne], ...) when a dialect name is not registered. Unknown
  * names — including non-ported sqlglot dialects such as `snowflake` and typos such as
- * `postgress` — are always rejected, never silently parsed with the base dialect (EVAL-07).
+ * `postgress` — are always rejected, never silently parsed with the base dialect.
  * Subclasses IllegalArgumentException for source compatibility with earlier releases.
  */
 class UnknownDialectException(val dialectName: String) : IllegalArgumentException(

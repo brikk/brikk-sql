@@ -1030,8 +1030,6 @@ open class DorisGenerator(
             }
             // BUGS-doris-generator-mappings enhancement: trino is_nan(x) parses to IsNan;
             // Doris function is ISNAN, not IS_NAN (GeneratedDorisFunctionCatalog: ISNAN).
-            // (DuckdbGenerator already renders IsNan -> ISNAN; Doris was falling back to the
-            // verbatim IS_NAN sql-name and refusing.)
             reg(IsNan::class) { e -> dg().renameFuncSql("ISNAN", e) }
             reg(Lag::class) { e -> dg().lagLeadSql(e) }
             reg(Lead::class) { e -> dg().lagLeadSql(e) }
@@ -1154,12 +1152,11 @@ open class DorisGenerator(
                 func("FROM_UNIXTIME", e.thisArg, dg().dorisTimeFormat(e))
             }
             // BUGS-doris-generator-mappings row 2 (P1): epoch_ms(ms) parses to
-            // UnixToTime(scale=3). The old `renameFuncSql("FROM_UNIXTIME", e)` flattened
-            // ALL args -> FROM_UNIXTIME(ms, 3), which is doubly wrong: Doris FROM_UNIXTIME
-            // takes SECONDS (ms overflows) and its 2nd arg is a FORMAT STRING (literal 3 ->
-            // '3'), not a fractional-second scale. Doris has a scale-keyed epoch family
-            // FROM_SECOND / FROM_MILLISECOND / FROM_MICROSECOND (all BIGINT -> DATETIME),
-            // used by dorisUnixToTimeSql below.
+            // UnixToTime(scale=3). A plain FROM_UNIXTIME(ms, 3) is doubly wrong: Doris
+            // FROM_UNIXTIME takes SECONDS (ms overflows) and its 2nd arg is a FORMAT STRING
+            // (literal 3 -> '3'), not a fractional-second scale. Doris has a scale-keyed epoch
+            // family FROM_SECOND / FROM_MILLISECOND / FROM_MICROSECOND (all BIGINT -> DATETIME),
+            // used by dorisUnixToTimeSql.
             reg(UnixToTime::class) { e -> dg().dorisUnixToTimeSql(e as UnixToTime) }
 
             // brikk extension (docs/brikk-extensions.md entry 14, NOT sqlglot parity):

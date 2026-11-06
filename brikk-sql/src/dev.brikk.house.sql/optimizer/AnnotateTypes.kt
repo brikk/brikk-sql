@@ -121,13 +121,22 @@ private fun isValidYmd(year: Int, month: Int, day: Int): Boolean {
     return day <= maxDay
 }
 
+private val ISO_DATE_RE = Regex("^(\\d{4})-(\\d{2})-(\\d{2})$")
+private val COMPACT_DATE_RE = Regex("^(\\d{4})(\\d{2})(\\d{2})$")
+private val ISO_DATE_PREFIX_RE = Regex("^\\d{4}-\\d{2}-\\d{2}")
+private val COMPACT_DATE_PREFIX_RE = Regex("^\\d{8}")
+private val ISO_TIME_RE = Regex(
+    "^\\d{2}(:\\d{2}(:\\d{2}(\\.\\d+)?)?|\\d{2}(\\d{2}(\\.\\d+)?)?)?" +
+        "(Z|[+-]\\d{2}(:?\\d{2}(:?\\d{2}(\\.\\d+)?)?)?)?$"
+)
+
 /**
  * sqlglot: helper.is_iso_date — Python uses datetime.date.fromisoformat. Supports the
  * ISO shapes that appear in SQL literals: YYYY-MM-DD and the compact YYYYMMDD.
  */
 internal fun isIsoDate(text: String): Boolean {
-    val m = Regex("^(\\d{4})-(\\d{2})-(\\d{2})$").matchEntire(text)
-        ?: Regex("^(\\d{4})(\\d{2})(\\d{2})$").matchEntire(text)
+    val m = ISO_DATE_RE.matchEntire(text)
+        ?: COMPACT_DATE_RE.matchEntire(text)
         ?: return false
     val (y, mo, d) = m.destructured
     return isValidYmd(y.toInt(), mo.toInt(), d.toInt())
@@ -140,8 +149,8 @@ internal fun isIsoDate(text: String): Boolean {
  */
 internal fun isIsoDatetime(text: String): Boolean {
     val dateLen = when {
-        Regex("^\\d{4}-\\d{2}-\\d{2}").containsMatchIn(text) -> 10
-        Regex("^\\d{8}").containsMatchIn(text) -> 8
+        ISO_DATE_PREFIX_RE.containsMatchIn(text) -> 10
+        COMPACT_DATE_PREFIX_RE.containsMatchIn(text) -> 8
         else -> return false
     }
     val datePart = text.substring(0, dateLen)
@@ -149,11 +158,7 @@ internal fun isIsoDatetime(text: String): Boolean {
     if (text.length == dateLen) return true
     if (text.length == dateLen + 1) return false // bare separator, no time
     val timePart = text.substring(dateLen + 1)
-    val time = Regex(
-        "^\\d{2}(:\\d{2}(:\\d{2}(\\.\\d+)?)?|\\d{2}(\\d{2}(\\.\\d+)?)?)?" +
-            "(Z|[+-]\\d{2}(:?\\d{2}(:?\\d{2}(\\.\\d+)?)?)?)?$"
-    )
-    return time.matches(timePart)
+    return ISO_TIME_RE.matches(timePart)
 }
 
 // Python int(text) acceptance for number-literal texts (Literal.is_int)

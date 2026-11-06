@@ -194,10 +194,6 @@ open class DuckdbGenerator(
     override fun isUnwrappedIntervalValue(thisArg: kotlin.Any?): Boolean =
         thisArg is Literal || thisArg is Paren
 
-    // ------------------------------------------------------------------
-    // Helpers
-    // ------------------------------------------------------------------
-
     // sqlglot: dialect.rename_func
     internal fun renameFuncSql(name: String, expression: Expression): String {
         val flattened = expression.args.values.flatMap { v ->
@@ -855,7 +851,6 @@ open class DuckdbGenerator(
             }
         }
 
-        // Cast if type is incompatible with DuckDB
         val argType = arg?.type?.thisArg as? DType
         if (argType != null && argType != DType.UNKNOWN &&
             argType !in TEXT_TYPES && argType !in BINARY_TYPES
@@ -1170,8 +1165,7 @@ open class DuckdbGenerator(
             ?: (value as? Cast)?.takeIf { (it.args["to"] as? DataType)?.thisArg == DType.TIMESTAMPTZ }
                 ?.thisArg?.let { it as? Literal }?.takeIf { it.isString }
             ?: return null
-        val hasZone = Regex("(?:[zZ]|[+-]\\d{2}(?::?\\d{2})?|[A-Za-z][A-Za-z0-9_+./-]*)$")
-            .containsMatchIn(literal.name.trim().drop(10))
+        val hasZone = BIGQUERY_ZONE_SUFFIX_RE.containsMatchIn(literal.name.trim().drop(10))
         if (!hasZone) {
             val text = literal.name.trim()
             literal.set("this", text + (if (text.length == 10) " 00:00:00 UTC" else " UTC"))
@@ -2097,7 +2091,6 @@ open class DuckdbGenerator(
 
         var validatedFlags = validateRegexpFlags(modifiers, supportedFlags = "cimsg") ?: ""
 
-        // Handle occurrence (only literals supported)
         if (occurrence != null && !occurrence.isInt) {
             unsupported("REGEXP_REPLACE with non-literal occurrence")
         } else {
@@ -2117,7 +2110,6 @@ open class DuckdbGenerator(
             }
         }
 
-        // Handle position (only literals supported)
         var prefix: Expression? = null
         if (position != null && !position.isInt) {
             unsupported("REGEXP_REPLACE with non-literal position")
@@ -2468,7 +2460,6 @@ open class DuckdbGenerator(
 
         val concatExprs: List<Expression?>
         if (posValue == 0) {
-            // insert at beginning
             concatExprs = listOf(elementArray, this_)
         } else if (posValue > 0) {
             // Positive position: LIST_CONCAT(arr[1:pos], [elem], arr[pos+1:])
@@ -2906,6 +2897,8 @@ open class DuckdbGenerator(
 
         // sqlglot: generators.duckdb.TIMEZONE_PATTERN
         val TIMEZONE_PATTERN: Regex = Regex(":\\d{2}.*?[+\\-]\\d{2}(?::\\d{2})?")
+
+        private val BIGQUERY_ZONE_SUFFIX_RE = Regex("(?:[zZ]|[+-]\\d{2}(?::?\\d{2})?|[A-Za-z][A-Za-z0-9_+./-]*)$")
 
         // sqlglot: DuckDB.INVERSE_TIME_MAPPING (auto-inverse of empty TIME_MAPPING
         // merged with the class-level overrides) + _with_strict_time_inverse

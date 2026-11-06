@@ -25,6 +25,12 @@ private fun lowerFunc(sql: String): String {
     return sql.take(index).lowercase() + sql.substring(index)
 }
 
+private val ISO_TIMESTAMP_RE = Regex(
+    "^(\\d{4}-\\d{2}-\\d{2})" +
+        "(?:[T ](\\d{2}:\\d{2})(?::(\\d{2}))?(?:\\.(\\d{1,6}))?)?" +
+        "(?:[+-]\\d{2}:\\d{2}(?::\\d{2})?|Z)?$"
+)
+
 /**
  * sqlglot: generators.clickhouse._timestrtotime_sql's use of
  * datetime.datetime.fromisoformat(...).replace(tzinfo=None).isoformat(sep=" ") —
@@ -34,11 +40,7 @@ private fun lowerFunc(sql: String): String {
  * corpus inputs are always parseable).
  */
 private fun isoformatWithoutTimezone(tsString: String): String? {
-    val m = Regex(
-        "^(\\d{4}-\\d{2}-\\d{2})" +
-            "(?:[T ](\\d{2}:\\d{2})(?::(\\d{2}))?(?:\\.(\\d{1,6}))?)?" +
-            "(?:[+-]\\d{2}:\\d{2}(?::\\d{2})?|Z)?$"
-    ).find(tsString) ?: return null
+    val m = ISO_TIMESTAMP_RE.find(tsString) ?: return null
 
     val (date, hm, sec, frac) = m.destructured
     val time = if (hm.isEmpty()) "00:00:00" else "$hm:${sec.ifEmpty { "00" }}"
@@ -229,10 +231,6 @@ open class ClickhouseGenerator(
     // sqlglot: ClickHouseGenerator.PROPERTIES_LOCATION
     override val propertiesLocation: Map<KClass<out Expression>, GeneratorTables.PropLocation>
         get() = PROPERTIES_LOCATION
-
-    // ------------------------------------------------------------------
-    // Helpers
-    // ------------------------------------------------------------------
 
     // sqlglot: dialect.rename_func
     internal fun renameFuncSql(name: String, expression: Expression): String {
@@ -838,17 +836,9 @@ open class ClickhouseGenerator(
         }
     }
 
-    // BUGS-clickhouse-generator-mappings row 4 (P1): RegexpReplace. ClickHouse
-    // REGEXP_REPLACE aliases replaceRegexpAll (replaces EVERY match). DuckDB
-    // regexp_replace(s, p, r) replaces only the FIRST match unless the 'g' flag is
-    // present (the parser records single_replace=true + the flag in `modifiers`); Trino
-    // regexp_replace always replaces all (single_replace unset). Emit the matching
-    // ClickHouse primitive: replaceRegexpOne for the DuckDB first-only form, else
-    // replaceRegexpAll. Any regex FLAG other than 'g' (case-insensitive 'i', ...) has no
-    // ClickHouse argument form, so flag it rather than silently drop it.
     // BUGS-clickhouse-generator-mappings row 6 (P1): DuckDB/Trino millisecond(t) reaches
-    // us as an unresolved Anonymous call (no canonical node) and used to pass through
-    // verbatim, but ClickHouse has NO `millisecond` function — its toMillisecond returns
+    // us as an unresolved Anonymous call (no canonical node), but ClickHouse has NO
+    // `millisecond` function — its toMillisecond returns
     // only the SUB-SECOND component, whereas the source millisecond is
     // seconds-within-minute*1000 + ms. Emit the compound. Live-differential-verified vs
     // ClickHouse 26.5.1.1 + DuckDB 1.5.4 (30123, 0, 5789, 56001 all match). `millisecond`
@@ -892,6 +882,14 @@ open class ClickhouseGenerator(
         return super.anonymousSql(expression)
     }
 
+    // BUGS-clickhouse-generator-mappings row 4 (P1): RegexpReplace. ClickHouse
+    // REGEXP_REPLACE aliases replaceRegexpAll (replaces EVERY match). DuckDB
+    // regexp_replace(s, p, r) replaces only the FIRST match unless the 'g' flag is
+    // present (the parser records single_replace=true + the flag in `modifiers`); Trino
+    // regexp_replace always replaces all (single_replace unset). Emit the matching
+    // ClickHouse primitive: replaceRegexpOne for the DuckDB first-only form, else
+    // replaceRegexpAll. Any regex FLAG other than 'g' (case-insensitive 'i', ...) has no
+    // ClickHouse argument form, so flag it rather than silently drop it.
     open fun clickhouseRegexpReplaceSql(expression: RegexpReplace): String {
         val single = expression.args["single_replace"] == true
         val modifiers = expression.args["modifiers"]
@@ -1164,8 +1162,8 @@ open class ClickhouseGenerator(
             reg(BitwiseAndAgg::class) { e -> ch().renameFuncSql("groupBitAnd", e) }
             reg(BitwiseOrAgg::class) { e -> ch().renameFuncSql("groupBitOr", e) }
             reg(BitwiseXorAgg::class) { e -> ch().renameFuncSql("groupBitXor", e) }
-            // SOURCE-AWARE rewrites (SPIKE-source-aware-generator-transforms, now implemented
-            // via Generator.sourceDialect / isCrossDialectFrom). These rewrites are CORRECT
+            // SOURCE-AWARE rewrites (SPIKE-source-aware-generator-transforms), gated
+            // via Generator.sourceDialect / isCrossDialectFrom. These rewrites are CORRECT
             // for cross-dialect (DuckDB/Trino/Doris -> ClickHouse) but would CORRUPT a native
             // ClickHouse function on same-dialect generation (pipe desugaring / toStandardSql,
             // transpile read==write), so they fire ONLY when the source is known to be a
@@ -1258,19 +1256,7 @@ open class ClickhouseGenerator(
             // BUGS-clickhouse-generator-mappings row 11 (P2): the leaked internal node name
             // TIME_TO_UNIX does not exist in ClickHouse. toUnixTimestamp is the real name.
             reg(TimeToUnix::class) { e -> func("toUnixTimestamp", e.thisArg) }
-            // TODO(clickhouse-bugs): rows from BUGS-clickhouse-generator-mappings not fixed
-            // here (millisecond, row 6, IS fixed via anonymousSql below — verified live):
-            //   rows 1 & 5 (lower/upper, duckdb week): source-aware follow-up — the correct
-            //                    lowerUTF8/upperUTF8/toISOWeek rewrites need source!=clickhouse
-            //                    gating to avoid CH->CH corruption. See SPIKE doc.
-            //   row 2  round  : half-away shim `sign(x)*floor(abs(x)*pow(10,d)+0.5)/pow(10,d)`
-            //                    is live-VERIFIED (matches DuckDB across 2.5/0.5/-2.5/2dp),
-            //                    but `round` is a ClickHouse-NATIVE name and this generator
-            //                    is source-unaware, so applying it would regress CH->CH
-            //                    banker's rounding — same source-aware follow-up.
-            //   row 7  bin    : strip-leading-zeros shim
-            //                    `if(x=0,'0',substring(bin(x),position(bin(x),'1')))` is
-            //                    live-VERIFIED, but `bin` is CH-native too — same concern.
+            // TODO(clickhouse-bugs): rows from BUGS-clickhouse-generator-mappings not fixed here:
             //   row 8  to_days: the ToDays node is source-ambiguous (DuckDB interval-builder
             //                    vs MySQL day-number) — fix belongs in the DuckDB PARSER,
             //                    not here, so a target rewrite isn't safe for all sources.

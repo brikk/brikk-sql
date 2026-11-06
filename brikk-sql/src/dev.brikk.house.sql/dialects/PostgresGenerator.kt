@@ -131,10 +131,6 @@ open class PostgresGenerator(
     override val propertiesLocation: Map<KClass<out Expression>, GeneratorTables.PropLocation>
         get() = PROPERTIES_LOCATION
 
-    // ------------------------------------------------------------------
-    // Helpers
-    // ------------------------------------------------------------------
-
     // sqlglot: dialect.rename_func
     internal fun renameFuncSql(name: String, expression: Expression): String {
         val flattened = expression.args.values.flatMap { v ->
@@ -1296,7 +1292,7 @@ open class PostgresGenerator(
             }
             reg(JSONBExtract::class) { e -> pg().arrowJsonExtractSql(e as Binary, "#>") }
             reg(JSONBExtractScalar::class) { e -> pg().arrowJsonExtractSql(e as Binary, "#>>") }
-            // sqlglot #8156: the `?` operator now maps to JSONBContainsTopKey (base
+            // sqlglot #8156: the `?` operator maps to JSONBContainsTopKey (base
             // generator); JSONBContains renders as its function form.
             reg(ParseJSON::class) { e ->
                 sql(Cast(args("this" to e.thisArg, "to" to DataType(args("this" to DType.JSON)))))

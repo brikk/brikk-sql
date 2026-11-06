@@ -163,7 +163,7 @@ open class TrinoGenerator(
     // Reverse direction (ClickHouse -> Trino): ClickHouse camelCase names that reach the
     // generator as an unmapped Anonymous, rewritten to the Trino spelling. Key = ClickHouse
     // name UPPERCASED, value = Trino name. Live-verified value-equal on Trino 481 +
-    // ClickHouse 26.5.1.1 (doris-ducklake agent, reverse-doris-trino.results.tsv).
+    // ClickHouse 26.5.1.1 (reverse-doris-trino.results.tsv).
     // Round-trip safe: keys are camelCase (no underscores) that Trino neither parses to a
     // node nor accepts, so native Trino generation is untouched. arrayElement->element_at
     // is value-equal here but stays a divergent hazard (negative-index semantics).
