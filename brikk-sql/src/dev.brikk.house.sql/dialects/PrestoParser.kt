@@ -66,15 +66,6 @@ import dev.brikk.house.sql.parser.formatTimeString
 import dev.brikk.house.sql.parser.fromArgList
 import dev.brikk.house.sql.parser.seqGet
 
-// sqlglot: Dialect["presto"].format_time (Presto.TIME_MAPPING = MySQL.TIME_MAPPING)
-private fun prestoFormatTime(expression: Expression?): Expression? {
-    if (expression is Literal && expression.isString) {
-        val converted = formatTimeString(expression.thisArg as? String, MysqlDialect.TIME_MAPPING)
-        return Literal(args("this" to converted, "is_string" to true))
-    }
-    return expression
-}
-
 // sqlglot: dialects.teradata.Teradata.TIME_MAPPING (used by presto's TO_CHAR builder)
 internal val TERADATA_TIME_MAPPING: Map<String, String> = mapOf(
     "YY" to "%y", "Y4" to "%Y", "YYYY" to "%Y", "M4" to "%B", "M3" to "%b", "M" to "%-M",
@@ -279,10 +270,10 @@ object PrestoParserTables {
         }
         // sqlglot: build_formatted_time(exp.TimeToStr) / (exp.StrToTime)
         put("DATE_FORMAT") { a ->
-            TimeToStr(args("this" to seqGet(a, 0), "format" to prestoFormatTime(seqGet(a, 1))))
+            TimeToStr(args("this" to seqGet(a, 0), "format" to Dialects.PRESTO.formatTime(seqGet(a, 1))))
         }
         put("DATE_PARSE") { a ->
-            StrToTime(args("this" to seqGet(a, 0), "format" to prestoFormatTime(seqGet(a, 1))))
+            StrToTime(args("this" to seqGet(a, 0), "format" to Dialects.PRESTO.formatTime(seqGet(a, 1))))
         }
         put("DATE_TRUNC", ::dateTruncToTime)
         put("DAY_OF_WEEK", fromArgList(listOf("this"), false) { DayOfWeekIso(it) })

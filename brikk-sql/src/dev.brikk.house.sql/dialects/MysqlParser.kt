@@ -91,7 +91,6 @@ import dev.brikk.house.sql.parser.ParseError
 import dev.brikk.house.sql.parser.Parser
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.TokenizerConfig
-import dev.brikk.house.sql.parser.formatTimeString
 import dev.brikk.house.sql.parser.seqGet
 
 // sqlglot: parsers.mysql.TIME_SPECIFIERS — specifiers for time (vs date) parts
@@ -110,20 +109,11 @@ private fun hasTimeSpecifier(dateFormat: String): Boolean {
     return false
 }
 
-// sqlglot: Dialect["mysql"].format_time on a parsed expression
-private fun mysqlFormatTime(expression: Expression?): Expression? {
-    if (expression is Literal && expression.isString) {
-        val converted = formatTimeString(expression.thisArg as? String, MysqlDialect.TIME_MAPPING)
-        return Literal(args("this" to converted, "is_string" to true))
-    }
-    return expression
-}
-
 // sqlglot: parsers.mysql._str_to_date
 // MySQL chooses date or timestamp from the format; ClickHouse casts STR_TO_DATE to DATETIME.
 private fun buildStrToDate(argsList: List<Expression?>): Expression {
     val mysqlDateFormat = seqGet(argsList, 1)
-    val dateFormat = mysqlFormatTime(mysqlDateFormat)
+    val dateFormat = Dialects.MYSQL.formatTime(mysqlDateFormat)
     val this_ = seqGet(argsList, 0)
 
     if (mysqlDateFormat != null && hasTimeSpecifier(mysqlDateFormat.name)) {
@@ -954,7 +944,7 @@ object MysqlParserTables {
             TimeToStr(
                 args(
                     "this" to TsOrDsToTimestamp(args("this" to seqGet(a, 0))),
-                    "format" to mysqlFormatTime(seqGet(a, 1)),
+                    "format" to Dialects.MYSQL.formatTime(seqGet(a, 1)),
                 )
             )
         }
@@ -967,7 +957,7 @@ object MysqlParserTables {
         // sqlglot: build_formatted_time(exp.UnixToTime) — no default format
         put("FROM_UNIXTIME") { a ->
             dev.brikk.house.sql.ast.UnixToTime(
-                args("this" to seqGet(a, 0), "format" to mysqlFormatTime(seqGet(a, 1)))
+                args("this" to seqGet(a, 0), "format" to Dialects.MYSQL.formatTime(seqGet(a, 1)))
             )
         }
         // sqlglot: parser FUNCTIONS[LEAST/GREATEST] with MySQL.LEAST_GREATEST_IGNORES_NULLS

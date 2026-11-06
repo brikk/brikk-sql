@@ -169,7 +169,7 @@ object Spark2ParserTables {
             if (a.size == 1) {
                 buildAsCast("timestamp")(a)
             } else {
-                StrToTime(args("this" to seqGet(a, 0), "format" to hiveFormatTime(seqGet(a, 1))))
+                StrToTime(args("this" to seqGet(a, 0), "format" to Dialects.HIVE.formatTime(seqGet(a, 1))))
             }
         }
         put("TO_UNIX_TIMESTAMP") { a -> StrToUnix(args("this" to seqGet(a, 0), "format" to seqGet(a, 1))) }

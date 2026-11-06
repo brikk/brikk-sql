@@ -151,8 +151,8 @@ import dev.brikk.house.sql.metadata.CLICKHOUSE_26_5_1_1_FUNCTION_CATALOG
 import dev.brikk.house.sql.metadata.FunctionKind
 import dev.brikk.house.sql.ast.Array as ArrayNode
 
-// sqlglot: Dialect["clickhouse"].format_time — the TIME_MAPPING is empty, so string
-// literals pass through unchanged (rebuilt as fresh Literals like the Python original).
+// brikk: Keep the raw literal payload, including empty strings; Dialect.formatTime
+// normalizes empty strings to null even with ClickHouse's empty TIME_MAPPING.
 private fun clickhouseFormatTime(expression: Expression?): Expression? {
     if (expression is Literal && expression.isString) {
         return Literal(args("this" to expression.thisArg, "is_string" to true))

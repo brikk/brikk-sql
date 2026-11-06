@@ -149,7 +149,8 @@ private fun buildDateDiff(a: List<Expression?>): Expression =
 // sqlglot: parsers.duckdb._build_generate_series
 private fun buildGenerateSeries(endExclusive: Boolean = false): (List<Expression?>) -> Expression =
     { a ->
-        // Unlike PostgreSQL's row-exploding series, DuckDB returns a list and defaults a missing start to zero.
+        // Unlike PostgreSQL's row-exploding series, DuckDB's scalar series returns a list
+        // and defaults a missing start to zero.
         val argsList = if (a.size == 1) listOf(Literal.number("0")) + a else a
 
         val genSeries = fromArgList(

@@ -12,7 +12,6 @@ import dev.brikk.house.sql.parser.Token
 import dev.brikk.house.sql.parser.TokenError
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.TokenizerConfig
-import dev.brikk.house.sql.parser.formatTimeString
 import dev.brikk.house.sql.parser.parseJsonPath
 import dev.brikk.house.sql.parser.seqGet
 import kotlin.Boolean
@@ -21,22 +20,13 @@ import kotlin.collections.List
 import kotlin.collections.Map
 import kotlin.collections.Set
 
-// sqlglot: dialect.build_formatted_time applied with BigQuery's TIME_MAPPING.
-internal fun bqFormatTime(expression: Expression?): Expression? {
-    if (expression is Literal && expression.isString) {
-        val converted = formatTimeString(expression.thisArg as? String, BigqueryDialect.TIME_MAPPING)
-        return Literal(args("this" to converted, "is_string" to true))
-    }
-    return expression
-}
-
 // sqlglot: dialect.build_formatted_time(expr_type)([fmt, this]) — TimeToStr with format.
 private fun buildFormattedTime(
     factory: (Args) -> Expression,
     thisIdx: kotlin.Int,
     fmtIdx: kotlin.Int,
 ): (List<Expression?>) -> Expression = { a ->
-    factory(args("this" to seqGet(a, thisIdx), "format" to bqFormatTime(seqGet(a, fmtIdx))))
+    factory(args("this" to seqGet(a, thisIdx), "format" to Dialects.BIGQUERY.formatTime(seqGet(a, fmtIdx))))
 }
 
 // sqlglot: parsers.bigquery._normalize_bare_week — a bare WEEK date part is WEEK(SUNDAY)
@@ -307,14 +297,14 @@ private fun buildJsonStripNulls(a: List<Expression?>): Expression {
 
 // sqlglot: parsers.bigquery._build_parse_date — build_formatted_time([value, format])
 private fun buildParseDate(a: List<Expression?>): Expression {
-    val this_ = StrToDate(args("this" to seqGet(a, 1), "format" to bqFormatTime(seqGet(a, 0))))
+    val this_ = StrToDate(args("this" to seqGet(a, 1), "format" to Dialects.BIGQUERY.formatTime(seqGet(a, 0))))
     this_.set("default_year", Literal.number("1970"))
     return this_
 }
 
 // sqlglot: parsers.bigquery._build_parse_timestamp
 private fun buildParseTimestamp(a: List<Expression?>): Expression {
-    val this_ = StrToTime(args("this" to seqGet(a, 1), "format" to bqFormatTime(seqGet(a, 0))))
+    val this_ = StrToTime(args("this" to seqGet(a, 1), "format" to Dialects.BIGQUERY.formatTime(seqGet(a, 0))))
     this_.set("zone", seqGet(a, 2))
     this_.set("default_year", Literal.number("1970"))
     return this_
@@ -322,7 +312,7 @@ private fun buildParseTimestamp(a: List<Expression?>): Expression {
 
 // sqlglot: parsers.bigquery._build_parse_datetime
 private fun buildParseDatetime(a: List<Expression?>): Expression {
-    val this_ = ParseDatetime(args("this" to seqGet(a, 1), "format" to bqFormatTime(seqGet(a, 0))))
+    val this_ = ParseDatetime(args("this" to seqGet(a, 1), "format" to Dialects.BIGQUERY.formatTime(seqGet(a, 0))))
     this_.set("default_year", Literal.number("1970"))
     return this_
 }
