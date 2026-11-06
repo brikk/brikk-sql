@@ -112,12 +112,12 @@ source evidence. Do not overwrite historical evidence to approve changed behavio
 
 ```sh
 python3 tools/capture_clickhouse_callable_sources.py \
-  --output /tmp/opencode/clickhouse-callable-sources.json
+  --output build/clickhouse-callable-sources.json
 
 python3 tools/probe_clickhouse_2026.py \
   --cases vendor/data/clickhouse-semantic/callables-cases.json \
   --task CHSEM-002 \
-  --output /tmp/opencode/clickhouse-callables-native
+  --output build/clickhouse-callables-native
 
 ./kotlin test -m brikk-sql \
   --include-classes='*ClickhouseCallableFactsTest' \

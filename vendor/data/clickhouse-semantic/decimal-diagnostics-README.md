@@ -76,13 +76,13 @@ Their conditional types are preserved.
 
 ```sh
 ./kotlin test -m brikk-sql --include-classes='*Clickhouse*Division*Test' \
-  --jvm-args='-Dbrikk.clickhouseDecimalDiagnosticsOut=/tmp/opencode/decimal-diagnostics-brikk.json -Dbrikk.clickhouseDecimalDiagnosticsScriptOut=/tmp/opencode/decimal-diagnostics-script-brikk.json'
+  --jvm-args='-Dbrikk.clickhouseDecimalDiagnosticsOut=build/decimal-diagnostics-brikk.json -Dbrikk.clickhouseDecimalDiagnosticsScriptOut=build/decimal-diagnostics-script-brikk.json'
 python3 tools/probe_clickhouse_2026.py \
   --cases vendor/data/clickhouse-semantic/decimal-diagnostics-cases.json --task CHSEM-016 \
-  --brikk /tmp/opencode/decimal-diagnostics-brikk.json --output /tmp/opencode/decimal-diagnostics-native
+  --brikk build/decimal-diagnostics-brikk.json --output build/decimal-diagnostics-native
 python3 tools/probe_clickhouse_script_settings.py \
   --cases vendor/data/clickhouse-semantic/decimal-diagnostics-script-cases.json \
-  --brikk /tmp/opencode/decimal-diagnostics-script-brikk.json --output /tmp/opencode/decimal-diagnostics-script-native
+  --brikk build/decimal-diagnostics-script-brikk.json --output build/decimal-diagnostics-script-native
 ```
 
 Use new output paths for rechecks. Native probing retains exact digest/version

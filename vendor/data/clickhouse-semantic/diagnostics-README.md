@@ -101,7 +101,7 @@ preservation of existing diagnostic JVM signatures.
   --include-classes='*ClickhouseSemanticDiagnostic*Test' \
   --include-classes='*SqlDiagnosticsTest' \
   --include-classes='*BinaryCompatibilityTest' \
-  --jvm-args='-Dbrikk.clickhouseDiagnosticsOut=/tmp/opencode/clickhouse-diagnostics.json'
+  --jvm-args='-Dbrikk.clickhouseDiagnosticsOut=build/clickhouse-diagnostics.json'
 
 python3 -m unittest discover -s tools -p 'test_*clickhouse*.py'
 

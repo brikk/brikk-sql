@@ -55,11 +55,11 @@ They must record intentional refinements without rewriting the older captures.
 ```sh
 ./kotlin test -m brikk-sql \
   --include-classes='*ClickhouseSemanticQualificationTest' \
-  --jvm-args='-Dbrikk.clickhouseQualificationOut=/tmp/opencode/clickhouse-qualification.json'
+  --jvm-args='-Dbrikk.clickhouseQualificationOut=build/clickhouse-qualification.json'
 python3 tools/probe_clickhouse_2026.py \
   --cases vendor/data/clickhouse-semantic/qualification-cases.json \
-  --task CHSEM-007 --brikk /tmp/opencode/clickhouse-qualification.json \
-  --output /tmp/opencode/clickhouse-qualification-native
+  --task CHSEM-007 --brikk build/clickhouse-qualification.json \
+  --output build/clickhouse-qualification-native
 python3 -m unittest discover -s tools -p 'test_*clickhouse*.py'
 ```
 

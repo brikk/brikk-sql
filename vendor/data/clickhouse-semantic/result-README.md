@@ -104,14 +104,14 @@ Write fresh observations to new paths, not over historical evidence:
 ./kotlin test -m brikk-sql \
   --include-classes='*ClickhouseResultInferenceTest' \
   --include-classes='*ClickhouseResultFixturesTest' \
-  --jvm-args='-Dbrikk.clickhouseResultOut=/tmp/opencode/clickhouse-results.json -Dbrikk.clickhouseResultMatrixOut=/tmp/opencode/clickhouse-result-matrix.json'
+  --jvm-args='-Dbrikk.clickhouseResultOut=build/clickhouse-results.json -Dbrikk.clickhouseResultMatrixOut=build/clickhouse-result-matrix.json'
 
 python3 tools/probe_clickhouse_2026.py \
   --cases vendor/data/clickhouse-semantic/result-cases.json \
-  --task CHSEM-005 --output /tmp/opencode/clickhouse-result-native
+  --task CHSEM-005 --output build/clickhouse-result-native
 
 python3 tools/probe_clickhouse_result_matrix.py \
-  --output /tmp/opencode/clickhouse-result-matrix-native
+  --output build/clickhouse-result-matrix-native
 
 python3 -m unittest discover -s tools -p 'test_*clickhouse*.py'
 ```

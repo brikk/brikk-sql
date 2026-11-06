@@ -84,12 +84,12 @@ certification change is part of this work.
 
 ```sh
 python3 tools/probe_clickhouse_division_types.py \
-  --output /tmp/opencode/division-types-native
+  --output build/division-types-native
 ./kotlin test -m brikk-sql --include-classes='*ClickhouseDivision*Test' \
-  --jvm-args='-Dbrikk.clickhouseDivisionOut=/tmp/opencode/division-brikk.json -Dbrikk.clickhouseDivisionMatrixOut=/tmp/opencode/division-types-brikk.json'
+  --jvm-args='-Dbrikk.clickhouseDivisionOut=build/division-brikk.json -Dbrikk.clickhouseDivisionMatrixOut=build/division-types-brikk.json'
 python3 tools/probe_clickhouse_2026.py \
   --cases vendor/data/clickhouse-semantic/division-cases.json --task CHSEM-012 \
-  --brikk /tmp/opencode/division-brikk.json --output /tmp/opencode/division-native
+  --brikk build/division-brikk.json --output build/division-native
 ```
 
 Use new output paths for rechecks. The existing isolated clickhouse-local runner

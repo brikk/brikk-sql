@@ -85,10 +85,10 @@ IntelliJ API call is part of the parser fix.
 ./kotlin test -m brikk-sql \
   --include-classes='*ClickhouseParenthesizedLambda*Test' \
   --include-classes='*BinaryCompatibilityTest' \
-  --jvm-args='-Dbrikk.clickhouseParenOut=/tmp/opencode/paren-lambdas.json'
+  --jvm-args='-Dbrikk.clickhouseParenOut=build/paren-lambdas.json'
 python3 tools/probe_clickhouse_2026.py \
   --cases vendor/data/clickhouse-semantic/paren-lambda-cases.json --task CHSEM-011 \
-  --brikk /tmp/opencode/paren-lambdas.json --output /tmp/opencode/paren-lambda-native
+  --brikk build/paren-lambdas.json --output build/paren-lambda-native
 python3 -m unittest discover -s tools -p 'test_*clickhouse*.py'
 ```
 

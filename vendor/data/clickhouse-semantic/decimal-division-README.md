@@ -67,12 +67,12 @@ refinements remain intact.
 
 ```sh
 python3 tools/probe_clickhouse_decimal_division.py \
-  --output /tmp/opencode/decimal-division-types-native
+  --output build/decimal-division-types-native
 ./kotlin test -m brikk-sql --include-classes='*ClickhouseDecimalDivisionTest' \
-  --jvm-args='-Dbrikk.clickhouseDecimalDivisionOut=/tmp/opencode/decimal-division-brikk.json -Dbrikk.clickhouseDecimalDivisionTypesOut=/tmp/opencode/decimal-division-types-brikk.json'
+  --jvm-args='-Dbrikk.clickhouseDecimalDivisionOut=build/decimal-division-brikk.json -Dbrikk.clickhouseDecimalDivisionTypesOut=build/decimal-division-types-brikk.json'
 python3 tools/probe_clickhouse_2026.py \
   --cases vendor/data/clickhouse-semantic/decimal-division-cases.json --task CHSEM-015 \
-  --brikk /tmp/opencode/decimal-division-brikk.json --output /tmp/opencode/decimal-division-native
+  --brikk build/decimal-division-brikk.json --output build/decimal-division-native
 ```
 
 All 1,368 matrix types match. Both pins pass all 22 original and 22 generated

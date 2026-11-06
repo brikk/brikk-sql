@@ -73,10 +73,10 @@ E06 fails to resolve the copied native URL function on every target.
 ./kotlin test -m brikk-sql --include-classes='*ClickhouseLoweringAssessmentTest'
 ./kotlin test -m brikk-sql-verify \
   --include-classes='*ClickhouseLoweringDuckdbAssessmentTest' \
-  --jvm-args='-Dbrikk.clickhouseLoweringDuckdbOut=/tmp/opencode/lowering-duckdb.json'
+  --jvm-args='-Dbrikk.clickhouseLoweringDuckdbOut=build/lowering-duckdb.json'
 python3 tools/probe_clickhouse_lowering.py \
-  --duckdb /tmp/opencode/lowering-duckdb.json \
-  --output /tmp/opencode/lowering-assessment.json
+  --duckdb build/lowering-duckdb.json \
+  --output build/lowering-assessment.json
 ```
 
 Use new output paths for rechecks. The probe uses only cached exact images, UUID
@@ -105,5 +105,4 @@ aborts and zero failures, including binary compatibility. Python discovery passe
 ClickHouse-only discovery passed 45. No production or IntelliJ code changed, so
 platform suites were not repeated for this assessment-only step. Existing corpus,
 hazard and certification rules remain unchanged. All disposable containers were
-removed. Failed startup diagnostics are kept only under /tmp/opencode and do not
-count as semantic results.
+removed. Failed startup diagnostics do not count as semantic results.

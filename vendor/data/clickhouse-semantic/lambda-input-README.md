@@ -111,12 +111,12 @@ Capture current annotations to a new path, leaving this round's saved evidence i
 ./kotlin test -m brikk-sql \
   --include-classes='*ClickhouseLambdaTypingTest' \
   --include-classes='*ClickhouseSemanticFixturesTest' \
-  --jvm-args='-Dbrikk.clickhouseLambdaInputOut=/tmp/opencode/clickhouse-lambda-inputs.json'
+  --jvm-args='-Dbrikk.clickhouseLambdaInputOut=build/clickhouse-lambda-inputs.json'
 
 python3 tools/probe_clickhouse_2026.py \
   --cases vendor/data/clickhouse-semantic/lambda-input-cases.json \
   --task CHSEM-003 \
-  --output /tmp/opencode/clickhouse-lambda-input-native
+  --output build/clickhouse-lambda-input-native
 
 python3 -m unittest discover -s tools -p 'test_*clickhouse*.py'
 ```

@@ -78,15 +78,15 @@ replaced; CHSEM-018's script typing capture regenerates byte-identically.
 
 ```sh
 python3 tools/probe_clickhouse_integer_add_sub.py \
-  --output /tmp/opencode/integer-add-sub-types-native
+  --output build/integer-add-sub-types-native
 ./kotlin test -m brikk-sql --include-classes='*ClickhouseIntegerAddSubTest' \
-  --jvm-args='-Dbrikk.clickhouseIntegerAddSubTypesOut=/tmp/opencode/integer-add-sub-types-brikk.json -Dbrikk.clickhouseIntegerAddSubOut=/tmp/opencode/integer-add-sub-brikk.json -Dbrikk.clickhouseIntegerAddSubScriptOut=/tmp/opencode/integer-add-sub-script-brikk.json'
+  --jvm-args='-Dbrikk.clickhouseIntegerAddSubTypesOut=build/integer-add-sub-types-brikk.json -Dbrikk.clickhouseIntegerAddSubOut=build/integer-add-sub-brikk.json -Dbrikk.clickhouseIntegerAddSubScriptOut=build/integer-add-sub-script-brikk.json'
 python3 tools/probe_clickhouse_2026.py \
   --cases vendor/data/clickhouse-semantic/integer-add-sub-cases.json --task CHSEM-020 \
-  --brikk /tmp/opencode/integer-add-sub-brikk.json --output /tmp/opencode/integer-add-sub-native
+  --brikk build/integer-add-sub-brikk.json --output build/integer-add-sub-native
 python3 tools/probe_clickhouse_script_settings.py \
   --cases vendor/data/clickhouse-semantic/integer-add-sub-script-cases.json \
-  --brikk /tmp/opencode/integer-add-sub-script-brikk.json --output /tmp/opencode/integer-add-sub-script-native
+  --brikk build/integer-add-sub-script-brikk.json --output build/integer-add-sub-script-native
 ```
 
 Both pins match all 2,304 matrix types, 30 original/generated finite outcomes and

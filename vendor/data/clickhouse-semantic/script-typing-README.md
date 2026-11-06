@@ -94,10 +94,10 @@ sharing the traversal. The new typing report regenerates byte-identically too.
 
 ```sh
 ./kotlin test -m brikk-sql --include-classes='*ClickhouseScriptSemanticTypesTest' \
-  --jvm-args='-Dbrikk.clickhouseScriptTypesOut=/tmp/opencode/script-typing-brikk.json'
+  --jvm-args='-Dbrikk.clickhouseScriptTypesOut=build/script-typing-brikk.json'
 python3 tools/probe_clickhouse_script_settings.py \
   --cases vendor/data/clickhouse-semantic/script-typing-cases.json \
-  --brikk /tmp/opencode/script-typing-brikk.json --output /tmp/opencode/script-typing-native
+  --brikk build/script-typing-brikk.json --output build/script-typing-native
 ```
 
 Full JVM regression passes 1,884 tests with 61 optional integration assumption
