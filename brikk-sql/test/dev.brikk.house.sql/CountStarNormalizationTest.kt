@@ -9,8 +9,6 @@ import kotlin.test.assertEquals
  * MySQL/Doris and Trino/Presto REJECT COUNT() and require COUNT(*). Transpiling ClickHouse
  * count() to those engines must emit COUNT(*). ClickHouse (native count()) and DuckDB (which
  * accepts COUNT()) keep their form; any argument / *  / DISTINCT is untouched.
- *
- * Reported by the Doris IntelliJ plugin agent: ClickHouse count() -> Doris COUNT() is invalid.
  */
 class CountStarNormalizationTest {
 

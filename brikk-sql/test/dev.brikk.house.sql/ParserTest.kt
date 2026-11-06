@@ -73,7 +73,7 @@ class ParserTest {
         assertFailsWith<ParseError> { parseOne("GRANT ON TABLE tbl TO bob") }
     }
 
-    /** EVAL-07: every entry point rejects unknown dialect names the same way — no base fallback. */
+    /** Every entry point rejects unknown dialect names the same way — no base fallback. */
     @Test
     fun unknownDialectIsRejectedConsistentlyByEveryEntryPoint() {
         for (bad in listOf("snowflake", "postgress", "tsql", "SQL Server")) {

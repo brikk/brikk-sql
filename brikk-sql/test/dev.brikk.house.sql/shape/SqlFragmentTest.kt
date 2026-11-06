@@ -47,8 +47,6 @@ class SqlFragmentTest {
         assertTrue(!parser.hasFromFirstQuery)
     }
 
-    // ------------------------------------------------------------- output shapes
-
     @Test
     fun plainSelectShapeTypesFlowFromCatalog() {
         val catalog = ShapeCatalog(
@@ -247,8 +245,6 @@ class SqlFragmentTest {
         )
     }
 
-    // ---------------------------------------------------------------- table slots
-
     @Test
     fun slotBindingResolvesOutputShape() {
         val fragment = SqlFragment("FROM source(x) |> WHERE a > 1")
@@ -354,8 +350,6 @@ class SqlFragmentTest {
         assertEquals(mapOf("one" to setOf("t")), pivot.columnDependencies())
     }
 
-    // -------------------------------------------------------------- scalar params
-
     @Test
     fun scalarParamsAllThreeStyles() {
         val fragment = SqlFragment(
@@ -371,8 +365,6 @@ class SqlFragmentTest {
             fragment.scalarParams,
         )
     }
-
-    // ------------------------------------------------------------------- lineage
 
     @Test
     fun columnDependenciesTwoHopThroughCte() {
@@ -403,8 +395,6 @@ class SqlFragmentTest {
         assertEquals(setOf("source"), deps["b"])
     }
 
-    // ------------------------------------------------------------- toStandardSql
-
     @Test
     fun toStandardSqlExpandsStarsForEnginesWithoutStarExcept() {
         val fragment = SqlFragment("FROM t |> SELECT *")
@@ -421,8 +411,6 @@ class SqlFragmentTest {
             fragment.toStandardSql(),
         )
     }
-
-    // ------------------------------------------------------- transpileTo pipes
 
     @Test
     fun transpileToRendersPipeSyntaxByDefault() {
@@ -445,8 +433,6 @@ class SqlFragmentTest {
         assertTrue(fragment.isPipe)
         assertTrue("|>" in fragment.transpileTo("doris").sql)
     }
-
-    // ------------------------------------------------------- guards and describe
 
     @Test
     fun multiStatementFragmentRaises() {

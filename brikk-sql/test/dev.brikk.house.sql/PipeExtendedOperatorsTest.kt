@@ -51,8 +51,6 @@ class PipeExtendedOperatorsTest {
         tables = mapOf("t" to Shape.of("a" to "INT", "b" to "TEXT", "c" to "INT")),
     )
 
-    // ------------------------------------------------------------- parse shapes
-
     @Test
     fun setParsesIntoEqAssignments() {
         // googlesql: pipe SET (~664) — `SET column_name = expression [, ...]`
@@ -113,7 +111,7 @@ class PipeExtendedOperatorsTest {
     @Test
     fun standaloneOffsetParses() {
         // googlesql extension: standalone `|> OFFSET` (LIMIT/OFFSET ~1419 covers the
-        // combined form; the standalone stage node existed but was disabled)
+        // combined form)
         val stage = assertIs<PipeOffset>(stages("FROM t |> OFFSET 5").single())
         assertIs<Offset>(stage.thisArg)
     }
@@ -207,8 +205,6 @@ class PipeExtendedOperatorsTest {
             desugared("FROM t |> SET a = a + 1 |> DROP b |> RENAME c AS k"),
         )
     }
-
-    // ------------------------------------------------------------- pipe generation
 
     @Test
     fun pipeGenerationExactStrings() {
@@ -336,8 +332,6 @@ class PipeExtendedOperatorsTest {
             SqlFragment("FROM t |> CALL tvf1(1)").tableSlots,
         )
     }
-
-    // ------------------------------------------------------------- error cases
 
     @Test
     fun renameUnknownColumnUnderSchemaRaises() {

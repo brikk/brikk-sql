@@ -27,10 +27,8 @@ class FunctionSemanticsTest {
     private fun messagesOf(sql: String, read: String, write: String): List<String> =
         SqlFragment(sql, read).transpileTo(write).unsupportedMessages
 
-    // ------------------------------------------------------------------
     // Tier 1a: GREATEST/LEAST — Trino NULL-propagates, DuckDB skips NULLs
     // (hazards verdict: divergent). Port of sqlglot's duckdb _greatest_least_sql.
-    // ------------------------------------------------------------------
 
     @Test
     fun trinoGreatestToDuckdbPropagatesNulls() {
@@ -88,10 +86,8 @@ class FunctionSemanticsTest {
         assertEquals(emptyList(), trino.unsupportedMessages)
     }
 
-    // ------------------------------------------------------------------
     // Tier 1b: REGEXP_REPLACE — Trino replaces ALL, DuckDB replaces FIRST unless 'g'
     // (hazards verdict: divergent). Port of sqlglot's duckdb regexpreplace_sql.
-    // ------------------------------------------------------------------
 
     @Test
     fun trinoRegexpReplaceToDuckdbForcesGlobalFlag() {
@@ -145,10 +141,8 @@ class FunctionSemanticsTest {
         assertEquals(emptyList(), result.unsupportedMessages)
     }
 
-    // ------------------------------------------------------------------
     // Tier 2: the hard UnsupportedError paths — fixed where a real equivalent
     // exists, otherwise still flagged with the accurate message.
-    // ------------------------------------------------------------------
 
     @Test
     fun duckdbListValueToDorisRendersFirstClassArray() {
@@ -186,9 +180,7 @@ class FunctionSemanticsTest {
         )
     }
 
-    // ------------------------------------------------------------------
     // Tier 3: catalog-backed fixes for absent-name renders (extension 14).
-    // ------------------------------------------------------------------
 
     @Test
     fun trinoShaDigestsToDorisUseSha2WithUnhexWrap() {

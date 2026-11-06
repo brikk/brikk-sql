@@ -34,8 +34,6 @@ class NullabilityTest {
         return shape.columns[0].nullable
     }
 
-    // ------------------------------------------------------------------ literals
-
     @Test
     fun nullLiteralIsNullable() {
         assertEquals(true, singleNullable("SELECT NULL AS c"))
@@ -46,8 +44,6 @@ class NullabilityTest {
         assertEquals(false, singleNullable("SELECT 1 AS c"))
         assertEquals(false, singleNullable("SELECT 'x' AS c"))
     }
-
-    // ------------------------------------------------------------------ columns
 
     @Test
     fun declaredNullableColumnFlowsThrough() {
@@ -151,8 +147,6 @@ class NullabilityTest {
         }
     }
 
-    // ------------------------------------------------------------------ COALESCE
-
     @Test
     fun coalesceWithNotNullArgIsNotNull() {
         // COALESCE(col, 0): 0 is a not-null literal -> whole expr not-null even though
@@ -168,8 +162,6 @@ class NullabilityTest {
         )
         assertEquals(true, singleNullable("SELECT COALESCE(a, NULL) AS c FROM t", catalog))
     }
-
-    // ---------------------------------------------------------------- functions
 
     @Test
     fun strictFunctionOverArgs() {
@@ -188,8 +180,6 @@ class NullabilityTest {
         assertEquals(true, singleNullable("SELECT ACOS(1) AS c"))
     }
 
-    // --------------------------------------------------------------- aggregates
-
     @Test
     fun aggregateIsNullableExceptCount() {
         val catalog = ShapeCatalog(
@@ -202,8 +192,6 @@ class NullabilityTest {
         assertEquals(false, singleNullable("SELECT COUNT(a) AS c FROM t", catalog))
     }
 
-    // -------------------------------------------------------------------- CASE
-
     @Test
     fun caseWithoutElseIsNullable() {
         // Missing ELSE -> implicit NULL branch -> nullable, even with not-null results.
@@ -211,8 +199,6 @@ class NullabilityTest {
         // With a not-null ELSE and not-null result -> not-null.
         assertEquals(false, singleNullable("SELECT CASE WHEN 1 = 1 THEN 1 ELSE 2 END AS c"))
     }
-
-    // ------------------------------------------------------- pipe end-to-end mix
 
     @Test
     fun pipeFragmentOutputShapeTrueFalseUnknownMix() {
@@ -239,8 +225,6 @@ class NullabilityTest {
         assertEquals(true, shape.columns[3].nullable)
     }
 
-    // ------------------------------------------------------- compare() matrix
-
     @Test
     fun compareNullabilityParticipationMatrix() {
         fun cmp(expected: Boolean?, actual: Boolean?): ShapeComparison =
@@ -266,8 +250,6 @@ class NullabilityTest {
         cmp(null, null).let { assertTrue(it.nullabilityMismatches.isEmpty()) }
     }
 
-    // ------------------------------------------------- serialization round-trip
-
     @Test
     fun columnShapeAndComparisonSerializeRoundTrip() {
         val shape = Shape(listOf(
@@ -284,8 +266,6 @@ class NullabilityTest {
         assertEquals(comparison, json.decodeFromString<ShapeComparison>(encodedCmp))
         assertEquals(1, comparison.nullabilityMismatches.size)
     }
-
-    // ---------------------------------------------- direct pass (cast/try_cast)
 
     @Test
     fun castPropagatesTryCastIsNullable() {

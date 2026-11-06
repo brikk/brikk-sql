@@ -27,10 +27,10 @@ class ClickhouseGeneratorMappingBugsTest {
 
     @Test
     fun p1_lowerUpper_sourceAwareUtf8() {
-        // BUGS row 1, now SOURCE-AWARE (Generator.sourceDialect / isCrossDialectFrom):
-        // cross-dialect (DuckDB/Trino -> ClickHouse) folds full Unicode, so emit
-        // lowerUTF8/upperUTF8; same-dialect ClickHouse stays faithful ASCII lower/upper
-        // (verified NOT to corrupt pipe desugaring — see ClickhouseSourceAwareTransformsTest).
+        // Source-aware (Generator.sourceDialect / isCrossDialectFrom): cross-dialect
+        // (DuckDB/Trino -> ClickHouse) folds full Unicode, so emit lowerUTF8/upperUTF8;
+        // same-dialect ClickHouse stays faithful ASCII lower/upper (pipe desugaring is
+        // not corrupted — see ClickhouseSourceAwareTransformsTest).
         assertEquals("SELECT lowerUTF8(x)", ch("SELECT lower(x)", "duckdb"))
         assertEquals("SELECT upperUTF8(x)", ch("SELECT upper(x)", "trino"))
         assertEquals("SELECT lower(x)", ch("SELECT lower(x)", "clickhouse"))
@@ -130,9 +130,8 @@ class ClickhouseGeneratorMappingBugsTest {
 
     @Test
     fun sourceAwareShims_round_bin() {
-        // round / bin (P1): now LANDED behind source-aware gating (the policy call the BUGS
-        // file deferred). duckdb->clickhouse emits the live-verified half-away / strip-zeros
-        // shims; ClickHouse->ClickHouse stays faithful native round/bin. See
+        // round / bin are source-aware: duckdb->clickhouse emits the live-verified half-away /
+        // strip-zeros shims; ClickHouse->ClickHouse stays faithful native round/bin. See
         // ClickhouseSourceAwareTransformsTest for the round-trip + engine-value pins.
         assertEquals(HazardVerdict.IDENTICAL, HazardRegistry.lookup("duckdb", "clickhouse", "round")?.verdict)
         assertEquals(HazardVerdict.IDENTICAL, HazardRegistry.lookup("duckdb", "clickhouse", "bin")?.verdict)

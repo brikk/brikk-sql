@@ -145,16 +145,15 @@ class CertifyTest {
 
     @Test
     fun dedicatedRendererDivergentIsWarningNotRefusal() {
-        // BEHAVIOR CHANGE (certify policy #2, 2026-07-13): a dedicated renderer no longer
-        // blanket-CLEARS a hazard, but it does downgrade a DIVERGENT/UNCLEAR verdict from
-        // REFUSAL to a non-blocking WARNING. 'concat' is probe-verified DIVERGENT (NULL
-        // algebra); trino->duckdb rewrites to `a || b` via the dedicated Concat renderer,
-        // so it is a TRANSLATED function -> WARNING, ok stays true (the divergence is
-        // surfaced, not silent; the consumer owns the risk). The multi-key lookup still
-        // hits the source-surface name CONCAT. (The || mapping also has a SEPARATE probe-
-        // verified IDENTICAL entry `concat -> || operator`, so this is very likely a stale
-        // finding for this direction; it stays a visible WARNING pending owner review —
-        // see docs/research/REPORT-certify-hazard-hole-closed-2026-07-13.md.)
+        // Under certify policy #2 a dedicated renderer does not blanket-CLEAR a hazard, but it
+        // does downgrade a DIVERGENT/UNCLEAR verdict from REFUSAL to a non-blocking WARNING.
+        // 'concat' is probe-verified DIVERGENT (NULL algebra); trino->duckdb rewrites to
+        // `a || b` via the dedicated Concat renderer, so it is a TRANSLATED function -> WARNING,
+        // ok stays true (the divergence is surfaced, not silent; the consumer owns the risk).
+        // The multi-key lookup still hits the source-surface name CONCAT. (The || mapping
+        // also has a SEPARATE probe-verified IDENTICAL entry `concat -> || operator`, so this is
+        // very likely a stale finding for this direction; it stays a visible WARNING pending
+        // owner review — see docs/research/REPORT-certify-hazard-hole-closed-2026-07-13.md.)
         val fwd = report("SELECT concat(a, b) FROM t", "trino", "duckdb")
         assertEquals("SELECT a || b FROM t", fwd.result.sql)
         assertTrue(fwd.ok)
@@ -394,7 +393,7 @@ class CertifyTest {
         // (`list_min/list_max` -> `array_min/array_max`, NULL/type divergence) is keyed
         // under the DUCKDB-side surface name LIST_MIN, so a parsed-sqlName-only lookup
         // (ARRAY_MIN) MISSES it. The multi-key set recovers LIST_MIN by rendering the
-        // node under the SOURCE dialect -> the divergent hazard now fires.
+        // node under the SOURCE dialect -> the divergent hazard fires.
         val r = report("SELECT list_min(xs) FROM t", "duckdb", "trino")
         assertEquals("SELECT ARRAY_MIN(xs) FROM t", r.result.sql)
         assertTrue(!r.ok)
@@ -408,7 +407,7 @@ class CertifyTest {
     @Test
     fun identicalMappingStaysOk() {
         // duckdb `list_has_any` -> Doris ARRAYS_OVERLAP is a probe-verified IDENTICAL
-        // mapping (the generator fix). An IDENTICAL entry produces NO SEMANTIC_HAZARD
+        // mapping. An IDENTICAL entry produces NO SEMANTIC_HAZARD
         // finding even though the source surface name resolves and a dedicated renderer
         // exists — trust lives in the DATA.
         val r = report("SELECT list_has_any(a, b) FROM t", "duckdb", "doris")
@@ -428,8 +427,7 @@ class CertifyTest {
 
     @Test
     fun okAcceptingStillWorksOverNewFindings() {
-        // okAccepting composes over the (now more complete) refusal set: waiving the
-        // hazard's areas clears the refusal, exactly as with the old findings.
+        // okAccepting composes over the refusal set: waiving the hazard's areas clears the refusal.
         val r = report("SELECT list_min(xs) FROM t", "duckdb", "trino")
         assertTrue(!r.ok)
         val f = r.findings.single { it.kind == FindingKind.SEMANTIC_HAZARD }

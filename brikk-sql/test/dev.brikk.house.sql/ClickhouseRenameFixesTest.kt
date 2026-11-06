@@ -17,8 +17,6 @@ import kotlin.test.assertEquals
  * DuckDB 1.5.4; see docs/research/CLICKHOUSE-rename-map.md and the per-pair generator-gap
  * reports. The fixes are round-trip-safe: ClickHouse parses its own names to Anonymous /
  * different nodes, so a ClickHouse->ClickHouse render is unchanged (asserted below).
- *
- * Group 1 (this pass): the array family (array_ and list_ prefixes -> ClickHouse array*).
  */
 class ClickhouseRenameFixesTest {
 
@@ -68,7 +66,7 @@ class ClickhouseRenameFixesTest {
         assertEquals("SELECT arrayUnion(a, b)", ch("SELECT array_union(a, b)", "doris"))
     }
 
-    // -- Group 2: temporal to<Part> (DuckDB + Doris) -------------------------------
+    // -- temporal to<Part> (DuckDB + Doris) ----------------------------------------
 
     @Test
     fun temporal_toPart() {
@@ -81,7 +79,7 @@ class ClickhouseRenameFixesTest {
         assertEquals("SELECT toDayOfWeek(d)", ch("SELECT weekday(d)", "doris"))
     }
 
-    // -- Group 3: math nodes + snake/camel + ip/url/hash ---------------------------
+    // -- math nodes + snake/camel + ip/url/hash ------------------------------------
 
     @Test
     fun math_lowercaseNames() {
@@ -112,7 +110,6 @@ class ClickhouseRenameFixesTest {
         assertEquals("SELECT bitShiftLeft(a, b)", ch("SELECT bit_shift_left(a, b)", "doris"))
         assertEquals("SELECT bitShiftRight(a, b)", ch("SELECT bit_shift_right(a, b)", "doris"))
         assertEquals("SELECT bitTest(a, b)", ch("SELECT bit_test(a, b)", "doris"))
-        // string / url
         assertEquals("SELECT countSubstrings(s, p)", ch("SELECT count_substrings(s, p)", "doris"))
         assertEquals("SELECT splitByRegexp(s, p)", ch("SELECT split_by_regexp(s, p)", "doris"))
         assertEquals("SELECT cutToFirstSignificantSubdomain(s)", ch("SELECT cut_to_first_significant_subdomain(s)", "doris"))
@@ -120,7 +117,6 @@ class ClickhouseRenameFixesTest {
         assertEquals("SELECT extractURLParameter(s, p)", ch("SELECT extract_url_parameter(s, p)", "doris"))
         assertEquals("SELECT firstSignificantSubdomain(s)", ch("SELECT first_significant_subdomain(s)", "doris"))
         assertEquals("SELECT topLevelDomain(s)", ch("SELECT top_level_domain(s)", "doris"))
-        // ip
         assertEquals("SELECT IPv4NumToString(x)", ch("SELECT ipv4_num_to_string(x)", "doris"))
         assertEquals("SELECT IPv4StringToNumOrDefault(x)", ch("SELECT ipv4_string_to_num_or_default(x)", "doris"))
         assertEquals("SELECT IPv6StringToNumOrDefault(x)", ch("SELECT ipv6_string_to_num_or_default(x)", "doris"))
@@ -128,7 +124,6 @@ class ClickhouseRenameFixesTest {
         assertEquals("SELECT isIPv6String(x)", ch("SELECT is_ipv6_string(x)", "doris"))
         assertEquals("SELECT toIPv4OrDefault(x)", ch("SELECT to_ipv4_or_default(x)", "doris"))
         assertEquals("SELECT toIPv6OrDefault(x)", ch("SELECT to_ipv6_or_default(x)", "doris"))
-        // distance / rounding
         assertEquals("SELECT L1Distance(a, b)", ch("SELECT l1_distance(a, b)", "doris"))
         assertEquals("SELECT roundBankers(x)", ch("SELECT round_bankers(x)", "doris"))
         // xxhash_32 IS ClickHouse xxHash32 (direct re-probe: values match) -> renamed,
@@ -142,7 +137,7 @@ class ClickhouseRenameFixesTest {
         assertEquals(HazardVerdict.DIVERGENT, HazardRegistry.lookup("doris", "clickhouse", "xxhash_64")?.verdict)
     }
 
-    // -- Group 4a: trino -> clickhouse forward completion --------------------------
+    // -- trino -> clickhouse forward completion ------------------------------------
 
     @Test
     fun trino_forwardRenames() {
@@ -166,12 +161,11 @@ class ClickhouseRenameFixesTest {
     fun deferred_notRewritten() {
         // translate reaches the shared Translate node which ClickHouse itself parses to,
         // so a node rewrite would corrupt native ClickHouse translate — see the hazard notes.
-        // (No safe generator rename this pass.)
         assertEquals("SELECT translateUTF8(x, f, t)",
             transpile("SELECT translateUTF8(x, f, t)", read = "clickhouse", write = "clickhouse"))
     }
 
-    // -- Group 4b: clickhouse -> duckdb reverse direction --------------------------
+    // -- clickhouse -> duckdb reverse direction ------------------------------------
 
     private fun dk(sql: String): String = transpile(sql, read = "clickhouse", write = "duckdb")
 
@@ -194,7 +188,7 @@ class ClickhouseRenameFixesTest {
         assertEquals("SELECT DAYOFYEAR(d)", dk("SELECT toDayOfYear(d)"))
     }
 
-    // -- Group 4c: clickhouse -> doris / trino reverse (agent live-verified) -------
+    // -- clickhouse -> doris / trino reverse (live-verified) -----------------------
 
     private fun toDoris(sql: String): String = transpile(sql, read = "clickhouse", write = "doris")
     private fun toTrino(sql: String): String = transpile(sql, read = "clickhouse", write = "trino")
@@ -281,17 +275,14 @@ class ClickhouseRenameFixesTest {
         // divergent renames keep guarding despite the valid emitted name
         assertEquals(HazardVerdict.DIVERGENT, HazardRegistry.lookup("duckdb", "clickhouse", "list_element")?.verdict)
         assertEquals(HazardVerdict.DIVERGENT, HazardRegistry.lookup("doris", "clickhouse", "array_union")?.verdict)
-        // temporal
         assertEquals(HazardVerdict.IDENTICAL, HazardRegistry.lookup("duckdb", "clickhouse", "dayofmonth")?.verdict)
         assertEquals(HazardVerdict.IDENTICAL, HazardRegistry.lookup("doris", "clickhouse", "to_monday")?.verdict)
         assertEquals(HazardVerdict.DIVERGENT, HazardRegistry.lookup("duckdb", "clickhouse", "weekday")?.verdict)
         assertEquals(HazardVerdict.DIVERGENT, HazardRegistry.lookup("doris", "clickhouse", "weekday")?.verdict)
-        // chunk 3 identical renames stay identical
         assertEquals(HazardVerdict.IDENTICAL, HazardRegistry.lookup("duckdb", "clickhouse", "bit_count")?.verdict)
         assertEquals(HazardVerdict.IDENTICAL, HazardRegistry.lookup("duckdb", "clickhouse", "gamma")?.verdict)
         assertEquals(HazardVerdict.IDENTICAL, HazardRegistry.lookup("doris", "clickhouse", "l1_distance")?.verdict)
         assertEquals(HazardVerdict.IDENTICAL, HazardRegistry.lookup("doris", "clickhouse", "bit_shift_left")?.verdict)
-        // trino
         assertEquals(HazardVerdict.IDENTICAL, HazardRegistry.lookup("trino", "clickhouse", "bitwise_left_shift")?.verdict)
         assertEquals(HazardVerdict.IDENTICAL, HazardRegistry.lookup("trino", "clickhouse", "day_of_week")?.verdict)
         assertEquals(HazardVerdict.IDENTICAL, HazardRegistry.lookup("trino", "clickhouse", "dot_product")?.verdict)

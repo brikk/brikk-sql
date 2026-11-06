@@ -44,8 +44,6 @@ class ExpressionTest {
         )
     )
 
-    // --- parent / argKey / index wiring -----------------------------------
-
     @Test
     fun constructorWiresParents() {
         val a = col("a")
@@ -96,12 +94,10 @@ class ExpressionTest {
         val select = selectFromT(col("a"), col("b"), col("c"))
         val x = col("x")
 
-        // overwrite
         select.set("expressions", x, index = 1)
         assertEquals(listOf("a", "x", "c"), select.expressionsArg.map { (it as Column).name })
         assertEquals(1, x.index)
 
-        // insert without overwrite
         val y = col("y")
         select.set("expressions", y, index = 1, overwrite = false)
         assertEquals(listOf("a", "y", "x", "c"), select.expressionsArg.map { (it as Column).name })
@@ -111,8 +107,6 @@ class ExpressionTest {
         assertEquals(listOf("y", "x", "c"), select.expressionsArg.map { (it as Column).name })
         assertEquals(listOf(0, 1, 2), select.expressionsArg.map { (it as Column).index })
     }
-
-    // --- copy ---------------------------------------------------------------
 
     @Test
     fun copyIsDeepAndDetached() {
@@ -135,8 +129,6 @@ class ExpressionTest {
         assertEquals(mutableListOf("hello"), select.comments)
         assertEquals("a", select.find<Column>()!!.name)
     }
-
-    // --- traversal ----------------------------------------------------------
 
     @Test
     fun dfsAndBfsOrders() {
@@ -196,8 +188,6 @@ class ExpressionTest {
         assertSame(tree, tree.unnest())
     }
 
-    // --- transform / replace / pop -------------------------------------------
-
     @Test
     fun transformReplacesNodes() {
         val select = selectFromT(col("a"), col("b"))
@@ -253,8 +243,6 @@ class ExpressionTest {
         assertEquals(0, (select.expressionsArg[0] as Column).index)
     }
 
-    // --- equality / hashCode ---------------------------------------------------
-
     @Test
     fun equalTreesAreEqualRegardlessOfParent() {
         val standalone = col("a")
@@ -304,7 +292,6 @@ class ExpressionTest {
         )
         // empty list args are equivalent to absent args
         assertEquals(Select(args("expressions" to emptyList<Any?>())), Select())
-        // different classes never compare equal
         assertNotEquals<Expression>(Star(), Null())
     }
 

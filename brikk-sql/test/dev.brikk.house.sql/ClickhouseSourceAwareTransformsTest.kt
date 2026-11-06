@@ -8,9 +8,9 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 /**
- * Source-aware generator transforms (SPIKE-source-aware-generator-transforms, Option A:
- * Generator.sourceDialect / isCrossDialectFrom). A semantic-changing rewrite that is correct
- * cross-dialect but would corrupt a NATIVE ClickHouse function must fire ONLY when the source
+ * Source-aware generator transforms (Generator.sourceDialect / isCrossDialectFrom). A
+ * semantic-changing rewrite that is correct cross-dialect but would corrupt a NATIVE
+ * ClickHouse function must fire ONLY when the source
  * is a known non-ClickHouse dialect. These pins lock both directions and — critically — the
  * pipe-desugaring path (`toStandardSql`, same-dialect) that the corruption bug rode in on.
  *
@@ -105,8 +105,7 @@ class ClickhouseSourceAwareTransformsTest {
     }
 
     // -- GOLDEN: X->X round-trip must be faithful for semantic-sensitive functions --
-    // (The spike's stated gap: no X->X identity tests, which let the pipe-desugar bug in.
-    //  A same-dialect round-trip must NEVER apply a semantic-changing rename.)
+    // A same-dialect round-trip must NEVER apply a semantic-changing rename.
 
     @Test
     fun golden_sameDialectRoundTripFaithful() {
