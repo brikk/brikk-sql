@@ -34,7 +34,7 @@ internal class DuckdbParquetWriteResultTest {
             c.exec("SET threads=1")
             for (codec in listOf("uncompressed", "snappy", "gzip", "zstd", "brotli", "lz4", "lz4_raw")) {
                 val file = root.resolve("$codec-$generated.parquet")
-                val sql = "COPY (SELECT i,CAST(i%7 AS VARCHAR) AS s FROM range(4096)t(i)) TO ${quote(file)} (FORMAT parquet,COMPRESSION $codec${if(codec=="zstd")",COMPRESSION_LEVEL 1"else""},PARQUET_VERSION V2,FIELD_IDS {i:0,s:1},KV_METADATA {source:'Brikk',n:42},DICTIONARY_SIZE_LIMIT 0,STRING_DICTIONARY_PAGE_SIZE_LIMIT 4096,WRITE_BLOOM_FILTER false,BLOOM_FILTER_FALSE_POSITIVE_RATIO 0.1,ROW_GROUP_SIZE 2048)"
+                val sql = "COPY (SELECT i,CAST(i%7 AS VARCHAR) AS s FROM range(4096)t(i)) TO ${quote(file)} (FORMAT parquet,COMPRESSION $codec${if (codec == "zstd") ",COMPRESSION_LEVEL 1" else ""},PARQUET_VERSION V2,FIELD_IDS {i:0,s:1},KV_METADATA {source:'Brikk',n:42},DICTIONARY_SIZE_LIMIT 0,STRING_DICTIONARY_PAGE_SIZE_LIMIT 4096,WRITE_BLOOM_FILTER false,BLOOM_FILTER_FALSE_POSITIVE_RATIO 0.1,ROW_GROUP_SIZE 2048)"
                 c.exec(if (generated) render(sql) else sql)
                 assertEquals(listOf(listOf("4096", "8386560")), c.rows("SELECT count(*),sum(i) FROM read_parquet(${quote(file)})"))
                 val compression = c.rows("SELECT DISTINCT compression FROM parquet_metadata(${quote(file)})").map { it.single() }.toSet()

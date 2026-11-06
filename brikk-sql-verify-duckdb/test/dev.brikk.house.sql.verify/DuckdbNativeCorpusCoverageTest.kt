@@ -29,7 +29,7 @@ internal class DuckdbNativeCorpusCoverageTest {
                 // Only an explicitly expression-shaped root gets the SELECT entry point.
                 val expression = tree is Condition || tree is Alias || tree is Paren || tree is Bracket || tree is DataType ||
                     tree is Filter || tree is WithinGroup || tree is AtTimeZone || tree is Tuple || tree is Lambda
-                raw("$origin/${if(expression)"expression"else"raw"}", if (expression) "SELECT $sql" else sql)
+                raw("$origin/${if (expression) "expression" else "raw"}", if (expression) "SELECT $sql" else sql)
                 if (tree.walk().any { it is Command }) record(origin, "opaque-command", "native serialization is still checked; no executable or modeled-AST claim")
                 if (generator.unsupportedMessages.isNotEmpty()) record(origin, "unsupported-warning", generator.unsupportedMessages.joinToString("; "))
             } catch (e: UnsupportedError) { record(origin, "unsupported", e.message.orEmpty()) }
