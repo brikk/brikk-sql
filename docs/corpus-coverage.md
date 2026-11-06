@@ -49,8 +49,9 @@ public shape and resolver regressions passed. G4 has also been fixed by applying
 the existing dialect default-column mapping without replacing explicit aliases;
 both ledger entries were removed.
 
-ASTRA-008 has now resolved G1 and G2. `build/astra-008-core.log` reports 388/388
-qualification assertions passing, with the same 39 exclusions and zero oracle-failed
+ASTRA-008 resolved G1 and G2. The qualification corpus in
+`brikk-sql/testResources/qualify-corpus/` has 388 passing assertions at that baseline,
+with the same 39 exclusions and zero oracle-failed
 skips. Its qualification gate failed only because the final 10 ledger entries were
 stale; those exact keys have been removed, leaving `qualify-corpus/known-failures.json`
 empty. The historical table above still records the original 13 failures. This

@@ -32,23 +32,23 @@ repository's `main` was changed.
 - Both assembled plugins contain `v30.22.0-5-ga00dc2e5c` in their relocated
   `BrikkSql.class`, rather than the peer's published 0.18.0 implementation.
 
-The final successful run is retained at `/tmp/opencode/engine-candidate-sdg1412e`:
-`manifest.json` records candidate bytes and source-input hashes; `results.json`
-records commands' exit statuses and log locations. The compiler/runtime, assembly,
-smoke and IDE logs and scratch artifacts remain available there. The earlier
-successful run at `/tmp/opencode/engine-candidate-qg1a7kkg` produced the same hashes.
+These are historical candidate hashes, not checked-in binaries or logs.
+`tools/verify_engine_candidate.py` recreates a candidate run and records input
+hashes and command results. `tools/test_verify_engine_candidate.py` checks the gate.
 
 ## Reproduction
 
-From the SQL checkout, after building the exact candidate:
+From the SQL checkout, after building the exact candidate, set `CORE_JAR` and
+`METADATA_JAR` to the packaging-task outputs and `SCRATCH_DIR` to an existing
+private scratch parent. These generated outputs are not repository evidence.
 
 ```sh
 ./kotlin build
 python3 tools/verify_engine_candidate.py \
   --client /home/jayson/DEV/brikk/brikk-house \
-  --core-jar build/tasks/_brikk-sql_jarJvm/brikk-sql-jvm.jar \
-  --metadata-jar build/tasks/_brikk-sql-metadata_jarJvm/brikk-sql-metadata-jvm.jar \
-  --scratch-dir /tmp/opencode \
+  --core-jar "$CORE_JAR" \
+  --metadata-jar "$METADATA_JAR" \
+  --scratch-dir "$SCRATCH_DIR" \
   --dependency-model-dir /home/jayson/.cache/JetBrains/Kotlin/.m2.cache/dev/brikk/house \
   --candidate-sha dd1ea09eb82844e677a4165d96410a575c1d8540
 ```
@@ -83,7 +83,7 @@ DuckDB JDBC, PostgreSQL 18.4, MySQL 8.4.10, Trino 483, chDB 26.5.1.1 calendar an
 Doris shared-behavior probes run. Four optional tests skip: Java chDB and three
 StarRocks tests already executed in prior rounds. The cached Doris engine actually
 reports `doris-4.1.3-rc02-7126cf65d96`, not 4.1.4.1. See extension #50 for scope.
-The full native-run log is `/tmp/opencode/sqlglot-catchup-final-native-all-2.log`.
+Native assertions live in `brikk-sql-verify/test/dev.brikk.house.sql.verify/`.
 The four isolated Doris/PostgreSQL/MySQL/Trino containers created for this task
 were removed after verification; scratch candidate evidence remains retained.
 
@@ -97,18 +97,17 @@ hash. The new guard passes the complete SQL-side suite and the 38 existing
 contracts, plus a targeted old-binary consumer probe: the retained precompiled
 peer runtime (`e985884a1010f1d1d8407da712e8217c65f5c16426946885445f9640b1fc2c06`)
 refuses `Rel<HasId>`'s schema-less Presto/Trino rename without emitting SQL, while
-explicit SELECT still renders and authored source remains unchanged. The probe
-and log are `/tmp/opencode/TrinoRenameRuntimeProbe.java` and
-`/tmp/opencode/trino-pipe-rename-peer-runtime.log`; no peer-source edits occurred.
+explicit SELECT still renders and authored source remains unchanged. The
+throwaway old-binary probe is not retained in the repository. The core regression
+is `brikk-sql/test/dev.brikk.house.sql/PipeRenameGenerationTest.kt`.
 
 The subsequent DROP/SET and executable-pivot follow-up (#52) uses core hash
 `3cd3d46ca32fdb22f599b0a9b3066c11d1c8fe32ea6ddae4e7a0524778dde9d0` with unchanged
-metadata. Its targeted old-binary runtime probe is retained at
-`/tmp/opencode/PipeCapabilitiesRuntimeProbe.java` and
-`/tmp/opencode/pipe-capabilities-peer-runtime.log`: Presto/Trino trait-backed
+metadata. Its historical old-binary runtime observation was that Presto/Trino trait-backed
 DROP/SET and Trino/Doris PIVOT/UNPIVOT refuse, while native Doris SET renders.
 Build, the full 1,295-method configured test sweep, 38 contracts and native row/type
 checks pass. This is not a fresh execution of the original 163-test peer suite.
+Repository controls are `brikk-sql/test/dev.brikk.house.sql/PipeExecutionCapabilitiesTest.kt`.
 
 This is a well-tested release candidate for the scoped catch-up, not proof of
 arbitrary SQL equivalence. Confidence is strongest for the hand-owned behaviors:
