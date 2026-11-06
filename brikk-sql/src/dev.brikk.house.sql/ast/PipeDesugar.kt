@@ -198,7 +198,7 @@ private fun applyPipeStage(input: Expression, stage: Expression, counter: PipeCt
         it == null || it == false || (it is List<*> && it.isEmpty())
     }) || (
         query.expressionsArg.all { it is Column && !it.isStar } &&
-            // A qualified name reads an old namespace, which a projection's output no longer has (Q13-C).
+            // A qualified name reads an old namespace, which a projection's output no longer has.
             stageColumns.all { it is Column && it.table.isEmpty() && it in query.expressionsArg }
         )
     val positionalOrder = (query.args["order"] as? Order)?.expressionsArg.orEmpty().any {
@@ -450,8 +450,9 @@ private fun pipeInputCte(query: Expression, stage: Expression, counter: PipeCteC
     return outer
 }
 
-/** The input namespace a boundary preserves and the ranking order DISTINCT ON keeps, or why it cannot. */
 /**
+ * The input namespace a boundary preserves and the ranking order DISTINCT ON keeps, or why it cannot.
+ *
  * [references] holds the stage's column references that must still resolve past the boundary.
  * With [wholeRows] (a stage reading whole rows: JOIN, AGGREGATE, EXTEND, ...) the input may span
  * several sources or repeat a name: only a qualifier the boundary cannot keep is refused.

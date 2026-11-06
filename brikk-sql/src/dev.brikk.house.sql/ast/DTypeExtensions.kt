@@ -9,7 +9,7 @@ package dev.brikk.house.sql.ast
  * files pure so `code-gen` needs zero manual re-patching.
  */
 
-// sqlglot: datatypes.DType.into_expr — converts this DType into a DataType instance.
+// sqlglot: datatypes.DType.into_expr
 fun DType.intoExpr(kwargs: Args = emptyMap()): DataType {
     val dataType = DataType(args("this" to this))
     for ((k, v) in kwargs) dataType.set(k, v)

@@ -246,8 +246,8 @@ val Expression.namedSelects: List<String>
                 if (expr.args["by_name"] == true) {
                     val left = expr.left.unnest().namedSelects
                     val right = expr.right.unnest().namedSelects
-                    // brikk extension (ASTRA-004): scope star expansion must use
-                    // the same BY NAME output subset/order as contract inference.
+                    // brikk: scope star expansion must use the same BY NAME
+                    // output subset/order as contract inference.
                     val on = (expr.args["on"] as? List<*>)?.filterIsInstance<Expression>()?.map { it.name }
                     byNameSelects = on ?: when {
                         expr.text("kind").equals("INNER", ignoreCase = true) -> left.filter { it in right }

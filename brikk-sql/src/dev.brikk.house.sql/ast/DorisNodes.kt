@@ -102,12 +102,6 @@ class DorisTemporaryPartition(initArgs: Args = emptyMap()) : Expression(initArgs
 }
 
 /**
- * `REFRESH MATERIALIZED VIEW [db.]mv [AUTO | COMPLETE] [PARTITION[S] (p1, ...)]`,
- * `REFRESH CATALOG c [PROPERTIES (...)]`, `REFRESH DATABASE [c.]db`. `kind` is the keyword
- * text; `method` is a [Var] (AUTO / COMPLETE); `partitions` a list of identifiers.
- * `REFRESH TABLE t` stays on sqlglot's [Refresh].
- */
-/**
  * Doris and StarRocks `SELECT ... INTO OUTFILE 'uri' [FORMAT AS fmt] [PROPERTIES (...)]`, in a query's
  * `outfile`: [this] is the URI literal, `format` a [Var], `properties` a [Properties].
  */
@@ -119,6 +113,12 @@ class DorisOutfile(initArgs: Args = emptyMap()) : Expression(initArgs) {
     }
 }
 
+/**
+ * `REFRESH MATERIALIZED VIEW [db.]mv [AUTO | COMPLETE] [PARTITION[S] (p1, ...)]`,
+ * `REFRESH CATALOG c [PROPERTIES (...)]`, `REFRESH DATABASE [c.]db`. `kind` is the keyword
+ * text; `method` is a [Var] (AUTO / COMPLETE); `partitions` a list of identifiers.
+ * `REFRESH TABLE t` stays on sqlglot's [Refresh].
+ */
 class DorisRefresh(initArgs: Args = emptyMap()) : Expression(initArgs) {
     override val argTypes get() = ARG_TYPES
 
