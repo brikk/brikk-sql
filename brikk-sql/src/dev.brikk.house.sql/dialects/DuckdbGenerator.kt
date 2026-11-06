@@ -608,9 +608,19 @@ open class DuckdbGenerator(
         )
     }
 
+    // BigQuery's EXTRACT spelling has a different weekday origin than DuckDB's.
+    override fun extractSql(expression: Extract): String {
+        val rendered = super.extractSql(expression)
+        return if (sourceDialect.equals("bigquery", true) && expression.metaOrNull?.get("duckdb_native_weekday") != true &&
+            (expression.thisArg as? Expression)?.name.equals("DAYOFWEEK", true))
+            "($rendered + 1)" else rendered
+    }
+
     // sqlglot: DuckDBGenerator.approxquantile_sql
-    open fun approxquantileSql(expression: ApproxQuantile): String =
-        func("APPROX_QUANTILE", expression.thisArg, expression.args["quantile"])
+    open fun approxquantileSql(expression: ApproxQuantile): String {
+        if (expression.args["weight"] != null) unexecutable("DuckDB APPROX_QUANTILE has no qualified weighted-percentile mapping")
+        return func("APPROX_QUANTILE", expression.thisArg, expression.args["quantile"])
+    }
 
     // sqlglot: DuckDBGenerator.approxquantiles_sql
     open fun approxquantilesSql(expression: ApproxQuantiles): String {
@@ -1478,7 +1488,7 @@ open class DuckdbGenerator(
         if (weekStart != null) {
             val dayOfWeek = Extract(
                 args("this" to Var(args("this" to "DAYOFWEEK")), "expression" to date.copy())
-            )
+            ).also { it.meta["duckdb_native_weekday"] = true }
             val daysToLast = Mod(
                 args(
                     "this" to Paren(

@@ -1,0 +1,126 @@
+{
+  "scope": "No native tuple, engine setting, corpus hash, old local disposition or parity ledger changed. Exactly five warnings for existing weighted percentile controls and three derived counters.",
+  "before": {
+    "files": 181,
+    "inputs": 24606,
+    "unique_sql": 5419,
+    "native_counts": {
+      "accepted": 13608,
+      "rejected": 7749,
+      "unverified": 3249
+    },
+    "native_fingerprint": "79437a00fab07678b159a47dc2f37c62749d21958eff156c8257e7b72296b12b",
+    "local_counts": {
+      "excluded-or-non-sql-expectation": 65,
+      "expected-unsupported": 9,
+      "foreign-analysis-input": 121,
+      "opaque-command": 398,
+      "unsupported": 235,
+      "unsupported-warning": 1566
+    },
+    "local_fingerprint": "2378802920b01d86caa6ac484834f6648ef6cab6d12629e75f35f45b645abcd4",
+    "inventory_fingerprint": "cab62827c619ef7459c598c261bc1d0c2e2d663dcde3b17df51b493199eae4d6"
+  },
+  "after": {
+    "files": 181,
+    "inputs": 24606,
+    "unique_sql": 5419,
+    "native_counts": {
+      "accepted": 13608,
+      "rejected": 7749,
+      "unverified": 3249
+    },
+    "native_fingerprint": "79437a00fab07678b159a47dc2f37c62749d21958eff156c8257e7b72296b12b",
+    "local_counts": {
+      "excluded-or-non-sql-expectation": 65,
+      "expected-unsupported": 9,
+      "foreign-analysis-input": 121,
+      "opaque-command": 398,
+      "unsupported": 235,
+      "unsupported-warning": 1571
+    },
+    "local_fingerprint": "e37c2a7874457cb2ec6ffc2fecbd96974488464240056474773397f0fa429925",
+    "inventory_fingerprint": "b5cf0105c61310406ab857ba64e9fe10733aecedfcd7cc429493598e5c43c4ac"
+  },
+  "native_outcomes_unchanged": true,
+  "engine_settings_unchanged": true,
+  "corpus_hashes_unchanged": true,
+  "old_local_dispositions_unchanged": true,
+  "added_warnings": [
+    {
+      "detail": "DuckDB APPROX_QUANTILE has no qualified weighted-percentile mapping",
+      "origin": "ast-corpus/presto-annotated-serde.json/30/loaded-dump",
+      "status": "unsupported-warning"
+    },
+    {
+      "detail": "DuckDB APPROX_QUANTILE has no qualified weighted-percentile mapping",
+      "origin": "ast-corpus/presto-annotated-serde.json/30/current-parser",
+      "status": "unsupported-warning"
+    },
+    {
+      "detail": "DuckDB APPROX_QUANTILE has no qualified weighted-percentile mapping",
+      "origin": "ast-corpus/presto-serde.json/30/loaded-dump",
+      "status": "unsupported-warning"
+    },
+    {
+      "detail": "DuckDB APPROX_QUANTILE has no qualified weighted-percentile mapping",
+      "origin": "ast-corpus/presto-serde.json/30/current-parser",
+      "status": "unsupported-warning"
+    },
+    {
+      "detail": "DuckDB APPROX_QUANTILE has no qualified weighted-percentile mapping",
+      "origin": "dialect-corpus/presto.json/identity/30/current",
+      "status": "unsupported-warning"
+    }
+  ],
+  "inventory_changes": [
+    {
+      "before": {
+        "file": "ast-corpus/presto-annotated-serde.json",
+        "sha256": "6a026f7553f9eab2101b698b3fe6f7fede9886b1c1f0da8c952f8c018339bd7e",
+        "classification": "all serde/annotated/handbuilt dumps and current parser outputs emitted to DuckDB; annotation is not native typing proof",
+        "native_inputs": 98,
+        "local_classifications": 12
+      },
+      "after": {
+        "file": "ast-corpus/presto-annotated-serde.json",
+        "sha256": "6a026f7553f9eab2101b698b3fe6f7fede9886b1c1f0da8c952f8c018339bd7e",
+        "classification": "all serde/annotated/handbuilt dumps and current parser outputs emitted to DuckDB; annotation is not native typing proof",
+        "native_inputs": 98,
+        "local_classifications": 14
+      }
+    },
+    {
+      "before": {
+        "file": "ast-corpus/presto-serde.json",
+        "sha256": "69be9129943b49d58d063da5d10869dbc0a5d2c7bded9e208f4ec6e50fa9c7fe",
+        "classification": "all serde/annotated/handbuilt dumps and current parser outputs emitted to DuckDB; annotation is not native typing proof",
+        "native_inputs": 98,
+        "local_classifications": 12
+      },
+      "after": {
+        "file": "ast-corpus/presto-serde.json",
+        "sha256": "69be9129943b49d58d063da5d10869dbc0a5d2c7bded9e208f4ec6e50fa9c7fe",
+        "classification": "all serde/annotated/handbuilt dumps and current parser outputs emitted to DuckDB; annotation is not native typing proof",
+        "native_inputs": 98,
+        "local_classifications": 14
+      }
+    },
+    {
+      "before": {
+        "file": "dialect-corpus/presto.json",
+        "sha256": "61e688685e81dbb1e7d014a406484059543fca06d07c67a1f027af049323433e",
+        "classification": "registered-source identities emitted to DuckDB, plus every DuckDB-target transpile direction and SQL expectation",
+        "native_inputs": 161,
+        "local_classifications": 15
+      },
+      "after": {
+        "file": "dialect-corpus/presto.json",
+        "sha256": "61e688685e81dbb1e7d014a406484059543fca06d07c67a1f027af049323433e",
+        "classification": "registered-source identities emitted to DuckDB, plus every DuckDB-target transpile direction and SQL expectation",
+        "native_inputs": 161,
+        "local_classifications": 16
+      }
+    }
+  ]
+}

@@ -159,7 +159,11 @@ internal class DuckdbNativeCorpusCoverageTest {
         // origin in the current parser. Three ledger hashes and those three derived
         // warning counters account for inventory changes. No native acceptance or
         // exclusion allowance; see sg29-014-rest/native-coverage-review.json.
-        val baseline=NativeCorpusAudit.root.resolve("brikk-sql-verify-duckdb/testResources/native-coverage-baseline-sg29-014-rest.json")
+        // SG29-016: every native tuple is unchanged. Exactly five weighted Presto
+        // percentile origins now warn instead of silently discarding a weight.
+        // Corpus hashes/old dispositions unchanged; three inventory counters only.
+        // See vendor/data/sqlglot-sg29-016/native-coverage-review.json.
+        val baseline=NativeCorpusAudit.root.resolve("brikk-sql-verify-duckdb/testResources/native-coverage-baseline-sg29-016.json")
         assertTrue(Files.isRegularFile(baseline),"Review build/duckdb-parser-audit/native-coverage.json before adding a baseline")
         assertEquals(Json.parseToJsonElement(Files.readString(baseline)),summary,"Investigate coverage changes; never refresh parity ledgers from native syntax outcomes")
         println("DDB20-050 $summary")

@@ -245,11 +245,19 @@ baseline explain the bounded drift. No global oracle refresh or release follows.
   unwrapped replacement is normalization only, not native equivalence. Build,
   2,582 JVM tests and 827 IntelliJ tests pass. The full native audit, parity
   ledgers, global pin and frozen manifest remain unchanged. Commit/push authorized.
-- [ ] **SG29-016: Reconcile BigQuery/Trino translations.** Review
+- [x] **SG29-016: Reconcile BigQuery/Trino translations.** Review
   `d17c7680`, `f536a823` and `a8a7610d` for date parts, FROM_BASE,
   percentiles and array operations. Our weekday probe emits DAY_OF_WEEK instead
   of EXTRACT(DAYOFWEEK FROM ...). Verify weekday numbering as well as syntax;
   preserve the independent BQ-36 through BQ-38 limitations.
+  [Evidence](../vendor/data/sqlglot-sg29-016/README.md): correct EXTRACT rendering,
+  ISO/Sunday weekday conversion, source-aware DuckDB weekday lowering, decimal
+  widening and non-mutating casts. Trino three-argument percentile weight is
+  distinct from Presto accuracy. Approximate/array/hex rewrites retain explicit
+  qualification refusals; no BigQuery backend execution is claimed. Seven native
+  weekday controls plus NULL pass. Build, 2,586 JVM tests and 827 IntelliJ tests
+  pass. Exactly five weighted-percentile warnings reviewed; all native tuples,
+  corpus hashes, parity ledgers and the global oracle pin remain unchanged.
 
 ## Batch E: shared analysis and compatibility-sensitive changes
 
@@ -312,7 +320,8 @@ and committed/pushed separately. All SG29-014 areas are now assessed and verifie
 with opaque preservation distinguished from structured support and native
 execution. SG29-015 is separately implemented and verified, with commit/push
 authorized before starting SG29-016. SG29-016 through SG29-018 are approved in
-order. Five parent items remain open.
+order. SG29-016 is now implemented and verified, with commit/push authorized.
+Four parent items remain open; SG29-017 is next.
 
 Implementation is isolated on branch/worktree `sqlglot-30-29-batch-a`. The
 planning request initially added this TODO and its index links; later approvals
