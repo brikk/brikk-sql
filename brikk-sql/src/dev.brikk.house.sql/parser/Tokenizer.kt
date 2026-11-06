@@ -846,7 +846,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
                 } else {
                     break
                 }
-            } else if (asciiUpper(peek) == 'E' && scientific == 0) {
+            } else if (asciiUpper(peek) == 'E' && scientific == 0 && exponentFollows()) {
                 scientific += 1
                 advance()
             } else if (peek == '_' && config.numbersCanBeUnderscoreSeparated) {
@@ -889,6 +889,14 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
             add(TokenType.DCOLON, "::")
             add(numericType, numericLiteral)
         }
+    }
+
+    // brikk: sqlglot takes any E after digits as an exponent marker, so `13END` lexes as `13E` + `ND`.
+    // An E that starts a word belongs to the word. A dangling E (`1e`, `1E+`) stays in the number,
+    // as DuckDB lexes it, so it fails as a bad literal rather than parsing as `1 AS e`.
+    private fun exponentFollows(): Boolean {
+        val afterE = current + 1
+        return afterE >= size || !sql[afterE].isLetter()
     }
 
     // sqlglot: TokenizerCore._scan_bits

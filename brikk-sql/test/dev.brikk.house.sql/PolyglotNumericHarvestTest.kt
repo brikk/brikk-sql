@@ -25,8 +25,11 @@ class PolyglotNumericHarvestTest {
         for (prefix in listOf("", "/* π */")) for (number in numbers) {
             val sql = "$prefix${number}END"
             val tokens = Tokenizer().tokenize(sql)
-            assertEquals(listOf(TokenType.NUMBER, TokenType.END), tokens.map { it.tokenType }, sql)
-            assertEquals(listOf(number, "END"), tokens.map { it.text }, sql)
+            // A leading dot is its own token; parsePrimary joins DOT NUMBER back into 0.N as sqlglot does.
+            val numberTokens = if (number.startsWith(".")) listOf(".", number.drop(1)) else listOf(number)
+            val numberTypes = if (number.startsWith(".")) listOf(TokenType.DOT, TokenType.NUMBER) else listOf(TokenType.NUMBER)
+            assertEquals(numberTypes + TokenType.END, tokens.map { it.tokenType }, sql)
+            assertEquals(numberTokens + "END", tokens.map { it.text }, sql)
         }
     }
 
