@@ -86,7 +86,7 @@ sealed interface PipeStageCut {
  * comments, quoted identifiers, or parenthesized subpipelines never split a stage —
  * this is precisely why this is tokenizer-based rather than text-based.
  *
- * This is Phase-0 machinery: raw text slices plus tokens, no AST. Full pipe-operator
+ * The result is raw text slices plus tokens, no AST. Full pipe-operator
  * parsing into first-class stage nodes lives in Parser.parsePipeSyntaxQuery (PipeQuery +
  * Pipe* stage nodes in ast/PipeNodes.kt; desugaring in ast/PipeDesugar.kt).
  */

@@ -51,11 +51,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         insertData.reset()
     }
 
-    /**
-     * Returns the list of tokens corresponding to [sql].
-     *
-     * sqlglot: TokenizerCore.tokenize
-     */
+    /** sqlglot: TokenizerCore.tokenize */
     fun tokenize(sql: String): List<Token> = try {
         scanAll(sql)
     } catch (e: Canceled) {
@@ -630,7 +626,6 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         if (commentEnd == "*/" && config.nestedBlockComments) {
             scanNestedBlockComment(commentStartSize, commentStartLine)
         } else if (commentEnd != null) {
-            // Skip the comment's start delimiter
             advance(commentStartSize)
 
             var commentCount = 1
@@ -1140,7 +1135,6 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
             val endIdx = sql.indexOf(delimChar, pos)
 
             if (
-                // the closing delimiter was found
                 endIdx != -1 &&
                 // there's no doubled delimiter (e.g. '' escape), or the delimiter isn't an escape
                 (endIdx + 1 >= size || sql[endIdx + 1] != delimChar || delimChar !in esc) &&
