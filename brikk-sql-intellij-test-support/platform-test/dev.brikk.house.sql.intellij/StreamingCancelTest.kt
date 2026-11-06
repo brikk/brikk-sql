@@ -20,11 +20,13 @@ import com.intellij.database.datagrid.DataAuditor
 import com.intellij.database.datagrid.DataProducer
 import com.intellij.database.datagrid.DataRequest
 import com.intellij.database.psi.DbPsiFacade
+import com.intellij.database.remote.jdbc.RemoteConnection
 import com.intellij.database.util.GuardedRef
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.impl.SimpleDataContext
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.util.Disposer
 import com.intellij.testFramework.LoggedErrorProcessor
@@ -37,9 +39,14 @@ import dev.brikk.house.sql.intellij.catalog.DialectDataSourceResolver
 import dev.brikk.house.sql.intellij.catalog.FinishedQuery
 import dev.brikk.house.sql.intellij.slowstream.SlowStreamDriver
 import dev.brikk.house.sql.intellij.testing.BackgroundErrors
+import java.io.EOFException
 import java.io.File
+import java.lang.reflect.InvocationTargetException
+import java.lang.reflect.Proxy
 import java.nio.file.Files
 import java.nio.file.Path
+import java.rmi.RemoteException
+import java.rmi.UnmarshalException
 import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
@@ -262,6 +269,93 @@ class StreamingCancelTest : BasePlatformTestCase() {
             steps("@next") == steps("@${SlowStreamDriver.HELD}"))
         Files.createFile(Path.of("$log.release"))
         console.run("SELECT 42")
+    }
+
+    fun testAFailedConnectionCancelIsReportedAndStillAllowsTheStockCleanup() = failedCancel(afterDisconnect = false)
+
+    fun testAConnectionCancelThatFailsAfterRetirementIsStillReportedWithoutABackgroundError() = failedCancel(afterDisconnect = true)
+
+    /** A cancel reply fails either on the current connection or after its worker has retired it and returned. */
+    private fun failedCancel(afterDisconnect: Boolean) {
+        val console = open()
+        console.run("SELECT 1")
+        val release = CountDownLatch(if (afterDisconnect) 1 else 0)
+        val returned = CountDownLatch(1)
+        val cleanup = AtomicInteger()
+        DataBus.addRootAuditor(project, object : DataAuditor {
+            override fun requestCancelStarted(context: DataRequest.Context, cancelRequest: DataRequest.Cancel?) {
+                cleanup.incrementAndGet()
+            }
+        }, testRootDisposable)
+        val worker = Executor { work ->
+            ApplicationManager.getApplication().executeOnPooledThread(Runnable { try { work.run() } finally { returned.countDown() } })
+        }
+        val interceptor = StreamingCancelInterceptor(DialectDataSourceResolver(dataSource.dbms), worker, 1.seconds)
+        val tag = if (afterDisconnect) SlowStreamDriver.LAGGING else "failed"
+        val request = stream(console, tag)
+        val failure = if (afterDisconnect) UnmarshalException("the cancel reply was lost", EOFException("synthetic cancel EOF"))
+            else RemoteException("the cancel could not be sent")
+        interceptCancel(request) { remote ->
+            // Before the deadline, fail without stopping the stream so the stock cleanup is still needed.
+            if (afterDisconnect) remote.cancelAll()
+            check(release.await(30, TimeUnit.SECONDS)) { "the test did not release the cancel reply" }
+            throw failure
+        }
+        val warnings = CopyOnWriteArrayList<Throwable>()
+        val unexpected = CopyOnWriteArrayList<Throwable>()
+        val logging = LoggedErrorProcessor.executeWith(object : LoggedErrorProcessor() {
+            override fun processWarn(category: String, message: String, t: Throwable?): Boolean {
+                if (message == "Cancelling a streaming request failed" && t != null) warnings += t
+                return super.processWarn(category, message, t)
+            }
+
+            // Keep checking every error while this warning recorder temporarily replaces BackgroundErrors' processor.
+            override fun processError(category: String, message: String, details: Array<out String>, t: Throwable?): Set<Action> {
+                unexpected += t ?: AssertionError(message)
+                return super.processError(category, message, details, t)
+            }
+        })
+        try {
+            assertEquals(ExecutionClaim.HANDLED, interceptor.perform(cancelEvent(console)) { fail("a streaming request is claimed") })
+            if (afterDisconnect) {
+                PlatformTestUtil.waitWithEventsDispatching("the timed out console disconnects", { !console.databaseSession.isConnected }, 10)
+                assertTrue("the worker returns without waiting on the retired connection", returned.await(10, TimeUnit.SECONDS))
+                assertEmpty("the cancel reply is still held", warnings)
+            } else {
+                PlatformTestUtil.waitWithEventsDispatching("the failed cancel and stock cleanup return", { returned.count == 0L }, 30)
+                assertEquals("the current request still receives the stock cleanup", 1, cleanup.get())
+                assertTrue("a failed reply before the deadline does not disconnect", console.databaseSession.isConnected)
+            }
+            val successor = console.submit("SELECT '${SlowStreamDriver.MARKER} next'")
+            PlatformTestUtil.waitWithEventsDispatching("the successor completes", { successor in finished }, 30)
+            assertEmpty(errorsOf(successor))
+            assertEquals("the successor is neither cancelled nor cleaned up", listOf("execute", "end"), steps("next").distinct())
+            assertEquals("only a retired connection is replaced", !afterDisconnect, steps("@next") == steps("@$tag"))
+            release.countDown()
+            PlatformTestUtil.waitWithEventsDispatching("the cancel failure is reported even after retirement", { warnings.isNotEmpty() }, 10)
+            assertEquals("report the original failure exactly once", listOf(failure), warnings.toList())
+        } finally {
+            release.countDown()
+            logging.finish()
+            assertEmpty("no cancel failure escapes to the platform's pooled-thread error logger", unexpected)
+        }
+    }
+
+    /** Replace only this live connection's cancel call; the engine and the interceptor retain the same identity. */
+    private fun interceptCancel(request: DataRequest, cancel: (RemoteConnection) -> Unit) {
+        val connection = DatabaseConnectionManager.getInstance().activeConnections.single {
+            (it.requestor as? JdbcEngine)?.requestContextIfAny?.request === request
+        }
+        val remote = connection.remoteConnection
+        val field = connection.javaClass.declaredFields.single { it.type == RemoteConnection::class.java }.apply { isAccessible = true }
+        field.set(connection, Proxy.newProxyInstance(RemoteConnection::class.java.classLoader, arrayOf(RemoteConnection::class.java)) { _, method, args ->
+            if (method.name == "cancelAll") cancel(remote) else try {
+                method.invoke(remote, *(args ?: emptyArray()))
+            } catch (e: InvocationTargetException) {
+                throw e.targetException
+            }
+        })
+        Disposer.register(testRootDisposable) { field.set(connection, remote) }
     }
 
     fun testADisconnectThatCannotBeSentHoldsTheNextRequestUntilTheConnectionCancelEnds() = disconnectRefused(ownershipFails = false)
