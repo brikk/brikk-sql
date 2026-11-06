@@ -10,13 +10,14 @@ approved only the SG29-014 LIKE/map wrong-result pair, with commit/push at the e
 that bounded round was verified and pushed as `19c29eda`. The owner then approved
 the remainder of SG29-014; those assessed sub-rounds are now implemented and
 verified, with commit/push at the end.
-SG29-015 is separately approved, implemented and verified on 2026-11-06. Do not start
-SG29-019 onward or publish/adopt the branch as part of that approval. The owner
+SG29-015 is separately approved, implemented and verified on 2026-11-06. Its approval
+did not cover SG29-019 onward or publication/adoption. The owner
 subsequently approved commit/push of SG29-015 followed by SG29-016 through
 SG29-018 in order, with separate tested commits/pushes between items.
-Remaining items
-in Batches C through F remain proposed, not authorized. Publication and
-downstream adoption require their own authorization.
+The owner subsequently authorized the final two items, SG29-019 and SG29-020,
+while the separately authorized streaming-cancellation validation runs.
+SG29-019's complete frozen-target ledger is now verified; SG29-020 is in progress.
+Publication and downstream adoption still require their own authorization.
 
 ## Baselines and evidence
 
@@ -296,10 +297,13 @@ baseline explain the bounded drift. No global oracle refresh or release follows.
   Two full IntelliJ runs each execute 827 tests with one unrelated streaming-
   cancellation RMI EOF failure. The owner directed a separate fix/commit/push
   thread, without pausing SG29-018; that gate is not represented as passed.
+  Subsequent independent fix `17a3d5d4` passes all 829 IntelliJ tests, the original
+  827 plus two cancellation regressions, without exclusions. Full build and
+  2,598 JVM tests also pass; no SG29-018 sort/native evidence was changed.
 
 ## Batch F: oracle integration, only after the preceding decisions
 
-- [ ] **SG29-019: Complete the frozen-target disposition ledger.** Account for
+- [x] **SG29-019: Complete the frozen-target disposition ledger.** Account for
   commits omitted from the initial targeted review, including shared escaping,
   UNNEST/explode transforms, parser progress guards and new AST/type definitions.
   Mark each relevant change ported/tested, already equivalent with evidence,
@@ -308,6 +312,14 @@ baseline explain the bounded drift. No global oracle refresh or release follows.
   fixed. Python's large-exponent is_int exception does not directly apply to our
   toLongOrNull implementation. No replace_tables-equivalent API was found in
   the initial search. Confirm these dispositions, not automatic feature additions.
+  [Complete ledger](../vendor/data/sqlglot-sg29-019/README.md): all 250 exact
+  commits have full IDs, subjects, paths, patch hashes and explicit owned
+  dispositions. Three offline checker/safety tests and a complete upstream
+  history replay pass. New quoting/EXPLODE/REF integration prerequisites are
+  assigned to SG29-020, not labeled ports; excluded optimizer/external-oracle
+  work retains named owners. No pin, generated corpus or native baseline moved.
+  The separately committed cancellation fix is `17a3d5d4`; its full build/JVM/IDE
+  gates are green before this documentation/tooling-only round is committed.
 - [ ] **SG29-020: Refresh coherently and qualify integration.** Once scope and
   compatibility decisions are approved, regenerate target AST/tokenizer/typing
   metadata and corpora together, update FixturePinSyncTest and pin declarations,
@@ -331,7 +343,9 @@ keep the new items separate. The SG29-014 LIKE/map pair was verified and pushed
 as `19c29eda`, followed by approval of the remaining SG29-014 sub-rounds with
 commit/push after validation. SG29-015 was then separately approved and verified.
 Commit/push for that round and sequential SG29-016 through SG29-018 are now
-authorized, with commit/push between items. SG29-019 onward is not authorized.
+authorized, with commit/push between items. That three-item approval did not
+authorize SG29-019 onward. The owner has now separately authorized SG29-019
+and SG29-020, retaining separate tested commits and no publication/adoption.
 
 SG29-010 through SG29-013 are complete, with the three requested items validated
 and committed/pushed separately. All SG29-014 areas are now assessed and verified,
@@ -342,8 +356,9 @@ order. SG29-016 is now implemented and verified, with commit/push authorized.
 SG29-017 is also implemented and verified, with commit/push before SG29-018.
 SG29-018 is complete with the compatibility decision and native fix. The owner
 authorized continuing its commit/push while the unrelated IntelliJ cancellation
-blocker is fixed in a separate session. Two parent items remain open, SG29-019
-and SG29-020; neither is authorized by the three-item request.
+blocker is fixed in a separate session. A later request authorizes the last two
+items. SG29-019's complete disposition ledger is verified; SG29-020 remains in
+progress. The cancellation fix retains its own commit and full validation.
 
 Implementation is isolated on branch/worktree `sqlglot-30-29-batch-a`. The
 planning request initially added this TODO and its index links; later approvals

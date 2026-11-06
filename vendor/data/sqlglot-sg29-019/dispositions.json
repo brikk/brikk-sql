@@ -1,0 +1,3534 @@
+{
+  "base": "a00dc2e5c489214bea53bacbbeba8713f21ebce1",
+  "target": "2fe25297af5b0f44f5c9e5d03e1b296424b7acbe",
+  "target_tag": "v30.29.0",
+  "commit_count": 250,
+  "history_sha256": "96b35901b06fd63cde9b8c04fcd03dc523aa6ee7873771d80c6359f4d3c0d0af",
+  "groups": {
+    "SG29-002": {
+      "commits": [
+        "d6e78751"
+      ],
+      "disposition": "ported/tested",
+      "reason": "Bounded port and follow-ups reviewed in the named round; its native limits and refusals remain, not general engine equivalence.",
+      "evidence": "vendor/data/sqlglot-30.29-batch-a-README.md",
+      "owner": "Brikk SQL maintainers"
+    },
+    "SG29-003": {
+      "commits": [
+        "8a524dfa"
+      ],
+      "disposition": "ported/tested",
+      "reason": "Bounded port and follow-ups reviewed in the named round; its native limits and refusals remain, not general engine equivalence.",
+      "evidence": "vendor/data/sqlglot-30.29-batch-a-README.md",
+      "owner": "Brikk SQL maintainers"
+    },
+    "SG29-004": {
+      "commits": [
+        "c39005c3",
+        "093f2ec7",
+        "7696edf9"
+      ],
+      "disposition": "ported/tested",
+      "reason": "Bounded port and follow-ups reviewed in the named round; its native limits and refusals remain, not general engine equivalence.",
+      "evidence": "vendor/data/sqlglot-30.29-batch-a-README.md",
+      "owner": "Brikk SQL maintainers"
+    },
+    "SG29-005": {
+      "commits": [
+        "479c4cae"
+      ],
+      "disposition": "ported/tested",
+      "reason": "Bounded port and follow-ups reviewed in the named round; its native limits and refusals remain, not general engine equivalence.",
+      "evidence": "vendor/data/sqlglot-30.29-batch-b/README.md",
+      "owner": "Brikk SQL maintainers"
+    },
+    "SG29-006": {
+      "commits": [
+        "86abcde3",
+        "a4e08982"
+      ],
+      "disposition": "ported/tested",
+      "reason": "Bounded port and follow-ups reviewed in the named round; its native limits and refusals remain, not general engine equivalence.",
+      "evidence": "vendor/data/sqlglot-30.29-batch-b/README.md",
+      "owner": "Brikk SQL maintainers"
+    },
+    "SG29-007": {
+      "commits": [
+        "fdd0e9a4",
+        "8955d752",
+        "b1fd4e9e"
+      ],
+      "disposition": "ported/tested",
+      "reason": "Bounded port and follow-ups reviewed in the named round; its native limits and refusals remain, not general engine equivalence.",
+      "evidence": "vendor/data/sqlglot-30.29-batch-b/README.md",
+      "owner": "Brikk SQL maintainers"
+    },
+    "SG29-008": {
+      "commits": [
+        "f814e4cb"
+      ],
+      "disposition": "ported/tested",
+      "reason": "Bounded port and follow-ups reviewed in the named round; its native limits and refusals remain, not general engine equivalence.",
+      "evidence": "vendor/data/sqlglot-sg29-008/README.md",
+      "owner": "Brikk SQL maintainers"
+    },
+    "SG29-009": {
+      "commits": [
+        "3cca3ea4",
+        "2d4b5a5b"
+      ],
+      "disposition": "ported/tested",
+      "reason": "Bounded port and follow-ups reviewed in the named round; its native limits and refusals remain, not general engine equivalence.",
+      "evidence": "vendor/data/sqlglot-sg29-009/README.md",
+      "owner": "Brikk SQL maintainers"
+    },
+    "SG29-010": {
+      "commits": [
+        "4d7d7ca9",
+        "7ee62016",
+        "036c6107"
+      ],
+      "disposition": "ported/tested",
+      "reason": "Bounded port and follow-ups reviewed in the named round; its native limits and refusals remain, not general engine equivalence.",
+      "evidence": "vendor/data/sqlglot-sg29-010/README.md",
+      "owner": "Brikk SQL maintainers"
+    },
+    "SG29-011": {
+      "commits": [
+        "1e5c649c",
+        "eb03a972",
+        "78b24a74",
+        "5739cd6c",
+        "53ccce9f",
+        "8709510f",
+        "991d6ce5"
+      ],
+      "disposition": "ported/tested",
+      "reason": "Bounded port and follow-ups reviewed in the named round; its native limits and refusals remain, not general engine equivalence.",
+      "evidence": "vendor/data/sqlglot-sg29-011/README.md",
+      "owner": "Brikk SQL maintainers"
+    },
+    "SG29-012": {
+      "commits": [
+        "90659e63",
+        "dca9a621"
+      ],
+      "disposition": "ported/tested",
+      "reason": "Bounded port and follow-ups reviewed in the named round; its native limits and refusals remain, not general engine equivalence.",
+      "evidence": "vendor/data/sqlglot-sg29-012/README.md",
+      "owner": "Brikk SQL maintainers"
+    },
+    "SG29-013": {
+      "commits": [
+        "f3a6eb95",
+        "a0cc28b9"
+      ],
+      "disposition": "ported/tested",
+      "reason": "Bounded port and follow-ups reviewed in the named round; its native limits and refusals remain, not general engine equivalence.",
+      "evidence": "vendor/data/sqlglot-sg29-013/README.md",
+      "owner": "Brikk SQL maintainers"
+    },
+    "SG29-014": {
+      "commits": [
+        "3ba19eed",
+        "6202d947",
+        "59a96d86",
+        "fbda0b91",
+        "f321207c",
+        "cd41eeef",
+        "af2b5773",
+        "954cca12",
+        "df5b53f9",
+        "ce7f6e39",
+        "caa920da",
+        "fc1472a0",
+        "40dcaabd",
+        "ec24376a",
+        "1852fd31",
+        "b06ed8ea",
+        "41a962d5",
+        "55277446",
+        "115ce02b"
+      ],
+      "disposition": "ported/tested",
+      "reason": "Bounded port and follow-ups reviewed in the named round; its native limits and refusals remain, not general engine equivalence.",
+      "evidence": "vendor/data/sqlglot-sg29-014-rest/README.md",
+      "owner": "Brikk SQL maintainers"
+    },
+    "SG29-015": {
+      "commits": [
+        "0b001782",
+        "03744a2a",
+        "ab043477",
+        "2748f82e"
+      ],
+      "disposition": "ported/tested",
+      "reason": "Bounded port and follow-ups reviewed in the named round; its native limits and refusals remain, not general engine equivalence.",
+      "evidence": "vendor/data/sqlglot-sg29-015/README.md",
+      "owner": "Brikk SQL maintainers"
+    },
+    "SG29-016": {
+      "commits": [
+        "d17c7680",
+        "f536a823",
+        "a8a7610d"
+      ],
+      "disposition": "ported/tested",
+      "reason": "Bounded port and follow-ups reviewed in the named round; its native limits and refusals remain, not general engine equivalence.",
+      "evidence": "vendor/data/sqlglot-sg29-016/README.md",
+      "owner": "Brikk SQL maintainers"
+    },
+    "SG29-017": {
+      "commits": [
+        "f0b4347b",
+        "a32ef636",
+        "fb36fb71"
+      ],
+      "disposition": "ported/tested",
+      "reason": "Bounded port and follow-ups reviewed in the named round; its native limits and refusals remain, not general engine equivalence.",
+      "evidence": "vendor/data/sqlglot-sg29-017/README.md",
+      "owner": "Brikk SQL maintainers"
+    },
+    "analysis-policy": {
+      "commits": [
+        "021991fb",
+        "cb57d802",
+        "55bff612",
+        "5e0f7169",
+        "4678f6cb",
+        "2bf94d96",
+        "9d2966ed",
+        "e54ad9aa"
+      ],
+      "disposition": "intentionally divergent",
+      "reason": "Retain Brikk inference-policy overloads, ordered recursive set reconciliation, identity caches and published uncache API instead of a wholesale upstream cache/qualification refactor.",
+      "evidence": "vendor/data/sqlglot-sg29-017/README.md",
+      "owner": "Brikk SQL maintainers"
+    },
+    "sort-compatibility": {
+      "commits": [
+        "094509aa"
+      ],
+      "disposition": "intentionally divergent",
+      "reason": "Keep both published SortArray and ArraySort classes, constructors and serde identities. No implicit breaking node migration.",
+      "evidence": "vendor/data/sqlglot-sg29-018/README.md",
+      "owner": "Brikk SQL maintainers"
+    },
+    "duckdb-native-policy": {
+      "commits": [
+        "df0a3006",
+        "530eab07",
+        "1f8d15bb",
+        "623dc888",
+        "e92c2228",
+        "68cd4a2d",
+        "d335f898",
+        "83479d06",
+        "65eb0f22",
+        "a220ffb9",
+        "a97d0357",
+        "dd71d360",
+        "e0ac5e4e",
+        "4aa189a4",
+        "e3b3e23c",
+        "46af6e46",
+        "e88e67e6",
+        "5859d714",
+        "ebd5fb4d",
+        "8cf42771",
+        "31918e9a",
+        "c514be04",
+        "840347fd",
+        "f31f109d",
+        "5b7af1e7",
+        "549d64b9"
+      ],
+      "disposition": "intentionally divergent",
+      "reason": "Reuse the separately qualified DuckDB 2.0 native models and DDB20-055 refusal matrix. Do not import generic rewrites over session-sensitive/native execution contracts.",
+      "evidence": "vendor/data/sqlglot-sg29-018/README.md",
+      "owner": "Brikk SQL maintainers"
+    },
+    "query-plan-optimizer": {
+      "commits": [
+        "e237d598",
+        "00fce66d",
+        "97134ffd",
+        "30ceae53",
+        "b994fa75",
+        "f872c442",
+        "37f09630",
+        "4d7421ee",
+        "0e7b2da5",
+        "bc7a5c46",
+        "114999ae",
+        "680873ae",
+        "20f01c7f",
+        "da00199f",
+        "d17073f2",
+        "2933aeac",
+        "518a36a5",
+        "c8919668",
+        "1cbcaf65",
+        "03ecb3ed"
+      ],
+      "disposition": "deferred",
+      "reason": "Query-plan rewrites, decorrelation, join elimination and constant folding are explicitly outside this parser/transpiler/analysis catch-up. No optimizer behavior is claimed ported.",
+      "evidence": "dev-docs/TODO-sqlglot-30.29.md",
+      "owner": "Jayson Minard, separately approved optimizer work"
+    },
+    "unsupported-profiles": {
+      "commits": [
+        "ffb9721d",
+        "98bedf64",
+        "7d9a6cd5",
+        "fb9b151a",
+        "e38929ed",
+        "ab0a291f",
+        "61c3ca44",
+        "08f2405c",
+        "5b949bd6",
+        "b679d0cf",
+        "2c7b9280",
+        "e71e4ee1",
+        "513beedd",
+        "f8c314c4",
+        "9e57e448",
+        "2d3d3ff7",
+        "a2a8bb42",
+        "092e29a8",
+        "2b57c00a",
+        "83c09cdf",
+        "13528f03",
+        "8fb04fb3",
+        "184557f7",
+        "908809d3",
+        "634edd93",
+        "c5fe5404",
+        "a20a4d9e",
+        "41287a2d",
+        "13a570c6",
+        "a07698a7",
+        "e2a8b658",
+        "7c9dbb91",
+        "ffced075",
+        "70c2a840",
+        "52763cdd",
+        "f70f4e5b",
+        "6de2df31",
+        "0852195e",
+        "49a6467d",
+        "ec500798",
+        "59db279d",
+        "007fe450",
+        "4912880c"
+      ],
+      "disposition": "intentionally divergent",
+      "reason": "The changed Oracle/Athena/Teradata/Databricks/Fabric/SQLite/Snowflake/TSQL profile is not a supported Brikk dialect. Shared generated node definitions may be refreshed without adding that dialect or claiming execution.",
+      "evidence": "brikk-sql/testResources/corpus-policy.json",
+      "owner": "Brikk SQL maintainers"
+    },
+    "python-runtime-and-diff": {
+      "commits": [
+        "579789dc",
+        "c388227a",
+        "911ee761",
+        "c90a322c",
+        "7eff3a2f",
+        "a673630a",
+        "897e1dd1",
+        "d18c57b8",
+        "ead649b9",
+        "902739a3",
+        "94afaf0b",
+        "2ef935d6",
+        "6f90b498",
+        "cff07856"
+      ],
+      "disposition": "intentionally divergent",
+      "reason": "Python packaging, compiled bindings, workflows and the Python AST edit-script diff implementation have no corresponding JVM runtime subsystem in this catch-up.",
+      "evidence": "dev-docs/TODO-sqlglot-30.29.md",
+      "owner": "Brikk SQL maintainers"
+    },
+    "integration-test-revisions": {
+      "commits": [
+        "189fe3f4",
+        "b9c5f8d4",
+        "5f12cae5",
+        "7f415fbc",
+        "360b315c",
+        "7e627d56",
+        "29e07b5d",
+        "e7aa0af6",
+        "a798b220",
+        "bd06614d",
+        "27a146b7",
+        "603dd92c",
+        "d155947f",
+        "23446622",
+        "571d5122",
+        "c922dbe9",
+        "f3f2201f",
+        "fe2d1485",
+        "feb0e08a",
+        "f1fa6bf6",
+        "aa7d8e39",
+        "4ef575e2",
+        "ad8d374b",
+        "f266a8ce",
+        "a1ec85c6",
+        "e2585b03",
+        "f41f4f8b",
+        "b8a1ce6f",
+        "2fe25297"
+      ],
+      "disposition": "deferred",
+      "reason": "These commits only advance upstream's external integration-test submodule. The frozen local fixtures are refreshed in SG29-020; unrun external engine suites remain explicitly unclaimed.",
+      "evidence": "dev-docs/TODO-sqlglot-30.29.md",
+      "owner": "Jayson Minard, external oracle qualification"
+    },
+    "release-changelogs": {
+      "commits": [
+        "f8287a09",
+        "e0ccb319",
+        "c034cbf2",
+        "9ae1a6a7",
+        "5c101a25"
+      ],
+      "disposition": "intentionally divergent",
+      "reason": "Release-note-only upstream commits do not require a Brikk behavioral port or change Brikk publication versions.",
+      "evidence": "dev-docs/TODO-sqlglot-30.29.md",
+      "owner": "Brikk SQL maintainers"
+    },
+    "shared-escaping": {
+      "commits": [
+        "d3758367"
+      ],
+      "disposition": "deferred",
+      "reason": "Shared property keys, single-string intervals and Presto WEEK rewrites interpolate raw text. Review and cover quoting before coherent refresh; native acceptance is a separate claim.",
+      "evidence": "brikk-sql/src/dev.brikk.house.sql/generator/Generator.kt",
+      "owner": "Jayson Minard, SG29-020"
+    },
+    "nested-explode": {
+      "commits": [
+        "9beb4ab2"
+      ],
+      "disposition": "deferred",
+      "reason": "explodeProjectionToUnnest searches through nested queries. Restrict every explode/zip discovery to its own scope and retain outer-map/zip semantics during SG29-020.",
+      "evidence": "brikk-sql/src/dev.brikk.house.sql/generator/Transforms.kt",
+      "owner": "Jayson Minard, SG29-020"
+    },
+    "copy-progress": {
+      "commits": [
+        "bc1cd99a"
+      ],
+      "disposition": "deferred",
+      "reason": "Initial COPY probes did not reproduce a hang. Kotlin parseVar(anyToken=true) consumes punctuation too. Pin finite malformed-input behavior and add a null/progress guard rather than claim a reproduced infinite loop.",
+      "evidence": "brikk-sql/src/dev.brikk.house.sql/parser/Parser.kt",
+      "owner": "Jayson Minard, SG29-020"
+    },
+    "bounded-integer-classification": {
+      "commits": [
+        "9619dd18",
+        "d06bde08"
+      ],
+      "disposition": "already equivalent",
+      "reason": "Expression.isInt uses toLongOrNull, not Python int(float(...)); large exponents do not materialize enormous integers or throw ValueError. Keep the bounded classification policy, not Python's floating-point definition of integer.",
+      "evidence": "brikk-sql/src/dev.brikk.house.sql/ast/Members.kt",
+      "owner": "Brikk SQL maintainers"
+    },
+    "replace-tables-api": {
+      "commits": [
+        "c241c2ff",
+        "c9e673a2"
+      ],
+      "disposition": "intentionally divergent",
+      "reason": "No replace_tables-equivalent public helper exists. Structural Expression.transform/replace is not that name-based API; do not add a new API merely to port its upstream fix.",
+      "evidence": "brikk-sql/src/dev.brikk.house.sql/ast/Expression.kt",
+      "owner": "Brikk SQL maintainers"
+    },
+    "generated-case-sensitivity": {
+      "commits": [
+        "cf39265a",
+        "282f7b29"
+      ],
+      "disposition": "deferred",
+      "reason": "The AST generator already emits _hash_raw_args but the frozen tables predate the new per-node flags. Refresh generated flags and hand-owned case/serde controls coherently, preserving structural rather than hash-collision equality.",
+      "evidence": "tools/gen_ast_nodes.py",
+      "owner": "Jayson Minard, SG29-020"
+    },
+    "ref-type": {
+      "commits": [
+        "98782638"
+      ],
+      "disposition": "deferred",
+      "reason": "REF requires a token and DType plus parsing of a named table target, not just enum regeneration. Preserve REF function/identifier parsing and do not claim native-engine support from generic parsing.",
+      "evidence": "tools/gen_ast_nodes.py",
+      "owner": "Jayson Minard, SG29-020"
+    },
+    "review-91143554": {
+      "commits": [
+        "91143554"
+      ],
+      "disposition": "deferred",
+      "reason": "Unnamed MySQL constraints are a syntax feature; retain whole-command fallback for unsupported definitions instead of promising native DDL execution.",
+      "evidence": "dev-docs/TODO-sqlglot-30.29.md",
+      "owner": "Jayson Minard, SG29-020 case-level qualification"
+    },
+    "review-676ba365": {
+      "commits": [
+        "676ba365"
+      ],
+      "disposition": "deferred",
+      "reason": "Named FOREIGN KEY index syntax needs a separate structured/native DDL contract, not a name-only parser alias.",
+      "evidence": "dev-docs/TODO-sqlglot-30.29.md",
+      "owner": "Jayson Minard, SG29-020 case-level qualification"
+    },
+    "review-c0a94574": {
+      "commits": [
+        "c0a94574"
+      ],
+      "disposition": "deferred",
+      "reason": "Tests follow the named FOREIGN KEY index feature; no independent runtime change.",
+      "evidence": "dev-docs/TODO-sqlglot-30.29.md",
+      "owner": "Jayson Minard, SG29-020 case-level qualification"
+    },
+    "review-b1b244b1": {
+      "commits": [
+        "b1b244b1"
+      ],
+      "disposition": "deferred",
+      "reason": "SPLIT_TO_TABLE column qualification belongs to an unsupported Snowflake TVF; do not infer arbitrary unknown TVF columns.",
+      "evidence": "dev-docs/TODO-sqlglot-30.29.md",
+      "owner": "Jayson Minard, SG29-020 case-level qualification"
+    },
+    "review-fdba492c": {
+      "commits": [
+        "fdba492c"
+      ],
+      "disposition": "deferred",
+      "reason": "Alias collision in merge_subqueries is a query-plan transformation outside this catch-up.",
+      "evidence": "dev-docs/TODO-sqlglot-30.29.md",
+      "owner": "Jayson Minard, SG29-020 case-level qualification"
+    },
+    "review-d747f5b2": {
+      "commits": [
+        "d747f5b2"
+      ],
+      "disposition": "deferred",
+      "reason": "Python's huge-int materialization is not Kotlin's bounded Long conversion. Pin large interval rendering and failure behavior during integration without introducing an arbitrary-precision simplifier.",
+      "evidence": "dev-docs/TODO-sqlglot-30.29.md",
+      "owner": "Jayson Minard, SG29-020 case-level qualification"
+    },
+    "review-ca870e84": {
+      "commits": [
+        "ca870e84"
+      ],
+      "disposition": "deferred",
+      "reason": "Unknown property classes currently emit a null name after warning; omit the unknown property instead, with an explicit diagnostic regression in SG29-020.",
+      "evidence": "dev-docs/TODO-sqlglot-30.29.md",
+      "owner": "Jayson Minard, SG29-020 case-level qualification"
+    },
+    "review-b50e43e4": {
+      "commits": [
+        "b50e43e4"
+      ],
+      "disposition": "deferred",
+      "reason": "PASTE JOIN needs a new token and supported grammar. Keep native execution unqualified; target token tables alone must not imply a new join contract.",
+      "evidence": "dev-docs/TODO-sqlglot-30.29.md",
+      "owner": "Jayson Minard, SG29-020 case-level qualification"
+    },
+    "review-2444b6db": {
+      "commits": [
+        "2444b6db"
+      ],
+      "disposition": "deferred",
+      "reason": "The associated PASTE JOIN optimizer scope change does not independently qualify PASTE JOIN execution.",
+      "evidence": "dev-docs/TODO-sqlglot-30.29.md",
+      "owner": "Jayson Minard, SG29-020 case-level qualification"
+    },
+    "review-7af2aa8d": {
+      "commits": [
+        "7af2aa8d"
+      ],
+      "disposition": "deferred",
+      "reason": "Pivoted CTE alias registration must be compared with Brikk's existing PIVOT scope model, not replace it with the upstream scope refactor.",
+      "evidence": "dev-docs/TODO-sqlglot-30.29.md",
+      "owner": "Jayson Minard, SG29-020 case-level qualification"
+    },
+    "review-e3d0dfb2": {
+      "commits": [
+        "e3d0dfb2"
+      ],
+      "disposition": "deferred",
+      "reason": "ORDER alias expansion must not share AST children. Compare the existing copy policy and target alias corpus before changing analysis order.",
+      "evidence": "dev-docs/TODO-sqlglot-30.29.md",
+      "owner": "Jayson Minard, SG29-020 case-level qualification"
+    },
+    "review-d44db25a": {
+      "commits": [
+        "d44db25a"
+      ],
+      "disposition": "deferred",
+      "reason": "PARTITION BY EXCLUDING is a new generic AST/syntax feature. Refresh its schema but do not claim native engine support from generic rendering.",
+      "evidence": "dev-docs/TODO-sqlglot-30.29.md",
+      "owner": "Jayson Minard, SG29-020 case-level qualification"
+    },
+    "review-5d588c0f": {
+      "commits": [
+        "5d588c0f"
+      ],
+      "disposition": "deferred",
+      "reason": "Unsupported struct-star operands must remain unresolved, not fabricate complete schemas. Retain conservative Engine policy and review exact target fixture deltas.",
+      "evidence": "dev-docs/TODO-sqlglot-30.29.md",
+      "owner": "Jayson Minard, SG29-020 case-level qualification"
+    },
+    "review-67961afb": {
+      "commits": [
+        "67961afb"
+      ],
+      "disposition": "deferred",
+      "reason": "JSON-path alias matching must preserve unknown paths and not choose a false alias. Compare existing structural equality and target corpus evidence.",
+      "evidence": "dev-docs/TODO-sqlglot-30.29.md",
+      "owner": "Jayson Minard, SG29-020 case-level qualification"
+    },
+    "review-e6c7d527": {
+      "commits": [
+        "e6c7d527"
+      ],
+      "disposition": "deferred",
+      "reason": "INSERT target aliases must not consume the target column list. Inspect structured Schema ownership and add target regression during SG29-020.",
+      "evidence": "dev-docs/TODO-sqlglot-30.29.md",
+      "owner": "Jayson Minard, SG29-020 case-level qualification"
+    },
+    "review-9fedfa5f": {
+      "commits": [
+        "9fedfa5f"
+      ],
+      "disposition": "deferred",
+      "reason": "Comment propagation follows the INSERT alias/column-list parser fix; retain comments without mutating caller-owned nodes.",
+      "evidence": "dev-docs/TODO-sqlglot-30.29.md",
+      "owner": "Jayson Minard, SG29-020 case-level qualification"
+    },
+    "review-3377b957": {
+      "commits": [
+        "3377b957"
+      ],
+      "disposition": "deferred",
+      "reason": "Parser cleanup is part of that same INSERT alias ownership fix, not a separate feature.",
+      "evidence": "dev-docs/TODO-sqlglot-30.29.md",
+      "owner": "Jayson Minard, SG29-020 case-level qualification"
+    },
+    "review-43fbff20": {
+      "commits": [
+        "43fbff20"
+      ],
+      "disposition": "deferred",
+      "reason": "Positional alias type inference is compared with Brikk's existing recursive set/CTE output reconciliation; keep duplicate names and explicit unknowns conservative.",
+      "evidence": "dev-docs/TODO-sqlglot-30.29.md",
+      "owner": "Jayson Minard, SG29-020 case-level qualification"
+    },
+    "review-7c4e124f": {
+      "commits": [
+        "7c4e124f"
+      ],
+      "disposition": "deferred",
+      "reason": "Caching positional column alias mappings is not an API or correctness requirement. Keep existing identity-cache invalidation contracts.",
+      "evidence": "dev-docs/TODO-sqlglot-30.29.md",
+      "owner": "Jayson Minard, SG29-020 case-level qualification"
+    },
+    "review-069a7517": {
+      "commits": [
+        "069a7517"
+      ],
+      "disposition": "deferred",
+      "reason": "ClickHouse NATURAL JOIN already has independent native parsing/typing safeguards; target generic output is not authority to weaken them.",
+      "evidence": "dev-docs/TODO-sqlglot-30.29.md",
+      "owner": "Jayson Minard, SG29-020 case-level qualification"
+    },
+    "review-76001235": {
+      "commits": [
+        "76001235"
+      ],
+      "disposition": "deferred",
+      "reason": "Snowflake splitter and BigQuery pivot changes include schema-less TVF inference. Keep the explicit Brikk inference-policy divergence and bounded pivot result contracts.",
+      "evidence": "dev-docs/TODO-sqlglot-30.29.md",
+      "owner": "Jayson Minard, SG29-020 case-level qualification"
+    },
+    "review-5f3b52da": {
+      "commits": [
+        "5f3b52da"
+      ],
+      "disposition": "deferred",
+      "reason": "Cleanup to unknown-source qualification follows the same splitter/pivot work; do not back-project guessed schemas.",
+      "evidence": "dev-docs/TODO-sqlglot-30.29.md",
+      "owner": "Jayson Minard, SG29-020 case-level qualification"
+    },
+    "review-a9f1309c": {
+      "commits": [
+        "a9f1309c"
+      ],
+      "disposition": "deferred",
+      "reason": "UNION BY NAME internal renaming is a query-plan canonicalization pass, not the native set-operation output reconciler.",
+      "evidence": "dev-docs/TODO-sqlglot-30.29.md",
+      "owner": "Jayson Minard, SG29-020 case-level qualification"
+    },
+    "review-c068aefd": {
+      "commits": [
+        "c068aefd"
+      ],
+      "disposition": "deferred",
+      "reason": "replaceLambda must give each synthesized Cast its own DataType child; add a parent-ownership regression before target refresh.",
+      "evidence": "dev-docs/TODO-sqlglot-30.29.md",
+      "owner": "Jayson Minard, SG29-020 case-level qualification"
+    },
+    "review-8c5600ad": {
+      "commits": [
+        "8c5600ad"
+      ],
+      "disposition": "deferred",
+      "reason": "ClickHouse Contains under unary minus requires grouping. Review the generic parenthesization path and target fixture before claiming equivalence.",
+      "evidence": "dev-docs/TODO-sqlglot-30.29.md",
+      "owner": "Jayson Minard, SG29-020 case-level qualification"
+    },
+    "review-bffbfbe4": {
+      "commits": [
+        "bffbfbe4"
+      ],
+      "disposition": "deferred",
+      "reason": "This only refines the corresponding ClickHouse test; no independent production change.",
+      "evidence": "dev-docs/TODO-sqlglot-30.29.md",
+      "owner": "Jayson Minard, SG29-020 case-level qualification"
+    },
+    "review-33c72094": {
+      "commits": [
+        "33c72094"
+      ],
+      "disposition": "deferred",
+      "reason": "SEMI/ANTI RHS tables must remain invisible to outer column resolution. Existing Engine/shape controls are retained; compare the new target scope fixture exactly.",
+      "evidence": "dev-docs/TODO-sqlglot-30.29.md",
+      "owner": "Jayson Minard, SG29-020 case-level qualification"
+    },
+    "review-a357b7d9": {
+      "commits": [
+        "a357b7d9"
+      ],
+      "disposition": "deferred",
+      "reason": "PostgreSQL TABLESPACE is new DDL syntax. Metadata preservation is not an authorization to execute native CREATE statements.",
+      "evidence": "dev-docs/TODO-sqlglot-30.29.md",
+      "owner": "Jayson Minard, SG29-020 case-level qualification"
+    },
+    "review-9943dc46": {
+      "commits": [
+        "9943dc46"
+      ],
+      "disposition": "deferred",
+      "reason": "Resolver semi/anti unknown-source handling must preserve Brikk's explicit unknown-schema conservatism and inference overloads.",
+      "evidence": "dev-docs/TODO-sqlglot-30.29.md",
+      "owner": "Jayson Minard, SG29-020 case-level qualification"
+    },
+    "review-b0842a1e": {
+      "commits": [
+        "b0842a1e"
+      ],
+      "disposition": "deferred",
+      "reason": "PER aggregate syntax is a new generic node, not a supported-engine execution contract; refresh metadata only unless independently qualified.",
+      "evidence": "dev-docs/TODO-sqlglot-30.29.md",
+      "owner": "Jayson Minard, SG29-020 case-level qualification"
+    },
+    "review-04f4a440": {
+      "commits": [
+        "04f4a440"
+      ],
+      "disposition": "deferred",
+      "reason": "IN as a contextual identifier needs grammar controls so the operator keeps its meaning. Review target cases during SG29-020.",
+      "evidence": "dev-docs/TODO-sqlglot-30.29.md",
+      "owner": "Jayson Minard, SG29-020 case-level qualification"
+    },
+    "review-06aa274a": {
+      "commits": [
+        "06aa274a"
+      ],
+      "disposition": "deferred",
+      "reason": "Warning expectations are test harness data and are incorporated through the coherent corpus extraction, not a global warning suppression.",
+      "evidence": "dev-docs/TODO-sqlglot-30.29.md",
+      "owner": "Jayson Minard, SG29-020 case-level qualification"
+    },
+    "review-90759771": {
+      "commits": [
+        "90759771"
+      ],
+      "disposition": "deferred",
+      "reason": "Unsupported-property warning expectations remain case-specific corpus data; retain diagnostics for unknown properties.",
+      "evidence": "dev-docs/TODO-sqlglot-30.29.md",
+      "owner": "Jayson Minard, SG29-020 case-level qualification"
+    },
+    "review-7e4d995f": {
+      "commits": [
+        "7e4d995f"
+      ],
+      "disposition": "deferred",
+      "reason": "ClickHouse parenthesized CTAS with COMMENT must not gain another wrapper on each generation. Review idempotence without executing DDL.",
+      "evidence": "dev-docs/TODO-sqlglot-30.29.md",
+      "owner": "Jayson Minard, SG29-020 case-level qualification"
+    },
+    "semi-using-left-value": {
+      "commits": [
+        "09481cec"
+      ],
+      "disposition": "already equivalent",
+      "reason": "Brikk's USING expansion records a nonempty left source and selects lhs directly for SEMI/ANTI joins. It never constructs upstream's empty COALESCE; retain the richer mergedValues model.",
+      "evidence": "brikk-sql/src/dev.brikk.house.sql/optimizer/QualifyColumns.kt",
+      "owner": "Brikk SQL maintainers"
+    },
+    "placeholder-replacement-api": {
+      "commits": [
+        "ad8764a0"
+      ],
+      "disposition": "intentionally divergent",
+      "reason": "No replace_placeholders public helper exists. Keep parameter/source-map ownership in existing Brikk APIs rather than add a new name-based expression-builder API.",
+      "evidence": "brikk-sql/src/dev.brikk.house.sql/ast/Builders.kt",
+      "owner": "Brikk SQL maintainers"
+    },
+    "regex-count-qualification": {
+      "commits": [
+        "ba643d33"
+      ],
+      "disposition": "deferred",
+      "reason": "Do not equate Trino REGEXP_COUNT and ClickHouse countMatches from names alone. The separately queued bounded Trino work and unproved ClickHouse mapping remain separate.",
+      "evidence": "vendor/data/sqlglot-sg29-018/README.md",
+      "owner": "Jayson Minard, bounded regex qualification"
+    }
+  },
+  "commits": [
+    {
+      "commit": "189fe3f4c0cf3da06b4e9319e3b71a7b43a78f2c",
+      "subject": "Sync w/ integration tests",
+      "files": [
+        "sqlglot-integration-tests"
+      ],
+      "patch_sha256": "3c04952483ff313d65ffdb300ec3108df683df4cace25758bbc5604f7e10a67f",
+      "review": "integration-test-revisions"
+    },
+    {
+      "commit": "ffb9721df98984c62817701ec8cd895cb3b1ee82",
+      "subject": "fix(oracle): tokenize q'...' quoted string literals [CLAUDE] (#8582)",
+      "files": [
+        "sqlglot/dialects/oracle.py",
+        "tests/dialects/test_oracle.py"
+      ],
+      "patch_sha256": "639fa4d36b794f7e80896d945f0f2477066b81ab203426a725074fe24d1a73df",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "f3a6eb95e424ef03bf20fca05a0431a666946e90",
+      "subject": "feat(doris): parse full-text search operators [CLAUDE] (#8585)",
+      "files": [
+        "sqlglot/expressions/core.py",
+        "sqlglot/generator.py",
+        "sqlglot/generators/doris.py",
+        "sqlglot/parsers/doris.py",
+        "tests/dialects/test_doris.py"
+      ],
+      "patch_sha256": "3487354da33387c38fda26df47faf3e01251db43383a28f96805c51e05389d3d",
+      "review": "SG29-013"
+    },
+    {
+      "commit": "e237d5980e8084cd2eceb874280efc3f3369c0ba",
+      "subject": "fix(optimizer): keep the alias outside of COALESCE when unnesting a COUNT subquery [CLAUDE] (#8589)",
+      "files": [
+        "sqlglot/optimizer/unnest_subqueries.py",
+        "tests/fixtures/optimizer/optimizer.sql"
+      ],
+      "patch_sha256": "8bae6cf1100a98579de30fbe89de24068a257663dae570b5320a0c3136e0e755",
+      "review": "query-plan-optimizer"
+    },
+    {
+      "commit": "98bedf649b244d321782a213944320d54f7cc868",
+      "subject": "fix(oracle): parse partition clauses and flashback queries [CODEX] (#8588)",
+      "files": [
+        "sqlglot/dialects/oracle.py",
+        "sqlglot/generators/oracle.py",
+        "sqlglot/parser.py",
+        "sqlglot/parsers/oracle.py",
+        "tests/dialects/test_oracle.py"
+      ],
+      "patch_sha256": "345cbec10cf26f28d6b679bfff7a10cb42d70660a904539223cb4da6829523e8",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "3ba19eedd7b381f990f9926266457eda7a60095b",
+      "subject": "feat(starrocks): support AGGREGATE KEY tables [CLAUDE] (#8591)",
+      "files": [
+        "sqlglot/expressions/properties.py",
+        "sqlglot/generator.py",
+        "sqlglot/parsers/starrocks.py",
+        "tests/dialects/test_starrocks.py"
+      ],
+      "patch_sha256": "4bac123fe9355b152e6297473b7ce456b4b2d348e8c77ba0659f7e0d98c2ee8e",
+      "review": "SG29-014"
+    },
+    {
+      "commit": "09481cec085106bc77fb584e4d322f7e179a5a11",
+      "subject": "fix(optimizer): qualify bare USING columns after SEMI/ANTI JOIN closes #8590 (#8592)",
+      "files": [
+        "sqlglot/optimizer/qualify_columns.py",
+        "tests/fixtures/optimizer/qualify_columns.sql"
+      ],
+      "patch_sha256": "da684fd15e4a5bac5c1c5ae79a49fd8dda2f3c0d3b8ffa35e9209595428e4b0a",
+      "review": "semi-using-left-value"
+    },
+    {
+      "commit": "df0a3006c485010e2bde4f2b6ce16594885772f0",
+      "subject": "fix(duckdb): append on 1-based ARRAY_INSERT -1 (#8597)",
+      "files": [
+        "sqlglot/generators/duckdb.py",
+        "tests/dialects/test_duckdb.py"
+      ],
+      "patch_sha256": "b07ee0592f656f3802fa71407948c885c75b49865802e6d5cc8c987154acd81a",
+      "review": "duckdb-native-policy"
+    },
+    {
+      "commit": "530eab0737ef4638f70ccd33dd1c35cffdde531d",
+      "subject": "cleanup",
+      "files": [
+        "sqlglot/generators/duckdb.py"
+      ],
+      "patch_sha256": "1d9dcb243ed54e3b8952052d4670e56f8c893bd83535f15f744a5a7463ada8b9",
+      "review": "duckdb-native-policy"
+    },
+    {
+      "commit": "9114355463fd02a9b505c869edb0561503a07b19",
+      "subject": "feat(mysql): Allow constraints without names. (#8600)",
+      "files": [
+        "sqlglot/parser.py",
+        "sqlglot/parsers/mysql.py",
+        "tests/dialects/test_mysql.py"
+      ],
+      "patch_sha256": "3c9db1d2361dd0a3f4eb30fbbb1187f41d135314a9757dc981bbff2b064871c8",
+      "review": "review-91143554"
+    },
+    {
+      "commit": "7d9a6cd599c41e4bd886c757e1b9e60b39bef70c",
+      "subject": "fix: allow `EXTERNAL FUNCTION` in Athena `CTAS` (#8602)",
+      "files": [
+        "sqlglot/generators/athena.py",
+        "sqlglot/parser.py",
+        "sqlglot/parsers/athena.py",
+        "tests/dialects/test_athena.py"
+      ],
+      "patch_sha256": "085eb6b9d8561b7466156b7b40044b213f7555baec27fea09cede77d6ddec9df",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "fb9b151a7fa22259c58140450e1075d7a0ff0f68",
+      "subject": "cleanup",
+      "files": [
+        "sqlglot/generators/athena.py",
+        "sqlglot/parser.py",
+        "sqlglot/parsers/athena.py"
+      ],
+      "patch_sha256": "2636ec5fc57ba9838a19758d2cd762795611dff5682007d68d97eb4ec36f37d8",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "e38929edd78a20f74fc19fee819e14ac23add687",
+      "subject": "fix(teradata): default window aggregate frame to the whole partition [CLAUDE] (#8596)",
+      "files": [
+        "sqlglot/generators/teradata.py",
+        "sqlglot/parsers/teradata.py",
+        "tests/dialects/test_teradata.py"
+      ],
+      "patch_sha256": "2339e2d37b0f481ecceb828a9a83c868c9d62128ad242f36793ae853738ba1e6",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "cf39265a3e8efd8c32bab7f9c9b4f123fdfbf682",
+      "subject": "fix(expressions)!: hash flag for case-sensitive nodes [CLAUDE] (#8599)",
+      "files": [
+        "sqlglot/expressions/core.py",
+        "sqlglot/expressions/ddl.py",
+        "sqlglot/expressions/json.py",
+        "sqlglot/expressions/properties.py",
+        "sqlglot/expressions/query.py",
+        "tests/test_expressions.py"
+      ],
+      "patch_sha256": "1b3aeeb05be8b0043ab45e1a7e025225dd327ae5a4b2ae22b090edc7c264c73e",
+      "review": "generated-case-sensitivity"
+    },
+    {
+      "commit": "282f7b29e9b183cfcad34f2d3bc197bf72cb0a57",
+      "subject": "additional fixups",
+      "files": [
+        "sqlglot/expressions/query.py",
+        "tests/fixtures/optimizer/eliminate_subqueries.sql",
+        "tests/test_expressions.py"
+      ],
+      "patch_sha256": "2ad8a82053521b3d6ca7f4c9f18f07ef62a7c7cceffa463e204f565ed16f7b56",
+      "review": "generated-case-sensitivity"
+    },
+    {
+      "commit": "ab0a291f91f1ba8c32058340bf76738c4ea685ea",
+      "subject": "fix(oracle): normalize flashback timestamps and simplify parsing (#8608)",
+      "files": [
+        "sqlglot/generators/oracle.py",
+        "sqlglot/parser.py",
+        "sqlglot/parsers/oracle.py",
+        "tests/dialects/test_oracle.py"
+      ],
+      "patch_sha256": "803e76f0f4c565eb349d6cce110ebae060bb5a5bf6b0880ac7abef9e18e820dc",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "a0cc28b91c3d186801d478e83967e967b86c90dd",
+      "subject": "fix(doris): round-trip MATCH operands and quoted analyzers (#8607)",
+      "files": [
+        "sqlglot/parsers/doris.py",
+        "tests/dialects/test_doris.py"
+      ],
+      "patch_sha256": "6b12b89e2417e0c7c994e9d6f7ddfe29bb2ca95775efd849cd7177184bb11fc6",
+      "review": "SG29-013"
+    },
+    {
+      "commit": "4d7d7ca94250269dc1903d7175b7b8aa96e9a480",
+      "subject": "fix(clickhouse)!: generate JSONExtractRaw for JSON-valued extraction (#8601)",
+      "files": [
+        "sqlglot/generators/clickhouse.py",
+        "sqlglot/parsers/clickhouse.py",
+        "tests/dialects/test_clickhouse.py",
+        "tests/dialects/test_dialect.py",
+        "tests/dialects/test_postgres.py"
+      ],
+      "patch_sha256": "1e4950039d6732a71c4aeeef0753277089a47d94b3864b300e7523e78c116452",
+      "review": "SG29-010"
+    },
+    {
+      "commit": "7ee6201688a8184a27177aec66569c4d84cdfba1",
+      "subject": "fixup",
+      "files": [
+        "sqlglot/generators/clickhouse.py",
+        "sqlglot/parsers/clickhouse.py",
+        "tests/dialects/test_clickhouse.py"
+      ],
+      "patch_sha256": "79f3ef43b24ed8fbe681e80f8eedf537194fe167f0dc8a22bfe19b8a4b0e9bb9",
+      "review": "SG29-010"
+    },
+    {
+      "commit": "1f8d15bbd68586704666533b21a5b35d710d68f0",
+      "subject": "fix: convert DuckDB ARRAY_SLICE endpoints to SLICE lengths (#8609)",
+      "files": [
+        "sqlglot/dialects/dialect.py",
+        "sqlglot/generators/presto.py",
+        "sqlglot/generators/spark2.py",
+        "sqlglot/parsers/duckdb.py",
+        "tests/dialects/test_duckdb.py",
+        "tests/dialects/test_spark.py"
+      ],
+      "patch_sha256": "c6f831cbd2dd8b1e1337e20ec1f7e7041bb35613dbe05e98e8a487a4d7ed5cdb",
+      "review": "duckdb-native-policy"
+    },
+    {
+      "commit": "61c3ca4479c167d9c90d51f73184568769fa0635",
+      "subject": "fix(oracle): parse CREATE TABLE TABLESPACE (#8605)",
+      "files": [
+        "sqlglot/expressions/properties.py",
+        "sqlglot/generator.py",
+        "sqlglot/generators/oracle.py",
+        "sqlglot/parsers/oracle.py",
+        "tests/dialects/test_oracle.py"
+      ],
+      "patch_sha256": "4b988d8e2e8c6051e94f28352c183e062e009fa5111f44bc74940b0660b5cba9",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "036c61079d71b9bba614085ecb7b163f4e81cc0d",
+      "subject": "tests",
+      "files": [
+        "tests/dialects/test_clickhouse.py"
+      ],
+      "patch_sha256": "1128ac591b8fb3d14e03682481698e32a6284eff99327231daca667993121831",
+      "review": "SG29-010"
+    },
+    {
+      "commit": "08f2405cfddc874f4366cbcca9e25233fcb11281",
+      "subject": "fix(oracle): expand alternative quoting and support national literals (#8606)",
+      "files": [
+        "sqlglot/anonymize.py",
+        "sqlglot/dialects/oracle.py",
+        "sqlglot/parser.py",
+        "sqlglot/tokenizer_core.py",
+        "sqlglot/tokens.py",
+        "tests/dialects/test_oracle.py",
+        "tests/test_anonymize.py",
+        "tests/test_parser.py"
+      ],
+      "patch_sha256": "4a0872cab8e892cac4d05751d33aac475bd4fb9a5c2822960c86c07f749795b1",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "579789dc3d368daf6aa0919ed5c0994187472a4b",
+      "subject": "chore: add support for Python 3.15 (#8586)",
+      "files": [
+        ".github/workflows/package-publish.yml",
+        ".github/workflows/package-test.yml"
+      ],
+      "patch_sha256": "651585c2b7b128a04a0fc1f332908809c455116991bd2af6225e7b686e08b962",
+      "review": "python-runtime-and-diff"
+    },
+    {
+      "commit": "5b949bd6b7f1db1474a87ac34d3a9246fa7de237",
+      "subject": "fix(oracle): parse CREATE TABLE physical attributes and storage clauses closes #8581",
+      "files": [
+        "sqlglot/expressions/properties.py",
+        "sqlglot/generator.py",
+        "sqlglot/generators/oracle.py",
+        "sqlglot/parsers/oracle.py",
+        "tests/dialects/test_oracle.py"
+      ],
+      "patch_sha256": "ea5129f40cb32dcda899e087e262c4392e086ecafe050f14e67dcd2a414271a8",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "6202d94764305621117dc6229cda79575ca103e5",
+      "subject": "feat(starrocks): support HLL columns and the HLL_UNION aggregation type [CLAUDE] (#8612)",
+      "files": [
+        "sqlglot/dialects/starrocks.py",
+        "sqlglot/generators/starrocks.py",
+        "sqlglot/parsers/starrocks.py",
+        "tests/dialects/test_starrocks.py"
+      ],
+      "patch_sha256": "a69831d27da25c801a8a560d2e8bb0cfd5ba8059052f31387690739283101022",
+      "review": "SG29-014"
+    },
+    {
+      "commit": "0b0017821590b08497529d37387396adb6c3aa5b",
+      "subject": "feat(spark): parse all ALTER TABLE DROP COLUMN[S] forms [CLAUDE] (#8611)",
+      "files": [
+        "sqlglot/parsers/spark2.py",
+        "tests/dialects/test_spark.py"
+      ],
+      "patch_sha256": "5f5de53b3529a8572e5f3a0d9eb9db52f59abc256c381820d3013ab7b86127c7",
+      "review": "SG29-015"
+    },
+    {
+      "commit": "59a96d868a6b8ed114ac3e216201106fea8bc351",
+      "subject": "feat(starrocks): support REFRESH MATERIALIZED VIEW options [CLAUDE] (#8613)",
+      "files": [
+        "sqlglot/expressions/core.py",
+        "sqlglot/generator.py",
+        "sqlglot/generators/starrocks.py",
+        "sqlglot/parsers/starrocks.py",
+        "tests/dialects/test_starrocks.py"
+      ],
+      "patch_sha256": "87e6aef2491b20d1a9e5bc6c038a58fa74b143af0c1f63383570568e837652b5",
+      "review": "SG29-014"
+    },
+    {
+      "commit": "676ba365497215dadf89c3fa57f4872529745650",
+      "subject": "feat(mysql): Support named `FOREIGN KEY` indexes. (#8615)",
+      "files": [
+        "sqlglot/expressions/constraints.py",
+        "sqlglot/generator.py",
+        "sqlglot/parsers/mysql.py",
+        "tests/dialects/test_mysql.py"
+      ],
+      "patch_sha256": "4287180f96b97d7be929c7fae55211a867c7a7b7a144fc7852204bf2b531ce80",
+      "review": "review-676ba365"
+    },
+    {
+      "commit": "c0a945740e55facdc7120c17cda2771dc55c7903",
+      "subject": "chore(mysql): tests for named FOREIGN KEY indexes",
+      "files": [
+        "tests/dialects/test_mysql.py"
+      ],
+      "patch_sha256": "a1fe1271213d8a9ff7d12fa48a64eb8c170b996111ef46febfdc2c804203b168",
+      "review": "review-c0a94574"
+    },
+    {
+      "commit": "b679d0cf8cad5bab7bb5004d9b8f8ce51d542b42",
+      "subject": "feat(databricks): match_recognize support closes #8617",
+      "files": [
+        "sqlglot/dialects/databricks.py",
+        "tests/dialects/test_databricks.py"
+      ],
+      "patch_sha256": "30b36ea36191afbbd01c3014cb2b59ee95fe782f27b1e35054c7444dca248cfd",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "ba643d33285475774c3253551e1ed18ac89e6c22",
+      "subject": "fix(clickhouse): transpile RegexpCount to countMatches [CLAUDE] (#8616)",
+      "files": [
+        "sqlglot/generators/clickhouse.py",
+        "sqlglot/parsers/clickhouse.py",
+        "tests/dialects/test_clickhouse.py"
+      ],
+      "patch_sha256": "9dc633ec2d379b145ec2fbebc2674ee8ccbdab65307bfe4f91ad87d5bd2e5fb5",
+      "review": "regex-count-qualification"
+    },
+    {
+      "commit": "623dc8889ba7bffa9b006fd1d1641715b73d5ce4",
+      "subject": "fix(duckdb)!: infer correct types for temporal interval arithmetic (#8622)",
+      "files": [
+        "sqlglot-integration-tests",
+        "sqlglot/typing/duckdb.py"
+      ],
+      "patch_sha256": "75a75cdb8125d812b5d5b919482bc142f45b49a834aea024f4515e45befafc4f",
+      "review": "duckdb-native-policy"
+    },
+    {
+      "commit": "b9c5f8d4a5857952e6921e45a7bd3b255d48ab1b",
+      "subject": "Sync w/ integration tests",
+      "files": [
+        "sqlglot-integration-tests"
+      ],
+      "patch_sha256": "928dd6e1b70d22d426a4784f493a85d3ca74785aab58ee2506cdfe35292ca041",
+      "review": "integration-test-revisions"
+    },
+    {
+      "commit": "b1b244b1f38a3000c94a7b21ee6dfae1959dd4b2",
+      "subject": "fix(optimizer): qualify columns for SPLIT_TO_TABLE (#8625)",
+      "files": [
+        "sqlglot/dialects/snowflake.py",
+        "sqlglot/optimizer/qualify_tables.py",
+        "tests/fixtures/optimizer/qualify_tables.sql"
+      ],
+      "patch_sha256": "e4383c3a2742e44009969b360d5975b51a588b2209c4e5486db864ce435daea6",
+      "review": "review-b1b244b1"
+    },
+    {
+      "commit": "e92c22287ff73a66e9dece115acedb81133f0dbf",
+      "subject": "fix(duckdb): cast array elements to text before applying the ARRAY_TO_STRING null replacement [CLAUDE] (#8627)",
+      "files": [
+        "sqlglot/generators/duckdb.py",
+        "tests/dialects/test_bigquery.py",
+        "tests/dialects/test_duckdb.py"
+      ],
+      "patch_sha256": "1ade135ca9782973bec0d97ee4cd6980c7556203abfc3f2bdc72355a5a0fd779",
+      "review": "duckdb-native-policy"
+    },
+    {
+      "commit": "fbda0b91481d679f17844af15fb998cc559533be",
+      "subject": "fix(parser): keep the whole statement when REFRESH falls back to a cmd (#8621)",
+      "files": [
+        "sqlglot/parser.py",
+        "tests/dialects/test_spark.py",
+        "tests/dialects/test_starrocks.py"
+      ],
+      "patch_sha256": "e0dbc3aa0ef943733d7ed56c734c193ec01509dd418aa55ab9b7174ac5df34d2",
+      "review": "SG29-014"
+    },
+    {
+      "commit": "fdba492cec5a1fbe012add7f1aed18f46739c2a3",
+      "subject": "fix(optimizer): include semi/anti join refs when identifying alias collisions (#8623)",
+      "files": [
+        "sqlglot/optimizer/merge_subqueries.py",
+        "tests/fixtures/optimizer/merge_subqueries.sql"
+      ],
+      "patch_sha256": "6166700bd3dc9f7d2a0603c4cbbdef2f7d5d9a3273bcbb939f51a26ec4b4d6af",
+      "review": "review-fdba492c"
+    },
+    {
+      "commit": "2c7b928071ed32e72b218011a1a3c011dba26b24",
+      "subject": "fix(athena): route by each engine's rules when the combined tokenizer fails [CLAUDE] (#8629)",
+      "files": [
+        "sqlglot/dialects/athena.py",
+        "tests/dialects/test_athena.py"
+      ],
+      "patch_sha256": "bdb2cf517824d08b8387cea23bf083508772b95fdb7ea0200b6db079c7c819af",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "e71e4ee1da5c3c6a7d3616d4cd4160a681202f0d",
+      "subject": "simplify athena tokenizing",
+      "files": [
+        "sqlglot/dialects/athena.py",
+        "tests/dialects/test_athena.py"
+      ],
+      "patch_sha256": "713980ddf426a2980e6fef6425deb181c313705c7bf68dd5d0e11fc20cb38639",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "ad8764a0436a7b5c500b783ebe50dbf20c1e477c",
+      "subject": "fix: keep a replacement's grouping in replace_placeholders (#8624)",
+      "files": [
+        "sqlglot/expressions/builders.py",
+        "tests/dialects/test_snowflake.py",
+        "tests/test_expressions.py"
+      ],
+      "patch_sha256": "38bb5f08ed03f2313b265557ee10a586bbf35d755828861a0bc702bb0dce9c5d",
+      "review": "placeholder-replacement-api"
+    },
+    {
+      "commit": "f814e4cb2a8743bba63e8818bae25207bbd3966f",
+      "subject": "fix(mysql): preserve population and sample aggregate semantics [CODEX] (#8632)",
+      "files": [
+        "sqlglot/generators/mysql.py",
+        "sqlglot/parsers/mysql.py",
+        "tests/dialects/test_duckdb.py",
+        "tests/dialects/test_mysql.py"
+      ],
+      "patch_sha256": "985040beeafa4fc91c7ce51100c0ac5a7548a152128b3cdcb647ead0e69c3a74",
+      "review": "SG29-008"
+    },
+    {
+      "commit": "552774469174ee686def95e6bcb2da46f61e047b",
+      "subject": "fix(starrocks): keep DATEDIFF's date-part semantics [CLAUDE] (#8636)",
+      "files": [
+        "sqlglot/generators/starrocks.py",
+        "sqlglot/parsers/starrocks.py",
+        "tests/dialects/test_bigquery.py",
+        "tests/dialects/test_starrocks.py"
+      ],
+      "patch_sha256": "fcd2211d5a3d6e6b586a6c7b59c96df862fa038a58caaa5f479c82e738007ee5",
+      "review": "SG29-014"
+    },
+    {
+      "commit": "f8287a0918808a8a74e618b556c630eb1504f971",
+      "subject": "Update CHANGELOG.md for v30.23.0 [skip ci]",
+      "files": [
+        "CHANGELOG.md"
+      ],
+      "patch_sha256": "e32ea569c23856f821ffc76bc98c3dd508c5a055436cc375624156f81e726eb1",
+      "review": "release-changelogs"
+    },
+    {
+      "commit": "03744a2a8376af5f5f70230b04d1c5fbfb71dc61",
+      "subject": "fix(hive,spark): parse ALTER TABLE REPLACE COLUMNS [CLAUDE] (#8633)",
+      "files": [
+        "sqlglot/expressions/query.py",
+        "sqlglot/generator.py",
+        "sqlglot/parsers/hive.py",
+        "tests/dialects/test_hive.py",
+        "tests/dialects/test_spark.py"
+      ],
+      "patch_sha256": "a9c87116bb560b906c188d02e269229e2b1a1c95bd650e913c2d3d95d2ae4592",
+      "review": "SG29-015"
+    },
+    {
+      "commit": "021991fb9a63060e2f71aeac48e134f67c77227f",
+      "subject": "fix(optimizer): evict dead refs from the type annotator cache (#8642)",
+      "files": [
+        "sqlglot/optimizer/qualify_columns.py",
+        "tests/test_optimizer.py"
+      ],
+      "patch_sha256": "42d18fe8ef6c008e2428328c1303a11729077d19e7a916097ba944306a96e9d1",
+      "review": "analysis-policy"
+    },
+    {
+      "commit": "00fce66dffd3dba4f90cda5534ec8df595bb1865",
+      "subject": "fix(optimizer): ensure generated decorrelation JOIN comes before reference in ON clause (#8638)",
+      "files": [
+        "sqlglot-integration-tests",
+        "sqlglot/optimizer/unnest_subqueries.py"
+      ],
+      "patch_sha256": "6cb0bbf3a6efe220e3e2eeec34d7c8c56cf8313c7eafc84c0b91c35600bad96c",
+      "review": "query-plan-optimizer"
+    },
+    {
+      "commit": "97134ffd3cd161222a42405b001a8a30a0a2c6f5",
+      "subject": "fix(optimizer): preserve precedence when unwrapping parens inside Mul (#8620)",
+      "files": [
+        "sqlglot-integration-tests",
+        "sqlglot/optimizer/simplify.py"
+      ],
+      "patch_sha256": "0a31b01a9688a00f5df49c275d4c74d0b5e12d24911ba3f2d74d4e4efb3da25c",
+      "review": "query-plan-optimizer"
+    },
+    {
+      "commit": "094509aad83fff575f1b4d198e4d03c21c432e58",
+      "subject": "refactor!: merge SortArray into ArraySort with explicit NULL ordering (#8643)",
+      "files": [
+        "sqlglot/dialects/dialect.py",
+        "sqlglot/expressions/array.py",
+        "sqlglot/generator.py",
+        "sqlglot/generators/duckdb.py",
+        "sqlglot/generators/hive.py",
+        "sqlglot/generators/presto.py",
+        "sqlglot/generators/snowflake.py",
+        "sqlglot/generators/spark2.py",
+        "sqlglot/parser.py",
+        "sqlglot/parsers/duckdb.py",
+        "sqlglot/parsers/presto.py",
+        "sqlglot/parsers/snowflake.py",
+        "sqlglot/parsers/spark2.py",
+        "sqlglot/typing/__init__.py",
+        "tests/dialects/test_dialect.py",
+        "tests/dialects/test_duckdb.py",
+        "tests/dialects/test_hive.py",
+        "tests/dialects/test_presto.py",
+        "tests/dialects/test_snowflake.py",
+        "tests/dialects/test_spark.py"
+      ],
+      "patch_sha256": "b211f7653812d48c7ec7c28518c733c41ed59622ed75c04e20472b22f3ffe35d",
+      "review": "sort-compatibility"
+    },
+    {
+      "commit": "d747f5b20dd71a379437dd3cf251ec130edd94b3",
+      "subject": "fix: don't materialize huge interval literals in simplify and the Postgres generator (#8641)",
+      "files": [
+        "sqlglot/generators/postgres.py",
+        "sqlglot/helper.py",
+        "sqlglot/optimizer/simplify.py",
+        "tests/dialects/test_postgres.py",
+        "tests/fixtures/optimizer/simplify.sql",
+        "tests/test_helper.py",
+        "tests/test_optimizer.py"
+      ],
+      "patch_sha256": "3a49534a10e8cc387b1d4550d020835182e3a2e6fd658baee803b32581e602ff",
+      "review": "review-d747f5b2"
+    },
+    {
+      "commit": "f321207c8dcc2973d149744fcaa4d1a13edb0026",
+      "subject": "fix(starrocks): preserve LIKE argument order [CODEX] (#8645)",
+      "files": [
+        "sqlglot/parsers/starrocks.py",
+        "tests/dialects/test_starrocks.py"
+      ],
+      "patch_sha256": "d1008a00f5af1db08e22fab2349ae04f1a8a650fce45f2922cb306812992a7da",
+      "review": "SG29-014"
+    },
+    {
+      "commit": "cd41eeef32e13db1a2517d0a0dc5432ec2b89eb5",
+      "subject": "chore: refactor starrocks tests for LIKE",
+      "files": [
+        "tests/dialects/test_starrocks.py"
+      ],
+      "patch_sha256": "7c60a1c4136ef1dee742d4815e7cbfd6766b4301e1bfd1855636555b67139f13",
+      "review": "SG29-014"
+    },
+    {
+      "commit": "af2b57734d67082ecc4db97cb5da1e8743918af0",
+      "subject": "chore: simplify starrocks tests",
+      "files": [
+        "tests/dialects/test_starrocks.py"
+      ],
+      "patch_sha256": "0ef90031355e6325da3ab714eb9ae6e0d9dc2307fcfb7745262099ad0abc7974",
+      "review": "SG29-014"
+    },
+    {
+      "commit": "06aa274a7f18be246492c1423703ce3cf3d48c60",
+      "subject": "suppress command warning in tests (#8647)",
+      "files": [
+        "tests/dialects/test_hive.py",
+        "tests/dialects/test_spark.py"
+      ],
+      "patch_sha256": "dd95a5a628af26c7fa1dbe5ee1d568d7999d0077921f71ad41c5662af248172a",
+      "review": "review-06aa274a"
+    },
+    {
+      "commit": "954cca1268ae38ae0384d5197e54fe50322ee9e3",
+      "subject": "fix(starrocks): preserve native TO_DAYS [CODEX] (#8648)",
+      "files": [
+        "sqlglot/parsers/starrocks.py",
+        "tests/dialects/test_starrocks.py"
+      ],
+      "patch_sha256": "4e9d05baf883e6cf29261b79bc9a660f059b6770ce349ae600a1657db58d6c34",
+      "review": "SG29-014"
+    },
+    {
+      "commit": "df5b53f92e31247e82bc37a512fab0abd4b54031",
+      "subject": "chore: refactor starrocks TO_DAYS test",
+      "files": [
+        "tests/dialects/test_starrocks.py"
+      ],
+      "patch_sha256": "c95cf6a07dcdbc9bb96fe120878d58835f1212eb4de60903b40db213aabb8a84",
+      "review": "SG29-014"
+    },
+    {
+      "commit": "ce7f6e39dbbbaa61ff01a307226ff867a3a9efb6",
+      "subject": "fix(starrocks): don't treat # as a comment [CLAUDE] (#8644)",
+      "files": [
+        "sqlglot/dialects/starrocks.py",
+        "tests/dialects/test_starrocks.py"
+      ],
+      "patch_sha256": "5c48b9c8d36161d5fd235918448487df15876cd6ee44e31a6b6068c6e1c8fcb7",
+      "review": "SG29-014"
+    },
+    {
+      "commit": "caa920da583f57913311798aff2561821ea8ca01",
+      "subject": "starrocks # followup fix",
+      "files": [
+        "sqlglot/dialects/starrocks.py",
+        "tests/dialects/test_starrocks.py"
+      ],
+      "patch_sha256": "160262b7acb08c2b3df23c4ee66613b741c40fb38faf5aef519f5fe023c2e7d3",
+      "review": "SG29-014"
+    },
+    {
+      "commit": "5f12cae562cd1196b81bd4dbafe35def5e3b109b",
+      "subject": "Sync w/ integration tests",
+      "files": [
+        "sqlglot-integration-tests"
+      ],
+      "patch_sha256": "efc31af4c9225ce91707f11e9a436cd4b013d04a40ab40c34b6b9cabfaab019b",
+      "review": "integration-test-revisions"
+    },
+    {
+      "commit": "7f415fbc833b329052d8a0a63c1d411c5bddf363",
+      "subject": "Sync w/ integration tests",
+      "files": [
+        "sqlglot-integration-tests"
+      ],
+      "patch_sha256": "06f6fe91e85a08de55be6201bc68b30ac37841212c4f9da9a919af66b85b48bb",
+      "review": "integration-test-revisions"
+    },
+    {
+      "commit": "360b315cc5fde521495aaa35f048dafd3abdc548",
+      "subject": "Sync w/ integration tests",
+      "files": [
+        "sqlglot-integration-tests"
+      ],
+      "patch_sha256": "80ee12967c101b2ee4c56c3e453ddb6085c8143fbc370c85a3c27bdc3a10fc99",
+      "review": "integration-test-revisions"
+    },
+    {
+      "commit": "c388227a73fe4e6652e311db0a04b8d838c7c821",
+      "subject": "fix: remove obsolete sqlglotc extensions during builds (#8653)",
+      "files": [
+        "sqlglotc/setup.py",
+        "tests/test_sqlglotc.py"
+      ],
+      "patch_sha256": "5bf011c2c4ec8f3c5a2d544affe25d282cbedf345d1f2d5ba47a1f893bc54be4",
+      "review": "python-runtime-and-diff"
+    },
+    {
+      "commit": "d17c7680b70bccb5fda677aaf63980b2663224dc",
+      "subject": "fix(bigquery): transpile Trino date parts, FROM_BASE, APPROX_PERCENTILE, ARRAY_SORT and ARRAY_DISTINCT (#8639)",
+      "files": [
+        "sqlglot/generators/bigquery.py",
+        "tests/dialects/test_dialect.py",
+        "tests/dialects/test_trino.py"
+      ],
+      "patch_sha256": "7a1bf45aba20bdec93f32f532976a6dc57ff3589c3bb91cf952756a0f9eb2d2c",
+      "review": "SG29-016"
+    },
+    {
+      "commit": "7e627d5607f2c3a4955c4e07af22df43c1ff6cdb",
+      "subject": "Sync w/ integration tests",
+      "files": [
+        "sqlglot-integration-tests"
+      ],
+      "patch_sha256": "98313b3ac27fa3a05ac625499db5030dac0935c0cceada728640404aeb2a72f3",
+      "review": "integration-test-revisions"
+    },
+    {
+      "commit": "cb57d80214bcd4a165194344b34bc930ef5318b8",
+      "subject": "fix(optimizer): clear child scope caches when projections are merged (#8646)",
+      "files": [
+        "sqlglot/optimizer/merge_subqueries.py",
+        "tests/fixtures/optimizer/merge_subqueries.sql"
+      ],
+      "patch_sha256": "4499b77cb72518e2e69e1ca703c7e60f1a7db430806b09ea0d8c13d6f2881675",
+      "review": "analysis-policy"
+    },
+    {
+      "commit": "ca870e845e45144e8c6bd02bb74fa5ac157795c8",
+      "subject": "Don't leak None as property name when a property class has no mapping (#8654)",
+      "files": [
+        "sqlglot/generator.py",
+        "tests/test_generator.py"
+      ],
+      "patch_sha256": "cab6e45695892c6c3bebf9ad3fc7a912e6c8999edaa2c9d1270bb5f26436f450",
+      "review": "review-ca870e84"
+    },
+    {
+      "commit": "41a962d5c1252c073b2883ea49b9ae2f49d77a6b",
+      "subject": "fix(parser): keep every argument of UNNEST parsed as a function [CLAUDE] (#8660)",
+      "files": [
+        "sqlglot/parser.py",
+        "tests/dialects/test_starrocks.py",
+        "tests/test_parser.py"
+      ],
+      "patch_sha256": "ebd925f3e35c370afd1f1358ae3ae4254db1ef4b12280fa2054aa7095e116f67",
+      "review": "SG29-014"
+    },
+    {
+      "commit": "b50e43e4407e010d15da9b313ff99df1b1099343",
+      "subject": "fix(clickhouse): parse PASTE JOIN instead of aliasing the table (#8662)",
+      "files": [
+        "sqlglot/dialects/clickhouse.py",
+        "sqlglot/parser.py",
+        "sqlglot/parsers/clickhouse.py",
+        "sqlglot/tokenizer_core.py",
+        "tests/dialects/test_clickhouse.py"
+      ],
+      "patch_sha256": "07b30fa409271396b302047a497963219501d96c221672bdef006c112a18554c",
+      "review": "review-b50e43e4"
+    },
+    {
+      "commit": "2444b6db78f336b70c6f7aa980e43036367c7b0d",
+      "subject": "feat(optimizer): paste join support",
+      "files": [
+        "sqlglot/optimizer/optimize_joins.py",
+        "tests/test_optimizer.py"
+      ],
+      "patch_sha256": "7ba6072338cef8896b0bedccf5ea4bc37ada17912f4418455740772ace92a51f",
+      "review": "review-2444b6db"
+    },
+    {
+      "commit": "7af2aa8db5e9b9df0afea07201574ceeb9e66098",
+      "subject": "fix(optimizer)!: register CTE reference alias when pivoted (#8667)",
+      "files": [
+        "sqlglot/optimizer/scope.py",
+        "tests/fixtures/optimizer/qualify_columns.sql"
+      ],
+      "patch_sha256": "dbad570f31412455889f7e2dbb6c3afa258dc58826c02edf37a74c97b7a21bc6",
+      "review": "review-7af2aa8d"
+    },
+    {
+      "commit": "513beedd3753a22c1ce234059bd5d831f64e48f0",
+      "subject": "fix(teradata): drop LOCKING request modifier for other dialects instead of crashing [CLAUDE] (#8666)",
+      "files": [
+        "sqlglot/generator.py",
+        "tests/dialects/test_teradata.py"
+      ],
+      "patch_sha256": "683cd2c511f89a289e1ef6400eb10a8f279dcff1faf376d9646f08feb5e3eb68",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "9beb4ab2807839088f3439a2b937d222e598b617",
+      "subject": "fix(transforms): don't hoist explodes from nested queries in explode_projection_to_unnest [CLAUDE] (#8664)",
+      "files": [
+        "sqlglot/transforms.py",
+        "tests/dialects/test_snowflake.py",
+        "tests/dialects/test_spark.py"
+      ],
+      "patch_sha256": "25921d4f87a95d8d3d478c751ce90fae17d3e614b9ed7d5b39661985016f798a",
+      "review": "nested-explode"
+    },
+    {
+      "commit": "f8c314c449080860604b9ddd716d6bc75c89155f",
+      "subject": "fix(teradata): transpile SAMPLE row counts and fractions [CLAUDE] (#8670)",
+      "files": [
+        "sqlglot/generator.py",
+        "sqlglot/generators/teradata.py",
+        "sqlglot/parsers/teradata.py",
+        "tests/dialects/test_teradata.py"
+      ],
+      "patch_sha256": "00ead89175899d07bd0b4fc91e4b75cc7b2a4b606dfe7ecb97a0b9a3340cc42e",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "1e5c649cc4157bf4451bba1361a3898d9504745b",
+      "subject": "fix(postgres)!: map ISO week format patterns IYYY and IW [CLAUDE] (#8672)",
+      "files": [
+        "sqlglot/dialects/postgres.py",
+        "tests/dialects/test_postgres.py"
+      ],
+      "patch_sha256": "e1c556dc09e3e0caef0e2eb7746e8d7075aa41f60bfd26141a6ce2599af0724f",
+      "review": "SG29-011"
+    },
+    {
+      "commit": "b06ed8ea3fc5dbf3771f86ee2a44a2134df0ed00",
+      "subject": "fix(starrocks): don't default column names for multi-array UNNEST [CLAUDE] (#8671)",
+      "files": [
+        "sqlglot/parsers/starrocks.py",
+        "tests/dialects/test_starrocks.py"
+      ],
+      "patch_sha256": "9bc086dd0ebe91c894b191988acf7f6e5da4a71f0e48c09281c2c1ec7c48ae1a",
+      "review": "SG29-014"
+    },
+    {
+      "commit": "9e57e448de90bc273a926e63f77f4fdf788d0fac",
+      "subject": "fix(oracle): map ISO week-numbering year IYYY to %G [CLAUDE] (#8675)",
+      "files": [
+        "sqlglot/dialects/oracle.py",
+        "tests/dialects/test_oracle.py"
+      ],
+      "patch_sha256": "180d43e5d799ac49f060a4517059a5225c1a71efc59333f72de9e0076a1f493e",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "f536a8233b4f9aa1efac982dd9d6b098ed3982a4",
+      "subject": "fix(bigquery): correct percentile and distinct-array transpilation (#8674)",
+      "files": [
+        "sqlglot/generators/bigquery.py",
+        "sqlglot/parsers/duckdb.py",
+        "sqlglot/parsers/trino.py",
+        "tests/dialects/test_bigquery.py",
+        "tests/dialects/test_presto.py",
+        "tests/dialects/test_trino.py"
+      ],
+      "patch_sha256": "5ea203a85820a0c8ee8309c1331d826340aef29f898423d79c0a85a822308413",
+      "review": "SG29-016"
+    },
+    {
+      "commit": "e3d0dfb2279d390dfed6e86cc353ed65cb2b97bb",
+      "subject": "fix(optimizer): give order aliases independent expression nodes (#8678)",
+      "files": [
+        "sqlglot/optimizer/qualify_columns.py",
+        "tests/test_optimizer.py"
+      ],
+      "patch_sha256": "999cdb109ab4b2ca6c674f38dbb2460d1d08f68e6602e15f1bde6d681f4f7735",
+      "review": "review-e3d0dfb2"
+    },
+    {
+      "commit": "40dcaabdd29a6c3cda7f4ce29dedcdcffa3e49a0",
+      "subject": "fix(starrocks): generate PIVOT instead of dropping it [CLAUDE] (#8679)",
+      "files": [
+        "sqlglot/generators/starrocks.py",
+        "tests/dialects/test_starrocks.py"
+      ],
+      "patch_sha256": "8f79500d3c512728a83986289570451107bfa1fd77b45bcff571498b7bc85d56",
+      "review": "SG29-014"
+    },
+    {
+      "commit": "ec24376a58200dff16820fddcd15db102b6ead2e",
+      "subject": "feat(starrocks): parse admin and job-control statements as commands [CLAUDE] (#8681)",
+      "files": [
+        "sqlglot/dialects/starrocks.py",
+        "tests/dialects/test_starrocks.py"
+      ],
+      "patch_sha256": "febb218d0626de8f471a855a5fb30edee6909830c1fd41194ba661ea5cb0635a",
+      "review": "SG29-014"
+    },
+    {
+      "commit": "fdd0e9a464f0f9ec425c56ae83fc87a5e2052087",
+      "subject": "fix(mysql): relative xor/or/and precedence closes #8684 (#8686)",
+      "files": [
+        "sqlglot/parsers/mysql.py",
+        "tests/dialects/test_mysql.py",
+        "tests/fixtures/optimizer/simplify.sql"
+      ],
+      "patch_sha256": "cd95f8be3b314cfadb01414b4c71107a491c9528243fa1ac146b688655b5cf09",
+      "review": "SG29-007"
+    },
+    {
+      "commit": "8955d752acc88ee23955dd6e07d567542a8cfaf8",
+      "subject": "fix(mysql): preserve exclamation mark operator precedence (#8687)",
+      "files": [
+        "sqlglot/parsers/mysql.py",
+        "tests/dialects/test_mysql.py"
+      ],
+      "patch_sha256": "71127015b603961c5e8bf6291bf6592eda24e586135b86279b5e47d7d18ccdbb",
+      "review": "SG29-007"
+    },
+    {
+      "commit": "b1fd4e9edf05ee6211656c235a62040e0f055bf0",
+      "subject": "fix(mysql): respect bitwise operator precedence (#8688)",
+      "files": [
+        "sqlglot/parsers/mysql.py",
+        "tests/dialects/test_mysql.py"
+      ],
+      "patch_sha256": "2ecab0fb5b7ad6c1903fa6f524d75419cbb038d9113341c147689cbc4c42f888",
+      "review": "SG29-007"
+    },
+    {
+      "commit": "fc1472a0d54c4e8d0d6700b0a4dbe66f0f32707b",
+      "subject": "fix(starrocks): parse map{...} literals as maps [CLAUDE] (#8682)",
+      "files": [
+        "sqlglot/generators/starrocks.py",
+        "sqlglot/parser.py",
+        "sqlglot/parsers/starrocks.py",
+        "tests/dialects/test_duckdb.py",
+        "tests/dialects/test_starrocks.py"
+      ],
+      "patch_sha256": "f3406e0b6d66bfb80d7cbefd22615e5ef684479209d44039c420ee216573c0e2",
+      "review": "SG29-014"
+    },
+    {
+      "commit": "115ce02b002ed63ff23a4c99a24ad025ec1efbb4",
+      "subject": "fix(starrocks): infer static pivot output columns [CODEX] (#8689)",
+      "files": [
+        "sqlglot/optimizer/annotate_types.py",
+        "sqlglot/optimizer/qualify_columns.py",
+        "sqlglot/optimizer/scope.py",
+        "sqlglot/parsers/starrocks.py",
+        "tests/test_optimizer.py",
+        "tests/test_parser.py"
+      ],
+      "patch_sha256": "0da2c6cffa32c4b529caa0e2b962aebf00efb8c86cd61d4065fd114de5431bde",
+      "review": "SG29-014"
+    },
+    {
+      "commit": "479c4cae0e38d60d10f4aac833c4091d5c2304e2",
+      "subject": "fix(parser)!: respect dialect precedence of IS predicates (#8676)",
+      "files": [
+        "sqlglot-integration-tests",
+        "sqlglot/dialects/dialect.py",
+        "sqlglot/generator.py",
+        "sqlglot/parser.py",
+        "sqlglot/parsers/clickhouse.py",
+        "sqlglot/parsers/doris.py",
+        "sqlglot/parsers/dremio.py",
+        "sqlglot/parsers/drill.py",
+        "sqlglot/parsers/duckdb.py",
+        "sqlglot/parsers/hive.py",
+        "sqlglot/parsers/mysql.py",
+        "sqlglot/parsers/oracle.py",
+        "sqlglot/parsers/postgres.py",
+        "sqlglot/parsers/prql.py",
+        "sqlglot/parsers/redshift.py",
+        "sqlglot/parsers/singlestore.py",
+        "sqlglot/parsers/spark2.py",
+        "sqlglot/parsers/sqlite.py",
+        "tests/dialects/test_duckdb.py",
+        "tests/dialects/test_hive.py",
+        "tests/dialects/test_mysql.py",
+        "tests/dialects/test_postgres.py",
+        "tests/dialects/test_sqlite.py",
+        "tests/fixtures/optimizer/simplify.sql",
+        "tests/test_build.py",
+        "tests/test_parser.py"
+      ],
+      "patch_sha256": "f4b93717f38877c7fab5e6af3176eca005113a1627b2f9fd1191008f2fb9223a",
+      "review": "SG29-005"
+    },
+    {
+      "commit": "29e07b5d7b7174b98c58a97de098a9c68c37f7e1",
+      "subject": "Sync w/ integration tests",
+      "files": [
+        "sqlglot-integration-tests"
+      ],
+      "patch_sha256": "3cbfe8c214f9c929850e970c0b67d319b603547e1b04f4ec914c590e97fd2927",
+      "review": "integration-test-revisions"
+    },
+    {
+      "commit": "7e4d995f75dac9fb6ed110109b80bf12f24cdea5",
+      "subject": "fix(clickhouse): stop re-wrapping parenthesized CTAS queries with COMMENT [CLAUDE] (#8698)",
+      "files": [
+        "sqlglot/generators/clickhouse.py",
+        "tests/dialects/test_clickhouse.py"
+      ],
+      "patch_sha256": "badf0f5394c1a1592c3368e07dd69c72c33cea32b6c348b4dd6fe9cd882ca732",
+      "review": "review-7e4d995f"
+    },
+    {
+      "commit": "d44db25a534d86ba593958dd0cc533f8310daef0",
+      "subject": "fix(parser): support PARTITION BY EXCLUDING (#8690)",
+      "files": [
+        "sqlglot/expressions/query.py",
+        "sqlglot/generator.py",
+        "sqlglot/parser.py",
+        "tests/dialects/test_dialect.py"
+      ],
+      "patch_sha256": "16ad8ef800e7383ece19a46d43b59958f078dbf6caca5d24c78fb19e6a26a615",
+      "review": "review-d44db25a"
+    },
+    {
+      "commit": "2d3d3ff7b8b8b475a68d70ffe3529ac110c96f4b",
+      "subject": "fix(fabric): don't re-wrap AT TIME ZONE that is already cast to DATETIME2 [CLAUDE] (#8699)",
+      "files": [
+        "sqlglot/generators/fabric.py",
+        "tests/dialects/test_fabric.py"
+      ],
+      "patch_sha256": "10bf97f91a2ba2ca0548c170232e4a151800c879d726b1f32edd1750a2296b35",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "e7aa0af6c1734c5080ebc95f2931aa09d70a7e4e",
+      "subject": "Sync w/ integration tests",
+      "files": [
+        "sqlglot-integration-tests"
+      ],
+      "patch_sha256": "c8a689346764e13f06d4837ba33f2045a138363e2ab87fdde06a0face23943ca",
+      "review": "integration-test-revisions"
+    },
+    {
+      "commit": "a798b2207acb9a1da28227974db5b11493bd1f52",
+      "subject": "Sync w/ integration tests",
+      "files": [
+        "sqlglot-integration-tests"
+      ],
+      "patch_sha256": "0c99e64a833a8a634f48f0982ea3e8f52d3fe82a6088b6a1d747eba27ba9e3cd",
+      "review": "integration-test-revisions"
+    },
+    {
+      "commit": "68cd4a2d8f766132e338721df8676e0b42d6b7ca",
+      "subject": "fix(duckdb): quote identifiers that are DuckDB reserved keywords [CLAUDE] (#8700)",
+      "files": [
+        "sqlglot/generators/duckdb.py",
+        "tests/dialects/test_duckdb.py"
+      ],
+      "patch_sha256": "c44e600a0e2767896fd5e841dd3f0eaef4f717dec6cd9816874e13f35bd7f93a",
+      "review": "duckdb-native-policy"
+    },
+    {
+      "commit": "55bff6129f36820c78efccf920c877443dc7fb70",
+      "subject": "fix(optimizer): retain nodes in type annotation caches (#8691)",
+      "files": [
+        "sqlglot/optimizer/annotate_types.py",
+        "tests/test_optimizer.py"
+      ],
+      "patch_sha256": "77841495bceb8d6d2a2df48d4dc3a67dee78fa431b2e41fadb38e170ec451ef7",
+      "review": "analysis-policy"
+    },
+    {
+      "commit": "5d588c0f32d17a08191898638f67ff27bb0a13ff",
+      "subject": "fix(optimizer): preserve unsupported struct star operands (#8692)",
+      "files": [
+        "sqlglot/optimizer/qualify_columns.py",
+        "tests/test_optimizer.py"
+      ],
+      "patch_sha256": "45ee0cd73d5c331b71603ca5e485580e465c94158fc82a875ba8cdbe4e2cedd4",
+      "review": "review-5d588c0f"
+    },
+    {
+      "commit": "e0ccb31966ca81b5adf39aeb1f82add511f1fe54",
+      "subject": "Update CHANGELOG.md for v30.24.0 [skip ci]",
+      "files": [
+        "CHANGELOG.md"
+      ],
+      "patch_sha256": "98a3f71a8c7a8edc6e6d650d25ed28da76ffff30cca34d23dea143ea67426d01",
+      "review": "release-changelogs"
+    },
+    {
+      "commit": "67961afbed7c986dfe26ab82db89a25814c1bdcb",
+      "subject": "fix(optimizer): preserve unresolved JSON paths during alias matching (#8693)",
+      "files": [
+        "sqlglot/optimizer/annotate_types.py",
+        "sqlglot/optimizer/qualify_columns.py",
+        "tests/fixtures/optimizer/qualify_columns.sql",
+        "tests/test_optimizer.py"
+      ],
+      "patch_sha256": "2c505af94b780823b972abf3ebfb7fdb49b28a72dd24b9f03ea0d56a43664510",
+      "review": "review-67961afb"
+    },
+    {
+      "commit": "c90a322c329d2b1003bf73b848f0d9e17f1a3d67",
+      "subject": "fix!: support non-identifier column parts in compiled code (#8710)",
+      "files": [
+        "sqlglot/expressions/core.py",
+        "tests/test_expressions.py",
+        "tests/test_optimizer.py"
+      ],
+      "patch_sha256": "a7eee6a7dd4c9961534cb49e6d57e552214a7f98f8f390867ec21eb0d8ae24bd",
+      "review": "python-runtime-and-diff"
+    },
+    {
+      "commit": "a2a8bb4209e188c0ae78d9809ec3e27666c00f16",
+      "subject": "perf(athena): avoid tokenizing DML twice [CLAUDE] (#8709)",
+      "files": [
+        "sqlglot/dialects/athena.py",
+        "tests/dialects/test_athena.py"
+      ],
+      "patch_sha256": "9200bf19adc3ac5aea35a39083ea84d6569addd3b7ec330864811d7397d8f049",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "d335f8985e59ad986408604ce92733e6834f24eb",
+      "subject": "fix(generator): parenthesize CONCAT paths in JSON arrow operators [CLAUDE] (#8701)",
+      "files": [
+        "sqlglot/dialects/dialect.py",
+        "tests/dialects/test_duckdb.py",
+        "tests/dialects/test_sqlite.py"
+      ],
+      "patch_sha256": "a9915bde633a7a2fc4a48b641c41ca0b0f30975e907b868c4b7c73cb21b8997a",
+      "review": "duckdb-native-policy"
+    },
+    {
+      "commit": "911ee761a6db0e34be6ec4beec17bb8047e54679",
+      "subject": "workflow improvements (#8711)",
+      "files": [
+        ".github/workflows/run-integration-tests.yml",
+        "sqlglot-integration-tests"
+      ],
+      "patch_sha256": "350ac2d795fbc5eddf482348071d4c0ff2f243916100a76889ba9946dbb408cf",
+      "review": "python-runtime-and-diff"
+    },
+    {
+      "commit": "e6c7d5275707635d7f5cbf08ba6f8095126ab669",
+      "subject": "fix(parser): parse the column list after an INSERT target alias as the INSERT's [CLAUDE] (#8712)",
+      "files": [
+        "sqlglot/parser.py",
+        "tests/dialects/test_postgres.py",
+        "tests/dialects/test_sqlite.py"
+      ],
+      "patch_sha256": "171c8f8b7f90641c1acecb45ad53d9163bcc5da1d28aeb3feca1b42cfb7f9a61",
+      "review": "review-e6c7d527"
+    },
+    {
+      "commit": "9fedfa5f5ecb94f4ca290ee6373b1dd4feb120e2",
+      "subject": "chore: fix comments for insert table",
+      "files": [
+        "sqlglot/parser.py"
+      ],
+      "patch_sha256": "43eb4ab67efcb5fa2740ac381dff49660af38d3ba06ee76847631729cdcc289e",
+      "review": "review-9fedfa5f"
+    },
+    {
+      "commit": "bd06614ddf9edb7a95ec27adea80e1c24fbfb886",
+      "subject": "Sync w/ integration tests",
+      "files": [
+        "sqlglot-integration-tests"
+      ],
+      "patch_sha256": "2006926cb025f764dfbce1876ecbe99eab4855c881973327ec7c19d28950c111",
+      "review": "integration-test-revisions"
+    },
+    {
+      "commit": "3377b95795837881a1ffe86c0ea6965084b195d7",
+      "subject": "chore: minimize insert table parser",
+      "files": [
+        "sqlglot/parser.py"
+      ],
+      "patch_sha256": "0687aabfdb206c214688b6190bcc009e5af4b71810ffc746ef037bbfcf826e86",
+      "review": "review-3377b957"
+    },
+    {
+      "commit": "83479d061b1b92836cc41b6fdf266f575a72dc3f",
+      "subject": "fix: duckdb v2 compat (#8717)",
+      "files": [
+        "sqlglot-integration-tests",
+        "sqlglot/generators/duckdb.py",
+        "tests/dialects/test_bigquery.py",
+        "tests/dialects/test_dialect.py",
+        "tests/dialects/test_duckdb.py",
+        "tests/dialects/test_snowflake.py",
+        "tests/fixtures/optimizer/qualify_columns.sql"
+      ],
+      "patch_sha256": "876e6e0119d4f3b11344341ff59f2480a6e50ade1c3a68aecb9497e41a2e58fe",
+      "review": "duckdb-native-policy"
+    },
+    {
+      "commit": "27a146b79a24a5d2dba1932788175ee0dd34ac17",
+      "subject": "Sync w/ integration tests",
+      "files": [
+        "sqlglot-integration-tests"
+      ],
+      "patch_sha256": "658cd8c24d35b366ba0371499cda9087d53062ca731f983e474ee84ddaa0f2a5",
+      "review": "integration-test-revisions"
+    },
+    {
+      "commit": "603dd92cddadc08748a9ca4bfa15b4da2105b565",
+      "subject": "Sync w/ integration tests",
+      "files": [
+        "sqlglot-integration-tests"
+      ],
+      "patch_sha256": "2d3bd453e86342e61c802be6d77b92bfcafbaa46706252b411526f17b7021928",
+      "review": "integration-test-revisions"
+    },
+    {
+      "commit": "65eb0f229a5d7af5e4d3ff9084d79362e5fc899a",
+      "subject": "refactor(duckdb): drop unused Lambda colon arg (#8721)",
+      "files": [
+        "sqlglot/expressions/query.py",
+        "sqlglot/parsers/duckdb.py",
+        "tests/dialects/test_duckdb.py"
+      ],
+      "patch_sha256": "044aa29bd1e7bcb8419ab5e6f3895e6f34647a3f78f17fc0704eab91df478b45",
+      "review": "duckdb-native-policy"
+    },
+    {
+      "commit": "a220ffb98a2f0ba290ff09c75154a73f09ff57b1",
+      "subject": "feat(duckdb): support NEAREST joins (#8722)",
+      "files": [
+        "sqlglot/expressions/query.py",
+        "sqlglot/generator.py",
+        "sqlglot/generators/duckdb.py",
+        "sqlglot/optimizer/eliminate_joins.py",
+        "sqlglot/optimizer/merge_subqueries.py",
+        "sqlglot/optimizer/optimize_joins.py",
+        "sqlglot/optimizer/pushdown_predicates.py",
+        "sqlglot/parsers/duckdb.py",
+        "tests/dialects/test_duckdb.py",
+        "tests/test_optimizer.py"
+      ],
+      "patch_sha256": "fa0a5c8db6f1b5867c82b1b046c54a9727c5d9fcb3b972a5426fad18e243e7e7",
+      "review": "duckdb-native-policy"
+    },
+    {
+      "commit": "5e0f7169307a4c77fe4cd1eba484eed47d124c4e",
+      "subject": "feat(optimizer): back-project columns to single unknown-schema TVF (#8677)",
+      "files": [
+        "sqlglot-integration-tests",
+        "sqlglot/optimizer/resolver.py"
+      ],
+      "patch_sha256": "96baaf4974fc514ab04ef8dc6507c5e450009f95faeee3a8392134ca7251eec1",
+      "review": "analysis-policy"
+    },
+    {
+      "commit": "d155947f6b2588e72bbfb5d148b2aa3230d1aa58",
+      "subject": "Sync w/ integration tests",
+      "files": [
+        "sqlglot-integration-tests"
+      ],
+      "patch_sha256": "1e678b3f64ba9c4712f0b1066b80de197aea9f816b8c393be01f952955a7a96c",
+      "review": "integration-test-revisions"
+    },
+    {
+      "commit": "90759771ddf61d8b53d729712c53870a3317f5ce",
+      "subject": "chore: suppress unsupported property warning in tests (#8724)",
+      "files": [
+        "tests/test_generator.py"
+      ],
+      "patch_sha256": "350c3c05f84303019949c558f56de8264ca4f9cb5a377e649492fe1a5592fa47",
+      "review": "review-90759771"
+    },
+    {
+      "commit": "7eff3a2fee87193523a35676b160f15b375ea8e7",
+      "subject": "redirect mypyc compilation output to a hidden logfile",
+      "files": [
+        "Makefile"
+      ],
+      "patch_sha256": "8c755a69aff477481262a2e7dcfca94e0dfb8bf538330d38161acacac15a7d53",
+      "review": "python-runtime-and-diff"
+    },
+    {
+      "commit": "092e29a82fdb153c6c1925627b0b4a7955398c9b",
+      "subject": "fix(databricks): preserve timestamp precision during SQL generation",
+      "files": [
+        "sqlglot/generators/databricks.py",
+        "sqlglot/generators/hive.py",
+        "tests/dialects/test_databricks.py"
+      ],
+      "patch_sha256": "99ccf7be192304eb6409ea4063ebcee62fb74e3b59ce51559f94654adf2892c8",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "a673630a73720eedd6006c05da7186f686ee2bc0",
+      "subject": "specify source writing behavior in pyproject (#8726)",
+      "files": [
+        "pyproject.toml",
+        "sqlglotc/pyproject.toml"
+      ],
+      "patch_sha256": "e66a7f71d77f49a79c26b4659347be2dff595f05b3915fa8af27300c776ac0d7",
+      "review": "python-runtime-and-diff"
+    },
+    {
+      "commit": "897e1dd1c56c3b7bcf465cddbc9aafa82bc86490",
+      "subject": "add pretend version to make CI git happy (#8727)",
+      "files": [
+        "tests/test_sqlglotc.py"
+      ],
+      "patch_sha256": "a6fbed5e7cf998f00640ed174d2105ba20d97c8a52e48d579d7f2894defd39db",
+      "review": "python-runtime-and-diff"
+    },
+    {
+      "commit": "43fbff2037b3c4aa4459ca5bce111c6a1c0c1559",
+      "subject": "feat(optimizer): Fix positional renaming to have proper type (#8725)",
+      "files": [
+        "sqlglot-integration-tests",
+        "sqlglot/optimizer/annotate_types.py"
+      ],
+      "patch_sha256": "040ac0be93ceced75ec6f8986efd5ab3fb3fa21e416a8fe5d1783e8272b53d86",
+      "review": "review-43fbff20"
+    },
+    {
+      "commit": "1852fd31961ac51afc38c923e33af84a447adced",
+      "subject": "feat(starrocks): parse blacklist and TRANSLATE TRINO statements as commands [CLAUDE] (#8732)",
+      "files": [
+        "sqlglot/dialects/starrocks.py",
+        "tests/dialects/test_starrocks.py"
+      ],
+      "patch_sha256": "b3ffd1794ac4fcd145019534ad2cd6272cce0779ed9cb00c04fcd59c955ea44a",
+      "review": "SG29-014"
+    },
+    {
+      "commit": "2b57c00a114ad74f8d016f499b0cc97c7ffca9d5",
+      "subject": "fix(sqlite): parse multi-argument MAX/MIN as GREATEST/LEAST (#8734)",
+      "files": [
+        "sqlglot/parsers/sqlite.py",
+        "tests/dialects/test_sqlite.py"
+      ],
+      "patch_sha256": "33bf9edda27cb396b1e852f5dee94bd76425efa4b9c03e92f1b69f06f838b367",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "83c09cdf3cdd42a6a28a9e7514fdef0a9e202d77",
+      "subject": "fix(oracle): allow non-reserved SAMPLE and MATCH_RECOGNIZE as identifiers [CLAUDE] (#8733)",
+      "files": [
+        "sqlglot/parsers/oracle.py",
+        "tests/dialects/test_oracle.py"
+      ],
+      "patch_sha256": "f77c4d762d0576299f2bcf99f84e6a64bbb22f3b5cff2f0dbfaa3c1f4f247184",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "13528f03a547df35e429eb5b19b9bcb4dbdb4a57",
+      "subject": "remove COLUMNS keyword from  hive to sf/tsql alter table add columns (#8731)",
+      "files": [
+        "sqlglot/generator.py",
+        "sqlglot/generators/oracle.py",
+        "sqlglot/generators/snowflake.py",
+        "sqlglot/generators/tsql.py",
+        "tests/dialects/test_hive.py"
+      ],
+      "patch_sha256": "541bfaa406ba09102ba7a84b3247521726e57dbfb8f92078da795fe06251a834",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "23446622e4ec9f368640c80ca1df6dd41f81cde5",
+      "subject": "Sync w/ integration tests",
+      "files": [
+        "sqlglot-integration-tests"
+      ],
+      "patch_sha256": "34c7623cbcb84fa4d80ad76c7814351c19f3b7a797976d15d8db3de0b83af58d",
+      "review": "integration-test-revisions"
+    },
+    {
+      "commit": "7c4e124f21225a4b60d790cb6938d64bf2778d4a",
+      "subject": "perf(optimizer): cache positional column alias mappings [CODEX] (#8735)",
+      "files": [
+        "sqlglot/optimizer/annotate_types.py",
+        "tests/test_optimizer.py"
+      ],
+      "patch_sha256": "fd86297f91cc178a7dc6bc63ec3e7806e1fe486f0da99ee6086a2c1f1dc0ae46",
+      "review": "review-7c4e124f"
+    },
+    {
+      "commit": "069a75175b3914ccaed99162eaae9b817482da48",
+      "subject": "fix(clickhouse): natural join #8739",
+      "files": [
+        "sqlglot/parsers/clickhouse.py",
+        "tests/dialects/test_clickhouse.py"
+      ],
+      "patch_sha256": "0e53289ce7f7b91e06b18455fcae97e448a6ea222dcfe37cb4e3366da2f28dd0",
+      "review": "review-069a7517"
+    },
+    {
+      "commit": "a97d03579f530531451e773823d823404cb6bedd",
+      "subject": "fix(duckdb): keep the - end placeholder of a slice with a step [CLAUDE] (#8736)",
+      "files": [
+        "sqlglot/generator.py",
+        "sqlglot/generators/python.py",
+        "sqlglot/parser.py",
+        "tests/dialects/test_duckdb.py",
+        "tests/test_executor.py"
+      ],
+      "patch_sha256": "a6897be670cf51153f7e685aa6a1876dce45f778711ae597f14c082bcf04607b",
+      "review": "duckdb-native-policy"
+    },
+    {
+      "commit": "30ceae53a0049859d9fd36b2ec1336a9cad7d4d2",
+      "subject": "fix(optimizer): preserve semantics when unnesting subqueries in JOIN ON (#8742)",
+      "files": [
+        "sqlglot/optimizer/unnest_subqueries.py",
+        "tests/fixtures/optimizer/optimizer.sql",
+        "tests/fixtures/optimizer/unnest_subqueries.sql",
+        "tests/test_optimizer.py"
+      ],
+      "patch_sha256": "015fad839a3ad5125b0b66701d65b0924bef8385b023e54efca70015061a95fc",
+      "review": "query-plan-optimizer"
+    },
+    {
+      "commit": "4678f6cb67662b0156d942f603eee816abbfec5a",
+      "subject": "fix(optimizer): preserve row references and aliases during TVF inference (#8723)",
+      "files": [
+        "sqlglot-integration-tests",
+        "sqlglot/optimizer/qualify_columns.py",
+        "sqlglot/optimizer/resolver.py",
+        "tests/fixtures/optimizer/qualify_columns.sql",
+        "tests/fixtures/optimizer/qualify_columns__invalid.sql",
+        "tests/helpers.py",
+        "tests/test_optimizer.py"
+      ],
+      "patch_sha256": "7093cff7c4c02399e2aa892294cee52dad763a4a18c5ea4c75bbbb4aaee103fe",
+      "review": "analysis-policy"
+    },
+    {
+      "commit": "571d512236bbd662392a56e16cd5f9de770907f6",
+      "subject": "Sync w/ integration tests",
+      "files": [
+        "sqlglot-integration-tests"
+      ],
+      "patch_sha256": "d6dff78e9aa2b7a11f623ee6557bca42f18367f8f3520b5be1685001ff06ef69",
+      "review": "integration-test-revisions"
+    },
+    {
+      "commit": "8fb04fb3428d592ba785dfc75bff19cf29d6d198",
+      "subject": "fix(sqlite): normalize hexadecimal integer literals (#8744)",
+      "files": [
+        "sqlglot/parsers/sqlite.py",
+        "tests/dialects/test_sqlite.py"
+      ],
+      "patch_sha256": "94c9314e8a3039a29e45a87165437c03a2fe7281de80ddb49e26ed7fb68d754b",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "b994fa759bb85182ae4a589c1d01973829236047",
+      "subject": "fix(optimizer): don't fold decimal division by zero [CLAUDE] (#8748)",
+      "files": [
+        "sqlglot/optimizer/simplify.py",
+        "tests/fixtures/optimizer/simplify.sql"
+      ],
+      "patch_sha256": "499277cad56340216215fcea2abd5ef874a8e4c47e818a0708a7a7a4b22f4a9c",
+      "review": "query-plan-optimizer"
+    },
+    {
+      "commit": "dd71d360f4ac49fc67b8a444b5c4c557e67298ea",
+      "subject": "fix(duckdb): keep the fraction of an interval written as one string [CLAUDE] (#8746)",
+      "files": [
+        "sqlglot/expressions/datatypes.py",
+        "sqlglot/generators/duckdb.py",
+        "sqlglot/parser.py",
+        "tests/dialects/test_duckdb.py"
+      ],
+      "patch_sha256": "85d788443e80e8101a29c36d083db0d452197f037129e54378652b1c88b2f548",
+      "review": "duckdb-native-policy"
+    },
+    {
+      "commit": "76001235539919787dfd05923c90d39b97122773",
+      "subject": "fix(optimizer): resolve Snowflake token-splitter columns and BigQuery pivot rows (#8745)",
+      "files": [
+        "sqlglot-integration-tests",
+        "sqlglot/dialects/bigquery.py",
+        "sqlglot/dialects/dialect.py",
+        "sqlglot/dialects/snowflake.py",
+        "sqlglot/expressions/array.py",
+        "sqlglot/optimizer/annotate_types.py",
+        "sqlglot/optimizer/qualify_columns.py"
+      ],
+      "patch_sha256": "20e3ba01b7cf78900d121c13aebe31aa43011247472c36fa9a4f7195ead14b2a",
+      "review": "review-76001235"
+    },
+    {
+      "commit": "c922dbe97c52e8cedf4360fb1449e2a0102388af",
+      "subject": "Sync w/ integration tests",
+      "files": [
+        "sqlglot-integration-tests"
+      ],
+      "patch_sha256": "6a6e5805dfe5706a42d6dad42f323b643fa3665dbbbf6655a2fe4db5d37da544",
+      "review": "integration-test-revisions"
+    },
+    {
+      "commit": "5f3b52da8100ec754db2190f8465f789dec046ee",
+      "subject": "cleanup",
+      "files": [
+        "sqlglot-integration-tests",
+        "sqlglot/optimizer/qualify_columns.py",
+        "tests/fixtures/optimizer/qualify_columns.sql"
+      ],
+      "patch_sha256": "a02c23a2f4705beaa6490eacb11474d8e487e20e392303a507885e6ee85d72bf",
+      "review": "review-5f3b52da"
+    },
+    {
+      "commit": "eb03a9726f27ce33b2a899e2b70c52ba8e6de8ad",
+      "subject": "fix(postgres): transpile a case-insensitive regex flag to ~* [CLAUDE] (#8755)",
+      "files": [
+        "sqlglot/generators/postgres.py",
+        "tests/dialects/test_duckdb.py"
+      ],
+      "patch_sha256": "c02f8176bc19c61f27495d0e830d2792e9eca83f360067541770d84401b09ea8",
+      "review": "SG29-011"
+    },
+    {
+      "commit": "d18c57b8791a26ece6e0455bc803d8edd611cd60",
+      "subject": "fixup",
+      "files": [
+        "tests/test_sqlglotc.py"
+      ],
+      "patch_sha256": "2d72ae681f5e7085a9246602f23d9714f69d7bbba2faf5f6f53e77fb1fc092cf",
+      "review": "python-runtime-and-diff"
+    },
+    {
+      "commit": "a9f1309cc7116a79008c9a2b6ab0a06ce6b6f4c7",
+      "subject": "fix(optimizer): rename right operand references when aligning UNION BY NAME (#8749)",
+      "files": [
+        "sqlglot/optimizer/canonicalize_internal_names.py",
+        "tests/fixtures/optimizer/canonicalize_internal_names.sql"
+      ],
+      "patch_sha256": "4b9cd9bfb53aad0a6f60f583fb68e8c8faca631277a26585fb24d1233166e5e5",
+      "review": "review-a9f1309c"
+    },
+    {
+      "commit": "e0ac5e4e667146df9fce47fd3a449bdd19f4f8ea",
+      "subject": "fix: keep the last value of an exclusive series with a negative step [CLAUDE] (#8757)",
+      "files": [
+        "sqlglot/dialects/dialect.py",
+        "tests/dialects/test_duckdb.py"
+      ],
+      "patch_sha256": "de533a66165a719d8949fe7d04e009c950534444f25e370617014c7e65c34ddf",
+      "review": "duckdb-native-policy"
+    },
+    {
+      "commit": "f872c442af585d773247f623cd5878d17cda6850",
+      "subject": "fix(optimizer): preserve filtered and grouped CROSS JOIN inputs [CODEX] (#8756)",
+      "files": [
+        "sqlglot/optimizer/eliminate_joins.py",
+        "tests/test_optimizer.py"
+      ],
+      "patch_sha256": "fa578a8e6ec24ed6083095b4f1834fa738ffa290d699176d9e987d66bfbeadbc",
+      "review": "query-plan-optimizer"
+    },
+    {
+      "commit": "4aa189a472639e7af442c8d794514ec3ab116995",
+      "subject": "fix(duckdb): decode the escapes of a Unicode string into its characters [CLAUDE] (#8758)",
+      "files": [
+        "sqlglot/generators/duckdb.py",
+        "tests/dialects/test_postgres.py"
+      ],
+      "patch_sha256": "7285f99eaa401d3fe31a4867e37fc1bf7af76d91dc94ed9c8acb11c6c8f69cf3",
+      "review": "duckdb-native-policy"
+    },
+    {
+      "commit": "184557f70dd6b606e76fb2592bd096e4667450eb",
+      "subject": "fix(oracle): parse JSON_VALUE RETURNING clause (#8762)",
+      "files": [
+        "sqlglot/parsers/oracle.py",
+        "tests/dialects/test_oracle.py"
+      ],
+      "patch_sha256": "9a72eb392de47323d52a6e8f1b040edcaff1f37f27b4044e711c2e8adc60e0c0",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "e3b3e23c644728be22e718b6ca838f753757592f",
+      "subject": "feat(duckdb): normalize explicit join types (#8759)",
+      "files": [
+        "sqlglot/generator.py",
+        "sqlglot/generators/duckdb.py",
+        "sqlglot/parser.py",
+        "sqlglot/parsers/duckdb.py",
+        "tests/dialects/test_duckdb.py"
+      ],
+      "patch_sha256": "bd35493beab08c2dcbb4acc011bf238a3441ffccaaa63f5902d874bcda69bb18",
+      "review": "duckdb-native-policy"
+    },
+    {
+      "commit": "46af6e468564c271f7cc748dda68a6d813a683f6",
+      "subject": "feat(duckdb): v2 [dis]connect statement",
+      "files": [
+        "sqlglot/dialects/duckdb.py",
+        "sqlglot/expressions/ddl.py",
+        "sqlglot/generator.py",
+        "sqlglot/parser.py",
+        "sqlglot/parsers/duckdb.py",
+        "sqlglot/tokenizer_core.py",
+        "tests/dialects/test_duckdb.py"
+      ],
+      "patch_sha256": "684051817a11a75145c27f4880e1587adc9d99fc4fe89756b45b2ce1ce53776f",
+      "review": "duckdb-native-policy"
+    },
+    {
+      "commit": "37f09630d14be44def882c8a2ef0666725a4d83a",
+      "subject": "fix(optimizer): GROUP BY ordinal interpretation in unnested subqueries (#8730)",
+      "files": [
+        "sqlglot-integration-tests",
+        "sqlglot/generator.py",
+        "sqlglot/optimizer/unnest_subqueries.py"
+      ],
+      "patch_sha256": "ef3c9f779eb87b57de4d1dda50327b2af28457e3fc1b8f6a51da455f9d6a9e76",
+      "review": "query-plan-optimizer"
+    },
+    {
+      "commit": "f3f2201f655ab3e9adf822bab37846873200c14a",
+      "subject": "Sync w/ integration tests",
+      "files": [
+        "sqlglot-integration-tests"
+      ],
+      "patch_sha256": "32c4bdda64174eb9c9d088e0525b186dcbef87898ffeb10d3df740e967e046a8",
+      "review": "integration-test-revisions"
+    },
+    {
+      "commit": "4d7421ee43612043f11574d98227319d5e1f9855",
+      "subject": "fix(optimizer): keep CROSS JOIN with LIMIT 1 and split the LEFT JOIN row check (#8760)",
+      "files": [
+        "sqlglot/optimizer/eliminate_joins.py",
+        "tests/fixtures/optimizer/eliminate_joins.sql",
+        "tests/test_optimizer.py"
+      ],
+      "patch_sha256": "45da5a8352f84c325b76b85563d82d9c46a5c8389e0b614a28705fdae0e9f113",
+      "review": "query-plan-optimizer"
+    },
+    {
+      "commit": "78b24a744adb8d5dc0eb285f067087338b60f266",
+      "subject": "fix(postgres)!: transpile hex SHA2 hashes with ENCODE(..., 'hex') and parse SHA256 as a digest [CLAUDE] (#8764)",
+      "files": [
+        "sqlglot/generators/postgres.py",
+        "sqlglot/parsers/postgres.py",
+        "tests/dialects/test_exasol.py",
+        "tests/dialects/test_postgres.py"
+      ],
+      "patch_sha256": "a41449a9a418fb12c788f178aa5f65ed2a3fae7c1b158f1a9e72ac2118eb278c",
+      "review": "SG29-011"
+    },
+    {
+      "commit": "c068aefd6997c5d272af86fb560ee25d8d5a10d6",
+      "subject": "fix(parser): copy DataType node for each cast in _replace_lambda (#8780)",
+      "files": [
+        "sqlglot/parser.py",
+        "tests/dialects/test_snowflake.py"
+      ],
+      "patch_sha256": "e4e31d2c4435943fa5caa29e0ed84848e9da56128a1576e0c80a6c369ec3898a",
+      "review": "review-c068aefd"
+    },
+    {
+      "commit": "ead649b98b50590fa5a50b377a7fc6678be8f595",
+      "subject": "eliminate setuptools version already set warning (#8770)",
+      "files": [
+        "tests/test_sqlglotc.py"
+      ],
+      "patch_sha256": "3bc21b6d30c980f7e53bcf249e6af1d81e0e8842521ff8641313184ae4ecf6c1",
+      "review": "python-runtime-and-diff"
+    },
+    {
+      "commit": "a8a7610d5d4139fe14d2ea624652fdbdb5ba74b3",
+      "subject": "fix(bigquery): generate EXTRACT(DAYOFWEEK FROM ...) for DayOfWeek (#8778)",
+      "files": [
+        "sqlglot/generators/bigquery.py",
+        "tests/dialects/test_mysql.py"
+      ],
+      "patch_sha256": "11a00a2d8de2a4a7acbd299d8801329cea1476e86cf3820fad2faf2ae6e6f8d9",
+      "review": "SG29-016"
+    },
+    {
+      "commit": "d3758367d4205bc728738110363e82edb3be211b",
+      "subject": "fix(generator): escape text before quoting it in generated SQL (#8779)",
+      "files": [
+        "sqlglot/dialects/dialect.py",
+        "sqlglot/generator.py",
+        "sqlglot/generators/duckdb.py",
+        "sqlglot/generators/exasol.py",
+        "sqlglot/generators/presto.py",
+        "sqlglot/generators/sqlite.py",
+        "sqlglot/generators/tsql.py",
+        "tests/dialects/test_bigquery.py",
+        "tests/dialects/test_duckdb.py",
+        "tests/dialects/test_exasol.py",
+        "tests/dialects/test_hive.py",
+        "tests/dialects/test_postgres.py",
+        "tests/dialects/test_presto.py",
+        "tests/dialects/test_snowflake.py",
+        "tests/dialects/test_sqlite.py",
+        "tests/dialects/test_tsql.py"
+      ],
+      "patch_sha256": "04415b01bf8254867861dd4cbb3f6292ae7b2611efa87fdc4b63c9864db3cf61",
+      "review": "shared-escaping"
+    },
+    {
+      "commit": "8c5600ad1fa322cbc11dcd93ee78cf5608efeda5",
+      "subject": "fix(clickhouse): parenthesize Contains under unary minus [CLAUDE] (#8782)",
+      "files": [
+        "sqlglot/generators/clickhouse.py",
+        "tests/dialects/test_clickhouse.py"
+      ],
+      "patch_sha256": "b4ca98295c93a7eff3824b022aa09221b9c91cd269299f531749c782e8ef9df1",
+      "review": "review-8c5600ad"
+    },
+    {
+      "commit": "908809d3c2b756d0c4e259c55e8e61ca9579ebd8",
+      "subject": "fix(sqlite): parse REAL and FLOAT as 8-byte DOUBLE [CLAUDE] (#8784)",
+      "files": [
+        "sqlglot/dialects/sqlite.py",
+        "tests/dialects/test_sqlite.py"
+      ],
+      "patch_sha256": "f22a2d61fbff14ecaa346b0da4b4f320ebe0ccdb0a8e97964a9ee6d5b3a70e41",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "bc1cd99a78974337a592662023e24231c2bf2a91",
+      "subject": "fix(parser): infinite loop issue (#8788)",
+      "files": [
+        "sqlglot/parser.py",
+        "tests/test_parser.py"
+      ],
+      "patch_sha256": "989ae7455a910ee8ad5bc20830177460d000b5d151539c8ed3884bfd1d314644",
+      "review": "copy-progress"
+    },
+    {
+      "commit": "0e7b2da5d199388e84908aef13c53e535f1cf715",
+      "subject": "fix(optimizer)!: preserve grouping when removing redundant casts (#8787)",
+      "files": [
+        "sqlglot/optimizer/canonicalize.py",
+        "tests/fixtures/optimizer/canonicalize.sql",
+        "tests/fixtures/optimizer/optimizer.sql",
+        "tests/fixtures/optimizer/tpc-h/tpc-h.sql",
+        "tests/test_optimizer.py"
+      ],
+      "patch_sha256": "9397d37a102eb04831b62374cf5c28cb738a5bcf8b76b3bc3c99e904f231f1ae",
+      "review": "query-plan-optimizer"
+    },
+    {
+      "commit": "bffbfbe49f762a930d7a81806b00e1784dbb7ce0",
+      "subject": "fix clickhouse test",
+      "files": [
+        "tests/dialects/test_clickhouse.py"
+      ],
+      "patch_sha256": "38b47c1e50e8a5b8f65cc90ee4f9f0f9ca5ff55b5675fb3f877643ed2846fb19",
+      "review": "review-bffbfbe4"
+    },
+    {
+      "commit": "f0b4347b84b71bfd406e2fe831656a6d03351110",
+      "subject": "fix(optimizer)!: coerce `VALUES` column types across all rows (#8775)",
+      "files": [
+        "sqlglot/optimizer/annotate_types.py",
+        "tests/test_optimizer.py"
+      ],
+      "patch_sha256": "ccdbfceb68d5eabe7d6df06a98c165ae970df96a36534ca1f975b3ced5415f0c",
+      "review": "SG29-017"
+    },
+    {
+      "commit": "5859d7146aca266f3fdfbff6f11a8eeffcb4ee78",
+      "subject": "fix(duckdb): keep every path of a multi-path JSON_EXTRACT [CLAUDE] (#8771)",
+      "files": [
+        "sqlglot/generators/duckdb.py",
+        "tests/dialects/test_sqlite.py"
+      ],
+      "patch_sha256": "bafd05ab3b0a00e2e8acfb56d3097d1181566ea968c82e495dbce7be38aeb507",
+      "review": "duckdb-native-policy"
+    },
+    {
+      "commit": "bc7a5c466e8dffe653c3fe04cb080cef1de1ad41",
+      "subject": "fix(optimizer): avoid unsafe `LEFT JOIN` elimination with `DISTINCT ON` (#8769)",
+      "files": [
+        "sqlglot/optimizer/eliminate_joins.py",
+        "tests/fixtures/optimizer/eliminate_joins.sql"
+      ],
+      "patch_sha256": "b6482c26eb33226a065c508e173fb725078ec5feefb90f28b4f8d27d0761636c",
+      "review": "query-plan-optimizer"
+    },
+    {
+      "commit": "33c72094fbe6d05382e560e1026780372640f79b",
+      "subject": "fix(optimizer): exclude semi/anti join RHS sources from column resolution (#8763)",
+      "files": [
+        "sqlglot-integration-tests",
+        "sqlglot/optimizer/scope.py"
+      ],
+      "patch_sha256": "c6ea73e42fda8c79cad3e247375e09b3722da3b5b30ce3a9c87d868db6f1ebed",
+      "review": "review-33c72094"
+    },
+    {
+      "commit": "fe2d148501dc181ae8decfcd6580b026be13da90",
+      "subject": "Sync w/ integration tests",
+      "files": [
+        "sqlglot-integration-tests"
+      ],
+      "patch_sha256": "60f476b393ca7ab4111837131ae91cc0e0a943a6836a005ec5f151dc074585da",
+      "review": "integration-test-revisions"
+    },
+    {
+      "commit": "634edd93bedaa5cb624098bb66fb99e07706f4ce",
+      "subject": "fix(sqlite): generate functions for temporal casts (#8793)",
+      "files": [
+        "sqlglot/generators/sqlite.py",
+        "tests/dialects/test_dialect.py",
+        "tests/dialects/test_sqlite.py",
+        "tests/fixtures/optimizer/canonicalize.sql"
+      ],
+      "patch_sha256": "54a4c448c2cc2ed1f0e577453f64367b1d74898621f3985c74735d0e299b86f9",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "ebd5fb4d74f6e849ef989c2a81ab8e69e0395569",
+      "subject": "fix(duckdb): drop the SQL/JSON clauses of JSON_ARRAY and JSON_OBJECT [CLAUDE] (#8794)",
+      "files": [
+        "sqlglot/generators/duckdb.py",
+        "tests/dialects/test_duckdb.py"
+      ],
+      "patch_sha256": "9bfbc9ce33d989116dd7615bcb99658ac7f85efb4c6ec3a5d0b69907ad516fe0",
+      "review": "duckdb-native-policy"
+    },
+    {
+      "commit": "a357b7d9be3d7c03ece213d53421d8a192b90a03",
+      "subject": "fix(postgres): support tablespace clauses in CREATE statements [CODEX] (#8792)",
+      "files": [
+        "sqlglot/expressions/constraints.py",
+        "sqlglot/generator.py",
+        "sqlglot/generators/postgres.py",
+        "sqlglot/parser.py",
+        "sqlglot/parsers/postgres.py",
+        "tests/dialects/test_oracle.py",
+        "tests/dialects/test_postgres.py"
+      ],
+      "patch_sha256": "dc2bae91c80568877d7e20aee92aa9071a41b113b13bac2622837fb1e3390ee7",
+      "review": "review-a357b7d9"
+    },
+    {
+      "commit": "8cf42771eb4c639a3185e71432250feb8dc8eee4",
+      "subject": "cleanup",
+      "files": [
+        "sqlglot/generators/duckdb.py",
+        "tests/dialects/test_duckdb.py"
+      ],
+      "patch_sha256": "b2102884e545cc243c3b5b0705c1b1991c75d53301409d5ea77565b7e5a19451",
+      "review": "duckdb-native-policy"
+    },
+    {
+      "commit": "31918e9a2f249bb5cda263e644eb9c1b96be0c6d",
+      "subject": "fix(duckdb): preserve quoted variable names (#8795)",
+      "files": [
+        "sqlglot/expressions/builders.py",
+        "sqlglot/generators/duckdb.py",
+        "sqlglot/parsers/duckdb.py",
+        "tests/dialects/test_duckdb.py"
+      ],
+      "patch_sha256": "c990ac3b33bb5253b06db3d5f6bee11044155d653d019f94b79721f144c3b827",
+      "review": "duckdb-native-policy"
+    },
+    {
+      "commit": "c514be049b382191d6ba010c2af4765d9b8cca57",
+      "subject": "feat(duckdb): parse SQL trigger bodies (#8796)",
+      "files": [
+        "sqlglot/generators/duckdb.py",
+        "sqlglot/parser.py",
+        "sqlglot/parsers/duckdb.py",
+        "tests/dialects/test_duckdb.py"
+      ],
+      "patch_sha256": "76ff7ebeae1c80d24b232636935b1b8d5895e450596079173678e9e213fd1ce2",
+      "review": "duckdb-native-policy"
+    },
+    {
+      "commit": "c5fe5404f379d84798610ab23fb94980f26d2ff2",
+      "subject": "fix(snowflake): support MERGE ALL BY NAME (#8797)",
+      "files": [
+        "sqlglot/generator.py",
+        "sqlglot/generators/snowflake.py",
+        "sqlglot/parser.py",
+        "tests/dialects/test_snowflake.py"
+      ],
+      "patch_sha256": "64278712be663ee2b709ad5a8c4fc2ae1a13001709356c22586ee33c6ad26ffe",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "114999ae6787cbdb7ea630710b82ad2849711e08",
+      "subject": "fix(optimizer): avoid nested aggregates when unnesting scalar subqueries [CODEX] (#8798)",
+      "files": [
+        "sqlglot/optimizer/unnest_subqueries.py",
+        "tests/fixtures/optimizer/unnest_subqueries.sql",
+        "tests/test_optimizer.py"
+      ],
+      "patch_sha256": "a48b7f45cadcc3211710b3830af1b9c43746f90461e0348daf6b50cf12a696ed",
+      "review": "query-plan-optimizer"
+    },
+    {
+      "commit": "fb36fb7112ad71356fe81fd2cce9aa4733679e1d",
+      "subject": "fix(optimizer): annotate struct-valued subqueries and row references (#8694)",
+      "files": [
+        "sqlglot/dialects/duckdb.py",
+        "sqlglot/optimizer/annotate_types.py",
+        "tests/test_optimizer.py"
+      ],
+      "patch_sha256": "84d94ff2c895ad07bf88befd1859c9b1698e4fb7d520fac3d627a5f2a318359d",
+      "review": "SG29-017"
+    },
+    {
+      "commit": "2bf94d96359db584862dcf20b358f34cabc1661d",
+      "subject": "refactor(optimizer): expand struct column paths using inferred types (#8695)",
+      "files": [
+        "sqlglot/optimizer/qualify_columns.py"
+      ],
+      "patch_sha256": "30977bb7394c0f42cb3a702015270506c53eacedee75d15ed02fb49ab247d341",
+      "review": "analysis-policy"
+    },
+    {
+      "commit": "9d2966ed3f8a7f0d370846dbae1579b40ddc2924",
+      "subject": "refactor(optimizer)!: defer scope annotation until qualification is complete (#8696)",
+      "files": [
+        "sqlglot/optimizer/annotate_types.py",
+        "sqlglot/optimizer/qualify_columns.py",
+        "tests/test_optimizer.py"
+      ],
+      "patch_sha256": "7e826fcc09f5b184cd44cd91113a6682313ca5146cd97194d7095697c7cfc9db",
+      "review": "analysis-policy"
+    },
+    {
+      "commit": "c034cbf2cccb50de77fdecadc216450ae96ea489",
+      "subject": "Update CHANGELOG.md for v30.25.0 [skip ci]",
+      "files": [
+        "CHANGELOG.md"
+      ],
+      "patch_sha256": "bbd140ef0d85f80f1fa1d0a988465332e356fd2586bb58bc9362de91c75ff971",
+      "review": "release-changelogs"
+    },
+    {
+      "commit": "5739cd6ca80c48fa166bcd239aba651487e9081c",
+      "subject": "fix(postgres): assign named MAKE_INTERVAL arguments to their units [CLAUDE] (#8800)",
+      "files": [
+        "sqlglot/parsers/postgres.py",
+        "tests/dialects/test_postgres.py"
+      ],
+      "patch_sha256": "c9f6b32ff09f708b886e74c60c8607a476b91517d71fc5666fbce070ab621ce1",
+      "review": "SG29-011"
+    },
+    {
+      "commit": "53ccce9f704a6172434eac84d399b0964fccf92c",
+      "subject": "fix(postgres): preserve anonymous MAKE_INTERVAL calls (#8801)",
+      "files": [
+        "sqlglot/parsers/postgres.py",
+        "tests/dialects/test_postgres.py"
+      ],
+      "patch_sha256": "5013e1ca3af87be256be9882b0298ec64df8bdfcd27e5b9498652603ab6c7bf1",
+      "review": "SG29-011"
+    },
+    {
+      "commit": "8709510f9a097d937e3058b82ededfe703625801",
+      "subject": "fix(postgres): count unit boundaries for DATEDIFF from boundary dialects [CLAUDE] (#8802)",
+      "files": [
+        "sqlglot/generators/postgres.py",
+        "tests/dialects/test_snowflake.py"
+      ],
+      "patch_sha256": "b4d977bcd103d933e7d4d3077478159b311a2d82d55b4313700a1df1afb55964",
+      "review": "SG29-011"
+    },
+    {
+      "commit": "e54ad9aaedeb5e9b2be615ebd5f1ff40cfb854a2",
+      "subject": "fix(optimizer)!: resolve set operation types during annotation [CODEX] (#8720)",
+      "files": [
+        "sqlglot-integration-tests",
+        "sqlglot/dialects/bigquery.py",
+        "sqlglot/optimizer/annotate_types.py",
+        "sqlglot/typing/bigquery.py",
+        "tests/dialects/test_bigquery.py",
+        "tests/test_optimizer.py"
+      ],
+      "patch_sha256": "4d19f2fb13232f562ac42650071a577a922ab6e2cc2e4f2362a322ae69c6d7de",
+      "review": "analysis-policy"
+    },
+    {
+      "commit": "feb0e08aba28a29590596bb3f5761fbaeb0e98b9",
+      "subject": "Sync w/ integration tests",
+      "files": [
+        "sqlglot-integration-tests"
+      ],
+      "patch_sha256": "0a83eaad121acfce8dca3c812ffd05e0b0aa6d0889548d2a51dae5ba20e43062",
+      "review": "integration-test-revisions"
+    },
+    {
+      "commit": "a4e08982b678a65a3b4140f2ee30493d827c85c8",
+      "subject": "fix(parser): wrap parenthesized `VALUES` setop operands (#8803)",
+      "files": [
+        "sqlglot/parser.py",
+        "tests/dialects/test_duckdb.py",
+        "tests/dialects/test_spark.py",
+        "tests/test_optimizer.py",
+        "tests/test_transpile.py"
+      ],
+      "patch_sha256": "a36b1ac8f869ff043ae65b150adfa90e5a2fc89eedca2dc1adbb7c132b386326",
+      "review": "SG29-006"
+    },
+    {
+      "commit": "991d6ce5ef300c32da83c2774fd88526d0ab667a",
+      "subject": "fix(duckdb): mark DATE_DIFF as counting unit boundaries [CLAUDE] (#8810)",
+      "files": [
+        "sqlglot/parsers/duckdb.py",
+        "tests/dialects/test_duckdb.py"
+      ],
+      "patch_sha256": "52ae2030691271502f8433663687b4c2ca3a1131a6b62c76e76f7f5c7819d992",
+      "review": "SG29-011"
+    },
+    {
+      "commit": "840347fd4bf92926337c8d118c39ef4dbf1a2131",
+      "subject": "fix(duckdb): add missing words to RESERVED_KEYWORDS (#8811)",
+      "files": [
+        "sqlglot/generators/duckdb.py",
+        "tests/dialects/test_duckdb.py"
+      ],
+      "patch_sha256": "9df6b0444eb14f888d64d81350a46925d1cdf1a6b1e214c05c4ffb99474e4e47",
+      "review": "duckdb-native-policy"
+    },
+    {
+      "commit": "dca9a621b5bc3a8703510265ffa6e695808fb320",
+      "subject": "simplify `values_to_select` logic",
+      "files": [
+        "sqlglot/parser.py"
+      ],
+      "patch_sha256": "7889a1a97c9d69a96321630d3c29f787c5b3081f4bd68d2a64c28db94897b9f0",
+      "review": "SG29-012"
+    },
+    {
+      "commit": "86abcde38e32ddb04ab721ab0654473d51e0a783",
+      "subject": "fix(parser)!: respect dialect `INTERSECT` precedence in set operations (#8704)",
+      "files": [
+        "sqlglot-integration-tests",
+        "sqlglot/dialects/dialect.py",
+        "sqlglot/dialects/hive.py",
+        "sqlglot/dialects/oracle.py",
+        "sqlglot/dialects/spark2.py",
+        "sqlglot/dialects/sqlite.py",
+        "sqlglot/generator.py",
+        "sqlglot/optimizer/scope.py",
+        "sqlglot/parser.py",
+        "sqlglot/parsers/clickhouse.py",
+        "tests/dialects/test_clickhouse.py",
+        "tests/dialects/test_dialect.py",
+        "tests/fixtures/pretty.sql",
+        "tests/test_optimizer.py"
+      ],
+      "patch_sha256": "7140ecce2073fad1303eb211d6f6a1b1bae5dbe95cc4d21bf0ca04b93c948b15",
+      "review": "SG29-006"
+    },
+    {
+      "commit": "2d4b5a5b0aea46e7f5a4fbe09c1d60fcafad76b3",
+      "subject": "fix(mysql): map TIMESTAMPADD and support transpilation (#8809)",
+      "files": [
+        "sqlglot/dialects/dialect.py",
+        "sqlglot/generators/postgres.py",
+        "sqlglot/parsers/mysql.py",
+        "tests/dialects/test_mysql.py"
+      ],
+      "patch_sha256": "ebfd12e01915a61fdc39ca11f5e13cd27c63e0132c5272247908ffba2195f2c0",
+      "review": "SG29-009"
+    },
+    {
+      "commit": "f1fa6bf69b1b601041444eb6ddbcf889b30e9e6d",
+      "subject": "Sync w/ integration tests",
+      "files": [
+        "sqlglot-integration-tests"
+      ],
+      "patch_sha256": "ce5e3004b655c566e10f2ef6e5f1f6e8856bc6bca18933c2acda5efc339ce145",
+      "review": "integration-test-revisions"
+    },
+    {
+      "commit": "a20a4d9e5eb3e5cf33d69148d40c25737b32d437",
+      "subject": "fix(snowflake)!: parse LOCALTIMESTAMP as CURRENT_TIMESTAMP [AGENT] (#8813)",
+      "files": [
+        "sqlglot/parsers/snowflake.py",
+        "tests/dialects/test_snowflake.py"
+      ],
+      "patch_sha256": "598a9b16086dd786b4c5510497966124f7c8d7d2178748da75051a5310a12d8d",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "9943dc465a01192412e595367f41f8bcecfa25a9",
+      "subject": "feat(optimizer): Fix the semi anti join qualify columns reference (#8814)",
+      "files": [
+        "sqlglot-integration-tests",
+        "sqlglot/optimizer/resolver.py"
+      ],
+      "patch_sha256": "4e36482466643890b93e5a1686756c9a0a4d7e5862a3410d8c6cf635ec810327",
+      "review": "review-9943dc46"
+    },
+    {
+      "commit": "aa7d8e399892248c181a6411166601e852d789d6",
+      "subject": "Sync w/ integration tests",
+      "files": [
+        "sqlglot-integration-tests"
+      ],
+      "patch_sha256": "737ac126f6d6a9052af45a6856450b97b2d1dae440dd2e7b3feab4ab14bbdecf",
+      "review": "integration-test-revisions"
+    },
+    {
+      "commit": "4ef575e2445529f3b68881c32e568e1d058b636e",
+      "subject": "Sync w/ integration tests",
+      "files": [
+        "sqlglot-integration-tests"
+      ],
+      "patch_sha256": "c293fa1daec19f8e1cac5c7960b3a465a5361fffeefd369931a22f089f88111d",
+      "review": "integration-test-revisions"
+    },
+    {
+      "commit": "41287a2d7ff6ede9fab62fc645922957788e443b",
+      "subject": "fix(snowflake)!: accept unquoted keyword identifiers (#8816)",
+      "files": [
+        "sqlglot/dialects/snowflake.py",
+        "sqlglot/parser.py",
+        "sqlglot/parsers/snowflake.py",
+        "tests/dialects/test_snowflake.py"
+      ],
+      "patch_sha256": "95e8bf04976ab0fa07d001d9405737322b1d7f3813148450b39e9bf0993ab2a0",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "3cca3ea47592c84b23636aff196ca0bbaf4f1905",
+      "subject": "fix: preserve timestamp arithmetic semantics (#8815)",
+      "files": [
+        "sqlglot/dialects/dialect.py",
+        "sqlglot/generators/postgres.py",
+        "sqlglot/parsers/mysql.py",
+        "tests/dialects/test_duckdb.py",
+        "tests/dialects/test_mysql.py",
+        "tests/dialects/test_postgres.py"
+      ],
+      "patch_sha256": "752855bc1612b596edcfce4160edb7885e8d49039ae468f1d206beaa25c68efa",
+      "review": "SG29-009"
+    },
+    {
+      "commit": "e88e67e6c8f5fe8992419f6920dac66cca8f12a8",
+      "subject": "fix(snowflake): preserve date truncation types in DuckDB (#8817)",
+      "files": [
+        "sqlglot/generators/duckdb.py",
+        "sqlglot/parsers/snowflake.py",
+        "tests/dialects/test_duckdb.py",
+        "tests/dialects/test_snowflake.py"
+      ],
+      "patch_sha256": "2fa615af13f5296251a37c1e186321f4726f58134172fe071c6e09692cd05580",
+      "review": "duckdb-native-policy"
+    },
+    {
+      "commit": "a32ef6365267049425dd93f45eb7af361466b854",
+      "subject": "fix(optimizer)!: propagate nested unknown types (#8818)",
+      "files": [
+        "sqlglot/optimizer/annotate_types.py",
+        "sqlglot/typing/bigquery.py",
+        "tests/dialects/test_duckdb.py",
+        "tests/fixtures/optimizer/annotate_types.sql"
+      ],
+      "patch_sha256": "b20c62b70b29c88724eaeeabaa053b9ad701e8f21ecf1e7736f9c7e677e54127",
+      "review": "SG29-017"
+    },
+    {
+      "commit": "13a570c6f790a6140c9c9ae004914b081beb7ae6",
+      "subject": "fix(oracle): preserve end of month in ADD_MONTHS closes #8824 [CLAUDE] (#8825)",
+      "files": [
+        "sqlglot/parsers/oracle.py",
+        "tests/dialects/test_oracle.py"
+      ],
+      "patch_sha256": "38138bc780f561dfc58e8a0044422b12d959de30ad6355b02db67afde0582b79",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "a07698a741dde560a820211cb4a2539856edb349",
+      "subject": "fix(snowflake): preserve default LISTAGG separator [CODEX] (#8823)",
+      "files": [
+        "sqlglot/parsers/snowflake.py",
+        "tests/dialects/test_snowflake.py"
+      ],
+      "patch_sha256": "d3455d7ee28fa7a582a6262fc8a9a6c712ae5ed98e8ad32cb2d9246286e739dc",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "e2a8b6589504793decb69d00158f728b6d3772ec",
+      "subject": "fix(snowflake): support COPY TAGS in CREATE TABLE (#8822)",
+      "files": [
+        "sqlglot/expressions/properties.py",
+        "sqlglot/generator.py",
+        "sqlglot/parser.py",
+        "sqlglot/parsers/snowflake.py",
+        "tests/dialects/test_snowflake.py"
+      ],
+      "patch_sha256": "cb99a5198de3b0211986c6f508bf417c6840a13a2e406ddd319b269f9de2cd08",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "ad8d374b78df08a0c9df8a9499e314907894ce84",
+      "subject": "Sync w/ integration tests",
+      "files": [
+        "sqlglot-integration-tests"
+      ],
+      "patch_sha256": "d4b0fb0f9cf500bd048e69a5dea3dedce03b13d334f3b110e43301adbd5f33d6",
+      "review": "integration-test-revisions"
+    },
+    {
+      "commit": "ab043477f777af312efc29b419eb14f0c385fef7",
+      "subject": "fix(spark): parse LISTAGG through _parse_string_agg (#8829)",
+      "files": [
+        "sqlglot/parsers/spark.py",
+        "tests/dialects/test_spark.py"
+      ],
+      "patch_sha256": "feb127b9c782e92320656d301d3c073d52100760037b7ead60d6bb138ce954f7",
+      "review": "SG29-015"
+    },
+    {
+      "commit": "7c9dbb91e9e252e2d47840ea4cb63caf8f4d6a12",
+      "subject": "fix(tsql): don't crash in qualify_derived_table_outputs for a CTE with a non-query body (#8827)",
+      "files": [
+        "sqlglot/generators/tsql.py",
+        "tests/dialects/test_tsql.py"
+      ],
+      "patch_sha256": "be9a0b0b68bc8ad58559caf5cdba67e637d245fec9f1257377d6dc50a7396236",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "2748f82ec5bf895f2055e60c8e90e132079bc532",
+      "subject": "fix(parser): accept ALL in string aggregation (#8831)",
+      "files": [
+        "sqlglot/parser.py",
+        "tests/dialects/test_spark.py"
+      ],
+      "patch_sha256": "a28e13768dc7944f1516f9b24e5891ae92d45eec39e78c646b8d001b4dd5b616",
+      "review": "SG29-015"
+    },
+    {
+      "commit": "ffced07542da094bb068d09a61b8f9ebe41d19f7",
+      "subject": "fixup",
+      "files": [
+        "sqlglot/generators/tsql.py"
+      ],
+      "patch_sha256": "31c181677558b06d296dec57db921272ef3749b38d41d7132b06193576677e13",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "70c2a84001863cfb5ddf6c62ee71bc2086507e2d",
+      "subject": "fix(snowflake)!: handle time format elements case-insensitively [CODEX] (#8832)",
+      "files": [
+        "sqlglot-integration-tests",
+        "sqlglot/dialects/snowflake.py",
+        "tests/dialects/test_mysql.py",
+        "tests/dialects/test_snowflake.py"
+      ],
+      "patch_sha256": "9b834c8b2a421c6143c1d4a956c8022e36cc91ab236a25bf6de571facbee1068",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "f266a8cefc5472b99ab635ee2975f3d34a29cf2c",
+      "subject": "Sync w/ integration tests",
+      "files": [
+        "sqlglot-integration-tests"
+      ],
+      "patch_sha256": "fe50a7e61d1ce2e09c8a1ca87c75833cf557e6e0df7cfe6d05b8c2e468424a48",
+      "review": "integration-test-revisions"
+    },
+    {
+      "commit": "902739a3e521c16974d02755f0a0fceb31107b04",
+      "subject": "uninstall sqlglotc *before* installing dev sqlglot in make install-dev",
+      "files": [
+        "Makefile"
+      ],
+      "patch_sha256": "540762ee3403bf0384bece8ae37ff2b2f2d12b0a121b94314f1372573e9e11a7",
+      "review": "python-runtime-and-diff"
+    },
+    {
+      "commit": "94afaf0b31884056c42601c5335cf4de1d3ffdb9",
+      "subject": "pin setuptools_scm to make sure write_to_source is supported",
+      "files": [
+        "pyproject.toml",
+        "setup.py",
+        "sqlglotc/pyproject.toml"
+      ],
+      "patch_sha256": "6fc06b9cc678e5074cfc50488e641884ff0e84afdc497c05d89407df775148b4",
+      "review": "python-runtime-and-diff"
+    },
+    {
+      "commit": "680873ae7711c691417c2cd7d3c1a372be348d7a",
+      "subject": "no decorrelation for IN/ANY/ALL with aggregation (#8833)",
+      "files": [
+        "sqlglot-integration-tests",
+        "sqlglot/optimizer/unnest_subqueries.py",
+        "tests/test_optimizer.py"
+      ],
+      "patch_sha256": "227e97d53539260907a3b9be8ce7817e8b81aa2c33b8fa8eb3c6401b1a48d2e4",
+      "review": "query-plan-optimizer"
+    },
+    {
+      "commit": "b0842a1ee0be2cc9345d7312724dbf2ee32e325a",
+      "subject": "feat(parser): support PER (...) on aggregates (#8835)",
+      "files": [
+        "sqlglot/expressions/core.py",
+        "sqlglot/generator.py",
+        "sqlglot/parser.py",
+        "tests/dialects/test_dialect.py"
+      ],
+      "patch_sha256": "f9e9ee62cd20b05b5301f2e5b3342188f83c7817b38cc994809f7c12ff6ef681",
+      "review": "review-b0842a1e"
+    },
+    {
+      "commit": "9ae1a6a7520a5171b612179509555d4a2977a434",
+      "subject": "Update CHANGELOG.md for v30.26.0 [skip ci]",
+      "files": [
+        "CHANGELOG.md"
+      ],
+      "patch_sha256": "5caf4ad23ef9c92042a82dc5f8dc37a01c5381514434bc226e88503ad7a0f8a4",
+      "review": "release-changelogs"
+    },
+    {
+      "commit": "04f4a4405b80dde33a05da0f4271a6ea2ac38938",
+      "subject": "fix(parser): allow IN as identifier (#8837)",
+      "files": [
+        "sqlglot/parser.py",
+        "tests/dialects/test_dialect.py"
+      ],
+      "patch_sha256": "607d9e6b23e7143c9cc77bbc818d6c099de5a68caab465c1c41d12362670717e",
+      "review": "review-04f4a440"
+    },
+    {
+      "commit": "f31f109daef0ca99347d36295534a0d59956059c",
+      "subject": "fix(duckdb): prevent SORT BY tokenization",
+      "files": [
+        "sqlglot/dialects/duckdb.py",
+        "tests/dialects/test_duckdb.py"
+      ],
+      "patch_sha256": "8a221056f94d665114a6b252b03dd47bc4468ee15528b7afc881be81b507421b",
+      "review": "duckdb-native-policy"
+    },
+    {
+      "commit": "5b7af1e765052d256aacb7d42624aee1a076fac4",
+      "subject": "fix(duckdb)!: parse ~ as a partial regex match from DuckDB 2.0 [a mix of models in Hermes Agent] (#8840)",
+      "files": [
+        "sqlglot/parsers/duckdb.py",
+        "tests/dialects/test_duckdb.py"
+      ],
+      "patch_sha256": "2f991079bd34e93ba56bf6465e64c141bd70a12c4b710d4ce9d6d0129d13022f",
+      "review": "duckdb-native-policy"
+    },
+    {
+      "commit": "20f01c7fbc0d7b80d1ef6ead063e6510026de36d",
+      "subject": "fix(optimizer): Fix merging subqueries with group by all and window functions (#8834) [CODEX]",
+      "files": [
+        "sqlglot-integration-tests",
+        "sqlglot/optimizer/helpers.py",
+        "sqlglot/optimizer/merge_subqueries.py",
+        "sqlglot/optimizer/pushdown_projections.py"
+      ],
+      "patch_sha256": "f6bf275f8515d309161b7d7785fbb5d9f97f76cf4ddbe3360a555c232f5553be",
+      "review": "query-plan-optimizer"
+    },
+    {
+      "commit": "2ef935d6ce02dd46e579b2edda7fce6298c8ad11",
+      "subject": "perf(diff): index the leaf matching set when scoring node pairs [CLAUDE] (#8838)",
+      "files": [
+        "sqlglot/diff.py"
+      ],
+      "patch_sha256": "8591e93287648e2da44eee7d6a2da56325647550319fee1cdba265e1b99c4dd9",
+      "review": "python-runtime-and-diff"
+    },
+    {
+      "commit": "a1ec85c6d1d891d5b05e6dd801c71365fac3e2a6",
+      "subject": "Sync w/ integration tests",
+      "files": [
+        "sqlglot-integration-tests"
+      ],
+      "patch_sha256": "47849bb8e55d7f51dae8fdbea4c52279a9c779c219f00bd95aa0cc106ef6622f",
+      "review": "integration-test-revisions"
+    },
+    {
+      "commit": "6f90b498078d65515bf57cf71c94332daf282009",
+      "subject": "refactor(diff): keep the edit script in a stable order (#8844)",
+      "files": [
+        "sqlglot/diff.py",
+        "tests/test_diff.py"
+      ],
+      "patch_sha256": "6b6dc807d592610916c9c056d4f03a8e6065b6b255d2b34de369695cc556778e",
+      "review": "python-runtime-and-diff"
+    },
+    {
+      "commit": "52763cdd96d5d6d4e7d8f06213c586ebfec8c711",
+      "subject": "fix(sqlite): preserve modifiers on parenthesized queries [CODEX] (#8843)",
+      "files": [
+        "sqlglot/generators/sqlite.py",
+        "tests/dialects/test_sqlite.py"
+      ],
+      "patch_sha256": "40fd0508f71d8c13473876e8a6957a3fd3cc06c463dd5ab8e4549a0dab1125e2",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "da00199fa2a33505bbb4b6c708d1ec10a0549850",
+      "subject": "fix(optimizer): skip decorrelation for subqueries evaluated after outer GROUP BY (#8836)",
+      "files": [
+        "sqlglot-integration-tests",
+        "sqlglot/optimizer/unnest_subqueries.py",
+        "tests/test_optimizer.py"
+      ],
+      "patch_sha256": "77b0714f2fe4f5fe78a09c5b1b7b348a5f6ab735f00b4e11c6dc0c628fdc31ce",
+      "review": "query-plan-optimizer"
+    },
+    {
+      "commit": "e2585b0330f33a569a1ec6c1e6be5a04aca1442d",
+      "subject": "Sync w/ integration tests",
+      "files": [
+        "sqlglot-integration-tests"
+      ],
+      "patch_sha256": "6219f836a956d7bb5d4216ae42bce66dcb723e375b46e69dee8a90254592cff6",
+      "review": "integration-test-revisions"
+    },
+    {
+      "commit": "98782638dd6dbdedebad0e6ff6edc6e69598b81e",
+      "subject": "feat: add REF data type for named references (#8847)",
+      "files": [
+        "sqlglot/expressions/datatypes.py",
+        "sqlglot/parser.py",
+        "sqlglot/tokenizer_core.py",
+        "sqlglot/tokens.py",
+        "tests/test_expressions.py",
+        "tests/test_parser.py",
+        "tests/test_schema.py"
+      ],
+      "patch_sha256": "89e4d954eaa98f7d8087fdfe431ad94fa28d6147de828fa1bcf0afbde9540971",
+      "review": "ref-type"
+    },
+    {
+      "commit": "5c101a25e72157347994156a497b590d02c4296d",
+      "subject": "Update CHANGELOG.md for v30.27.0 [skip ci]",
+      "files": [
+        "CHANGELOG.md"
+      ],
+      "patch_sha256": "fa41b3e0a70f9c993d1ab6cda3908c0dcbb4dbbcf7b728998f409fbba200be04",
+      "review": "release-changelogs"
+    },
+    {
+      "commit": "549d64b984e2634abd8dd58f8fae1d5e790f7528",
+      "subject": "fix(duckdb): avoid cascading Base64 alphabet replacements (#8850)",
+      "files": [
+        "sqlglot/generators/duckdb.py",
+        "tests/dialects/test_snowflake.py"
+      ],
+      "patch_sha256": "713b98ff102b163a2bfac6a0c50770c66cd30d8789d7e6f610a12eb87ec07d3a",
+      "review": "duckdb-native-policy"
+    },
+    {
+      "commit": "f70f4e5be5acc50058f4d4ac1ee0f250e203916b",
+      "subject": "fix(sqlite): parse multi-argument DATE with modifiers as Anonymous (#8854) (#8857)",
+      "files": [
+        "sqlglot/parsers/sqlite.py",
+        "tests/dialects/test_sqlite.py"
+      ],
+      "patch_sha256": "dafb7ebb890db8ade978b454daa142d7b3046e3e896e49618f6047b238f68fd0",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "6de2df31b0ae8b21155828f575a14dc8903c1b9b",
+      "subject": "fix(sqlite)!: parse IS / IS NOT with a non-trivial right side as a null-safe comparison (#8856)",
+      "files": [
+        "sqlglot/generators/sqlite.py",
+        "sqlglot/parsers/sqlite.py",
+        "tests/dialects/test_sqlite.py"
+      ],
+      "patch_sha256": "a2de6c34a98a5f06e3856649994ffcb299400cbf52e51e765ce8485fff8159ab",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "0852195e4a483ca5931e403c2f66c5feab2abd1f",
+      "subject": "fix style",
+      "files": [
+        "sqlglot/parsers/sqlite.py",
+        "tests/dialects/test_sqlite.py"
+      ],
+      "patch_sha256": "0468d6dcaff05b32e95011118f37437b4800b9c3df03a351debb571562e9d17e",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "d17073f270149a51338506e6d39454bab9f2ef2a",
+      "subject": "replace full comparison when decorr ANY (#8852)",
+      "files": [
+        "sqlglot-integration-tests",
+        "sqlglot/optimizer/unnest_subqueries.py"
+      ],
+      "patch_sha256": "ca4e311474916202d9f6125c5bdca47ec9ba2548f7d7779359fa7c58b6766918",
+      "review": "query-plan-optimizer"
+    },
+    {
+      "commit": "f41f4f8ba26c4385a3e0a4207941b35db09128eb",
+      "subject": "Sync w/ integration tests",
+      "files": [
+        "sqlglot-integration-tests"
+      ],
+      "patch_sha256": "1c93b8932453647d80ff6ef4ad9890c855f1f6166a9133237074d04b3721d5ac",
+      "review": "integration-test-revisions"
+    },
+    {
+      "commit": "49a6467dc303e1c6d455f4630ff381f8b3b67b7f",
+      "subject": "fix(oracle): preserve nlsparam in TO_DATE and TO_TIMESTAMP [CLAUDE] (#8874)",
+      "files": [
+        "sqlglot/expressions/temporal.py",
+        "sqlglot/generators/oracle.py",
+        "sqlglot/parsers/oracle.py",
+        "tests/dialects/test_oracle.py"
+      ],
+      "patch_sha256": "0685427af9e79c707375a83d01bd55e0a4075b1a4abb4b6186a9f1c219ddab27",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "90659e63fc8f3c4626f41b162961210b9d619fe4",
+      "subject": "fix(parser): support PIVOT after a VALUES table in FROM (#8876)",
+      "files": [
+        "sqlglot/expressions/query.py",
+        "sqlglot/generator.py",
+        "sqlglot/parser.py",
+        "tests/dialects/test_dialect.py",
+        "tests/dialects/test_redshift.py"
+      ],
+      "patch_sha256": "4e0c591638737413b9b4fbcb74dc3e61b56d6d9d3ba5e9ca9751c6988349b6f7",
+      "review": "SG29-012"
+    },
+    {
+      "commit": "ec500798de13bf1be7863700605499833c104b68",
+      "subject": "fix(sqlite): preserve parenthesized IS predicate semantics (#8877)",
+      "files": [
+        "sqlglot/parsers/sqlite.py",
+        "tests/dialects/test_postgres.py",
+        "tests/dialects/test_sqlite.py",
+        "tests/fixtures/optimizer/simplify.sql",
+        "tests/test_parser.py"
+      ],
+      "patch_sha256": "9c12270e6ce6e049ad643fd7d983fa51e474ee3dab64c565a5296dc8c8aec149",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "2933aeacb37944d3f3e35223ffa88d054147063c",
+      "subject": "fix(optimizer): preserve left joins with casted keys [CODEX] (#8859)",
+      "files": [
+        "sqlglot/optimizer/eliminate_joins.py",
+        "tests/test_optimizer.py"
+      ],
+      "patch_sha256": "4adbfa27dd92927a95e4206d687d93c546c0e97a33bc7fa21c05d87ec303deb8",
+      "review": "query-plan-optimizer"
+    },
+    {
+      "commit": "518a36a505639b0f7225bca6a3f196ef87cc4670",
+      "subject": "cleanup",
+      "files": [
+        "sqlglot/optimizer/eliminate_joins.py",
+        "tests/fixtures/optimizer/eliminate_joins.sql",
+        "tests/fixtures/optimizer/optimizer.sql",
+        "tests/test_optimizer.py"
+      ],
+      "patch_sha256": "226d71af5dcd83e355c10e4f76100e6edd0e99e5e37551dd37fc8246508f674f",
+      "review": "query-plan-optimizer"
+    },
+    {
+      "commit": "c241c2ff1b2a3319236ee6ea86eb915b9ca049d7",
+      "subject": "fix: keep table function arguments in replace_tables (#8872)",
+      "files": [
+        "sqlglot/expressions/builders.py",
+        "tests/test_expressions.py"
+      ],
+      "patch_sha256": "01b9b4b7aa3b5269b32a4c442dfcbf54a7ae4a925a2f6bcf07923ef540550d16",
+      "review": "replace-tables-api"
+    },
+    {
+      "commit": "d6e787519b1d3952ff3921251cf60b5afcd82bde",
+      "subject": "Fix(parser): infinite recursion in _parse_describe when DESC is followed by a dot (#8871)",
+      "files": [
+        "sqlglot/parser.py",
+        "tests/test_parser.py"
+      ],
+      "patch_sha256": "68eeb231197e97201d7e6669ff7702cb3c0e5547cd739accae44552bd20fe9a9",
+      "review": "SG29-002"
+    },
+    {
+      "commit": "c9e673a2f18952ab82ed93b1fd34f3691161e5a6",
+      "subject": "clean up _replace_tables",
+      "files": [
+        "sqlglot/expressions/builders.py",
+        "tests/test_expressions.py"
+      ],
+      "patch_sha256": "a9d18770d8c1f48f7bcc7834941a7d2e9fe9e0b4f071794e84c59bb079f9bc22",
+      "review": "replace-tables-api"
+    },
+    {
+      "commit": "8a524dfa1ea61f924afa0f58e0c16a1882410b71",
+      "subject": "fix(jsonpath): raise ParseError for non-decimal array indexes (#8869)",
+      "files": [
+        "sqlglot/jsonpath.py",
+        "tests/test_jsonpath.py"
+      ],
+      "patch_sha256": "152ea05b312ed71daf7f7597b60ae311d430b31305dd0ae91f00d97cadfd3ca6",
+      "review": "SG29-003"
+    },
+    {
+      "commit": "59db279da9df5e64ee249c39e73c346d4441bf92",
+      "subject": "feat(snowflake): support CREATE INTERACTIVE TABLE [CLAUDE] (#8864)",
+      "files": [
+        "sqlglot/expressions/properties.py",
+        "sqlglot/generator.py",
+        "sqlglot/generators/snowflake.py",
+        "sqlglot/parsers/snowflake.py",
+        "tests/dialects/test_snowflake.py"
+      ],
+      "patch_sha256": "819978baf1f28959d73bd9260c32e3933ef2a07e72019101497a0a4821a458d1",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "c39005c3438ef7d64930666e98824de242462682",
+      "subject": "fix(bigquery): escape backticks and backslashes in quoted identifiers (#8863)",
+      "files": [
+        "sqlglot/dialects/bigquery.py",
+        "sqlglot/generators/bigquery.py",
+        "tests/dialects/test_bigquery.py"
+      ],
+      "patch_sha256": "eb67edde6a81c033f119a74401e1ff3e6746f852caf5205d5741d6fc7d55dfae",
+      "review": "SG29-004"
+    },
+    {
+      "commit": "093f2ec73410fe874966a8b041920c3d5a5ba428",
+      "subject": "clean up bigquery identifier escapes",
+      "files": [
+        "sqlglot/generators/bigquery.py",
+        "tests/dialects/test_bigquery.py"
+      ],
+      "patch_sha256": "206df19f8204d2e13d108ee1256e9e8d97dddf09021e2c4447396cf49e69e117",
+      "review": "SG29-004"
+    },
+    {
+      "commit": "7696edf997155cf872d93e1ab3787dc72301bf47",
+      "subject": "whoops",
+      "files": [
+        "sqlglot/generators/bigquery.py"
+      ],
+      "patch_sha256": "557b5dc720b754d85262ed9e93296d117cd4a55e2bfd90605fedeea41b9306f9",
+      "review": "SG29-004"
+    },
+    {
+      "commit": "9619dd185b2f7bbaa77d4ecb3abe44b83ac0905b",
+      "subject": "fix(expression): prevent unhandled ValueError in is_int on large exponents [GEMINI] (#8879)",
+      "files": [
+        "sqlglot/expressions/core.py",
+        "tests/dialects/test_duckdb.py",
+        "tests/dialects/test_postgres.py",
+        "tests/test_expressions.py",
+        "tests/test_optimizer.py"
+      ],
+      "patch_sha256": "d183e84edfdd48e2a843186835f0965ed5ccfd9c4234c1ded74b5a14af2934ab",
+      "review": "bounded-integer-classification"
+    },
+    {
+      "commit": "d06bde08386831f42d6b3d4c881f3f1cf962c36c",
+      "subject": "cleanup",
+      "files": [
+        "sqlglot/expressions/core.py",
+        "tests/dialects/test_duckdb.py",
+        "tests/dialects/test_postgres.py",
+        "tests/test_parser.py"
+      ],
+      "patch_sha256": "be100ec58181f36929d541fe294fd2752b1d6693948f98f25da1161495fb3713",
+      "review": "bounded-integer-classification"
+    },
+    {
+      "commit": "cff078561fefc194b9b85a2d96b1924ce2ee86ae",
+      "subject": "build(sqlglotc): reduce published wheel storage",
+      "files": [
+        ".github/workflows/package-publish.yml",
+        "sqlglotc/setup.py"
+      ],
+      "patch_sha256": "af7ed7af5d3544507d985d25854fec4557289be61bfa4b3e12929fd93e1090e5",
+      "review": "python-runtime-and-diff"
+    },
+    {
+      "commit": "c89196682c0a3767894079aa2eac608a82db6296",
+      "subject": "fix(optimizer): fix merge_subqueries for constant projections having GROUP_BY_ALL (#8849)",
+      "files": [
+        "sqlglot-integration-tests",
+        "sqlglot/optimizer/merge_subqueries.py"
+      ],
+      "patch_sha256": "e4c9f0d246f2610a87c9769648f5dbc04766d8cc366d07131ddcef7967f2f5fd",
+      "review": "query-plan-optimizer"
+    },
+    {
+      "commit": "b8a1ce6fce3a01ab9ca7407c6637784e41f7fba7",
+      "subject": "Sync w/ integration tests",
+      "files": [
+        "sqlglot-integration-tests"
+      ],
+      "patch_sha256": "05d3ba907dd5b11af87c52e495854be970b789398c3c588d5b75af44052f13e4",
+      "review": "integration-test-revisions"
+    },
+    {
+      "commit": "007fe4504a85dced2659b43d6d8c42ce96d509a1",
+      "subject": "feat(snowflake): support SCOPED TEMPORARY objects (#8883)",
+      "files": [
+        "sqlglot/generators/snowflake.py",
+        "sqlglot/parsers/snowflake.py",
+        "tests/dialects/test_snowflake.py"
+      ],
+      "patch_sha256": "198948ec1ae0f774e04ab3a616d17761bfaafa5490ffd5e4987f64fbad3cf11f",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "4912880ca6e9a46a52b3f62218ce361f6ecdd692",
+      "subject": "cleanup",
+      "files": [
+        "sqlglot/expressions/properties.py",
+        "sqlglot/generators/snowflake.py",
+        "sqlglot/parsers/snowflake.py",
+        "tests/dialects/test_snowflake.py"
+      ],
+      "patch_sha256": "2f788f12a3c479411443521681193da0c5ccd5fa521a715744a7aee45ed873fe",
+      "review": "unsupported-profiles"
+    },
+    {
+      "commit": "1cbcaf65566159b21c77488931f343ae1abac2a1",
+      "subject": "fix(optimizer)!: preserve row presence when decorrelating scalar aggregates  (#8851)",
+      "files": [
+        "sqlglot/optimizer/unnest_subqueries.py"
+      ],
+      "patch_sha256": "418352f12a4b79ff731833bb5332b07f56d6d9401b63ba7ba44e0c60cb6d7cb9",
+      "review": "query-plan-optimizer"
+    },
+    {
+      "commit": "03ecb3ed161ff97872f61e20388f338d6b0f4871",
+      "subject": "fix(optimizer): skip decorrelation for anonymous funcs with unknown semantics (#8881)",
+      "files": [
+        "sqlglot/optimizer/unnest_subqueries.py"
+      ],
+      "patch_sha256": "30bbeb6f88de5c91be1e5feab22c6801dc3779dd26ec0610bcee1d091a3831df",
+      "review": "query-plan-optimizer"
+    },
+    {
+      "commit": "2fe25297af5b0f44f5c9e5d03e1b296424b7acbe",
+      "subject": "Sync w/ integration tests",
+      "files": [
+        "sqlglot-integration-tests"
+      ],
+      "patch_sha256": "64a2e4e17de9f437720ee17cf09b92cf27bbbd7f84d02625fd5e29ea0cc602e8",
+      "review": "integration-test-revisions"
+    }
+  ]
+}
