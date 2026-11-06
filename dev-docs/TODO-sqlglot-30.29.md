@@ -277,7 +277,7 @@ baseline explain the bounded drift. No global oracle refresh or release follows.
   New shape/lineage/Engine and native DuckDB controls pass. Build, 2,594 JVM tests
   and 827 IntelliJ tests pass. One annotation-only ledger row reviewed; every
   native tuple, local classification and engine/setting remains unchanged.
-- [ ] **SG29-018: Decide ArraySort migration and reconcile DuckDB overlap.**
+- [x] **SG29-018: Decide ArraySort migration and reconcile DuckDB overlap.**
   Upstream `094509aa` merges SortArray into ArraySort with explicit NULL ordering.
   Propose a compatible AST/serde/API transition before replacing nodes. Reuse
   DDB20-054/055 dispositions for array endpoints/insertion/null replacement,
@@ -286,6 +286,16 @@ baseline explain the bounded drift. No global oracle refresh or release follows.
   intentionally refused, a separately qualified port or deferred; do not reopen
   completed native work wholesale. Keep the queued bounded Trino REGEXP_COUNT
   work separate from any ClickHouse countMatches mapping.
+  [Evidence and compatibility proposal](../vendor/data/sqlglot-sg29-018/README.md):
+  retain both published node classes/serde/schema names; no breaking replacement.
+  Preserve native reverse-sort NULL-order arguments and session defaults, with
+  32 native controls across copy/serde. Detached comparators/post-pin flags refuse
+  rather than losing options. Replayed DDB20-054's exact 37-commit review and
+  retained DDB20-055's refusal matrix. Build and 2,598 JVM tests pass; all native
+  tuples/corpus hashes unchanged and exactly two comparator warnings reviewed.
+  Two full IntelliJ runs each execute 827 tests with one unrelated streaming-
+  cancellation RMI EOF failure. The owner directed a separate fix/commit/push
+  thread, without pausing SG29-018; that gate is not represented as passed.
 
 ## Batch F: oracle integration, only after the preceding decisions
 
@@ -330,7 +340,10 @@ execution. SG29-015 is separately implemented and verified, with commit/push
 authorized before starting SG29-016. SG29-016 through SG29-018 are approved in
 order. SG29-016 is now implemented and verified, with commit/push authorized.
 SG29-017 is also implemented and verified, with commit/push before SG29-018.
-Three parent items remain open; SG29-018 is next.
+SG29-018 is complete with the compatibility decision and native fix. The owner
+authorized continuing its commit/push while the unrelated IntelliJ cancellation
+blocker is fixed in a separate session. Two parent items remain open, SG29-019
+and SG29-020; neither is authorized by the three-item request.
 
 Implementation is isolated on branch/worktree `sqlglot-30-29-batch-a`. The
 planning request initially added this TODO and its index links; later approvals

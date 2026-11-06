@@ -21,8 +21,10 @@ native resource packaging is tracked in [brikk-chdb](https://github.com/brikk/br
   Administrative commands remain opaque preservation, not structured semantics.
   Separately approved SG29-015 Spark/Hive aggregation and ALTER forms are verified,
   with commit/push authorized. SG29-016 through SG29-018 are approved in order,
-  with separate commit/push between items. SG29-016 and SG29-017 are verified; three catch-up
-  items remain open.
+  with separate commit/push between items. SG29-016 through SG29-018 are complete;
+  two catch-up items remain open. SG29-018's unrelated IntelliJ streaming-cancel
+  RMI failure is being fixed in a separately authorized session; its full IDE
+  gate is not claimed passed. SG29-019 onward remains unauthorized.
   Native coverage drift is individually reviewed; the
   [evidence guide](../vendor/data/sqlglot-30.29-batch-b/README.md) retains limits.
   Preserve the separate DuckDB native/executable safeguards; global

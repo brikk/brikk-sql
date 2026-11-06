@@ -166,7 +166,10 @@ internal class DuckdbNativeCorpusCoverageTest {
         // SG29-017: only the exact reviewed BigQuery UNKNOWN annotation ledger hash
         // changes. All native tuples, local dispositions and engine settings stay
         // identical. See sg29-017/native-coverage-review.json; retain old baselines.
-        val baseline=NativeCorpusAudit.root.resolve("brikk-sql-verify-duckdb/testResources/native-coverage-baseline-sg29-017.json")
+        // SG29-018: exactly two additional unsupported comparator warnings on
+        // existing Presto/Spark write origins; no native tuple, file hash or old
+        // local classification changes. See sg29-018/native-coverage-review.json.
+        val baseline=NativeCorpusAudit.root.resolve("brikk-sql-verify-duckdb/testResources/native-coverage-baseline-sg29-018.json")
         assertTrue(Files.isRegularFile(baseline),"Review build/duckdb-parser-audit/native-coverage.json before adding a baseline")
         assertEquals(Json.parseToJsonElement(Files.readString(baseline)),summary,"Investigate coverage changes; never refresh parity ledgers from native syntax outcomes")
         println("DDB20-050 $summary")

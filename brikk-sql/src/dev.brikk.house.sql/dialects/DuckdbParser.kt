@@ -135,7 +135,7 @@ private fun seqGet(argsList: List<Expression?>, index: Int): Expression? = argsL
 
 // sqlglot: parsers.duckdb._build_sort_array_desc
 private fun buildSortArrayDesc(a: List<Expression?>): Expression =
-    SortArray(args("this" to seqGet(a, 0), "asc" to BooleanNode(args("this" to false))))
+    SortArray(args("this" to seqGet(a, 0), "asc" to BooleanNode(args("this" to false)), "nulls_first" to seqGet(a, 1)))
 
 // sqlglot: parsers.duckdb._build_array_prepend
 private fun buildArrayPrependDuckdb(a: List<Expression?>): Expression =

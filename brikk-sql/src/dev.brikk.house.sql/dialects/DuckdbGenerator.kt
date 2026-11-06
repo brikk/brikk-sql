@@ -277,6 +277,14 @@ open class DuckdbGenerator(
         val asc = expression.args["asc"]
         val nullsFirst = expression.args["nulls_first"]
 
+        // Keep the legacy node/API while preserving DuckDB's explicit raw NULL order.
+        // A boolean direction plus a string/expression NULL order comes from reverse-sort.
+        if (asc is BooleanNode && nullsFirst != null && nullsFirst !is BooleanNode) {
+            // Retain the native operator and its session-default direction policy.
+            return if (asc.thisArg == false) func("ARRAY_REVERSE_SORT", arr, nullsFirst)
+                else func("LIST_SORT", arr, Literal.string("ASC"), nullsFirst)
+        }
+
         if (asc !is BooleanNode && nullsFirst !is BooleanNode) {
             return func("LIST_SORT", arr, asc, nullsFirst)
         }
@@ -3035,7 +3043,12 @@ open class DuckdbGenerator(
             // sqlglot: dialect.approx_count_distinct_sql (only `this` is forwarded)
             reg(ApproxDistinct::class) { e -> func("APPROX_COUNT_DISTINCT", e.thisArg) }
             // sqlglot: generators.duckdb._array_sort_sql (comparator args are dropped)
-            reg(ArraySort::class) { e -> func("ARRAY_SORT", e.thisArg) }
+            reg(ArraySort::class) { e ->
+                if (e.args["expression"] != null) unexecutable("DuckDB LIST_SORT does not support an ArraySort comparator")
+                if (e.args["asc"] != null || e.args["nulls_first"] != null)
+                    unexecutable("Post-pin ArraySort direction/NULL-order fields need the staged compatibility adapter")
+                func("ARRAY_SORT", e.thisArg)
+            }
             // sqlglot: generators.duckdb._xor_sql (round_input is annotate-independent)
             reg(Xor::class) { e ->
                 fun roundArg(arg: kotlin.Any?): Expression? {
