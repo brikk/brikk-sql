@@ -346,6 +346,7 @@ def main():
     refresh.add_argument('--profile', type=Path)
     refresh.add_argument('--reference', type=Path, required=True)
     refresh.add_argument('--spiced', type=Path)
+    refresh.add_argument('--work-dir', type=Path, default=ROOT / 'build/datafusion-upstream')
     refresh.add_argument('--brikk', type=Path, required=True)
     refresh.add_argument('--output', type=Path, required=True)
     comparison = commands.add_parser('compare')

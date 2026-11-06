@@ -63,14 +63,14 @@ def port() -> int:
 
 
 @contextlib.contextmanager
-def spice_runtime(binary: Path, *, flight: bool = False):
+def spice_runtime(binary: Path, *, flight: bool = False, work_dir: Path = ROOT / "build/spice-reference"):
     if sha256(binary) != SPICE_SHA256:
         raise ValueError("Spice binary does not match the pinned v2.4.0 release checksum")
     version = subprocess.check_output([str(binary.resolve()), "--version"], text=True).strip()
     if version != "v2.4.0+models":
         raise ValueError(f"Unexpected Spice version: {version}")
-    temp_parent = "/tmp/opencode" if Path("/tmp/opencode").is_dir() else None
-    with tempfile.TemporaryDirectory(prefix="brikk-spice-reference-", dir=temp_parent) as tmp:
+    work_dir.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="brikk-spice-reference-", dir=work_dir.resolve()) as tmp:
         pod = Path(tmp) / "spicepod.yaml"
         shutil.copyfile(ROOT / "tools/datafusion-reference/spicepod.yaml", pod)
         http_port, flight_port = port(), port()
@@ -196,7 +196,7 @@ def capture(args) -> dict:
             observations.append(row)
         result["profiles"][name] = {"binary_sha256": sha256(binary), "cases": observations}
     if args.spiced:
-        with spice_runtime(args.spiced) as (url, runtime):
+        with spice_runtime(args.spiced, work_dir=args.work_dir) as (url, runtime):
             health = spice_sql(url, "SELECT version() AS version")
             if health["status"] != "accepted":
                 raise RuntimeError(f"Spice query readiness failed: {health}")
@@ -230,6 +230,7 @@ def main():
     parser.add_argument("--upstream", type=Path)
     parser.add_argument("--spice-parser", type=Path)
     parser.add_argument("--spiced", type=Path)
+    parser.add_argument("--work-dir", type=Path, default=ROOT / "build/spice-reference")
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     if not any([args.upstream, args.spice_parser, args.spiced]):

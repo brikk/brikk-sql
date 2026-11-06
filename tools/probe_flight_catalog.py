@@ -77,15 +77,17 @@ def datafusion_runtime(binary, directory):
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--spiced', type=Path, default=Path('/tmp/opencode/spice-2.4.0-runtime/spiced'))
+    p.add_argument('--spiced', type=Path, default=ROOT / 'build/spice-2.4.0-runtime/spiced')
+    p.add_argument('--work-dir', type=Path, default=ROOT / 'build/flight-catalog')
     p.add_argument('--output', type=Path, default=ROOT / 'vendor/data/datafusion-spice/round9/spice-jdbc.json')
     p.add_argument('--java', default='java')
     p.add_argument('--java-option', action='append', default=[])
     p.add_argument('--datafusion-flight', type=Path)
     p.add_argument('--harvester-classpath-file', type=Path, help='test.log.classpath from the compiled platform suite; requires Java 21+')
     args = p.parse_args()
-    directory = Path('/tmp/opencode/dfs009'); directory.mkdir(exist_ok=True)
-    fixture = datafusion_runtime(args.datafusion_flight, directory) if args.datafusion_flight else spice_runtime(args.spiced, flight=True)
+    directory = args.work_dir.resolve()
+    directory.mkdir(parents=True, exist_ok=True)
+    fixture = datafusion_runtime(args.datafusion_flight, directory) if args.datafusion_flight else spice_runtime(args.spiced, flight=True, work_dir=directory)
     with fixture as (url, runtime):
         observations = probe(url, directory, auth=bool(args.datafusion_flight), java=args.java, java_options=args.java_option,
                              harvester_classpath=args.harvester_classpath_file)

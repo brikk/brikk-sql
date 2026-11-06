@@ -12,7 +12,8 @@ from release_config import development_version, release_template, validate_versi
 
 
 ROOT = Path(__file__).resolve().parents[1]
-TEMP_DIR = "/tmp/opencode" if Path("/tmp/opencode").is_dir() else None
+TEMP_DIR = ROOT / "build/release-tests"
+TEMP_DIR.mkdir(parents=True, exist_ok=True)
 
 
 class ReleaseVersionTest(unittest.TestCase):
