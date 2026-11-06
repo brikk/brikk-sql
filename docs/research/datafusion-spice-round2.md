@@ -69,15 +69,18 @@ These belong to its specialization. Baseline docs/runtime discrepancies still ap
 
 ## Reproduction
 
+Set `CARGO_TARGET_DIR` to a private compilation directory. Set `SPICE_PARSER`
+and `SPICED` to checksum-verified binaries from `tools/datafusion-reference/README.md`.
+
 ```sh
-cargo build --locked --manifest-path tools/datafusion-reference/upstream/Cargo.toml --target-dir build/datafusion-reference -j 4
-python3 tools/capture_datafusion_spice_metadata.py --upstream build/datafusion-reference/debug/brikk-datafusion-reference --spiced /tmp/opencode/spice-2.4.0-runtime/spiced
+cargo build --locked --manifest-path tools/datafusion-reference/upstream/Cargo.toml --target-dir "$CARGO_TARGET_DIR" -j 4
+python3 tools/capture_datafusion_spice_metadata.py --upstream "$CARGO_TARGET_DIR/debug/brikk-datafusion-reference" --spiced "$SPICED"
 python3 tools/generate_datafusion_metadata.py
 python3 -m unittest discover -s tools -p 'test_generate_datafusion_metadata.py'
 ./kotlin run -m dialect-audit -- datafusion vendor/data/datafusion-spice/round2/cases.json vendor/data/datafusion-spice/round2/brikk-observations.json
-python3 tools/probe_datafusion_spice.py --upstream build/datafusion-reference/debug/brikk-datafusion-reference --cases vendor/data/datafusion-spice/round2/cases.json --brikk vendor/data/datafusion-spice/round2/brikk-observations.json --output vendor/data/datafusion-spice/round2/datafusion-observations.json
-python3 tools/probe_datafusion_spice.py --spice-parser build/spice-parser-reference/debug/brikk-spice-parser-reference --cases vendor/data/datafusion-spice/round2/cases.json --brikk vendor/data/datafusion-spice/round2/brikk-observations.json --output vendor/data/datafusion-spice/round2/spice-parser-observations.json
-python3 tools/probe_datafusion_spice.py --spiced /tmp/opencode/spice-2.4.0-runtime/spiced --cases vendor/data/datafusion-spice/round2/cases.json --brikk vendor/data/datafusion-spice/round2/brikk-observations.json --output vendor/data/datafusion-spice/round2/spice-runtime-observations.json
+python3 tools/probe_datafusion_spice.py --upstream "$CARGO_TARGET_DIR/debug/brikk-datafusion-reference" --cases vendor/data/datafusion-spice/round2/cases.json --brikk vendor/data/datafusion-spice/round2/brikk-observations.json --output vendor/data/datafusion-spice/round2/datafusion-observations.json
+python3 tools/probe_datafusion_spice.py --spice-parser "$SPICE_PARSER" --cases vendor/data/datafusion-spice/round2/cases.json --brikk vendor/data/datafusion-spice/round2/brikk-observations.json --output vendor/data/datafusion-spice/round2/spice-parser-observations.json
+python3 tools/probe_datafusion_spice.py --spiced "$SPICED" --cases vendor/data/datafusion-spice/round2/cases.json --brikk vendor/data/datafusion-spice/round2/brikk-observations.json --output vendor/data/datafusion-spice/round2/spice-runtime-observations.json
 ```
 
 The Spice executable must match the checksums in the

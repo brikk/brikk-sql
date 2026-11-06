@@ -15,22 +15,26 @@ checksum and `--version` must match its declared release.
 Produce current Brikk observations once for the stable corpus. Use the same generated SQL
 when comparing two engine versions, so generator edits do not obscure engine changes:
 
+Set `REVIEW_DIR` to a private output directory, and `DATAFUSION_REFERENCE` and
+`SPICE_PARSER` to the pinned binaries built with `tools/datafusion-reference/README.md`.
+Generated reports are not evidence until reviewed and committed.
+
 ```sh
-./kotlin run -m dialect-audit -- datafusion vendor/data/datafusion-spice/cases.json build/review/brikk-datafusion.json
-./kotlin run -m dialect-audit -- spice vendor/data/datafusion-spice/cases.json build/review/brikk-spice.json
+./kotlin run -m dialect-audit -- datafusion vendor/data/datafusion-spice/cases.json "$REVIEW_DIR/brikk-datafusion.json"
+./kotlin run -m dialect-audit -- spice vendor/data/datafusion-spice/cases.json "$REVIEW_DIR/brikk-spice.json"
 ```
 
 The refresh commands are:
 
 ```sh
 python3 tools/datafusion_upstream.py refresh datafusion \
-  --reference build/datafusion-reference/debug/brikk-datafusion-reference \
-  --brikk build/review/brikk-datafusion.json --output build/review/datafusion-current
+  --reference "$DATAFUSION_REFERENCE" \
+  --brikk "$REVIEW_DIR/brikk-datafusion.json" --output "$REVIEW_DIR/datafusion-current"
 
 python3 tools/datafusion_upstream.py refresh spice \
-  --reference build/spice-parser-reference/debug/brikk-spice-parser-reference \
+  --reference "$SPICE_PARSER" \
   --spiced /path/to/checksum-pinned/spiced \
-  --brikk build/review/brikk-spice.json --output build/review/spice-current
+  --brikk "$REVIEW_DIR/brikk-spice.json" --output "$REVIEW_DIR/spice-current"
 ```
 
 Each command captures the catalog, native constraints where available, introspection samples,
@@ -53,8 +57,8 @@ rebuilds the normalized view from the raw evidence. It does not accept an edited
 Export the current profile as a starting point:
 
 ```sh
-python3 tools/datafusion_upstream.py profile datafusion --output build/review/datafusion-candidate.json
-python3 tools/datafusion_upstream.py profile spice --output build/review/spice-candidate.json
+python3 tools/datafusion_upstream.py profile datafusion --output "$REVIEW_DIR/datafusion-candidate.json"
+python3 tools/datafusion_upstream.py profile spice --output "$REVIEW_DIR/spice-candidate.json"
 ```
 
 Edit a copy with a new profile ID, release, full source commit, reference build/lock hashes,
@@ -101,8 +105,8 @@ features are availability changes, not asserted product removals.
 ## Compare and review
 
 ```sh
-python3 tools/datafusion_upstream.py compare build/review/datafusion-old build/review/datafusion-new \
-  --output build/review/datafusion-diff.json
+python3 tools/datafusion_upstream.py compare "$REVIEW_DIR/datafusion-old" "$REVIEW_DIR/datafusion-new" \
+  --output "$REVIEW_DIR/datafusion-diff.json"
 ```
 
 The JSON report is deterministic. It gives each change a stable `DFS-UP-...` follow-up ID,
@@ -164,10 +168,10 @@ keyword, setting and table-function schema changes, a parser regression, newly p
 negative syntax, and a semantic result change.
 
 ```sh
-python3 tools/datafusion_upstream.py demo --output build/review/controlled-demo
-python3 tools/datafusion_upstream.py compare build/review/controlled-demo/before build/review/controlled-demo/after \
-  --output build/review/controlled-repeat.json
-cmp build/review/controlled-demo/report.json build/review/controlled-repeat.json
+python3 tools/datafusion_upstream.py demo --output "$REVIEW_DIR/controlled-demo"
+python3 tools/datafusion_upstream.py compare "$REVIEW_DIR/controlled-demo/before" "$REVIEW_DIR/controlled-demo/after" \
+  --output "$REVIEW_DIR/controlled-repeat.json"
+cmp "$REVIEW_DIR/controlled-demo/report.json" "$REVIEW_DIR/controlled-repeat.json"
 ```
 
 The tests also cover aliases, same-name scalar/table functions, incomplete captures, disabled
@@ -185,8 +189,9 @@ Both real refresh commands also completed against the current pins with fresh Br
 graph covers the upstream DataFusion repository and, separately, Spice plus its resolved
 DataFusion and Arrow forks. All configured watch components matched actual source paths.
 `round11/native-refresh-summary.json` records the snapshot IDs, manifest hashes and verdict
-counts. The complete local validation snapshots are under `/tmp/opencode/dfs011/*-final`;
-manual CI uploads the complete snapshot directories for review. Archive approved snapshots
+counts. The committed summary is
+`vendor/data/datafusion-spice/round11/native-refresh-summary.json`;
+manual CI uploads complete snapshot directories for review. Archive approved snapshots
 with the versioned evidence before those temporary files or CI artifacts expire.
 
 The real DataFusion self-comparison also exposed a pre-existing coverage gap:

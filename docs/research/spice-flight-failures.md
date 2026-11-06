@@ -196,14 +196,15 @@ SFI-04 [#15950](https://github.com/spiceai/spiceai/issues/15950) and SFI-05
 
 ## Reproduction and evidence
 
-Run the standalone probe against the disposable pinned Spice executable:
+Run the standalone probe against the disposable pinned Spice executable. Set
+`REVIEW_DIR` to a new private output directory; it is not a checked-in capture.
 
 ```sh
 python3 tools/probe_spice_flight_failures.py \
   --spiced /path/to/checksum-verified/spiced \
   --java /path/to/java25 \
   --java-option=--sun-misc-unsafe-memory-access=allow \
-  --output build/review/spice-flight-failures.json
+  --output "$REVIEW_DIR/spice-flight-failures.json"
 python3 -m unittest discover -s tools -p 'test_datafusion_flight_investigation.py'
 ```
 

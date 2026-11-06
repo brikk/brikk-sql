@@ -64,10 +64,13 @@ difference is client `?` binding syntax. Of 61 bounded execution inputs, all 51 
 originals retain their captured values and types after regeneration. Rejected originals
 remain visible. Search/AI, writes, and EXPLAIN execution are not run by this capture.
 
+Set `SPICE_PARSER` and `SPICED` to the checksum-verified reference executables
+described in `tools/datafusion-reference/README.md`.
+
 ```sh
 ./kotlin run -m dialect-audit -- spice vendor/data/datafusion-spice/round4/cases.json vendor/data/datafusion-spice/round4/spice-brikk.json
-python3 tools/probe_datafusion_spice.py --spice-parser build/spice-parser-reference/debug/brikk-spice-parser-reference --cases vendor/data/datafusion-spice/round4/cases.json --brikk vendor/data/datafusion-spice/round4/spice-brikk.json --output vendor/data/datafusion-spice/round4/parser-native.json
-python3 tools/probe_datafusion_spice.py --spiced /tmp/opencode/spice-2.4.0-runtime/spiced --cases vendor/data/datafusion-spice/round4/cases.json --brikk vendor/data/datafusion-spice/round4/spice-brikk.json --output vendor/data/datafusion-spice/round4/runtime-native.json
+python3 tools/probe_datafusion_spice.py --spice-parser "$SPICE_PARSER" --cases vendor/data/datafusion-spice/round4/cases.json --brikk vendor/data/datafusion-spice/round4/spice-brikk.json --output vendor/data/datafusion-spice/round4/parser-native.json
+python3 tools/probe_datafusion_spice.py --spiced "$SPICED" --cases vendor/data/datafusion-spice/round4/cases.json --brikk vendor/data/datafusion-spice/round4/spice-brikk.json --output vendor/data/datafusion-spice/round4/runtime-native.json
 ```
 
 The full core suite passes 1,338 tests, including 12 Spice tests, the existing DataFusion

@@ -136,12 +136,14 @@ default constructors, `copy` and `copy$default` signatures. Platform ABI tests c
 
 ## Reproduction
 
+Set `CARGO_TARGET_DIR` to a private compilation directory.
+
 ```sh
 cargo build --locked --manifest-path tools/datafusion-reference/flight/Cargo.toml \
-  --bin brikk-datafusion-flight --target-dir build/datafusion-reference -j 2
+  --bin brikk-datafusion-flight --target-dir "$CARGO_TARGET_DIR" -j 2
 python3 tools/probe_flight_catalog.py --java /path/to/jdk21/bin/java
 python3 tools/probe_flight_catalog.py --java /path/to/jdk21/bin/java \
-  --datafusion-flight build/datafusion-reference/debug/brikk-datafusion-flight \
+  --datafusion-flight "$CARGO_TARGET_DIR/debug/brikk-datafusion-flight" \
   --output vendor/data/datafusion-spice/round9/datafusion-jdbc.json
 ```
 
@@ -162,6 +164,8 @@ No publication or consumer dependency update is part of this round.
 - Python evidence checks: 26 passed. Both production Kotlin harvesters passed over the pinned
   JDBC driver. The stable captured inventories contain 320 DataFusion and 447 Spice name/kind
   entries, each with 11 relations including information-schema relations.
-- The API containment tests found no new internal or experimental API use. The binary audit
-  in `/tmp/opencode/dfs009/` records five new IntelliJ member references and 12 increased
-  class/member-reference counts. No API-risk allowance or suppression was added.
+- The API containment tests found no new internal or experimental API use.
+  `brikk-sql-intellij-test-support/platform-test/dev.brikk.house.sql.intellij/InternalApiContainmentTest.kt`
+  retains the guard. The historical uncommitted binary audit counted five new
+  IntelliJ member references and 12 increased class/member-reference counts.
+  No API-risk allowance or suppression was added.
