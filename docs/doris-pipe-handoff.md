@@ -63,14 +63,14 @@ non-Doris QUALIFY star lowering still has its documented helper-leak limitation.
 
 ## Upstream verification
 
-Run from the upstream root. The temp-directory override avoids this machine's
-restricted `/tmp` quota; `build/verification-tmp` already existed for these runs.
+Run from the upstream root. Set `SCRATCH_DIR` to an existing private directory
+with enough space for native extraction and test outputs.
 
 ```sh
-env JAVA_TOOL_OPTIONS="-Djava.io.tmpdir=$PWD/build/verification-tmp" \
+env JAVA_TOOL_OPTIONS="-Djava.io.tmpdir=$SCRATCH_DIR" \
   ./kotlin do assemblePluginJar
 env -u BRIKK_TRINO_CONTAINER \
-  JAVA_TOOL_OPTIONS="-Djava.io.tmpdir=$PWD/build/verification-tmp" \
+  JAVA_TOOL_OPTIONS="-Djava.io.tmpdir=$SCRATCH_DIR" \
   ./kotlin test \
     -m brikk-sql -m brikk-sql-metadata -m brikk-sql-verify \
     -m brikk-engine-kotlin -m brikk-engine-kotlin-compiler-plugin \
@@ -88,7 +88,6 @@ env -u BRIKK_TRINO_CONTAINER \
 | brikk-engine-kotlin-smoke | 1 | 0/0/0 |
 | Total | 1,011 | 0/0/0 |
 
-Reports are under `build/reports/<module>/jvm/TEST-junit-jupiter.xml`.
 New semantic suites are `DorisPipeStageOrderTest`, `DorisQualifySemanticsTest`,
 `DorisRenameSemanticsTest`, and `PipePaginationSemanticsTest`. They use independent
 staged references, exact output names/width and row multiplicities, native Doris
@@ -99,14 +98,15 @@ lateral, Unicode/source-map, quoting, function and DDL tests remain active.
 ## Consumer verification
 
 The unchanged client is at `49caa9a8f187367393852e71cde4fb0de4696beb`. From
-`/home/jayson/DEV/sortdev/doris-intellij-plugin`, the exact candidate gate was:
+`/home/jayson/DEV/sortdev/doris-intellij-plugin`, use the candidate gate with
+`CORE_JAR` and `METADATA_JAR` set to fresh candidate outputs:
 
 ```sh
 mise exec -- bash /home/jayson/DEV/brikk/brikk-sql/tools/verify_doris_consumer.sh \
   --client /home/jayson/DEV/sortdev/doris-intellij-plugin \
-  --core-jar /home/jayson/DEV/brikk/brikk-sql/build/tasks/_brikk-sql_jarJvm/brikk-sql-jvm.jar \
-  --metadata-jar /home/jayson/DEV/brikk/brikk-sql/build/tasks/_brikk-sql-metadata_jarJvm/brikk-sql-metadata-jvm.jar \
-  --scratch-dir /home/jayson/DEV/brikk/brikk-house/build
+  --core-jar "$CORE_JAR" \
+  --metadata-jar "$METADATA_JAR" \
+  --scratch-dir "$SCRATCH_DIR"
 ```
 
 Result: **44 passed, 1 failed, 0 skipped**. All 9 action tests passed; 35 of 36
@@ -122,8 +122,8 @@ exclude B14, broaden the exception catch, or match its diagnostic message to tur
 the gate green. If the client adopts schema-backed generation, add a separate
 successful RENAME case with the complete catalog.
 
-Evidence is retained in `build/doris-consumer.3hPziUnB/`, including `gradle.log`,
-JUnit reports, candidate/input manifests and the final test classpath.
+`tools/verify_doris_consumer.sh` records JUnit results, candidate/input hashes
+and the final test classpath for each new run. Historical candidate hashes follow.
 
 | Input | SHA-256 |
 | --- | --- |
@@ -149,18 +149,10 @@ SDK. Runtime probes round-tripped all 4,441 catalog entries, Shape and captured
 metadata, then exercised the new lowering/refusal paths, source-map identity,
 schema-aware RENAME and DDL capture. No newly required runtime API was found.
 
-Local probe sources are retained at `build/CandidateRuntimeProbe.java` and
-`/tmp/opencode/doris-brikk-010-audit-20260905/LinkageAudit.java`. These are temporary
-audit tools, not production dependencies or permanent test fixtures. To repeat the
-runtime probe, set `CORE`, `META` and `SDK` to the candidate and IDE paths, then run
-with Java 21 from the upstream root:
-
-```sh
-java --source 21 --class-path "$CORE:$META:$SDK/lib/util-8.jar:$SDK/lib/intellij.libraries.kotlinx.serialization.core.jar:$SDK/lib/intellij.libraries.kotlinx.serialization.json.jar" \
-  build/CandidateRuntimeProbe.java "$CORE" "$META"
-java -Xmx1g -cp /tmp/opencode/doris-brikk-0110-audit:/tmp/opencode/doris-brikk-010-audit-20260905/asm-9.9.jar \
-  LinkageAudit "$SDK" "$CORE" "$META"
-```
+The throwaway Java linkage probes were not committed. These are historical
+measurements, not repeatable repository fixtures. Current public JVM-shape
+checks are in `brikk-sql/test/dev.brikk.house.sql/BinaryCompatibilityTest.kt`;
+they do not reproduce that old-IDE linkage scan.
 
 These checks do not launch either IDE or prove plugin-classloader isolation,
 companion coexistence, packaging, or published transitive dependencies. No live

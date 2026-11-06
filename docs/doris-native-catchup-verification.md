@@ -19,8 +19,8 @@ digest-pinned FE and BE images rather than the older 4.1.3 all-in-one image:
 | BE | `apache/doris@sha256:0b2827e2fcc0fc9b007502bda2a89e00d97f5696ca47c89f95cdff8e488da249` |
 
 Both live components report **`doris-4.1.4.1-rc02-5dbec55b399`**, matching the
-release-tag commit `5dbec55b399c2c4323f565bb2c6745cacb574416`. Version output is
-retained at `/tmp/opencode/sqlglot-catchup-doris4141-versions.tsv`.
+release-tag commit `5dbec55b399c2c4323f565bb2c6745cacb574416`. Current version
+assertions are in `brikk-sql-verify/test/dev.brikk.house.sql.verify/DorisCatchupResultTest.kt`.
 
 ## Why upgrade
 
@@ -42,7 +42,7 @@ covered the hotfix. The current parser artifact now uses the changed 4.1.5 gramm
 Historical command from the 4.1.4.1 run, not the current gate's required version:
 
 ```sh
-BRIKK_DORIS_TEST_CONTAINER=<4.1.4.1-FE-container> TMPDIR=/tmp/opencode \
+BRIKK_DORIS_TEST_CONTAINER=<4.1.4.1-FE-container> \
   ./kotlin test -m brikk-sql-verify --include-classes='*Doris*'
 ```
 
@@ -66,14 +66,13 @@ execution and hand-owned semantic assertions as documented in their own suites.
 Not every `*Doris*` method executes a Doris server; the native catch-up methods do.
 
 All **81 Doris-selected methods pass**, including all six live catch-up methods,
-with no failures or skips. The log is
-`/tmp/opencode/sqlglot-catchup-doris4141-native.log`. Build, 38 compatibility/editor
+with no failures or skips. Build, 38 compatibility/editor
 contracts, sixteen offline release tests, two generator tests and three candidate
 gate safety tests also pass. Core/metadata JAR SHA-256 values are unchanged from
 the exact candidate that passed the peer compiler/runtime and CLI/IDE gates.
 
 The subsequent full sweep passes **1,267 methods with 24 optional native skips**
-and no failures (`/tmp/opencode/sqlglot-catchup-doris4141-full.log`). This sweep
+and no failures. This sweep
 configures Doris and Python chDB only; the other live-engine containers from the
 previous round were already removed. Their earlier native results are not
 reclassified as failures or as newly executed tests: the previous broader native
@@ -86,10 +85,10 @@ The existing 92 vectors spanning 82 function names were rerun against 4.1.4.1.
 All raw outputs match the committed 4.1.3 results exactly: **88 value results and
 four expected errors** (two ARRAY_LENGTH cases and two ARRAY_TO_STRING cases).
 No error was accepted by count alone; each is the same specific function-lookup
-error from the baseline. Raw old/new SQL and results are retained in
-`/tmp/opencode/sqlglot-catchup-doris4141-matrix.json`; the summary is in
-`/tmp/opencode/sqlglot-catchup-doris4141-matrix.log`. This rechecks these exact
-vectors, not the entirety of Doris or every older pairwise hazard dataset.
+error from the baseline. The baseline is
+`vendor/data/behavior-matrix/doris-results.tsv`. The old/new recheck output
+was not committed. This historical result covers those exact vectors, not all
+of Doris or every older pairwise hazard dataset.
 
 ## 2026-10-12 SET/REPLACE execution follow-up
 
@@ -100,8 +99,8 @@ simultaneous swaps in both assignment orders, chained SET, typed NULLs, untouche
 columns, DROP and wide results. Row headers/order and values (including duplicates)
 and direct wire metadata match explicit reference projections. Missing, repeated
 and ambiguous replacement targets raise native errors. Native star EXCEPT works;
-native star RENAME does not. Evidence: `/tmp/opencode/doris-set-versions.tsv`,
-`/tmp/opencode/doris-set-exploration.log` and the pipe-capabilities native test log.
+native star RENAME does not. Repository controls are in
+`brikk-sql-verify/test/dev.brikk.house.sql.verify/DorisPipeSetResultTest.kt`.
 
 A CREATE VIEW metadata probe failed on generated WITH plus star REPLACE with a
 native SQL-text range-rewrite error. SELECT execution succeeds; no view-DDL
@@ -121,8 +120,8 @@ Docker still enforces the container limits. No host kernel setting, global Java
 configuration or vendored SQL grammar is changed. This small isolated runtime
 does not establish production sizing, performance or operational readiness.
 
-The exact image digests, native version output and test logs—not tags alone—are
-the execution evidence. Historical 4.1.3 probe datasets retain their original
+Exact image digests and asserted native versions, not tags alone, identify the
+execution target. Historical 4.1.3 probe datasets retain their original
 provenance; this upgrade must not relabel unrerun historical evidence as 4.1.4.1.
 The two task containers and their internal network were removed after verification;
-all recorded native/matrix logs remain retained.
+the historical local logs are not repository fixtures.

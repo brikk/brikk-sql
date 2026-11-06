@@ -1,6 +1,7 @@
 import hashlib
 import json
 import pathlib
+import re
 import unittest
 
 import capture_clickhouse_semantic_contract_sources as sources
@@ -99,4 +100,11 @@ class ClickhouseFloatingAddSubEvidenceTest(unittest.TestCase):
                 self.assertEqual(root, frontend["root_node"])
                 self.assertEqual(0, observed["returncode"])
                 self.assertTrue(observed["stdout"].endswith("\tFloat64\n"))
-        self.assertIn("CHSEM-022", (ROOT / "dev-docs/TODO-clickhouse-semantic.md").read_text())
+
+    def test_tracker_retains_stable_ids_and_the_completed_parser_followup(self):
+        tracker = (ROOT / "dev-docs/TODO-clickhouse-semantic.md").read_text()
+        rows = re.findall(r"^\| (CHSEM-\d{3}(?:-A)?) \| (DONE|AUDIT|ADD|MONITOR|DEFER) \|", tracker, re.M)
+        states = dict(rows)
+        self.assertEqual({f"CHSEM-{i:03}" for i in range(1, 35)} | {"CHSEM-030-A"}, set(states))
+        self.assertEqual(len(states), len(rows), "Each stable ID must have exactly one tracker row")
+        self.assertEqual("DONE", states["CHSEM-022"])

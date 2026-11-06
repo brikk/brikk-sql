@@ -21,7 +21,11 @@ class DuckdbReleaseAuditTest(unittest.TestCase):
         original = re.findall(r"https://github.com/duckdb/duckdb/pull/(\d+)", actual["source"]["body"])
         self.assertEqual([int(i) for i in original], [row["pr"] for row in actual["rows"]])
         self.assertEqual(len(original), len(set(original)))
-        ids = set(re.findall(r"^- \[[ x]\] `(DDB20-\d{3})`", (ROOT / "dev-docs/TODO-duckdb-2.0.md").read_text(), re.M))
+        tracker = (ROOT / "dev-docs/TODO-duckdb-2.0.md").read_text()
+        rows = re.findall(r"^\| (DDB20-\d{3}) \| (DONE|AUDIT|ADD|MONITOR|DEFER) \|", tracker, re.M)
+        ids = {id for id, _ in rows}
+        self.assertEqual({f"DDB20-{i:03}" for i in range(1, 79)}, ids)
+        self.assertEqual(len(ids), len(rows), "Each stable ID must have exactly one tracker row")
         for row in actual["rows"]:
             self.assertTrue(set(row["owners"]) <= ids, row)
             self.assertTrue(row["reason"])

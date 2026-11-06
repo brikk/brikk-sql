@@ -147,16 +147,21 @@ can show the original driver message when no exact authored range exists.
 
 ## Reproduction
 
+Set `CARGO_TARGET_DIR` to a private compilation directory, `PLATFORM_CLASSPATH_FILE`
+to the test runner's emitted classpath file, and `REVIEW_DIR` to a new output directory.
+The runner is defined in
+`brikk-sql-intellij-tooling/src/dev.brikk.house.sql.intellij.tooling/PlatformTests.kt`.
+
 ```sh
 cargo build --locked --manifest-path tools/datafusion-reference/flight/Cargo.toml \
-  --bin brikk-datafusion-flight-execution --target-dir build/datafusion-reference -j 2
+  --bin brikk-datafusion-flight-execution --target-dir "$CARGO_TARGET_DIR" -j 2
 python3 tools/probe_flight_execution.py --java /path/to/java21 \
-  --classpath-file build/tasks/_brikk-sql-intellij-support_testIntellijPlatform@brikk-sql-intellij-tooling/run-BUILD/test.log.classpath \
-  --output build/review/spice-execution.json
+  --classpath-file "$PLATFORM_CLASSPATH_FILE" \
+  --output "$REVIEW_DIR/spice-execution.json"
 python3 tools/probe_flight_execution.py --java /path/to/java21 \
-  --classpath-file build/tasks/_brikk-sql-intellij-support_testIntellijPlatform@brikk-sql-intellij-tooling/run-BUILD/test.log.classpath \
-  --datafusion-flight build/datafusion-reference/debug/brikk-datafusion-flight-execution \
-  --output build/review/datafusion-execution.json
+  --classpath-file "$PLATFORM_CLASSPATH_FILE" \
+  --datafusion-flight "$CARGO_TARGET_DIR/debug/brikk-datafusion-flight-execution" \
+  --output "$REVIEW_DIR/datafusion-execution.json"
 ```
 
 The probe opens `java.nio`; Java 25 additionally needs
@@ -172,6 +177,7 @@ service launches this fixture or probe.
   56 tests passed on each of 261.25134.95, 262.10968.63 and 263.5701.42.
 - Python evidence checks: 29 passed. Twenty lowered stage controls execute with expected
   values over Flight SQL. Negative native syntax and driver outcomes remain in the captures.
-- API containment passes without new internal/experimental use or allowances. The binary
-  audit in `/tmp/opencode/dfs010/` records eight new IntelliJ member references and 26
-  increased class/member-reference counts.
+- API containment passes without new internal/experimental use or allowances.
+  `brikk-sql-intellij-test-support/platform-test/dev.brikk.house.sql.intellij/InternalApiContainmentTest.kt`
+  retains the API guard. The historical uncommitted binary audit counted eight new
+  IntelliJ member references and 26 increased class/member-reference counts.

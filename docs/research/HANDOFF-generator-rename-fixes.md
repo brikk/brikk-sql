@@ -154,7 +154,8 @@ semantics-changing rewrite is not. When unsure, verify the round-trip
 
 ## Tooling notes / gotchas
 - Temp probe/transpile helpers: write throwaway `*Test.kt` (class name MUST end in `Test` for
-  toolchain discovery); read/write under `/tmp/opencode`; DELETE them before committing.
+  toolchain discovery). Use an explicit private scratch directory and remove only
+  those temporary helpers before committing. Preserve probe data in `docs/research/probe-runs/`.
 - chdb TSV bytes: decode with `errors="backslashreplace"`; normalize when diffing (booleans
   1/true, NULL vs `\N`, float precision, array spacing `[1, 2]`/`[1,2]`, hex-vs-raw-bytes for
   hashes → treat as conditionally-equivalent representation).

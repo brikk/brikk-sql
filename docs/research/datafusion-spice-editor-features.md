@@ -115,6 +115,8 @@ Validated on this round:
 - Full core suite: 1,356 tests passed, including ABI/Java 17 and the new context/diagnostic contracts.
 - Metadata: 129 tests passed. DataFusion/Spice Python checks: 24 passed.
 - No internal API references or experimental references in the new DataFusion components.
-  The binary inventory at `/tmp/opencode/dfs008/` records 14 newly referenced IntelliJ
+  The historical uncommitted binary inventory records 14 newly referenced IntelliJ
   members and 69 increased class/member-reference counts; these are constant-pool counts,
   not execution counts. No API-risk allowlist or suppression was added.
+  The retained guard is
+  `brikk-sql-intellij-test-support/platform-test/dev.brikk.house.sql.intellij/InternalApiContainmentTest.kt`.

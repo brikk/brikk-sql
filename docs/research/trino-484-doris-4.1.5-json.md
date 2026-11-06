@@ -117,14 +117,15 @@ global certification-policy change is made by this refresh.
 
 ## Reproduction and runtime limits
 
-Use disposable, digest-pinned containers and run:
+Use disposable, digest-pinned containers. Set `RECHECK_JSON` to a new private
+output file for the recheck, then run:
 
 ```sh
 python3 tools/probe_trino_doris_json.py \
   --trino-container brikk-trino-484-json \
   --doris-container brikk-doris-415-json-fe \
   --backend-container brikk-doris-415-json-be \
-  --output /tmp/opencode/json-results-recheck.json
+  --output "$RECHECK_JSON"
 
 BRIKK_TRINO_TEST_CONTAINER=brikk-trino-484-json \
 BRIKK_DORIS_TEST_CONTAINER=brikk-doris-415-json-fe \

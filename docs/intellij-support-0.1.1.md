@@ -1,43 +1,33 @@
 # SQL IntelliJ support 0.1.1
 
-Published from `befa4ea`, adding `SqlColumnCompletion` for consistent column
-lookup presentation across the SQL dialect plugins.
+Released on Maven Central from `befa4ea`.
 
-Coordinate: `dev.brikk.house:brikk-sql-intellij-support:0.1.1`.
+## What changed
 
-Central JAR SHA-256:
-`7ffdbb93990507db3f7ad83bc8e2571a7ef011f6debe0dd6b03d72d1b1ebd64e`.
+SqlColumnCompletion provides consistent column-lookup presentation across SQL
+dialect plugins. Column names remain insertion text. Type text includes known
+nullability, such as `String?`, while unknown types/nullability stay explicit.
+Source aliases appear in the tail, such as `brikk column (src)`. Consumers choose
+origin labels such as `relation contract` or `PIPE column`.
 
-[Successful release workflow](https://github.com/brikk/brikk-sql/actions/runs/38113629918).
+Same-named columns from different aliases retain distinct lookup identities.
+Default priority is 120. The formatter performs no inference or scope resolution.
+
+## Coordinates and upgrade
+
+Use `dev.brikk.house:brikk-sql-intellij-support:0.1.1` from `mavenCentral()`.
 Core, metadata and verifier versions are independent of this helper-only release.
+Reuse the formatter's type/tail text while preserving native insertion,
+navigation, icons and matching behavior on decorated lookups.
 
-## Presentation contract
+## Compatibility
 
-- Column name remains the insertion text.
-- Type text includes known nullability, for example `String?`.
-- Unknown types and nullability remain explicit.
-- Source aliases appear in the tail, for example `brikk column (src)`.
-- Consumers choose the origin label, including `relation contract` for generated
-  navigation fallbacks and `PIPE column` for unproven computed columns.
-- Same-named columns from different aliases retain distinct lookup identities.
-- Default priority is 120. No type inference or scope resolution is performed.
+The formatter accepts strings and a nullable Boolean. Kotlin stdlib remains the
+only Maven dependency, with no Kotlin IDE, Kotlin helper or SQL-engine dependency.
+The original 27 helper classes are byte-identical to 0.1.0; two classes are new.
+Trino 0.3.4 embeds this Central JAR and checks nullable source columns and
+same-named join columns. Other plugins need their own adoption checks.
 
-The formatter accepts strings and a nullable Boolean, adding no dependency on
-Kotlin IDE, the Kotlin helper or the SQL engine. Consumers decorating native
-lookups can reuse its rendered type/tail while preserving native insertion,
-navigation, icons and matching behavior.
-
-## Verification
-
-The original 27 helper classes are byte-identical to 0.1.0. Two new classes are
-added. All 29 published classes match the locally tested candidate. Central
-checksums, source/notices and POM/Gradle metadata audits pass; Kotlin stdlib remains
-the sole Maven dependency.
-
-Trino's real completion pipeline verifies nullable source columns and two
-same-named join columns with different aliases/types. Its candidate passes the
-five pinned IDE verifier targets. Trino 0.3.4 embeds the actual Central JAR and
-passes package and completion checks against that release.
-
-The Doris and DuckDB agents have separate migration notes in the Trino checkout.
-SQL Transpiler currently has no column-completion provider to migrate.
+Central JAR SHA-256 is
+`7ffdbb93990507db3f7ad83bc8e2571a7ef011f6debe0dd6b03d72d1b1ebd64e`.
+[Release checks](https://github.com/brikk/brikk-sql/actions/runs/38113629918).

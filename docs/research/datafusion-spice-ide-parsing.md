@@ -103,5 +103,6 @@ The before/after binary inventory records seven newly referenced IntelliJ member
 lexer/parser constructors, two parser entry points, the XOR token, and two PSI error-reporting
 methods. There are 32 increased class/member-reference counts, including already-used public
 builder/lexer operations. These counts are constant-pool references per class, not execution
-counts. The inspection gates check their API status. The inventory and binary snapshots are
-at `/tmp/opencode/dfs007/`; no Plugin Verifier suppressions or allowlists were added.
+counts. The inventory and binary snapshots were not committed. The retained guard is
+`brikk-sql-intellij-test-support/platform-test/dev.brikk.house.sql.intellij/InternalApiContainmentTest.kt`.
+No Plugin Verifier suppressions or allowlists were added.

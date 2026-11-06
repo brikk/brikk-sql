@@ -15,14 +15,16 @@ the checked-in wrapper's task-graph command:
 
 Toolchain 0.12.0 supports `task` even though the top-level help omits it.
 `package -f jar` does not register packaging tasks for these library modules.
-Pass the freshly built artifacts, not an older release or Maven-local copy:
+Set `CORE_JAR` and `METADATA_JAR` to the fresh packaging-task outputs, not an
+older release or Maven-local copy. Task definitions are in `brikk-sql/module.yaml`
+and `brikk-sql-metadata/module.yaml`.
 
 ```sh
 export JAVA_HOME=/absolute/path/to/jdk-21
 bash tools/verify_doris_consumer.sh \
   --client /absolute/path/to/doris-intellij-plugin \
-  --core-jar "$PWD/build/tasks/_brikk-sql_jarJvm/brikk-sql-jvm.jar" \
-  --metadata-jar "$PWD/build/tasks/_brikk-sql-metadata_jarJvm/brikk-sql-metadata-jvm.jar" \
+  --core-jar "$CORE_JAR" \
+  --metadata-jar "$METADATA_JAR" \
   --scratch-dir /tmp
 ```
 
@@ -37,8 +39,8 @@ Alternatively, from the client directory, let its mise configuration select Java
 ```sh
 mise exec -- bash /absolute/path/to/brikk-sql/tools/verify_doris_consumer.sh \
   --client "$PWD" \
-  --core-jar /absolute/path/to/brikk-sql/build/tasks/_brikk-sql_jarJvm/brikk-sql-jvm.jar \
-  --metadata-jar /absolute/path/to/brikk-sql/build/tasks/_brikk-sql-metadata_jarJvm/brikk-sql-metadata-jvm.jar
+  --core-jar "$CORE_JAR" \
+  --metadata-jar "$METADATA_JAR"
 ```
 
 The gate invokes the copied client `gradlew`, pins `JAVA_HOME` for the Gradle and

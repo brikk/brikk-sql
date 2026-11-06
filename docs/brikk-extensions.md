@@ -1787,8 +1787,9 @@ consumer/editor contracts, sixteen offline release and three candidate safety
 tests pass. Trino 483 ran the complete-projection row checks; all existing ledgers
 are unchanged. The retained precompiled brikk-house runtime also refuses a bound
 `Rel<HasId>` rename against the new core JAR while explicit SELECT still renders;
-the original peer checkout stays clean. Logs are retained under
-`/tmp/opencode/trino-pipe-rename-*`; only the isolated task container is removed.
+the original peer checkout stays clean. Repository regressions are
+`brikk-sql/test/dev.brikk.house.sql/PipeRenameGenerationTest.kt` and
+`brikk-sql-verify/test/dev.brikk.house.sql.verify/TrinoPipeRenameResultTest.kt`.
 
 ## 52. DROP/SET capabilities, native Doris replacement and executable pivot refusal
 
@@ -1832,8 +1833,10 @@ filtering belongs in the IDE/profile consumer, not the core parser's keyword tab
 `PipeExecutionCapabilitiesTest`, `PipeExecutionCapabilitiesResultTest` and
 `DorisPipeSetResultTest` cover the guards, complete-layout execution, preserved
 previews and native behavior. Live Trino 483 and Doris 4.1.4.1 run the relevant
-row checks. Scratch evidence is retained under `/tmp/opencode/pipe-capabilities-*`
-and `/tmp/opencode/doris-set-*`; no peer source or grand-unification branch is edited.
+row checks. Repository controls are
+`brikk-sql/test/dev.brikk.house.sql/PipeExecutionCapabilitiesTest.kt`,
+`brikk-sql-verify/test/dev.brikk.house.sql.verify/PipeExecutionCapabilitiesResultTest.kt`
+and `brikk-sql-verify/test/dev.brikk.house.sql.verify/DorisPipeSetResultTest.kt`.
 
 Verification on 2026-10-12: build, 1,295 Kotlin methods (18 optional native skips),
 38 existing consumer/editor contracts, sixteen offline release and three candidate

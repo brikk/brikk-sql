@@ -42,13 +42,16 @@ Spice-specific semantics and utility statements are implemented separately in DF
 
 ## Reproduce
 
+Set `REVIEW_DIR` to a private output directory and `DATAFUSION_REFERENCE` to the
+binary built using `tools/datafusion-reference/README.md`.
+
 ```sh
 python3 tools/audit_datafusion_functions.py --output vendor/data/datafusion-spice/round3/function-cases.json
-./kotlin run -m dialect-audit -- datafusion vendor/data/datafusion-spice/round3/function-cases.json build/datafusion-functions-after.json
-python3 tools/audit_datafusion_functions.py --observations build/datafusion-functions-after.json --output vendor/data/datafusion-spice/round3/function-audit-after.json
+./kotlin run -m dialect-audit -- datafusion vendor/data/datafusion-spice/round3/function-cases.json "$REVIEW_DIR/datafusion-functions-after.json"
+python3 tools/audit_datafusion_functions.py --observations "$REVIEW_DIR/datafusion-functions-after.json" --output vendor/data/datafusion-spice/round3/function-audit-after.json
 python3 tools/audit_datafusion_functions.py --execution-only --output vendor/data/datafusion-spice/round3/function-execution-cases.json
 ./kotlin run -m dialect-audit -- datafusion vendor/data/datafusion-spice/round3/function-execution-cases.json vendor/data/datafusion-spice/round3/function-execution-brikk.json
-python3 tools/probe_datafusion_spice.py --upstream build/datafusion-reference/debug/brikk-datafusion-reference --cases vendor/data/datafusion-spice/round3/function-execution-cases.json --brikk vendor/data/datafusion-spice/round3/function-execution-brikk.json --output vendor/data/datafusion-spice/round3/function-native.json
+python3 tools/probe_datafusion_spice.py --upstream "$DATAFUSION_REFERENCE" --cases vendor/data/datafusion-spice/round3/function-execution-cases.json --brikk vendor/data/datafusion-spice/round3/function-execution-brikk.json --output vendor/data/datafusion-spice/round3/function-native.json
 ./kotlin run -m dialect-audit -- datafusion vendor/data/datafusion-spice/round3/grammar-cases.json vendor/data/datafusion-spice/round3/grammar-brikk.json
-python3 tools/probe_datafusion_spice.py --upstream build/datafusion-reference/debug/brikk-datafusion-reference --cases vendor/data/datafusion-spice/round3/grammar-cases.json --brikk vendor/data/datafusion-spice/round3/grammar-brikk.json --output vendor/data/datafusion-spice/round3/grammar-native.json
+python3 tools/probe_datafusion_spice.py --upstream "$DATAFUSION_REFERENCE" --cases vendor/data/datafusion-spice/round3/grammar-cases.json --brikk vendor/data/datafusion-spice/round3/grammar-brikk.json --output vendor/data/datafusion-spice/round3/grammar-native.json
 ```

@@ -1,12 +1,10 @@
 # SQL 0.21.0 release
 
-Published and verified on Maven Central from source commit
+Released on Maven Central from source commit
 `fcd1b91aea72f34de51136927e6cd8d5b9256125`, with the source frozen at
-`release/0.21.0`. The [full-gate release workflow](https://github.com/brikk/brikk-sql/actions/runs/40772800553)
-succeeded. Versions 0.20.0 and 0.20.1 were already published and immutable; the
-user explicitly selected 0.21.0 for this release.
+`release/0.21.0`. Versions 0.20.0 and 0.20.1 remain immutable.
 
-## Coordinates and scope
+## Coordinates and changes
 
 All of these use group `dev.brikk.house` and version `0.21.0`:
 
@@ -39,15 +37,7 @@ a Java 25 runtime through trino-parser 484. Oracle contains major 69 and require
 Java 25. Java 17 deployments must use the individual compatible modules rather
 than the aggregate or IDE support.
 
-## Public artifact verification
-
-Public Central POMs and Gradle metadata for all 12 coordinates were downloaded
-and audited: no SNAPSHOT references, consistent 0.21.0 candidate dependency versions.
-JVM binaries, source JARs and armored signature sidecars were downloaded; packaged
-class versions were checked. Relevant sources match the exact release commit.
-The Java 17 publication and verifier audits pass on the public downloads, not just
-on Maven Local outputs. This checks signature-sidecar availability, not an
-independent public-key trust policy.
+## Artifact checksums
 
 Java 17 JAR SHA-256 values:
 
@@ -62,12 +52,12 @@ brikk-sql-verify-doris
   43602940ba8ae1bb2960ad8783b77d7ffb7f068fe45ddf5bfbd4ee2fbc834e87
 ```
 
-The corresponding Java 17 snapshot and formal JAR payloads are byte-identical;
-the formal POM/module dependency graph uses immutable 0.21.0 release coordinates.
-Verification records are retained at
-`/tmp/opencode/maven-central-0.21.0/verified-artifacts.json`.
+The formal POM/module graph uses immutable 0.21.0 release coordinates.
+[Release checks](https://github.com/brikk/brikk-sql/actions/runs/40772800553)
+include Java 17 publication and verifier audits. Signature-sidecar availability
+does not establish an independent public-key trust policy.
 
-## Consumer handoff
+## Upgrade
 
 Use `dev.brikk.house:brikk-sql-metadata-jvm:0.21.0`, and core/API/Doris verifier at
 the same version where needed. No consumer pin was edited by this release.

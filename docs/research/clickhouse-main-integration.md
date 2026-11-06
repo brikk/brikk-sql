@@ -21,7 +21,7 @@ No production fix was needed after merging main.
 - All Python tooling tests with the release-model check enabled: 57 passed.
   Generator tests need the pinned SQLGlot development dependency. The missing
   local dependency was supplied from exact commit
-  `a00dc2e5c489214bea53bacbbeba8713f21ebce1` under /tmp/opencode via PYTHONPATH;
+  `a00dc2e5c489214bea53bacbbeba8713f21ebce1` via PYTHONPATH;
   no source generation, global installation or gate suppression was performed.
 
 The IDE suite initially found an obsolete assertion that ClickHouse NATURAL pipe
@@ -94,9 +94,10 @@ assumptions aborted, zero failures; 754 IDE platform contracts passed on
 Java 17, verifier and IDE artifact audits passed. The actual packaged core passes
 the exact interval scope/shape smoke on Java 17, as well as the ClickHouse smoke.
 Packaged common/JDBC IDE support still adds no IntelliJ/JetBrains references or
-callsites versus published 0.2.4. Local manifests and logs are under
-`/tmp/opencode/snapshot-version-correction/`; public availability is checked
-separately after main CI publishes the fixed build.
+callsites versus published 0.2.4. The local manifests were not committed.
+`tools/verify_java17_publication.py`, `tools/verify_verifier_publication.py` and
+`tools/verify_intellij_publication.py` retain the packaging checks; public
+availability requires an independent download of the published build.
 
 The fixed-build workflow `40925135049` again stopped before publication, solely on
 tokenizer scaling. The scaling tests previously warmed and measured the small
