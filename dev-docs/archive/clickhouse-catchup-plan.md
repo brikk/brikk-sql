@@ -41,7 +41,7 @@ Sources:
 
 The docs page fetched on 2026-10-28 stopped at 26.9 despite the published 26.10 stable release. Record the source retrieval date and release identifiers. Review SQL-relevant New Feature, Experimental Feature, Improvement and incompatible-change entries across 26.1 through 26.10. Supplement the presentation with official reference documentation and upstream tests/source for exact grammar.
 
-Commit minimal fixtures and a repeatable probe runner. The initial exploratory script was `/tmp/opencode/clickhouse-2026-audit.kts` in the original session; do not depend on that temporary file surviving. Recreate its useful vectors in the repository and correct any tentative examples against native grammar before treating them as regressions.
+Fixtures and the repeatable probe runner are in `vendor/data/clickhouse-2026-audit/`, `tools/clickhouse_2026_audit.kts` and `tools/probe_clickhouse_2026.py`. Correct tentative examples against native grammar before treating them as regressions.
 
 For each finding record a stable case ID, release boundary, input SQL, current AST/output/error, expected native behavior and evidence source. Categorize it as incorrect rewrite, rejection, wrong AST, opaque Command, metadata omission, semantic gap, or already supported. Save raw native output, exact version and checksum/digest. The available local 26.7.1.1315 binary is useful supplemental evidence, not a substitute for the targets.
 

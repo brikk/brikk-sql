@@ -20,18 +20,19 @@ printf 'brikk.mavencentral.user=x\nbrikk.mavencentral.pass=x\n' > .env
 Run the core suite separately because it includes wall-clock scaling checks. Optional native
 controls need their documented fixtures or engine URLs. The live DuckDB window-completion
 controls require a genuine signed-fixture capture through `BRIKK_DUCKDB_WINDOW_CAPTURE`.
-Current release blockers and missing fixtures are tracked in [the DuckDB work list](TODO-duckdb-2.0.md).
+Feature boundaries are tracked in [the DuckDB tracker](TODO-duckdb-2.0.md).
 
 ### Native window fixture
 
 The shared IntelliJ suite needs a real native window-function capture. CI builds it from
 DuckDB revision `d54cbbe3df17e8e5ce68312f483b4155836112aa` and checksum-pinned static libraries.
-For local runs, supply a clean checkout at that exact revision:
+For local runs, supply a clean checkout at that exact revision. Set `WINDOW_DIR`
+to a new private output directory. This generated fixture is not checked-in evidence.
 
 ```sh
-python3 tools/build_duckdb_window_fixture.py --source /path/to/duckdb --output build/duckdb-window-fixture
-export BRIKK_DUCKDB_WINDOW_EXTENSION="$PWD/build/duckdb-window-fixture/brikk_window.duckdb_extension"
-export BRIKK_DUCKDB_WINDOW_CAPTURE="$PWD/build/duckdb-window-fixture/catalog.json"
+python3 tools/build_duckdb_window_fixture.py --source /path/to/duckdb --output "$WINDOW_DIR"
+export BRIKK_DUCKDB_WINDOW_EXTENSION="$WINDOW_DIR/brikk_window.duckdb_extension"
+export BRIKK_DUCKDB_WINDOW_CAPTURE="$WINDOW_DIR/catalog.json"
 ./kotlin test -m brikk-sql-verify-duckdb --include-classes='*DuckdbWindowCatalogResultTest*'
 ./kotlin check intellijPlatform -m brikk-sql-intellij-support
 ```
@@ -42,13 +43,20 @@ Do not substitute hand-written rows or install this fixture into a user's databa
 
 No sibling Engine checkout or native chDB installation is needed for the standard tests.
 The oracle resolves `dev.brikk.house:brikk-chdb:0.16.0` from Maven Central.
-Corpus failures write review files under `build/ledger-actual/`; do not blindly copy those
-over curated failure ledgers. See [corpus coverage](../docs/corpus-coverage.md).
+Corpus failures write review files as configured in
+`brikk-sql/test@jvm/dev.brikk.house.sql/TestResources.kt`; do not blindly copy
+them over curated failure ledgers. See [corpus coverage](../docs/corpus-coverage.md).
 
 The IntelliJ build provisions a checksum-pinned IDEA 261 SDK on Linux x64, or accepts
 `BRIKK_INTELLIJ_SDK` on other hosts. Core-only builds do not provision the SDK.
 Generators live in `tools/`; some need the gitignored checkouts under `reference/`.
 See [vendor provenance](../vendor/README.md) before refreshing fixtures.
+
+The offline Python gate is `python3 -m unittest discover -s tools -p 'test_*.py'`.
+Generator tests need the SQLGlot checkout at `reference/sqlglot`, exactly
+`a00dc2e5c489214bea53bacbbeba8713f21ebce1`. An existing clean checkout at that
+commit can instead be supplied through `PYTHONPATH`; do not substitute a newer
+installed package or regenerate fixtures for a documentation change.
 
 ## Publishing
 

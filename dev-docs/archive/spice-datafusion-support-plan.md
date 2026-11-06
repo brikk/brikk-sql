@@ -86,10 +86,9 @@ parses, 6 passed as opaque commands, and 9 failed parsing. There were also 24 fo
 Several accepted examples changed meaning during generation. The documentation corpus is
 an exploratory sample, not an exhaustive or release-pinned conformance suite.
 
-Temporary research is under `/tmp/opencode/spice-sql-check/`: `check.py`, `Probe.java`,
-`cases.json`, `results.json`, downloaded documentation, and selected upstream source under
-`upstream/`. Promote useful evidence into repository fixtures in DFS-001; do not require
-these temporary files or their original checkout paths to survive.
+Versioned fixtures are in `vendor/data/datafusion-spice/`; the repeatable probes
+are `tools/probe_datafusion_spice.py` and `tools/datafusion-reference/`.
+The original exploratory scripts and downloads are not repository evidence.
 
 Source inspection of Spice `v2.4.0` found:
 
