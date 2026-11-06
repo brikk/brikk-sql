@@ -1,0 +1,1225 @@
+{
+  "scope": "Read-only SELECT value/type controls and shipped FE parser classes. DDL/refresh/admin/job-control are NEVER executed. Opaque preservation is not structured support.",
+  "image": "starrocks/allin1-ubuntu@sha256:5c0a65390daa18ea5db9251f4bed2c6d9cdba174363fb289b58af180ea680a14",
+  "version": {
+    "stdout": "current_version()\t@@sql_mode\n4.1.4-4a9848e\tONLY_FULL_GROUP_BY\n",
+    "stderr": "",
+    "returncode": 0
+  },
+  "native_parser_jar_sha256": "d18ff5b022b75ab4892a6d25ec184bc3e5a6cf0f9bd2a65affb4c36e72a20df9",
+  "native_harness_sha256": "76908250e8e3f71fd5721f19489ad066433b399dad4ca775a41fe5ab881cebf3",
+  "native_parser_stderr": "Note: /var/tmp/StarrocksNativeParserProbe.java uses or overrides a deprecated API.\nNote: Recompile with -Xlint:deprecation for details.\nERROR StatusLogger Could not determine local host name\n java.net.UnknownHostException: 49a2d4103dbf: 49a2d4103dbf: Temporary failure in name resolution\n\tat java.base/java.net.InetAddress.getLocalHost(InetAddress.java:1671)\n\tat org.apache.logging.log4j.core.util.NetUtils.getLocalHostname(NetUtils.java:54)\n\tat org.apache.logging.log4j.core.LoggerContext.lambda$setConfiguration$0(LoggerContext.java:615)\n\tat java.base/java.util.concurrent.ConcurrentHashMap.computeIfAbsent(ConcurrentHashMap.java:1708)\n\tat org.apache.logging.log4j.core.LoggerContext.setConfiguration(LoggerContext.java:615)\n\tat org.apache.logging.log4j.core.LoggerContext.reconfigure(LoggerContext.java:694)\n\tat org.apache.logging.log4j.core.LoggerContext.reconfigure(LoggerContext.java:711)\n\tat org.apache.logging.log4j.core.LoggerContext.start(LoggerContext.java:253)\n\tat org.apache.logging.log4j.core.impl.Log4jContextFactory.getContext(Log4jContextFactory.java:155)\n\tat org.apache.logging.log4j.core.impl.Log4jContextFactory.getContext(Log4jContextFactory.java:47)\n\tat org.apache.logging.log4j.LogManager.getContext(LogManager.java:196)\n\tat org.apache.logging.log4j.LogManager.getLogger(LogManager.java:599)\n\tat com.starrocks.sql.parser.SqlParser.<clinit>(SqlParser.java:71)\n\tat StarrocksNativeParserProbe.main(StarrocksNativeParserProbe.java:18)\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:569)\n\tat jdk.compiler/com.sun.tools.javac.launcher.Main.execute(Main.java:419)\n\tat jdk.compiler/com.sun.tools.javac.launcher.Main.run(Main.java:192)\n\tat jdk.compiler/com.sun.tools.javac.launcher.Main.main(Main.java:132)\nCaused by: java.net.UnknownHostException: 49a2d4103dbf: Temporary failure in name resolution\n\tat java.base/java.net.Inet6AddressImpl.lookupAllHostAddr(Native Method)\n\tat java.base/java.net.InetAddress$PlatformNameService.lookupAllHostAddr(InetAddress.java:934)\n\tat java.base/java.net.InetAddress.getAddressesFromNameService(InetAddress.java:1543)\n\tat java.base/java.net.InetAddress$NameServiceAddresses.get(InetAddress.java:852)\n\tat java.base/java.net.InetAddress.getAllByName0(InetAddress.java:1533)\n\tat java.base/java.net.InetAddress.getLocalHost(InetAddress.java:1666)\n\t... 20 more\n",
+  "records": [
+    {
+      "kind": "result",
+      "sql": "SELECT TO_DAYS('2026-03-10') AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=ToDays(this=Literal(this=2026-03-10,is_string=true)),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT TO_DAYS('2026-03-10') AS v",
+      "executable": "SELECT TO_DAYS('2026-03-10') AS v",
+      "native_original": {
+        "status": "OK",
+        "detail": "QueryStatement",
+        "canonical": "SELECT to_days('2026-03-10') AS `v`"
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "QueryStatement",
+        "canonical": "SELECT to_days('2026-03-10') AS `v`"
+      },
+      "original_result": {
+        "stdout": "v\n740050\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_result": {
+        "stdout": "v\n740050\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT TO_DAYS('2026-03-10') AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       LONG\nCollation:  binary (63)\nLength:     11\nMax_length: 6\nDecimals:   0\nFlags:      NUM \n\n\n+--------+\n| v      |\n+--------+\n| 740050 |\n+--------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT TO_DAYS('2026-03-10') AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       LONG\nCollation:  binary (63)\nLength:     11\nMax_length: 6\nDecimals:   0\nFlags:      NUM \n\n\n+--------+\n| v      |\n+--------+\n| 740050 |\n+--------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "kind": "result",
+      "sql": "SELECT TO_DAYS(NULL) AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=ToDays(this=Null()),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT TO_DAYS(NULL) AS v",
+      "executable": "SELECT TO_DAYS(NULL) AS v",
+      "native_original": {
+        "status": "OK",
+        "detail": "QueryStatement",
+        "canonical": "SELECT to_days(NULL) AS `v`"
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "QueryStatement",
+        "canonical": "SELECT to_days(NULL) AS `v`"
+      },
+      "original_result": {
+        "stdout": "v\nNULL\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_result": {
+        "stdout": "v\nNULL\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT TO_DAYS(NULL) AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       LONG\nCollation:  binary (63)\nLength:     11\nMax_length: 0\nDecimals:   0\nFlags:      NUM \n\n\n+------+\n| v    |\n+------+\n| NULL |\n+------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT TO_DAYS(NULL) AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       LONG\nCollation:  binary (63)\nLength:     11\nMax_length: 0\nDecimals:   0\nFlags:      NUM \n\n\n+------+\n| v    |\n+------+\n| NULL |\n+------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "kind": "result",
+      "sql": "SELECT TO_DAYS(CAST('2024-02-29 12:00:00' AS DATETIME)) AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=ToDays(this=Cast(this=Literal(this=2024-02-29 12:00:00,is_string=true),to=DataType(this=DATETIME,expressions=null,nested=false),format=null,safe=null,action=null,default=null)),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT TO_DAYS(CAST('2024-02-29 12:00:00' AS DATETIME)) AS v",
+      "executable": "SELECT TO_DAYS(CAST('2024-02-29 12:00:00' AS DATETIME)) AS v",
+      "native_original": {
+        "status": "OK",
+        "detail": "QueryStatement",
+        "canonical": "SELECT to_days(CAST('2024-02-29 12:00:00' AS DATETIME)) AS `v`"
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "QueryStatement",
+        "canonical": "SELECT to_days(CAST('2024-02-29 12:00:00' AS DATETIME)) AS `v`"
+      },
+      "original_result": {
+        "stdout": "v\n739310\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_result": {
+        "stdout": "v\n739310\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT TO_DAYS(CAST('2024-02-29 12:00:00' AS DATETIME)) AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       LONG\nCollation:  binary (63)\nLength:     11\nMax_length: 6\nDecimals:   0\nFlags:      NUM \n\n\n+--------+\n| v      |\n+--------+\n| 739310 |\n+--------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT TO_DAYS(CAST('2024-02-29 12:00:00' AS DATETIME)) AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       LONG\nCollation:  binary (63)\nLength:     11\nMax_length: 6\nDecimals:   0\nFlags:      NUM \n\n\n+--------+\n| v      |\n+--------+\n| 739310 |\n+--------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "kind": "result",
+      "sql": "SELECT DATEDIFF(CAST('2026-03-11 01:00:00' AS DATETIME), CAST('2026-03-10 23:00:00' AS DATETIME)) AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=DateDiff(this=Cast(this=Literal(this=2026-03-11 01:00:00,is_string=true),to=DataType(this=DATETIME,expressions=null,nested=false),format=null,safe=null,action=null,default=null),expression=Cast(this=Literal(this=2026-03-10 23:00:00,is_string=true),to=DataType(this=DATETIME,expressions=null,nested=false),format=null,safe=null,action=null,default=null),date_part_boundary=true),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT DATEDIFF(CAST('2026-03-11 01:00:00' AS DATETIME), CAST('2026-03-10 23:00:00' AS DATETIME)) AS v",
+      "executable": "SELECT DATEDIFF(CAST('2026-03-11 01:00:00' AS DATETIME), CAST('2026-03-10 23:00:00' AS DATETIME)) AS v",
+      "native_original": {
+        "status": "OK",
+        "detail": "QueryStatement",
+        "canonical": "SELECT datediff(CAST('2026-03-11 01:00:00' AS DATETIME), CAST('2026-03-10 23:00:00' AS DATETIME)) AS `v`"
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "QueryStatement",
+        "canonical": "SELECT datediff(CAST('2026-03-11 01:00:00' AS DATETIME), CAST('2026-03-10 23:00:00' AS DATETIME)) AS `v`"
+      },
+      "original_result": {
+        "stdout": "v\n1\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_result": {
+        "stdout": "v\n1\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT DATEDIFF(CAST('2026-03-11 01:00:00' AS DATETIME), CAST('2026-03-10 23:00:00' AS DATETIME)) AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       LONG\nCollation:  binary (63)\nLength:     11\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\n\n+------+\n| v    |\n+------+\n|    1 |\n+------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT DATEDIFF(CAST('2026-03-11 01:00:00' AS DATETIME), CAST('2026-03-10 23:00:00' AS DATETIME)) AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       LONG\nCollation:  binary (63)\nLength:     11\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\n\n+------+\n| v    |\n+------+\n|    1 |\n+------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "kind": "result",
+      "sql": "SELECT DATE_DIFF('DAY', CAST('2026-03-11 01:00:00' AS DATETIME), CAST('2026-03-10 23:00:00' AS DATETIME)) AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=DateDiff(this=Cast(this=Literal(this=2026-03-11 01:00:00,is_string=true),to=DataType(this=DATETIME,expressions=null,nested=false),format=null,safe=null,action=null,default=null),expression=Cast(this=Literal(this=2026-03-10 23:00:00,is_string=true),to=DataType(this=DATETIME,expressions=null,nested=false),format=null,safe=null,action=null,default=null),unit=Var(this=DAY)),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT DATE_DIFF('DAY', CAST('2026-03-11 01:00:00' AS DATETIME), CAST('2026-03-10 23:00:00' AS DATETIME)) AS v",
+      "executable": "SELECT DATE_DIFF('DAY', CAST('2026-03-11 01:00:00' AS DATETIME), CAST('2026-03-10 23:00:00' AS DATETIME)) AS v",
+      "native_original": {
+        "status": "OK",
+        "detail": "QueryStatement",
+        "canonical": "SELECT date_diff('DAY', CAST('2026-03-11 01:00:00' AS DATETIME), CAST('2026-03-10 23:00:00' AS DATETIME)) AS `v`"
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "QueryStatement",
+        "canonical": "SELECT date_diff('DAY', CAST('2026-03-11 01:00:00' AS DATETIME), CAST('2026-03-10 23:00:00' AS DATETIME)) AS `v`"
+      },
+      "original_result": {
+        "stdout": "v\n0\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_result": {
+        "stdout": "v\n0\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT DATE_DIFF('DAY', CAST('2026-03-11 01:00:00' AS DATETIME), CAST('2026-03-10 23:00:00' AS DATETIME)) AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       LONGLONG\nCollation:  binary (63)\nLength:     20\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\n\n+------+\n| v    |\n+------+\n|    0 |\n+------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT DATE_DIFF('DAY', CAST('2026-03-11 01:00:00' AS DATETIME), CAST('2026-03-10 23:00:00' AS DATETIME)) AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       LONGLONG\nCollation:  binary (63)\nLength:     20\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\n\n+------+\n| v    |\n+------+\n|    0 |\n+------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "kind": "result",
+      "sql": "SELECT DATEDIFF(CAST('2026-03-10 23:00:00' AS DATETIME), CAST('2026-03-11 01:00:00' AS DATETIME)) AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=DateDiff(this=Cast(this=Literal(this=2026-03-10 23:00:00,is_string=true),to=DataType(this=DATETIME,expressions=null,nested=false),format=null,safe=null,action=null,default=null),expression=Cast(this=Literal(this=2026-03-11 01:00:00,is_string=true),to=DataType(this=DATETIME,expressions=null,nested=false),format=null,safe=null,action=null,default=null),date_part_boundary=true),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT DATEDIFF(CAST('2026-03-10 23:00:00' AS DATETIME), CAST('2026-03-11 01:00:00' AS DATETIME)) AS v",
+      "executable": "SELECT DATEDIFF(CAST('2026-03-10 23:00:00' AS DATETIME), CAST('2026-03-11 01:00:00' AS DATETIME)) AS v",
+      "native_original": {
+        "status": "OK",
+        "detail": "QueryStatement",
+        "canonical": "SELECT datediff(CAST('2026-03-10 23:00:00' AS DATETIME), CAST('2026-03-11 01:00:00' AS DATETIME)) AS `v`"
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "QueryStatement",
+        "canonical": "SELECT datediff(CAST('2026-03-10 23:00:00' AS DATETIME), CAST('2026-03-11 01:00:00' AS DATETIME)) AS `v`"
+      },
+      "original_result": {
+        "stdout": "v\n-1\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_result": {
+        "stdout": "v\n-1\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT DATEDIFF(CAST('2026-03-10 23:00:00' AS DATETIME), CAST('2026-03-11 01:00:00' AS DATETIME)) AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       LONG\nCollation:  binary (63)\nLength:     11\nMax_length: 2\nDecimals:   0\nFlags:      NUM \n\n\n+------+\n| v    |\n+------+\n|   -1 |\n+------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT DATEDIFF(CAST('2026-03-10 23:00:00' AS DATETIME), CAST('2026-03-11 01:00:00' AS DATETIME)) AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       LONG\nCollation:  binary (63)\nLength:     11\nMax_length: 2\nDecimals:   0\nFlags:      NUM \n\n\n+------+\n| v    |\n+------+\n|   -1 |\n+------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "kind": "result",
+      "sql": "SELECT DATEDIFF(NULL, CAST('2026-03-11' AS DATE)) AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=DateDiff(this=Null(),expression=Cast(this=Literal(this=2026-03-11,is_string=true),to=DataType(this=DATE,expressions=null,nested=false),format=null,safe=null,action=null,default=null),date_part_boundary=true),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT DATEDIFF(NULL, CAST('2026-03-11' AS DATE)) AS v",
+      "executable": "SELECT DATEDIFF(NULL, CAST('2026-03-11' AS DATE)) AS v",
+      "native_original": {
+        "status": "OK",
+        "detail": "QueryStatement",
+        "canonical": "SELECT datediff(NULL, CAST('2026-03-11' AS DATE)) AS `v`"
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "QueryStatement",
+        "canonical": "SELECT datediff(NULL, CAST('2026-03-11' AS DATE)) AS `v`"
+      },
+      "original_result": {
+        "stdout": "v\nNULL\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_result": {
+        "stdout": "v\nNULL\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT DATEDIFF(NULL, CAST('2026-03-11' AS DATE)) AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       LONG\nCollation:  binary (63)\nLength:     11\nMax_length: 0\nDecimals:   0\nFlags:      NUM \n\n\n+------+\n| v    |\n+------+\n| NULL |\n+------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT DATEDIFF(NULL, CAST('2026-03-11' AS DATE)) AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       LONG\nCollation:  binary (63)\nLength:     11\nMax_length: 0\nDecimals:   0\nFlags:      NUM \n\n\n+------+\n| v    |\n+------+\n| NULL |\n+------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "kind": "result",
+      "sql": "SELECT * FROM (SELECT 1 g,'a' k,10 v UNION ALL SELECT 1,'b',20) t PIVOT(MAX(v) FOR k IN ('a','b'))",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Star(ilike=null,except_=null,replace=null,rename=null)],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Union(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Literal(this=1,is_string=false),alias=Identifier(this=g,quoted=false)),Alias(this=Literal(this=a,is_string=true),alias=Identifier(this=k,quoted=false)),Alias(this=Literal(this=10,is_string=false),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null),distinct=false,by_name=null,expression=Select(kind=null,hint=null,distinct=null,expressions=[Literal(this=1,is_string=false),Literal(this=b,is_string=true),Literal(this=20,is_string=false)],limit=null,exclude=null,operation_modifiers=null),side=null,kind=null,on=null),pivots=[Pivot(expressions=[Max(this=Column(this=Identifier(this=v,quoted=false)),expressions=[])],fields=[In(this=Column(this=Identifier(this=k,quoted=false)),expressions=[Literal(this=a,is_string=true),Literal(this=b,is_string=true)])],unpivot=false,include_nulls=null,default_on_null=false,group=null,columns=[Identifier(this='a',quoted=true),Identifier(this='b',quoted=true)],identify_pivot_strings=true,prefixed_pivot_columns=false,pivot_column_naming=agg_name_if_multiple)],alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT * FROM (SELECT 1 AS g, 'a' AS k, 10 AS v UNION ALL SELECT 1, 'b', 20) AS t PIVOT(MAX(v) FOR k IN ('a', 'b'))",
+      "executable": "SELECT * FROM (SELECT 1 AS g, 'a' AS k, 10 AS v UNION ALL SELECT 1, 'b', 20) AS t PIVOT(MAX(v) FOR k IN ('a', 'b'))",
+      "native_original": {
+        "status": "OK",
+        "detail": "QueryStatement",
+        "canonical": "SELECT *\nFROM (SELECT 1 AS `g`, 'a' AS `k`, 10 AS `v` UNION ALL SELECT 1, 'b', 20) `t` PIVOT (max(v) FOR k IN ('a', 'b'))"
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "QueryStatement",
+        "canonical": "SELECT *\nFROM (SELECT 1 AS `g`, 'a' AS `k`, 10 AS `v` UNION ALL SELECT 1, 'b', 20) `t` PIVOT (max(v) FOR k IN ('a', 'b'))"
+      },
+      "original_result": {
+        "stdout": "g\t'a'\t'b'\n1\t10\t20\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_result": {
+        "stdout": "g\t'a'\t'b'\n1\t10\t20\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT * FROM (SELECT 1 g,'a' k,10 v UNION ALL SELECT 1,'b',20) t PIVOT(MAX(v) FOR k IN ('a','b'))\n--------------\n\nField   1:  `g`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\nField   2:  `'a'`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 2\nDecimals:   0\nFlags:      NUM \n\nField   3:  `'b'`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 2\nDecimals:   0\nFlags:      NUM \n\n\n+------+------+------+\n| g    | 'a'  | 'b'  |\n+------+------+------+\n|    1 |   10 |   20 |\n+------+------+------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT * FROM (SELECT 1 AS g, 'a' AS k, 10 AS v UNION ALL SELECT 1, 'b', 20) AS t PIVOT(MAX(v) FOR k IN ('a', 'b'))\n--------------\n\nField   1:  `g`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\nField   2:  `'a'`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 2\nDecimals:   0\nFlags:      NUM \n\nField   3:  `'b'`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 2\nDecimals:   0\nFlags:      NUM \n\n\n+------+------+------+\n| g    | 'a'  | 'b'  |\n+------+------+------+\n|    1 |   10 |   20 |\n+------+------+------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "kind": "result",
+      "sql": "SELECT * FROM (SELECT 1 g,'a' k,10 v UNION ALL SELECT 1,'b',20) t PIVOT(SUM(v) AS s, MAX(v) AS m FOR k IN ('a','b'))",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Star(ilike=null,except_=null,replace=null,rename=null)],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Union(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Literal(this=1,is_string=false),alias=Identifier(this=g,quoted=false)),Alias(this=Literal(this=a,is_string=true),alias=Identifier(this=k,quoted=false)),Alias(this=Literal(this=10,is_string=false),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null),distinct=false,by_name=null,expression=Select(kind=null,hint=null,distinct=null,expressions=[Literal(this=1,is_string=false),Literal(this=b,is_string=true),Literal(this=20,is_string=false)],limit=null,exclude=null,operation_modifiers=null),side=null,kind=null,on=null),pivots=[Pivot(expressions=[Alias(this=Sum(this=Column(this=Identifier(this=v,quoted=false))),alias=Identifier(this=s,quoted=false)),Alias(this=Max(this=Column(this=Identifier(this=v,quoted=false)),expressions=[]),alias=Identifier(this=m,quoted=false))],fields=[In(this=Column(this=Identifier(this=k,quoted=false)),expressions=[Literal(this=a,is_string=true),Literal(this=b,is_string=true)])],unpivot=false,include_nulls=null,default_on_null=false,group=null,columns=[Identifier(this='a'_s,quoted=true),Identifier(this='a'_m,quoted=true),Identifier(this='b'_s,quoted=true),Identifier(this='b'_m,quoted=true)],identify_pivot_strings=true,prefixed_pivot_columns=false,pivot_column_naming=agg_name_if_multiple)],alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT * FROM (SELECT 1 AS g, 'a' AS k, 10 AS v UNION ALL SELECT 1, 'b', 20) AS t PIVOT(SUM(v) AS s, MAX(v) AS m FOR k IN ('a', 'b'))",
+      "executable": "SELECT * FROM (SELECT 1 AS g, 'a' AS k, 10 AS v UNION ALL SELECT 1, 'b', 20) AS t PIVOT(SUM(v) AS s, MAX(v) AS m FOR k IN ('a', 'b'))",
+      "native_original": {
+        "status": "OK",
+        "detail": "QueryStatement",
+        "canonical": "SELECT *\nFROM (SELECT 1 AS `g`, 'a' AS `k`, 10 AS `v` UNION ALL SELECT 1, 'b', 20) `t` PIVOT (sum(v) AS s, max(v) AS m FOR k IN ('a', 'b'))"
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "QueryStatement",
+        "canonical": "SELECT *\nFROM (SELECT 1 AS `g`, 'a' AS `k`, 10 AS `v` UNION ALL SELECT 1, 'b', 20) `t` PIVOT (sum(v) AS s, max(v) AS m FOR k IN ('a', 'b'))"
+      },
+      "original_result": {
+        "stdout": "g\t'a'_s\t'a'_m\t'b'_s\t'b'_m\n1\t10\t10\t20\t20\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_result": {
+        "stdout": "g\t'a'_s\t'a'_m\t'b'_s\t'b'_m\n1\t10\t10\t20\t20\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT * FROM (SELECT 1 g,'a' k,10 v UNION ALL SELECT 1,'b',20) t PIVOT(SUM(v) AS s, MAX(v) AS m FOR k IN ('a','b'))\n--------------\n\nField   1:  `g`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\nField   2:  `'a'_s`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       LONGLONG\nCollation:  binary (63)\nLength:     20\nMax_length: 2\nDecimals:   0\nFlags:      NUM \n\nField   3:  `'a'_m`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 2\nDecimals:   0\nFlags:      NUM \n\nField   4:  `'b'_s`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       LONGLONG\nCollation:  binary (63)\nLength:     20\nMax_length: 2\nDecimals:   0\nFlags:      NUM \n\nField   5:  `'b'_m`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 2\nDecimals:   0\nFlags:      NUM \n\n\n+------+-------+-------+-------+-------+\n| g    | 'a'_s | 'a'_m | 'b'_s | 'b'_m |\n+------+-------+-------+-------+-------+\n|    1 |    10 |    10 |    20 |    20 |\n+------+-------+-------+-------+-------+\n1 row in set (0.02 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT * FROM (SELECT 1 AS g, 'a' AS k, 10 AS v UNION ALL SELECT 1, 'b', 20) AS t PIVOT(SUM(v) AS s, MAX(v) AS m FOR k IN ('a', 'b'))\n--------------\n\nField   1:  `g`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\nField   2:  `'a'_s`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       LONGLONG\nCollation:  binary (63)\nLength:     20\nMax_length: 2\nDecimals:   0\nFlags:      NUM \n\nField   3:  `'a'_m`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 2\nDecimals:   0\nFlags:      NUM \n\nField   4:  `'b'_s`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       LONGLONG\nCollation:  binary (63)\nLength:     20\nMax_length: 2\nDecimals:   0\nFlags:      NUM \n\nField   5:  `'b'_m`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 2\nDecimals:   0\nFlags:      NUM \n\n\n+------+-------+-------+-------+-------+\n| g    | 'a'_s | 'a'_m | 'b'_s | 'b'_m |\n+------+-------+-------+-------+-------+\n|    1 |    10 |    10 |    20 |    20 |\n+------+-------+-------+-------+-------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "kind": "result",
+      "sql": "SELECT * FROM (SELECT 1 g,'a' k,10 v UNION ALL SELECT 1,'b',20) t PIVOT(MAX(v) AS m FOR k IN ('a' AS one,'b' AS two))",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Star(ilike=null,except_=null,replace=null,rename=null)],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Union(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Literal(this=1,is_string=false),alias=Identifier(this=g,quoted=false)),Alias(this=Literal(this=a,is_string=true),alias=Identifier(this=k,quoted=false)),Alias(this=Literal(this=10,is_string=false),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null),distinct=false,by_name=null,expression=Select(kind=null,hint=null,distinct=null,expressions=[Literal(this=1,is_string=false),Literal(this=b,is_string=true),Literal(this=20,is_string=false)],limit=null,exclude=null,operation_modifiers=null),side=null,kind=null,on=null),pivots=[Pivot(expressions=[Alias(this=Max(this=Column(this=Identifier(this=v,quoted=false)),expressions=[]),alias=Identifier(this=m,quoted=false))],fields=[In(this=Column(this=Identifier(this=k,quoted=false)),expressions=[PivotAlias(this=Literal(this=a,is_string=true),alias=Identifier(this=one,quoted=false)),PivotAlias(this=Literal(this=b,is_string=true),alias=Identifier(this=two,quoted=false))])],unpivot=false,include_nulls=null,default_on_null=false,group=null,columns=[Identifier(this=one,quoted=false),Identifier(this=two,quoted=false)],identify_pivot_strings=true,prefixed_pivot_columns=false,pivot_column_naming=agg_name_if_multiple)],alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT * FROM (SELECT 1 AS g, 'a' AS k, 10 AS v UNION ALL SELECT 1, 'b', 20) AS t PIVOT(MAX(v) AS m FOR k IN ('a' AS one, 'b' AS two))",
+      "executable": "SELECT * FROM (SELECT 1 AS g, 'a' AS k, 10 AS v UNION ALL SELECT 1, 'b', 20) AS t PIVOT(MAX(v) AS m FOR k IN ('a' AS one, 'b' AS two))",
+      "native_original": {
+        "status": "OK",
+        "detail": "QueryStatement",
+        "canonical": "SELECT *\nFROM (SELECT 1 AS `g`, 'a' AS `k`, 10 AS `v` UNION ALL SELECT 1, 'b', 20) `t` PIVOT (max(v) AS m FOR k IN ('a' AS one, 'b' AS two))"
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "QueryStatement",
+        "canonical": "SELECT *\nFROM (SELECT 1 AS `g`, 'a' AS `k`, 10 AS `v` UNION ALL SELECT 1, 'b', 20) `t` PIVOT (max(v) AS m FOR k IN ('a' AS one, 'b' AS two))"
+      },
+      "original_result": {
+        "stdout": "g\tone\ttwo\n1\t10\t20\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_result": {
+        "stdout": "g\tone\ttwo\n1\t10\t20\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT * FROM (SELECT 1 g,'a' k,10 v UNION ALL SELECT 1,'b',20) t PIVOT(MAX(v) AS m FOR k IN ('a' AS one,'b' AS two))\n--------------\n\nField   1:  `g`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\nField   2:  `one`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 2\nDecimals:   0\nFlags:      NUM \n\nField   3:  `two`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 2\nDecimals:   0\nFlags:      NUM \n\n\n+------+------+------+\n| g    | one  | two  |\n+------+------+------+\n|    1 |   10 |   20 |\n+------+------+------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT * FROM (SELECT 1 AS g, 'a' AS k, 10 AS v UNION ALL SELECT 1, 'b', 20) AS t PIVOT(MAX(v) AS m FOR k IN ('a' AS one, 'b' AS two))\n--------------\n\nField   1:  `g`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\nField   2:  `one`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 2\nDecimals:   0\nFlags:      NUM \n\nField   3:  `two`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 2\nDecimals:   0\nFlags:      NUM \n\n\n+------+------+------+\n| g    | one  | two  |\n+------+------+------+\n|    1 |   10 |   20 |\n+------+------+------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "kind": "result",
+      "sql": "SELECT * FROM (SELECT 1 g,'a' k,10 v UNION ALL SELECT 1,'b',20) t PIVOT(SUM(v),MAX(v) FOR k IN ('a','b'))",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Star(ilike=null,except_=null,replace=null,rename=null)],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Union(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Literal(this=1,is_string=false),alias=Identifier(this=g,quoted=false)),Alias(this=Literal(this=a,is_string=true),alias=Identifier(this=k,quoted=false)),Alias(this=Literal(this=10,is_string=false),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null),distinct=false,by_name=null,expression=Select(kind=null,hint=null,distinct=null,expressions=[Literal(this=1,is_string=false),Literal(this=b,is_string=true),Literal(this=20,is_string=false)],limit=null,exclude=null,operation_modifiers=null),side=null,kind=null,on=null),pivots=[Pivot(expressions=[Sum(this=Column(this=Identifier(this=v,quoted=false))),Max(this=Column(this=Identifier(this=v,quoted=false)),expressions=[])],fields=[In(this=Column(this=Identifier(this=k,quoted=false)),expressions=[Literal(this=a,is_string=true),Literal(this=b,is_string=true)])],unpivot=false,include_nulls=null,default_on_null=false,group=null,columns=[],identify_pivot_strings=true,prefixed_pivot_columns=false,pivot_column_naming=agg_name_if_multiple)],alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT * FROM (SELECT 1 AS g, 'a' AS k, 10 AS v UNION ALL SELECT 1, 'b', 20) AS t PIVOT(SUM(v), MAX(v) FOR k IN ('a', 'b'))",
+      "executable": "SELECT * FROM (SELECT 1 AS g, 'a' AS k, 10 AS v UNION ALL SELECT 1, 'b', 20) AS t PIVOT(SUM(v), MAX(v) FOR k IN ('a', 'b'))",
+      "native_original": {
+        "status": "OK",
+        "detail": "QueryStatement",
+        "canonical": "SELECT *\nFROM (SELECT 1 AS `g`, 'a' AS `k`, 10 AS `v` UNION ALL SELECT 1, 'b', 20) `t` PIVOT (sum(v), max(v) FOR k IN ('a', 'b'))"
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "QueryStatement",
+        "canonical": "SELECT *\nFROM (SELECT 1 AS `g`, 'a' AS `k`, 10 AS `v` UNION ALL SELECT 1, 'b', 20) `t` PIVOT (sum(v), max(v) FOR k IN ('a', 'b'))"
+      },
+      "original_result": {
+        "stdout": "g\t'a'_sum(t.v)\t'a'_max(t.v)\t'b'_sum(t.v)\t'b'_max(t.v)\n1\t10\t10\t20\t20\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_result": {
+        "stdout": "g\t'a'_sum(t.v)\t'a'_max(t.v)\t'b'_sum(t.v)\t'b'_max(t.v)\n1\t10\t10\t20\t20\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT * FROM (SELECT 1 g,'a' k,10 v UNION ALL SELECT 1,'b',20) t PIVOT(SUM(v),MAX(v) FOR k IN ('a','b'))\n--------------\n\nField   1:  `g`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\nField   2:  `'a'_sum(t.v)`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       LONGLONG\nCollation:  binary (63)\nLength:     20\nMax_length: 2\nDecimals:   0\nFlags:      NUM \n\nField   3:  `'a'_max(t.v)`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 2\nDecimals:   0\nFlags:      NUM \n\nField   4:  `'b'_sum(t.v)`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       LONGLONG\nCollation:  binary (63)\nLength:     20\nMax_length: 2\nDecimals:   0\nFlags:      NUM \n\nField   5:  `'b'_max(t.v)`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 2\nDecimals:   0\nFlags:      NUM \n\n\n+------+--------------+--------------+--------------+--------------+\n| g    | 'a'_sum(t.v) | 'a'_max(t.v) | 'b'_sum(t.v) | 'b'_max(t.v) |\n+------+--------------+--------------+--------------+--------------+\n|    1 |           10 |           10 |           20 |           20 |\n+------+--------------+--------------+--------------+--------------+\n1 row in set (0.02 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT * FROM (SELECT 1 AS g, 'a' AS k, 10 AS v UNION ALL SELECT 1, 'b', 20) AS t PIVOT(SUM(v), MAX(v) FOR k IN ('a', 'b'))\n--------------\n\nField   1:  `g`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\nField   2:  `'a'_sum(t.v)`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       LONGLONG\nCollation:  binary (63)\nLength:     20\nMax_length: 2\nDecimals:   0\nFlags:      NUM \n\nField   3:  `'a'_max(t.v)`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 2\nDecimals:   0\nFlags:      NUM \n\nField   4:  `'b'_sum(t.v)`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       LONGLONG\nCollation:  binary (63)\nLength:     20\nMax_length: 2\nDecimals:   0\nFlags:      NUM \n\nField   5:  `'b'_max(t.v)`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 2\nDecimals:   0\nFlags:      NUM \n\n\n+------+--------------+--------------+--------------+--------------+\n| g    | 'a'_sum(t.v) | 'a'_max(t.v) | 'b'_sum(t.v) | 'b'_max(t.v) |\n+------+--------------+--------------+--------------+--------------+\n|    1 |           10 |           10 |           20 |           20 |\n+------+--------------+--------------+--------------+--------------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "kind": "result",
+      "sql": "SELECT * FROM (SELECT 1 g,1 a,2 b,10 v) t PIVOT(MAX(v) FOR (a,b) IN ((1,2)))",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Star(ilike=null,except_=null,replace=null,rename=null)],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Literal(this=1,is_string=false),alias=Identifier(this=g,quoted=false)),Alias(this=Literal(this=1,is_string=false),alias=Identifier(this=a,quoted=false)),Alias(this=Literal(this=2,is_string=false),alias=Identifier(this=b,quoted=false)),Alias(this=Literal(this=10,is_string=false),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null),pivots=[Pivot(expressions=[Max(this=Column(this=Identifier(this=v,quoted=false)),expressions=[])],fields=[In(this=Tuple(expressions=[Column(this=Identifier(this=a,quoted=false)),Column(this=Identifier(this=b,quoted=false))]),expressions=[Tuple(expressions=[Literal(this=1,is_string=false),Literal(this=2,is_string=false)])])],unpivot=false,include_nulls=null,default_on_null=false,group=null,columns=[Identifier(this={1,2},quoted=true)],identify_pivot_strings=true,prefixed_pivot_columns=false,pivot_column_naming=agg_name_if_multiple)],alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT * FROM (SELECT 1 AS g, 1 AS a, 2 AS b, 10 AS v) AS t PIVOT(MAX(v) FOR (a, b) IN ((1, 2)))",
+      "executable": "SELECT * FROM (SELECT 1 AS g, 1 AS a, 2 AS b, 10 AS v) AS t PIVOT(MAX(v) FOR (a, b) IN ((1, 2)))",
+      "native_original": {
+        "status": "OK",
+        "detail": "QueryStatement",
+        "canonical": "SELECT *\nFROM (SELECT 1 AS `g`, 1 AS `a`, 2 AS `b`, 10 AS `v`) `t` PIVOT (max(v) FOR (a, b) IN ((1, 2)))"
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "QueryStatement",
+        "canonical": "SELECT *\nFROM (SELECT 1 AS `g`, 1 AS `a`, 2 AS `b`, 10 AS `v`) `t` PIVOT (max(v) FOR (a, b) IN ((1, 2)))"
+      },
+      "original_result": {
+        "stdout": "g\t{1,2}\n1\t10\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_result": {
+        "stdout": "g\t{1,2}\n1\t10\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT * FROM (SELECT 1 g,1 a,2 b,10 v) t PIVOT(MAX(v) FOR (a,b) IN ((1,2)))\n--------------\n\nField   1:  `g`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\nField   2:  `{1,2}`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 2\nDecimals:   0\nFlags:      NUM \n\n\n+------+-------+\n| g    | {1,2} |\n+------+-------+\n|    1 |    10 |\n+------+-------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT * FROM (SELECT 1 AS g, 1 AS a, 2 AS b, 10 AS v) AS t PIVOT(MAX(v) FOR (a, b) IN ((1, 2)))\n--------------\n\nField   1:  `g`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\nField   2:  `{1,2}`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 2\nDecimals:   0\nFlags:      NUM \n\n\n+------+-------+\n| g    | {1,2} |\n+------+-------+\n|    1 |    10 |\n+------+-------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "kind": "result",
+      "sql": "SELECT * FROM (SELECT 1 AS id) s, UNNEST([1,2],['a','b']) AS u",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Star(ilike=null,except_=null,replace=null,rename=null)],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Literal(this=1,is_string=false),alias=Identifier(this=id,quoted=false))],limit=null,exclude=null,operation_modifiers=null),alias=TableAlias(this=Identifier(this=s,quoted=false),columns=null),sample=null)),joins=[Join(this=Unnest(expressions=[Array(expressions=[Literal(this=1,is_string=false),Literal(this=2,is_string=false)],value_constructor=false),Array(expressions=[Literal(this=a,is_string=true),Literal(this=b,is_string=true)],value_constructor=false)],alias=TableAlias(this=Identifier(this=u,quoted=false),columns=null),offset=false))])",
+      "preview": "SELECT * FROM (SELECT 1 AS id) AS s, UNNEST([1, 2], ['a', 'b']) AS u",
+      "executable": "SELECT * FROM (SELECT 1 AS id) AS s, UNNEST([1, 2], ['a', 'b']) AS u",
+      "native_original": {
+        "status": "OK",
+        "detail": "QueryStatement",
+        "canonical": ""
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "QueryStatement",
+        "canonical": ""
+      },
+      "original_result": {
+        "stdout": "id\tunnest\tunnest\n1\t1\ta\n1\t2\tb\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_result": {
+        "stdout": "id\tunnest\tunnest\n1\t1\ta\n1\t2\tb\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT * FROM (SELECT 1 AS id) s, UNNEST([1,2],['a','b']) AS u\n--------------\n\nField   1:  `id`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\nField   2:  `unnest`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\nField   3:  `unnest`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 1\nDecimals:   0\nFlags:      \n\n\n+------+--------+--------+\n| id   | unnest | unnest |\n+------+--------+--------+\n|    1 |      1 | a      |\n|    1 |      2 | b      |\n+------+--------+--------+\n2 rows in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT * FROM (SELECT 1 AS id) AS s, UNNEST([1, 2], ['a', 'b']) AS u\n--------------\n\nField   1:  `id`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\nField   2:  `unnest`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\nField   3:  `unnest`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 1\nDecimals:   0\nFlags:      \n\n\n+------+--------+--------+\n| id   | unnest | unnest |\n+------+--------+--------+\n|    1 |      1 | a      |\n|    1 |      2 | b      |\n+------+--------+--------+\n2 rows in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "kind": "result",
+      "sql": "SELECT * FROM TABLE(UNNEST([1,2],['a','b'])) AS t(x,y)",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Star(ilike=null,except_=null,replace=null,rename=null)],limit=null,exclude=null,operation_modifiers=null,from_=From(this=TableFromRows(this=Unnest(expressions=[Array(expressions=[Literal(this=1,is_string=false),Literal(this=2,is_string=false)],value_constructor=false),Array(expressions=[Literal(this=a,is_string=true),Literal(this=b,is_string=true)],value_constructor=false)]),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=[Identifier(this=x,quoted=false),Identifier(this=y,quoted=false)]))))",
+      "preview": "SELECT * FROM TABLE(UNNEST([1, 2], ['a', 'b'])) AS t(x, y)",
+      "executable": "SELECT * FROM TABLE(UNNEST([1, 2], ['a', 'b'])) AS t(x, y)",
+      "native_original": {
+        "status": "OK",
+        "detail": "QueryStatement",
+        "canonical": "SELECT *\nFROM TABLE(unnest()) t(`x`,`y`)"
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "QueryStatement",
+        "canonical": "SELECT *\nFROM TABLE(unnest()) t(`x`,`y`)"
+      },
+      "original_result": {
+        "stdout": "x\ty\n1\ta\n2\tb\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_result": {
+        "stdout": "x\ty\n1\ta\n2\tb\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT * FROM TABLE(UNNEST([1,2],['a','b'])) AS t(x,y)\n--------------\n\nField   1:  `x`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\nField   2:  `y`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 1\nDecimals:   0\nFlags:      \n\n\n+------+------+\n| x    | y    |\n+------+------+\n|    1 | a    |\n|    2 | b    |\n+------+------+\n2 rows in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT * FROM TABLE(UNNEST([1, 2], ['a', 'b'])) AS t(x, y)\n--------------\n\nField   1:  `x`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  binary (63)\nLength:     4\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\nField   2:  `y`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       VAR_STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     192\nMax_length: 1\nDecimals:   0\nFlags:      \n\n\n+------+------+\n| x    | y    |\n+------+------+\n|    1 | a    |\n|    2 | b    |\n+------+------+\n2 rows in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "kind": "structured-ddl",
+      "sql": "CREATE TABLE t (k INT, v INT SUM) AGGREGATE KEY (k) DISTRIBUTED BY HASH (k)",
+      "ast": "Create(this=Schema(this=Table(this=Identifier(this=t,quoted=false),db=null,catalog=null),expressions=[ColumnDef(this=Identifier(this=k,quoted=false),kind=DataType(this=INT,expressions=null,nested=false),constraints=[],position=null),ColumnDef(this=Identifier(this=v,quoted=false),kind=DataType(this=INT,expressions=null,nested=false),constraints=[ColumnConstraint(this=null,kind=AggregateTypeColumnConstraint(this=Var(this=SUM)))],position=null)]),kind=TABLE,replace=false,refresh=false,unique=false,expression=null,exists=false,properties=Properties(expressions=[AggregateKeyProperty(expressions=[Identifier(this=k,quoted=false)]),DistributedByProperty(expressions=[Identifier(this=k,quoted=false)],kind=HASH,buckets=null,order=null)]),indexes=[],no_schema_binding=null,begin=null,clone=null,concurrently=false,clustered=null)",
+      "preview": "CREATE TABLE t (k INT, v INT SUM) AGGREGATE KEY (k) DISTRIBUTED BY HASH (k)",
+      "executable": "CREATE TABLE t (k INT, v INT SUM) AGGREGATE KEY (k) DISTRIBUTED BY HASH (k)",
+      "native_original": {
+        "status": "OK",
+        "detail": "CreateTableStmt",
+        "canonical": ""
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "CreateTableStmt",
+        "canonical": ""
+      },
+      "native_original_field_snapshot": "CREATE|null.t|keys=AGG_KEYS[k]|columns=k:int(11):null:nullable=true:default=null,v:int(11):SUM:nullable=true:default=null|hash=[k]:buckets=0",
+      "native_generated_field_snapshot": "CREATE|null.t|keys=AGG_KEYS[k]|columns=k:int(11):null:nullable=true:default=null,v:int(11):SUM:nullable=true:default=null|hash=[k]:buckets=0",
+      "native_explicit_fields_equal": true
+    },
+    {
+      "kind": "structured-ddl",
+      "sql": "CREATE TABLE t (k INT, v INT MAX) AGGREGATE KEY (k) DISTRIBUTED BY HASH (k)",
+      "ast": "Create(this=Schema(this=Table(this=Identifier(this=t,quoted=false),db=null,catalog=null),expressions=[ColumnDef(this=Identifier(this=k,quoted=false),kind=DataType(this=INT,expressions=null,nested=false),constraints=[],position=null),ColumnDef(this=Identifier(this=v,quoted=false),kind=DataType(this=INT,expressions=null,nested=false),constraints=[ColumnConstraint(this=null,kind=AggregateTypeColumnConstraint(this=Var(this=MAX)))],position=null)]),kind=TABLE,replace=false,refresh=false,unique=false,expression=null,exists=false,properties=Properties(expressions=[AggregateKeyProperty(expressions=[Identifier(this=k,quoted=false)]),DistributedByProperty(expressions=[Identifier(this=k,quoted=false)],kind=HASH,buckets=null,order=null)]),indexes=[],no_schema_binding=null,begin=null,clone=null,concurrently=false,clustered=null)",
+      "preview": "CREATE TABLE t (k INT, v INT MAX) AGGREGATE KEY (k) DISTRIBUTED BY HASH (k)",
+      "executable": "CREATE TABLE t (k INT, v INT MAX) AGGREGATE KEY (k) DISTRIBUTED BY HASH (k)",
+      "native_original": {
+        "status": "OK",
+        "detail": "CreateTableStmt",
+        "canonical": ""
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "CreateTableStmt",
+        "canonical": ""
+      },
+      "native_original_field_snapshot": "CREATE|null.t|keys=AGG_KEYS[k]|columns=k:int(11):null:nullable=true:default=null,v:int(11):MAX:nullable=true:default=null|hash=[k]:buckets=0",
+      "native_generated_field_snapshot": "CREATE|null.t|keys=AGG_KEYS[k]|columns=k:int(11):null:nullable=true:default=null,v:int(11):MAX:nullable=true:default=null|hash=[k]:buckets=0",
+      "native_explicit_fields_equal": true
+    },
+    {
+      "kind": "structured-ddl",
+      "sql": "CREATE TABLE t (k INT, v INT MIN) AGGREGATE KEY (k) DISTRIBUTED BY HASH (k)",
+      "ast": "Create(this=Schema(this=Table(this=Identifier(this=t,quoted=false),db=null,catalog=null),expressions=[ColumnDef(this=Identifier(this=k,quoted=false),kind=DataType(this=INT,expressions=null,nested=false),constraints=[],position=null),ColumnDef(this=Identifier(this=v,quoted=false),kind=DataType(this=INT,expressions=null,nested=false),constraints=[ColumnConstraint(this=null,kind=AggregateTypeColumnConstraint(this=Var(this=MIN)))],position=null)]),kind=TABLE,replace=false,refresh=false,unique=false,expression=null,exists=false,properties=Properties(expressions=[AggregateKeyProperty(expressions=[Identifier(this=k,quoted=false)]),DistributedByProperty(expressions=[Identifier(this=k,quoted=false)],kind=HASH,buckets=null,order=null)]),indexes=[],no_schema_binding=null,begin=null,clone=null,concurrently=false,clustered=null)",
+      "preview": "CREATE TABLE t (k INT, v INT MIN) AGGREGATE KEY (k) DISTRIBUTED BY HASH (k)",
+      "executable": "CREATE TABLE t (k INT, v INT MIN) AGGREGATE KEY (k) DISTRIBUTED BY HASH (k)",
+      "native_original": {
+        "status": "OK",
+        "detail": "CreateTableStmt",
+        "canonical": ""
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "CreateTableStmt",
+        "canonical": ""
+      },
+      "native_original_field_snapshot": "CREATE|null.t|keys=AGG_KEYS[k]|columns=k:int(11):null:nullable=true:default=null,v:int(11):MIN:nullable=true:default=null|hash=[k]:buckets=0",
+      "native_generated_field_snapshot": "CREATE|null.t|keys=AGG_KEYS[k]|columns=k:int(11):null:nullable=true:default=null,v:int(11):MIN:nullable=true:default=null|hash=[k]:buckets=0",
+      "native_explicit_fields_equal": true
+    },
+    {
+      "kind": "structured-ddl",
+      "sql": "CREATE TABLE t (k INT, v INT REPLACE) AGGREGATE KEY (k) DISTRIBUTED BY HASH (k)",
+      "ast": "Create(this=Schema(this=Table(this=Identifier(this=t,quoted=false),db=null,catalog=null),expressions=[ColumnDef(this=Identifier(this=k,quoted=false),kind=DataType(this=INT,expressions=null,nested=false),constraints=[],position=null),ColumnDef(this=Identifier(this=v,quoted=false),kind=DataType(this=INT,expressions=null,nested=false),constraints=[ColumnConstraint(this=null,kind=AggregateTypeColumnConstraint(this=Var(this=REPLACE)))],position=null)]),kind=TABLE,replace=false,refresh=false,unique=false,expression=null,exists=false,properties=Properties(expressions=[AggregateKeyProperty(expressions=[Identifier(this=k,quoted=false)]),DistributedByProperty(expressions=[Identifier(this=k,quoted=false)],kind=HASH,buckets=null,order=null)]),indexes=[],no_schema_binding=null,begin=null,clone=null,concurrently=false,clustered=null)",
+      "preview": "CREATE TABLE t (k INT, v INT REPLACE) AGGREGATE KEY (k) DISTRIBUTED BY HASH (k)",
+      "executable": "CREATE TABLE t (k INT, v INT REPLACE) AGGREGATE KEY (k) DISTRIBUTED BY HASH (k)",
+      "native_original": {
+        "status": "OK",
+        "detail": "CreateTableStmt",
+        "canonical": ""
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "CreateTableStmt",
+        "canonical": ""
+      },
+      "native_original_field_snapshot": "CREATE|null.t|keys=AGG_KEYS[k]|columns=k:int(11):null:nullable=true:default=null,v:int(11):REPLACE:nullable=true:default=null|hash=[k]:buckets=0",
+      "native_generated_field_snapshot": "CREATE|null.t|keys=AGG_KEYS[k]|columns=k:int(11):null:nullable=true:default=null,v:int(11):REPLACE:nullable=true:default=null|hash=[k]:buckets=0",
+      "native_explicit_fields_equal": true
+    },
+    {
+      "kind": "structured-ddl",
+      "sql": "CREATE TABLE t (k INT, v INT REPLACE_IF_NOT_NULL) AGGREGATE KEY (k) DISTRIBUTED BY HASH (k)",
+      "ast": "Create(this=Schema(this=Table(this=Identifier(this=t,quoted=false),db=null,catalog=null),expressions=[ColumnDef(this=Identifier(this=k,quoted=false),kind=DataType(this=INT,expressions=null,nested=false),constraints=[],position=null),ColumnDef(this=Identifier(this=v,quoted=false),kind=DataType(this=INT,expressions=null,nested=false),constraints=[ColumnConstraint(this=null,kind=AggregateTypeColumnConstraint(this=Var(this=REPLACE_IF_NOT_NULL)))],position=null)]),kind=TABLE,replace=false,refresh=false,unique=false,expression=null,exists=false,properties=Properties(expressions=[AggregateKeyProperty(expressions=[Identifier(this=k,quoted=false)]),DistributedByProperty(expressions=[Identifier(this=k,quoted=false)],kind=HASH,buckets=null,order=null)]),indexes=[],no_schema_binding=null,begin=null,clone=null,concurrently=false,clustered=null)",
+      "preview": "CREATE TABLE t (k INT, v INT REPLACE_IF_NOT_NULL) AGGREGATE KEY (k) DISTRIBUTED BY HASH (k)",
+      "executable": "CREATE TABLE t (k INT, v INT REPLACE_IF_NOT_NULL) AGGREGATE KEY (k) DISTRIBUTED BY HASH (k)",
+      "native_original": {
+        "status": "OK",
+        "detail": "CreateTableStmt",
+        "canonical": ""
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "CreateTableStmt",
+        "canonical": ""
+      },
+      "native_original_field_snapshot": "CREATE|null.t|keys=AGG_KEYS[k]|columns=k:int(11):null:nullable=true:default=null,v:int(11):REPLACE_IF_NOT_NULL:nullable=true:default=null|hash=[k]:buckets=0",
+      "native_generated_field_snapshot": "CREATE|null.t|keys=AGG_KEYS[k]|columns=k:int(11):null:nullable=true:default=null,v:int(11):REPLACE_IF_NOT_NULL:nullable=true:default=null|hash=[k]:buckets=0",
+      "native_explicit_fields_equal": true
+    },
+    {
+      "kind": "structured-ddl",
+      "sql": "CREATE TABLE t (k INT, v HLL HLL_UNION) AGGREGATE KEY (k) DISTRIBUTED BY HASH (k)",
+      "ast": "Create(this=Schema(this=Table(this=Identifier(this=t,quoted=false),db=null,catalog=null),expressions=[ColumnDef(this=Identifier(this=k,quoted=false),kind=DataType(this=INT,expressions=null,nested=false),constraints=[],position=null),ColumnDef(this=Identifier(this=v,quoted=false),kind=DataType(this=HLLSKETCH,expressions=null,nested=false),constraints=[ColumnConstraint(this=null,kind=AggregateTypeColumnConstraint(this=Var(this=HLL_UNION)))],position=null)]),kind=TABLE,replace=false,refresh=false,unique=false,expression=null,exists=false,properties=Properties(expressions=[AggregateKeyProperty(expressions=[Identifier(this=k,quoted=false)]),DistributedByProperty(expressions=[Identifier(this=k,quoted=false)],kind=HASH,buckets=null,order=null)]),indexes=[],no_schema_binding=null,begin=null,clone=null,concurrently=false,clustered=null)",
+      "preview": "CREATE TABLE t (k INT, v HLL HLL_UNION) AGGREGATE KEY (k) DISTRIBUTED BY HASH (k)",
+      "executable": "CREATE TABLE t (k INT, v HLL HLL_UNION) AGGREGATE KEY (k) DISTRIBUTED BY HASH (k)",
+      "native_original": {
+        "status": "OK",
+        "detail": "CreateTableStmt",
+        "canonical": ""
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "CreateTableStmt",
+        "canonical": ""
+      },
+      "native_original_field_snapshot": "CREATE|null.t|keys=AGG_KEYS[k]|columns=k:int(11):null:nullable=true:default=null,v:hll:HLL_UNION:nullable=true:default=null|hash=[k]:buckets=0",
+      "native_generated_field_snapshot": "CREATE|null.t|keys=AGG_KEYS[k]|columns=k:int(11):null:nullable=true:default=null,v:hll:HLL_UNION:nullable=true:default=null|hash=[k]:buckets=0",
+      "native_explicit_fields_equal": true
+    },
+    {
+      "kind": "structured-refresh",
+      "sql": "REFRESH MATERIALIZED VIEW db.mv",
+      "ast": "Refresh(this=Table(this=Identifier(this=mv,quoted=false),db=Identifier(this=db,quoted=false),catalog=null),kind=MATERIALIZED VIEW,partition_start=null,partition_end=null,force=false,mode=null)",
+      "preview": "REFRESH MATERIALIZED VIEW db.mv",
+      "executable": "REFRESH MATERIALIZED VIEW db.mv",
+      "native_original": {
+        "status": "OK",
+        "detail": "RefreshMaterializedViewStatement",
+        "canonical": ""
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "RefreshMaterializedViewStatement",
+        "canonical": ""
+      },
+      "native_original_field_snapshot": "REFRESH|db.mv|partition=none|force=false|sync=false|priority=null",
+      "native_generated_field_snapshot": "REFRESH|db.mv|partition=none|force=false|sync=false|priority=null",
+      "native_explicit_fields_equal": true
+    },
+    {
+      "kind": "structured-refresh",
+      "sql": "REFRESH MATERIALIZED VIEW db.mv FORCE",
+      "ast": "Refresh(this=Table(this=Identifier(this=mv,quoted=false),db=Identifier(this=db,quoted=false),catalog=null),kind=MATERIALIZED VIEW,partition_start=null,partition_end=null,force=true,mode=null)",
+      "preview": "REFRESH MATERIALIZED VIEW db.mv FORCE",
+      "executable": "REFRESH MATERIALIZED VIEW db.mv FORCE",
+      "native_original": {
+        "status": "OK",
+        "detail": "RefreshMaterializedViewStatement",
+        "canonical": ""
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "RefreshMaterializedViewStatement",
+        "canonical": ""
+      },
+      "native_original_field_snapshot": "REFRESH|db.mv|partition=none|force=true|sync=false|priority=null",
+      "native_generated_field_snapshot": "REFRESH|db.mv|partition=none|force=true|sync=false|priority=null",
+      "native_explicit_fields_equal": true
+    },
+    {
+      "kind": "structured-refresh",
+      "sql": "REFRESH MATERIALIZED VIEW db.mv WITH SYNC MODE",
+      "ast": "Refresh(this=Table(this=Identifier(this=mv,quoted=false),db=Identifier(this=db,quoted=false),catalog=null),kind=MATERIALIZED VIEW,partition_start=null,partition_end=null,force=false,mode=SYNC)",
+      "preview": "REFRESH MATERIALIZED VIEW db.mv WITH SYNC MODE",
+      "executable": "REFRESH MATERIALIZED VIEW db.mv WITH SYNC MODE",
+      "native_original": {
+        "status": "OK",
+        "detail": "RefreshMaterializedViewStatement",
+        "canonical": ""
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "RefreshMaterializedViewStatement",
+        "canonical": ""
+      },
+      "native_original_field_snapshot": "REFRESH|db.mv|partition=none|force=false|sync=true|priority=null",
+      "native_generated_field_snapshot": "REFRESH|db.mv|partition=none|force=false|sync=true|priority=null",
+      "native_explicit_fields_equal": true
+    },
+    {
+      "kind": "structured-refresh",
+      "sql": "REFRESH MATERIALIZED VIEW db.mv WITH ASYNC MODE",
+      "ast": "Refresh(this=Table(this=Identifier(this=mv,quoted=false),db=Identifier(this=db,quoted=false),catalog=null),kind=MATERIALIZED VIEW,partition_start=null,partition_end=null,force=false,mode=ASYNC)",
+      "preview": "REFRESH MATERIALIZED VIEW db.mv WITH ASYNC MODE",
+      "executable": "REFRESH MATERIALIZED VIEW db.mv WITH ASYNC MODE",
+      "native_original": {
+        "status": "OK",
+        "detail": "RefreshMaterializedViewStatement",
+        "canonical": ""
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "RefreshMaterializedViewStatement",
+        "canonical": ""
+      },
+      "native_original_field_snapshot": "REFRESH|db.mv|partition=none|force=false|sync=false|priority=null",
+      "native_generated_field_snapshot": "REFRESH|db.mv|partition=none|force=false|sync=false|priority=null",
+      "native_explicit_fields_equal": true
+    },
+    {
+      "kind": "structured-refresh",
+      "sql": "REFRESH MATERIALIZED VIEW db.mv PARTITION START ('2020-02-01') END ('2020-03-01')",
+      "ast": "Refresh(this=Table(this=Identifier(this=mv,quoted=false),db=Identifier(this=db,quoted=false),catalog=null),kind=MATERIALIZED VIEW,partition_start=Literal(this=2020-02-01,is_string=true),partition_end=Literal(this=2020-03-01,is_string=true),force=false,mode=null)",
+      "preview": "REFRESH MATERIALIZED VIEW db.mv PARTITION START ('2020-02-01') END ('2020-03-01')",
+      "executable": "REFRESH MATERIALIZED VIEW db.mv PARTITION START ('2020-02-01') END ('2020-03-01')",
+      "native_original": {
+        "status": "OK",
+        "detail": "RefreshMaterializedViewStatement",
+        "canonical": ""
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "RefreshMaterializedViewStatement",
+        "canonical": ""
+      },
+      "native_original_field_snapshot": "REFRESH|db.mv|partition=2020-02-01:2020-03-01|force=false|sync=false|priority=null",
+      "native_generated_field_snapshot": "REFRESH|db.mv|partition=2020-02-01:2020-03-01|force=false|sync=false|priority=null",
+      "native_explicit_fields_equal": true
+    },
+    {
+      "kind": "structured-refresh",
+      "sql": "REFRESH MATERIALIZED VIEW db.mv PARTITION START ('2020-02-01') END ('2020-03-01') FORCE WITH SYNC MODE",
+      "ast": "Refresh(this=Table(this=Identifier(this=mv,quoted=false),db=Identifier(this=db,quoted=false),catalog=null),kind=MATERIALIZED VIEW,partition_start=Literal(this=2020-02-01,is_string=true),partition_end=Literal(this=2020-03-01,is_string=true),force=true,mode=SYNC)",
+      "preview": "REFRESH MATERIALIZED VIEW db.mv PARTITION START ('2020-02-01') END ('2020-03-01') FORCE WITH SYNC MODE",
+      "executable": "REFRESH MATERIALIZED VIEW db.mv PARTITION START ('2020-02-01') END ('2020-03-01') FORCE WITH SYNC MODE",
+      "native_original": {
+        "status": "OK",
+        "detail": "RefreshMaterializedViewStatement",
+        "canonical": ""
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "RefreshMaterializedViewStatement",
+        "canonical": ""
+      },
+      "native_original_field_snapshot": "REFRESH|db.mv|partition=2020-02-01:2020-03-01|force=true|sync=true|priority=null",
+      "native_generated_field_snapshot": "REFRESH|db.mv|partition=2020-02-01:2020-03-01|force=true|sync=true|priority=null",
+      "native_explicit_fields_equal": true
+    },
+    {
+      "kind": "opaque",
+      "sql": "ADMIN SET FRONTEND CONFIG ('disable_balance'='true')",
+      "ast": "Command(this=ADMIN,expression=Literal(this=SET FRONTEND CONFIG ('disable_balance'='true'),is_string=true))",
+      "preview": "ADMIN SET FRONTEND CONFIG ('disable_balance'='true')",
+      "executable": "ADMIN SET FRONTEND CONFIG ('disable_balance'='true')",
+      "native_original": {
+        "status": "OK",
+        "detail": "AdminSetConfigStmt",
+        "canonical": ""
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "AdminSetConfigStmt",
+        "canonical": ""
+      },
+      "classification": "Opaque text preservation only; native rejection is not an equivalence pass"
+    },
+    {
+      "kind": "opaque",
+      "sql": "ADMIN SHOW FRONTEND CONFIG LIKE 'disable_balance'",
+      "ast": "Command(this=ADMIN,expression=Literal(this=SHOW FRONTEND CONFIG LIKE 'disable_balance',is_string=true))",
+      "preview": "ADMIN SHOW FRONTEND CONFIG LIKE 'disable_balance'",
+      "executable": "ADMIN SHOW FRONTEND CONFIG LIKE 'disable_balance'",
+      "native_original": {
+        "status": "OK",
+        "detail": "AdminShowConfigStmt",
+        "canonical": ""
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "AdminShowConfigStmt",
+        "canonical": ""
+      },
+      "classification": "Opaque text preservation only; native rejection is not an equivalence pass"
+    },
+    {
+      "kind": "opaque",
+      "sql": "BACKUP SNAPSHOT db.s TO repo ON (t)",
+      "ast": "Command(this=BACKUP,expression=Literal(this=SNAPSHOT db.s TO repo ON (t),is_string=true))",
+      "preview": "BACKUP SNAPSHOT db.s TO repo ON (t)",
+      "executable": "BACKUP SNAPSHOT db.s TO repo ON (t)",
+      "native_original": {
+        "status": "OK",
+        "detail": "BackupStmt",
+        "canonical": ""
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "BackupStmt",
+        "canonical": ""
+      },
+      "classification": "Opaque text preservation only; native rejection is not an equivalence pass"
+    },
+    {
+      "kind": "opaque",
+      "sql": "RESTORE SNAPSHOT db.s FROM repo ON (t) PROPERTIES ('backup_timestamp'='2018-05-04-16-45-08')",
+      "ast": "Command(this=RESTORE,expression=Literal(this=SNAPSHOT db.s FROM repo ON (t) PROPERTIES ('backup_timestamp'='2018-05-04-16-45-08'),is_string=true))",
+      "preview": "RESTORE SNAPSHOT db.s FROM repo ON (t) PROPERTIES ('backup_timestamp'='2018-05-04-16-45-08')",
+      "executable": "RESTORE SNAPSHOT db.s FROM repo ON (t) PROPERTIES ('backup_timestamp'='2018-05-04-16-45-08')",
+      "native_original": {
+        "status": "OK",
+        "detail": "RestoreStmt",
+        "canonical": ""
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "RestoreStmt",
+        "canonical": ""
+      },
+      "classification": "Opaque text preservation only; native rejection is not an equivalence pass"
+    },
+    {
+      "kind": "opaque",
+      "sql": "RECOVER TABLE db.t",
+      "ast": "Command(this=RECOVER,expression=Literal(this=TABLE db.t,is_string=true))",
+      "preview": "RECOVER TABLE db.t",
+      "executable": "RECOVER TABLE db.t",
+      "native_original": {
+        "status": "OK",
+        "detail": "RecoverTableStmt",
+        "canonical": ""
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "RecoverTableStmt",
+        "canonical": ""
+      },
+      "classification": "Opaque text preservation only; native rejection is not an equivalence pass"
+    },
+    {
+      "kind": "opaque",
+      "sql": "CANCEL LOAD FROM db WHERE LABEL = 'x'",
+      "ast": "Command(this=CANCEL,expression=Literal(this=LOAD FROM db WHERE LABEL = 'x',is_string=true))",
+      "preview": "CANCEL LOAD FROM db WHERE LABEL = 'x'",
+      "executable": "CANCEL LOAD FROM db WHERE LABEL = 'x'",
+      "native_original": {
+        "status": "OK",
+        "detail": "CancelLoadStmt",
+        "canonical": ""
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "CancelLoadStmt",
+        "canonical": ""
+      },
+      "classification": "Opaque text preservation only; native rejection is not an equivalence pass"
+    },
+    {
+      "kind": "opaque",
+      "sql": "EXPORT TABLE db.t TO 's3://not-executed/'",
+      "ast": "Command(this=EXPORT,expression=Literal(this=TABLE db.t TO 's3://not-executed/',is_string=true))",
+      "preview": "EXPORT TABLE db.t TO 's3://not-executed/'",
+      "executable": "EXPORT TABLE db.t TO 's3://not-executed/'",
+      "native_original": {
+        "status": "OK",
+        "detail": "ExportStmt",
+        "canonical": "EXPORT TABLE `db`.`t` TO \"s3://not-executed/\" WITH BROKER "
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "ExportStmt",
+        "canonical": "EXPORT TABLE `db`.`t` TO \"s3://not-executed/\" WITH BROKER "
+      },
+      "classification": "Opaque text preservation only; native rejection is not an equivalence pass"
+    },
+    {
+      "kind": "opaque",
+      "sql": "SUBMIT TASK AS INSERT INTO t2 SELECT * FROM t1",
+      "ast": "Command(this=SUBMIT,expression=Literal(this=TASK AS INSERT INTO t2 SELECT * FROM t1,is_string=true))",
+      "preview": "SUBMIT TASK AS INSERT INTO t2 SELECT * FROM t1",
+      "executable": "SUBMIT TASK AS INSERT INTO t2 SELECT * FROM t1",
+      "native_original": {
+        "status": "OK",
+        "detail": "SubmitTaskStmt",
+        "canonical": "SUBMIT TASK null AS null"
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "SubmitTaskStmt",
+        "canonical": "SUBMIT TASK null AS null"
+      },
+      "classification": "Opaque text preservation only; native rejection is not an equivalence pass"
+    },
+    {
+      "kind": "opaque",
+      "sql": "PAUSE ROUTINE LOAD FOR db.job",
+      "ast": "Command(this=PAUSE,expression=Literal(this=ROUTINE LOAD FOR db.job,is_string=true))",
+      "preview": "PAUSE ROUTINE LOAD FOR db.job",
+      "executable": "PAUSE ROUTINE LOAD FOR db.job",
+      "native_original": {
+        "status": "OK",
+        "detail": "PauseRoutineLoadStmt",
+        "canonical": ""
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "PauseRoutineLoadStmt",
+        "canonical": ""
+      },
+      "classification": "Opaque text preservation only; native rejection is not an equivalence pass"
+    },
+    {
+      "kind": "opaque",
+      "sql": "RESUME ROUTINE LOAD FOR db.job",
+      "ast": "Command(this=RESUME,expression=Literal(this=ROUTINE LOAD FOR db.job,is_string=true))",
+      "preview": "RESUME ROUTINE LOAD FOR db.job",
+      "executable": "RESUME ROUTINE LOAD FOR db.job",
+      "native_original": {
+        "status": "OK",
+        "detail": "ResumeRoutineLoadStmt",
+        "canonical": ""
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "ResumeRoutineLoadStmt",
+        "canonical": ""
+      },
+      "classification": "Opaque text preservation only; native rejection is not an equivalence pass"
+    },
+    {
+      "kind": "opaque",
+      "sql": "STOP ROUTINE LOAD FOR db.job",
+      "ast": "Command(this=STOP,expression=Literal(this=ROUTINE LOAD FOR db.job,is_string=true))",
+      "preview": "STOP ROUTINE LOAD FOR db.job",
+      "executable": "STOP ROUTINE LOAD FOR db.job",
+      "native_original": {
+        "status": "OK",
+        "detail": "StopRoutineLoadStmt",
+        "canonical": ""
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "StopRoutineLoadStmt",
+        "canonical": ""
+      },
+      "classification": "Opaque text preservation only; native rejection is not an equivalence pass"
+    },
+    {
+      "kind": "opaque",
+      "sql": "DEALLOCATE PREPARE stmt1",
+      "ast": "Command(this=DEALLOCATE,expression=Literal(this=PREPARE stmt1,is_string=true))",
+      "preview": "DEALLOCATE PREPARE stmt1",
+      "executable": "DEALLOCATE PREPARE stmt1",
+      "native_original": {
+        "status": "OK",
+        "detail": "DeallocateStmt",
+        "canonical": ""
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "DeallocateStmt",
+        "canonical": ""
+      },
+      "classification": "Opaque text preservation only; native rejection is not an equivalence pass"
+    },
+    {
+      "kind": "opaque",
+      "sql": "INSTALL PLUGIN FROM '/not-executed.zip'",
+      "ast": "Command(this=INSTALL,expression=Literal(this=PLUGIN FROM '/not-executed.zip',is_string=true))",
+      "preview": "INSTALL PLUGIN FROM '/not-executed.zip'",
+      "executable": "INSTALL PLUGIN FROM '/not-executed.zip'",
+      "native_original": {
+        "status": "OK",
+        "detail": "InstallPluginStmt",
+        "canonical": ""
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "InstallPluginStmt",
+        "canonical": ""
+      },
+      "classification": "Opaque text preservation only; native rejection is not an equivalence pass"
+    },
+    {
+      "kind": "opaque",
+      "sql": "UNINSTALL PLUGIN p",
+      "ast": "Command(this=UNINSTALL,expression=Literal(this=PLUGIN p,is_string=true))",
+      "preview": "UNINSTALL PLUGIN p",
+      "executable": "UNINSTALL PLUGIN p",
+      "native_original": {
+        "status": "OK",
+        "detail": "UninstallPluginStmt",
+        "canonical": ""
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "UninstallPluginStmt",
+        "canonical": ""
+      },
+      "classification": "Opaque text preservation only; native rejection is not an equivalence pass"
+    },
+    {
+      "kind": "opaque",
+      "sql": "ADD SQLBLACKLIST 'select .+'",
+      "ast": "Command(this=ADD SQLBLACKLIST,expression=Literal(this='select .+',is_string=true))",
+      "preview": "ADD SQLBLACKLIST 'select .+'",
+      "executable": "ADD SQLBLACKLIST 'select .+'",
+      "native_original": {
+        "status": "OK",
+        "detail": "AddSqlBlackListStmt",
+        "canonical": ""
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "AddSqlBlackListStmt",
+        "canonical": ""
+      },
+      "classification": "Opaque text preservation only; native rejection is not an equivalence pass"
+    },
+    {
+      "kind": "opaque",
+      "sql": "DELETE SQLBLACKLIST 3,4",
+      "ast": "Command(this=DELETE SQLBLACKLIST,expression=Literal(this=3,4,is_string=true))",
+      "preview": "DELETE SQLBLACKLIST 3,4",
+      "executable": "DELETE SQLBLACKLIST 3,4",
+      "native_original": {
+        "status": "OK",
+        "detail": "DelSqlBlackListStmt",
+        "canonical": ""
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "DelSqlBlackListStmt",
+        "canonical": ""
+      },
+      "classification": "Opaque text preservation only; native rejection is not an equivalence pass"
+    },
+    {
+      "kind": "opaque",
+      "sql": "ADD SQL DIGEST BLACKLIST abcdef0123456789abcdef0123456789",
+      "ast": "Command(this=ADD SQL DIGEST BLACKLIST,expression=Literal(this=abcdef0123456789abcdef0123456789,is_string=true))",
+      "preview": "ADD SQL DIGEST BLACKLIST abcdef0123456789abcdef0123456789",
+      "executable": "ADD SQL DIGEST BLACKLIST abcdef0123456789abcdef0123456789",
+      "native_original": {
+        "status": "OK",
+        "detail": "AddSqlDigestBlackListStmt",
+        "canonical": ""
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "AddSqlDigestBlackListStmt",
+        "canonical": ""
+      },
+      "classification": "Opaque text preservation only; native rejection is not an equivalence pass"
+    },
+    {
+      "kind": "opaque",
+      "sql": "DELETE SQL DIGEST BLACKLIST abcdef0123456789abcdef0123456789",
+      "ast": "Command(this=DELETE SQL DIGEST BLACKLIST,expression=Literal(this=abcdef0123456789abcdef0123456789,is_string=true))",
+      "preview": "DELETE SQL DIGEST BLACKLIST abcdef0123456789abcdef0123456789",
+      "executable": "DELETE SQL DIGEST BLACKLIST abcdef0123456789abcdef0123456789",
+      "native_original": {
+        "status": "OK",
+        "detail": "DelSqlDigestBlackListStmt",
+        "canonical": ""
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "DelSqlDigestBlackListStmt",
+        "canonical": ""
+      },
+      "classification": "Opaque text preservation only; native rejection is not an equivalence pass"
+    },
+    {
+      "kind": "opaque",
+      "sql": "ADD BACKEND BLACKLIST 10001,10002",
+      "ast": "Command(this=ADD BACKEND BLACKLIST,expression=Literal(this=10001,10002,is_string=true))",
+      "preview": "ADD BACKEND BLACKLIST 10001,10002",
+      "executable": "ADD BACKEND BLACKLIST 10001,10002",
+      "native_original": {
+        "status": "OK",
+        "detail": "AddBackendBlackListStmt",
+        "canonical": ""
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "AddBackendBlackListStmt",
+        "canonical": ""
+      },
+      "classification": "Opaque text preservation only; native rejection is not an equivalence pass"
+    },
+    {
+      "kind": "opaque",
+      "sql": "DELETE BACKEND BLACKLIST 10001",
+      "ast": "Command(this=DELETE BACKEND BLACKLIST,expression=Literal(this=10001,is_string=true))",
+      "preview": "DELETE BACKEND BLACKLIST 10001",
+      "executable": "DELETE BACKEND BLACKLIST 10001",
+      "native_original": {
+        "status": "OK",
+        "detail": "DelBackendBlackListStmt",
+        "canonical": ""
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "DelBackendBlackListStmt",
+        "canonical": ""
+      },
+      "classification": "Opaque text preservation only; native rejection is not an equivalence pass"
+    },
+    {
+      "kind": "opaque",
+      "sql": "ADD COMPUTE NODE BLACKLIST 10005",
+      "ast": "Command(this=ADD COMPUTE NODE BLACKLIST,expression=Literal(this=10005,is_string=true))",
+      "preview": "ADD COMPUTE NODE BLACKLIST 10005",
+      "executable": "ADD COMPUTE NODE BLACKLIST 10005",
+      "native_original": {
+        "status": "OK",
+        "detail": "AddComputeNodeBlackListStmt",
+        "canonical": ""
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "AddComputeNodeBlackListStmt",
+        "canonical": ""
+      },
+      "classification": "Opaque text preservation only; native rejection is not an equivalence pass"
+    },
+    {
+      "kind": "opaque",
+      "sql": "DELETE COMPUTE NODE BLACKLIST 10005",
+      "ast": "Command(this=DELETE COMPUTE NODE BLACKLIST,expression=Literal(this=10005,is_string=true))",
+      "preview": "DELETE COMPUTE NODE BLACKLIST 10005",
+      "executable": "DELETE COMPUTE NODE BLACKLIST 10005",
+      "native_original": {
+        "status": "OK",
+        "detail": "DelComputeNodeBlackListStmt",
+        "canonical": ""
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "DelComputeNodeBlackListStmt",
+        "canonical": ""
+      },
+      "classification": "Opaque text preservation only; native rejection is not an equivalence pass"
+    },
+    {
+      "kind": "opaque",
+      "sql": "TRANSLATE TRINO SELECT id FROM products",
+      "ast": "Command(this=TRANSLATE TRINO,expression=Literal(this=SELECT id FROM products,is_string=true))",
+      "preview": "TRANSLATE TRINO SELECT id FROM products",
+      "executable": "TRANSLATE TRINO SELECT id FROM products",
+      "native_original": {
+        "status": "OK",
+        "detail": "TranslateStmt",
+        "canonical": ""
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "TranslateStmt",
+        "canonical": ""
+      },
+      "classification": "Opaque text preservation only; native rejection is not an equivalence pass"
+    },
+    {
+      "kind": "opaque",
+      "sql": "REFRESH DICTIONARY dict_obj",
+      "ast": "Command(this=REFRESH,expression= DICTIONARY dict_obj)",
+      "preview": "REFRESH DICTIONARY dict_obj",
+      "executable": "REFRESH DICTIONARY dict_obj",
+      "native_original": {
+        "status": "OK",
+        "detail": "RefreshDictionaryStmt",
+        "canonical": ""
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "RefreshDictionaryStmt",
+        "canonical": ""
+      },
+      "classification": "Opaque text preservation only; native rejection is not an equivalence pass"
+    },
+    {
+      "kind": "opaque",
+      "sql": "REFRESH CONNECTIONS FORCE",
+      "ast": "Command(this=REFRESH,expression= CONNECTIONS FORCE)",
+      "preview": "REFRESH CONNECTIONS FORCE",
+      "executable": "REFRESH CONNECTIONS FORCE",
+      "native_original": {
+        "status": "OK",
+        "detail": "RefreshConnectionsStmt",
+        "canonical": "REFRESH CONNECTIONS FORCE"
+      },
+      "native_generated": {
+        "status": "OK",
+        "detail": "RefreshConnectionsStmt",
+        "canonical": "REFRESH CONNECTIONS FORCE"
+      },
+      "classification": "Opaque text preservation only; native rejection is not an equivalence pass"
+    }
+  ],
+  "native_field_harness_sha256": "f6bf027d18e234e04bfbe6af16f9765374b4eb19002bdfdebb7eaa87e6318138",
+  "native_field_recheck_stderr": "Note: /var/tmp/StarrocksNativeParserProbe.java uses or overrides a deprecated API.\nNote: Recompile with -Xlint:deprecation for details.\nERROR StatusLogger Could not determine local host name\n java.net.UnknownHostException: 49a2d4103dbf: 49a2d4103dbf: Temporary failure in name resolution\n\tat java.base/java.net.InetAddress.getLocalHost(InetAddress.java:1671)\n\tat org.apache.logging.log4j.core.util.NetUtils.getLocalHostname(NetUtils.java:54)\n\tat org.apache.logging.log4j.core.LoggerContext.lambda$setConfiguration$0(LoggerContext.java:615)\n\tat java.base/java.util.concurrent.ConcurrentHashMap.computeIfAbsent(ConcurrentHashMap.java:1708)\n\tat org.apache.logging.log4j.core.LoggerContext.setConfiguration(LoggerContext.java:615)\n\tat org.apache.logging.log4j.core.LoggerContext.reconfigure(LoggerContext.java:694)\n\tat org.apache.logging.log4j.core.LoggerContext.reconfigure(LoggerContext.java:711)\n\tat org.apache.logging.log4j.core.LoggerContext.start(LoggerContext.java:253)\n\tat org.apache.logging.log4j.core.impl.Log4jContextFactory.getContext(Log4jContextFactory.java:155)\n\tat org.apache.logging.log4j.core.impl.Log4jContextFactory.getContext(Log4jContextFactory.java:47)\n\tat org.apache.logging.log4j.LogManager.getContext(LogManager.java:196)\n\tat org.apache.logging.log4j.LogManager.getLogger(LogManager.java:599)\n\tat com.starrocks.sql.parser.SqlParser.<clinit>(SqlParser.java:71)\n\tat StarrocksNativeParserProbe.main(StarrocksNativeParserProbe.java:41)\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:569)\n\tat jdk.compiler/com.sun.tools.javac.launcher.Main.execute(Main.java:419)\n\tat jdk.compiler/com.sun.tools.javac.launcher.Main.run(Main.java:192)\n\tat jdk.compiler/com.sun.tools.javac.launcher.Main.main(Main.java:132)\nCaused by: java.net.UnknownHostException: 49a2d4103dbf: Temporary failure in name resolution\n\tat java.base/java.net.Inet6AddressImpl.lookupAllHostAddr(Native Method)\n\tat java.base/java.net.InetAddress$PlatformNameService.lookupAllHostAddr(InetAddress.java:934)\n\tat java.base/java.net.InetAddress.getAddressesFromNameService(InetAddress.java:1543)\n\tat java.base/java.net.InetAddress$NameServiceAddresses.get(InetAddress.java:852)\n\tat java.base/java.net.InetAddress.getAllByName0(InetAddress.java:1533)\n\tat java.base/java.net.InetAddress.getLocalHost(InetAddress.java:1666)\n\t... 20 more\n",
+  "native_field_recheck_scope": "Parsed getters only; previously recorded SELECT results retained, no backend statements rerun"
+}

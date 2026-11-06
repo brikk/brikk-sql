@@ -154,7 +154,12 @@ internal class DuckdbNativeCorpusCoverageTest {
         // strict SHA384/512 execution is refused, not qualified by syntax acceptance.
         // Other 24603 native origins and every local disposition are unchanged. Four
         // exact ledger file hashes account for inventory drift. See sg29-011 audit review.
-        val baseline=NativeCorpusAudit.root.resolve("brikk-sql-verify-duckdb/testResources/native-coverage-baseline-sg29-011.json")
+        // SG29-014 remainder: native SQL/status/type tuples are ALL unchanged.
+        // Exactly three extra warnings attach to the same already-opaque ALTER
+        // origin in the current parser. Three ledger hashes and those three derived
+        // warning counters account for inventory changes. No native acceptance or
+        // exclusion allowance; see sg29-014-rest/native-coverage-review.json.
+        val baseline=NativeCorpusAudit.root.resolve("brikk-sql-verify-duckdb/testResources/native-coverage-baseline-sg29-014-rest.json")
         assertTrue(Files.isRegularFile(baseline),"Review build/duckdb-parser-audit/native-coverage.json before adding a baseline")
         assertEquals(Json.parseToJsonElement(Files.readString(baseline)),summary,"Investigate coverage changes; never refresh parity ledgers from native syntax outcomes")
         println("DDB20-050 $summary")

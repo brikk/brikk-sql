@@ -3551,7 +3551,7 @@ open class Parser(
     }
 
     // sqlglot: Parser._parse_pivot
-    protected fun parsePivot(): Expression? {
+    protected open fun parsePivot(): Expression? {
         val startIndex = index
         var includeNulls: kotlin.Boolean? = null
 
@@ -6518,6 +6518,7 @@ open class Parser(
     // sqlglot: Parser._parse_refresh
     // (open for DorisParser: REFRESH MATERIALIZED VIEW | CATALOG | DATABASE, docs/brikk-extensions.md #19)
     open fun parseRefresh(): Expression {
+        val start = prevToken
         // sqlglot 3c6d84248 (feat(starrocks): parse REFRESH EXTERNAL TABLE): the
         // EXTERNAL TABLE branch is exercised by the StarRocks dialect (now ported).
         val kind = when {
@@ -6527,12 +6528,12 @@ open class Parser(
             else -> ""
         }
 
-        val this_ = parseString() ?: parseTable()
+        val this_ = parseString()
         if (kind.isEmpty() && this_ !is Literal) {
-            return parseAsCommand(prevToken)
+            return parseAsCommand(start)
         }
 
-        return expression(Refresh(args("this" to this_, "kind" to kind)))
+        return expression(Refresh(args("this" to (this_ ?: parseTable()), "kind" to kind)))
     }
 
     // sqlglot: Parser._parse_drop

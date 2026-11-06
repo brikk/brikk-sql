@@ -244,6 +244,8 @@ class Refresh(initArgs: Args = emptyMap()) : Expression(initArgs) {
     companion object {
         private val ARG_TYPES = argTypesOf(
             "this" to true, "kind" to true,
+            // Bounded SG29-014 native MV option suffix; constructor shape unchanged.
+            "partition_start" to false, "partition_end" to false, "force" to false, "mode" to false,
         )
     }
 }

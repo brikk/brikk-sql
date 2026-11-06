@@ -1,6 +1,12 @@
 {
     "cases": [
         {
+            "id": "assertion:v1:sha256:c4011a57b71bd62aec15d7e6ee6b75cc129f5ec751d4589c77fb968819edf93c:1",
+            "case": "write|starrocks|DATE_DIFF(DATE '2010-07-07', DATE '2008-12-25', DAY)",
+            "signature": "sql-mismatch:v1:sha256:04a39b0c57d5d31e955c05591bd394183a41db6d581d0175e51d821604055911",
+            "reason": "SG29-014/#8636/55277446: DAY boundary-counting maps to native DATEDIFF, not elapsed DATE_DIFF('DAY',...). Date-only operands agree in this flat fixture; native overnight timestamp controls distinguish the contracts. Non-DAY boundary conversions refuse strict execution. Exact frozen-pin output row, reconcile with SG29-020."
+        },
+        {
             "id": "assertion:v1:sha256:2147b84d237d3bc20e2173dda6ad11ca9ac56488652e469ca817f33b80c2960a:1",
             "case": "write|duckdb|SELECT DATETIME('2020-01-01', 'America/Los_Angeles')",
             "reason": "brikk extension BQ-6, registry section 30: normalize an unzoned string to a UTC instant before deriving Los Angeles civil time. The pin's direct TIMESTAMPTZ cast depends on DuckDB's session zone. Executed under UTC, New York and Auckland.",

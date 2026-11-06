@@ -7,7 +7,9 @@ SG29-010 is separately approved, implemented and verified on 2026-11-04. The own
 approved SG29-011 through SG29-013 in order, with commit/push between items; all
 three are now implemented and verified on 2026-11-05. The owner subsequently
 approved only the SG29-014 LIKE/map wrong-result pair, with commit/push at the end;
-that bounded round is now implemented and verified.
+that bounded round was verified and pushed as `19c29eda`. The owner then approved
+the remainder of SG29-014; those assessed sub-rounds are now implemented and
+verified, with commit/push at the end.
 Remaining items
 in Batches C through F remain proposed, not authorized. Publication and
 downstream adoption require their own authorization.
@@ -185,7 +187,7 @@ baseline explain the bounded drift. No global oracle refresh or release follows.
   behavior or analyzer-catalog execution is claimed; the host guard remains intact.
   Build, 2,562 JVM tests and 827 IntelliJ tests pass. Native coverage/baselines,
   the global oracle pin and generated manifests remain unchanged.
-- [ ] **SG29-014: Reconcile StarRocks fixes and features.** First fix LIKE argument
+- [x] **SG29-014: Reconcile StarRocks fixes and features.** First fix LIKE argument
   order, `f321207c`, and map literals, `fc1472a0`, both observed to change meaning
   in our probes. Then assess native TO_DAYS/DATEDIFF, hash-comment rules, PIVOT
   rendering/static outputs, aggregate-key/HLL DDL, materialized-view refresh
@@ -199,7 +201,29 @@ baseline explain the bounded drift. No global oracle refresh or release follows.
   [Evidence](../vendor/data/sqlglot-sg29-014-wrong-results/README.md): 19 paired
   native StarRocks value/type controls and six map refusals; build, 2,570 JVM
   tests and 827 IntelliJ tests pass. Native audit and global pin are unchanged.
-  The parent item remains open for the remaining, unauthorized feature reviews.
+  - [x] **SG29-014-C: Native dates.** Preserve TO_DAYS and date-part DATEDIFF;
+    keep elapsed DATE_DIFF separate and refuse unqualified boundary conversions.
+  - [x] **SG29-014-D: Hash lexing.** Reject bare hashes/PG hash arrows, preserve
+    quoted hashes and normal comments, and leave MySQL comment behavior unchanged.
+  - [x] **SG29-014-E: PIVOT.** Render native PIVOT and infer qualified static
+    output names; keep unresolved aggregate names unknown and refuse UNPIVOT,
+    simplified PIVOT and unqualified cross-engine result-name/type mappings.
+  - [x] **SG29-014-F: Aggregate/HLL DDL.** Structured nodes preserve all six
+    aggregation suffixes, keys, types and distribution. Native parser field
+    snapshots match; no table creation or storage/aggregation execution is claimed.
+  - [x] **SG29-014-G: Refresh.** Structured partition/FORCE/mode options,
+    invalid-mode rejection and whole unknown-command fallback; exact optional
+    Refresh schema suffix is gated without changing the frozen manifest.
+  - [x] **SG29-014-H: Administration.** All reviewed admin/blacklist/job-control
+    families retain whole text as opaque Command, not structured semantic support.
+  - [x] **SG29-014-I: UNNEST prerequisites.** Keep all function arguments and
+    avoid fabricating one alias for multi-array duplicate default output names.
+  [Remainder evidence](../vendor/data/sqlglot-sg29-014-rest/README.md): 14 native
+  read-only value/type pairs, 12 matching native parsed-field pairs and 25 opaque
+  records. DDL/refresh/admin statements are never executed. Build, 2,578 JVM
+  tests and 827 IntelliJ tests pass. Three exact parity rows and three extra
+  opaque-command warnings are reviewed; all 24,606 native SQL/status/type tuples
+  are unchanged. The global oracle pin and generated manifests remain unchanged.
 - [ ] **SG29-015: Fix Spark/Hive string aggregation and ALTER forms.** Review
   `ab043477`/`2748f82e`, `0b001782` and `03744a2a`. Our Spark LISTAGG DISTINCT
   emits an extra separator argument. Test ALL/DISTINCT, ordering, separators,
@@ -261,17 +285,18 @@ accumulated branch after SG29-009 validation, completed as `70a9f1c0` on
 `origin/sqlglot-30-29-batch-a`. SG29-010 JSON-valued ClickHouse extraction is
 separately approved. The owner subsequently approved SG29-011, SG29-012 and
 SG29-013 in order, with commit/push after each. Commit/push SG29-010 first to
-keep the new items separate. Only the SG29-014 LIKE argument-order and map-literal
-wrong-result pair is now approved, with commit/push after validation. Other
-SG29-014 features and SG29-015 onward are not authorized.
+keep the new items separate. The SG29-014 LIKE/map pair was verified and pushed
+as `19c29eda`, followed by approval of the remaining SG29-014 sub-rounds with
+commit/push after validation. SG29-015 onward is not authorized.
 
 SG29-010 through SG29-013 are complete, with the three requested items validated
-and committed/pushed separately. The bounded SG29-014 wrong-result pair is
-complete, with commit/push authorized. Its parent item remains open until the other separately scoped
-StarRocks work is reviewed. Seven parent items remain open.
+and committed/pushed separately. All SG29-014 areas are now assessed and verified,
+with opaque preservation distinguished from structured support and native
+execution. Proposed next is **SG29-015**, Spark/Hive aggregation and ALTER forms,
+pending separate authorization. Six parent items remain open.
 
 Implementation is isolated on branch/worktree `sqlglot-30-29-batch-a`. The
 planning request initially added this TODO and its index links; later approvals
-cover the implementation/evidence through SG29-013 and the two SG29-014 fixes. Earlier
+cover the implementation/evidence through SG29-014. Earlier
 guides' uncommitted-status statements describe their original checkpoints.
 Publication, consumer adoption and PR creation remain unrequested.

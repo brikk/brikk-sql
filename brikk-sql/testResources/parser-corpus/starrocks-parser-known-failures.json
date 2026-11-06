@@ -1,4 +1,9 @@
 {
     "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
-    "cases": []
+    "cases": [{
+        "id": "assertion:v1:sha256:2684eaff7d559ae5658515aa30b68394f0cc010cc35a34e0c2518312a2465d4f:1",
+        "sql": "ALTER TABLE t ADD COLUMN c INT TO r1, ADD COLUMN d INT",
+        "signature": "ast-mismatch:v1:sha256:15e9a917da0b4ca4f5dfabf946b4ef13b6054183988c5268f7e6ea90ca7e3de8",
+        "reason": "SG29-014 remainder: only serialized starrocks_opaque_command provenance is added to this existing Command. Payload and opaque classification are unchanged; no structured ALTER support is claimed. The marker preserves strict cross-target refusal after serde. Exact frozen-pin row, reconcile with SG29-020."
+    }]
 }

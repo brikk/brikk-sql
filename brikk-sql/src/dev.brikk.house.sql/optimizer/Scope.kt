@@ -735,6 +735,7 @@ private fun isDerivedTableNode(expression: Expression): Boolean =
     expression is dev.brikk.house.sql.ast.TrinoNearest || expression is Subquery &&
         (
             expression.alias.isNotEmpty() ||
+                !(expression.args["pivots"] as? List<*>).isNullOrEmpty() ||
                 expression.thisArg is Select || expression.thisArg is SetOperation
             )
 

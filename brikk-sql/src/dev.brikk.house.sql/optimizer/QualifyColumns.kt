@@ -1279,6 +1279,8 @@ private fun expandStarsInScope(
     if (scopeExpression !is Selectable) {
         return
     }
+    if (scope.pivots.filterIsInstance<Pivot>().any { it.args["unpivot"] != true &&
+            (it.args["columns"] as? List<*>)?.isEmpty() == true && it.aliasColumnNames.isEmpty() }) return
 
     for (expression in scopeExpression.selects) {
         if (preserveBareStar && expression is Star) {

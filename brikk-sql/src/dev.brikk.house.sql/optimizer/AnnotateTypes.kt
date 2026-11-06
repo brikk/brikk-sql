@@ -1421,6 +1421,13 @@ class TypeAnnotator(
 
     // sqlglot: TypeAnnotator._get_pivot_column_types
     private fun getPivotColumnTypes(pivot: Pivot, srcTypes: Map<String, Any>): Map<String, Any> {
+        if ((pivot.args["columns"] as? List<*>)?.isEmpty() == true) {
+            val excluded = pivot.findAll<Column>().map { it.name }.toSet()
+            val aliases = pivot.aliasColumnNames
+            return srcTypes.filterKeys { it !in excluded }.entries.mapIndexed { i, e ->
+                (aliases.getOrNull(i) ?: e.key) to e.value
+            }.toMap()
+        }
         val firstField = seqGet(pivot.fields, 0)
         if (firstField !is In) {
             throw OptimizeError(

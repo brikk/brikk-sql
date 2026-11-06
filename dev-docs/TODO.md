@@ -17,8 +17,9 @@ native resource packaging is tracked in [brikk-chdb](https://github.com/brikk/br
   verified and committed/pushed as `70a9f1c0`. SG29-010 JSON-valued ClickHouse
   extraction is separately verified. Commit/push of SG29-010 and sequential
   SG29-011 through SG29-013 are verified, with separate commit/push between items.
-  SG29-014 LIKE/map wrong-result fixes are verified, with commit/push authorized.
-  Other SG29-014 features and SG29-015 onward are not authorized.
+  All SG29-014 sub-rounds are assessed and verified, with commit/push authorized.
+  Administrative commands remain opaque preservation, not structured semantics.
+  SG29-015 is proposed next, not authorized; six catch-up items remain open.
   Native coverage drift is individually reviewed; the
   [evidence guide](../vendor/data/sqlglot-30.29-batch-b/README.md) retains limits.
   Preserve the separate DuckDB native/executable safeguards; global

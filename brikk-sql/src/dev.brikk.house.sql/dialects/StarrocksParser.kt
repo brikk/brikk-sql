@@ -5,6 +5,18 @@ import dev.brikk.house.sql.ast.Bracket
 import dev.brikk.house.sql.ast.Column
 import dev.brikk.house.sql.ast.ToMap
 import dev.brikk.house.sql.ast.Like
+import dev.brikk.house.sql.ast.Refresh
+import dev.brikk.house.sql.ast.Command
+import dev.brikk.house.sql.ast.Pivot
+import dev.brikk.house.sql.ast.PivotAlias
+import dev.brikk.house.sql.ast.Tuple
+import dev.brikk.house.sql.ast.AggregateKeyProperty
+import dev.brikk.house.sql.ast.AggregateTypeColumnConstraint
+import dev.brikk.house.sql.ast.DataType
+import dev.brikk.house.sql.ast.DType
+import dev.brikk.house.sql.ast.Var
+import dev.brikk.house.sql.ast.ToDays
+import dev.brikk.house.sql.dialects.sql
 import dev.brikk.house.sql.ast.DateAdd
 import dev.brikk.house.sql.ast.DateDiff
 import dev.brikk.house.sql.ast.DateSub
@@ -118,6 +130,41 @@ open class StarrocksParser(
     override val dialect: Dialect get() = Dialects.STARROCKS
 
     override val mapKeysAreArbitraryExpressions: Boolean get() = true
+    override val identifyPivotStrings: Boolean get() = true
+    override val pivotColumnNaming: String get() = "agg_name_if_multiple"
+
+    override fun parseStatement(): Expression? = super.parseStatement()?.also {
+        if (it is Command) it.meta["starrocks_opaque_command"] = true
+    }
+
+    override val constraintParsers: Map<String,(Parser)->Expression?>
+        get() = super.constraintParsers + listOf("SUM","MAX","MIN","REPLACE","REPLACE_IF_NOT_NULL","HLL_UNION").associateWith {
+            { p: Parser -> p.expression(AggregateTypeColumnConstraint(args("this" to Var(args("this" to p.prevToken.text.uppercase()))))) }
+        }
+
+    override fun parsePivot(): Expression? {
+        val pivot = super.parsePivot() as? Pivot ?: return null
+        if (pivot.args["unpivot"] == true) return pivot
+        pivot.meta["starrocks_native_pivot"] = true
+        val names = if (pivot.expressionsArg.size > 1) pivot.expressionsArg.filterIsInstance<Expression>().map { it.alias } else listOf("")
+        val fields = (pivot.args["fields"] as? List<*>)?.filterIsInstance<Expression>()?.firstOrNull()?.expressionsArg?.filterIsInstance<Expression>().orEmpty()
+        fun static(e: Expression): Boolean = e is Literal || e is dev.brikk.house.sql.ast.Boolean || e is dev.brikk.house.sql.ast.Null ||
+            e.isNumber || e is Tuple && e.expressionsArg.filterIsInstance<Expression>().all { static(it) }
+        if (names.size > 1 && names.any { it.isEmpty() } || fields.any { it !is PivotAlias && !static(it) }) {
+            pivot.set("columns", emptyList<Expression>())
+            return pivot
+        }
+        val columns = fields.flatMap { field ->
+            val name = when (field) {
+                is PivotAlias -> field.alias
+                is Tuple -> "{" + field.expressionsArg.filterIsInstance<Expression>().joinToString(",") { it.sql("starrocks") } + "}"
+                else -> field.sql("starrocks")
+            }
+            names.map { aggregate -> toIdentifier(if (aggregate.isEmpty()) name else "${name}_$aggregate") }
+        }
+        pivot.set("columns",columns)
+        return pivot
+    }
 
     // #8682: wrap the literal itself, not the subscripts following it. Its keys
     // remain expressions, including qualified columns, rather than struct names.
@@ -140,12 +187,28 @@ open class StarrocksParser(
 
     override fun parseInto(): Expression? = if (isIntoOutfile()) null else super.parseInto()
 
-    // brikk-native: REFRESH MATERIALIZED VIEW options sqlglot does not model (FORCE, WITH SYNC MODE,
-    // PARTITION START (...) END (...)) keep the statement as a command, its text kept.
+    // Structured native MV options; unrelated REFRESH forms keep the whole command.
     override fun parseRefresh(): Expression {
-        val start = prevToken
-        return tryParse({ super.parseRefresh().takeIf { !currToken.exists || currToken.tokenType == TokenType.SEMICOLON } })
-            ?: parseAsCommand(start)
+        if (!matchTextSeq("MATERIALIZED","VIEW")) return super.parseRefresh()
+        val table = parseTableParts()
+        var start: Expression? = null
+        var end: Expression? = null
+        if (matchTextSeq("PARTITION","START")) {
+            start = parseWrapped({ parseString() })
+            if (start == null || !matchTextSeq("END")) raiseError("Expected PARTITION START/END strings")
+            end = parseWrapped({ parseString() })
+            if (end == null) raiseError("Expected partition end string")
+        }
+        val force = matchTextSeq("FORCE")
+        val mode = if (matchTextSeq("WITH")) {
+            when {
+                matchTextSeq("SYNC","MODE") -> "SYNC"
+                matchTextSeq("ASYNC","MODE") -> "ASYNC"
+                else -> { raiseError("Expected WITH SYNC MODE or WITH ASYNC MODE"); null }
+            }
+        } else null
+        return expression(Refresh(args("this" to table,"kind" to "MATERIALIZED VIEW",
+            "partition_start" to start,"partition_end" to end,"force" to force,"mode" to mode)))
     }
 
     // sqlglot: StarRocks.INDEX_OFFSET = 1 (mirrored by StarrocksGenerator.dialectIndexOffset)
@@ -203,6 +266,8 @@ open class StarrocksParser(
             }
         }
 
+        if (create is Create && (create.find<AggregateKeyProperty>() != null ||
+            create.findAll<DataType>().any { it.thisArg == DType.HLLSKETCH })) create.meta["starrocks_native_ddl"] = true
         return create
     }
 
@@ -219,12 +284,12 @@ open class StarrocksParser(
                     TableAlias(
                         args(
                             "this" to toIdentifier("unnest"),
-                            "columns" to mutableListOf(toIdentifier("unnest")),
+                            "columns" to if (unnest.expressionsArg.size == 1) mutableListOf(toIdentifier("unnest")) else emptyList<Expression>(),
                         )
                     )
                 ),
             )
-        } else if ((alias.args["columns"] as? List<*>).orEmpty().isEmpty()) {
+        } else if ((alias.args["columns"] as? List<*>).orEmpty().isEmpty() && unnest.expressionsArg.size == 1) {
             alias.set("columns", mutableListOf(toIdentifier("unnest")))
         }
 
@@ -350,15 +415,8 @@ object StarrocksParserTables {
         put("SUBDATE", buildDateDeltaWithIntervalDefaultDay { a -> DateSub(a) })
         put("DATE_TRUNC", ::buildStarrocksTimestampTrunc)
         put("TIME_SLICE", ::buildStarrocksTimeSlice)
-        put("DATEDIFF") { a ->
-            DateDiff(
-                args(
-                    "this" to seqGet(a, 0),
-                    "expression" to seqGet(a, 1),
-                    "unit" to normalizeTimeUnit(Literal.string("DAY")),
-                )
-            )
-        }
+        put("DATEDIFF",MysqlParserTables.FUNCTIONS.getValue("DATEDIFF"))
+        put("TO_DAYS") { a -> ToDays(args("this" to seqGet(a,0))).also { it.meta["starrocks_to_days"] = true } }
         put("DATE_DIFF") { a ->
             DateDiff(
                 args(
@@ -394,6 +452,7 @@ object StarrocksParserTables {
     val PROPERTY_PARSERS: Map<String, (Parser, Parser.PropertyKwargs) -> kotlin.Any?> =
         MysqlParserTables.PROPERTY_PARSERS + mapOf<String, (Parser, Parser.PropertyKwargs) -> kotlin.Any?>(
             "PROPERTIES" to { p, _ -> p.parseWrappedProperties() },
+            "AGGREGATE" to { p, _ -> p.parseCompositeKeyProperty { a -> AggregateKeyProperty(a) } },
             "UNIQUE" to { p, _ -> p.parseCompositeKeyProperty { a -> UniqueKeyProperty(a) } },
             "ROLLUP" to { p, _ -> (p as StarrocksParser).parseRollupProperty() },
             "REFRESH" to { p, _ -> (p as StarrocksParser).parseRefreshProperty() },

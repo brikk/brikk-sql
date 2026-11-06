@@ -1,3 +1,8 @@
 {
-    "cases": []
+    "cases": [{
+        "id": "assertion:v1:sha256:2b65aaf79fa31be733abcbf824b4e186fa1963d6368d2b863d19b8cd531e9d5d:1",
+        "sql": "ALTER TABLE t ADD COLUMN c INT TO r1, ADD COLUMN d INT",
+        "signature": "type-mismatch:v1:sha256:f36c6749b1fd4ab08d2b9e235c617fb6e1385da9d54df6af12e38213f40fa0eb",
+        "reason": "SG29-014 remainder: despite this gate's type-mismatch label, the type stays UNKNOWN. Only starrocks_opaque_command provenance is added; native text and Command kind are identical. Not structured semantic support or new type inference. Exact frozen-pin row, reconcile with SG29-020."
+    }]
 }

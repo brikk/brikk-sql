@@ -753,6 +753,11 @@ open class Generator(
         }
 
         val nativeDialect = expression.metaOrNull?.get("native_only_dialect") as? String
+        if (forExecution && dialect.name != "starrocks" &&
+            (expression.metaOrNull?.get("starrocks_native_ddl") == true || expression.metaOrNull?.get("starrocks_to_days") == true ||
+                expression.metaOrNull?.get("starrocks_native_pivot") == true)) {
+            throw UnsupportedError("Native StarRocks DDL/TO_DAYS/PIVOT semantics are not qualified for another engine")
+        }
         if (forExecution && dialect.name != "starrocks" && expression.metaOrNull?.get("starrocks_map_literal") == true) {
             throw UnsupportedError("StarRocks map literal null/duplicate-key and type contracts have no qualified cross-engine execution mapping")
         }
@@ -3265,6 +3270,9 @@ open class Generator(
 
     // sqlglot: Generator.refresh_sql
     open fun refreshSql(expression: Refresh): String {
+        if (listOf("partition_start","partition_end","force","mode").any { expression.args[it] != null && expression.args[it] != false }) {
+            unexecutable("Native REFRESH partition/FORCE/mode options are not supported in $targetName")
+        }
         val thisSql = sql(expression, "this")
         val kind = if (expression.thisArg is Literal) "" else "${expression.text("kind")} "
         return "REFRESH $kind$thisSql"
@@ -4266,8 +4274,12 @@ open class Generator(
     }
 
     // sqlglot: Generator.command_sql
-    open fun commandSql(expression: Command): String =
-        "${sql(expression, "this")} ${expression.text("expression").trim()}"
+    open fun commandSql(expression: Command): String {
+        if (expression.metaOrNull?.get("starrocks_opaque_command") == true && dialect.name != "starrocks") {
+            unexecutable("Opaque StarRocks administrative commands have no cross-engine execution mapping")
+        }
+        return "${sql(expression, "this")} ${expression.text("expression").trim()}"
+    }
 
     // sqlglot: Generator.comment_sql
     open fun commentSql(expression: Comment): String {
