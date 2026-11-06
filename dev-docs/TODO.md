@@ -1,67 +1,50 @@
-# Work list — brikk-sql
+# SQL work list
 
-This is the active **SQL-owned** index. Keep the exact cases, fixtures and
-verification instructions in the linked detailed trackers; these `SQL-*` IDs
-name the top-level outcomes. Do not relabel verifier-backed intentional
-divergences as bugs ([extension registry](../docs/brikk-extensions.md)). Compiler
-integration is tracked separately in [Brikk Engine](https://github.com/brikk/brikk-house/blob/main/TODO.md);
-native resource packaging is tracked in [brikk-chdb](https://github.com/brikk/brikk-chdb/blob/main/TODO.md).
+This is the SQL-owned index. Stable SQL IDs name outcomes; detailed trackers
+hold the cases, proof paths and remaining boundaries. Verifier-backed intentional
+differences belong in the [extension registry](../docs/brikk-extensions.md), not
+the bug backlog. Compiler integration lives in
+[Brikk Engine](https://github.com/brikk/brikk-house/blob/main/TODO.md), and native
+packaging in [brikk-chdb](https://github.com/brikk/brikk-chdb/blob/main/TODO.md).
 
 ## Design and correctness
 
-- [ ] **SQL-08: Improve bounded ClickHouse semantic analysis.** The user accepted
-  the CHSEM-001 through CHSEM-023 scope as opt-in hints and separately proved
-  checks, not full validation or native-exact metadata for every AST node.
-  CHSEM-024/025 now provide proof provenance and primitive root multiplication
-  typing. CHSEM-030-A adds bounded non-recursive CTE propagation, qualified in
-  local RC2 candidates. Publication and consumer updates
-  still need approval. Deferred work, evidence, dependencies and completion criteria:
-  [CHSEM-024 through CHSEM-034](TODO-clickhouse-semantic.md#deferred-improvement-backlog).
-  The remaining P2 items are not authorized for implementation by this approval.
-- [ ] **SQL-01 — Decide and implement multi-output pipe semantics.** Get owner
-  decisions on `FORK`/`TEE` and terminal operators; then land parsing/validation,
-  multi-output desugaring, and fidelity certification in separate phases. Do
-  **not** silently represent compute-once or atomic multi-write guarantees as
-  independent statements. Details: [multi-output pipe design](design/pipe-multi-output.md),
-  especially §6–7. Engine's eventual DSL/runner surface is `ENG-07`.
-- [ ] **SQL-02 — Close version-qualified transpile gaps.** Nine ledgered cases
-  for older Postgres, DuckDB, Spark and ClickHouse versions remain because a
-  `"dialect, version=..."` corpus key runs against the unversioned dialect.
-  Model dialect-version settings in generation, then retire passing exact
-  ledger signatures. Details: [rewrite tracker](TODO-BUGS-rewrites.md).
-- [ ] **SQL-03 — Address BigQuery execution limitations.** `BQ-36`–`BQ-38` cover
-  row-dependent `ARRAY_TO_STRING` delimiters, offset-preserving timestamp
-  formatting, and schema-driven timestamp overloads. The current diagnostics
-  are deliberate; do not replace them with unsafe SQL. There are **zero** open
-  BigQuery parity-ledger failures. Details: [BigQuery tracker](TODO-bigquery.md).
-- [ ] **SQL-04 — Decide whether to preserve Doris `BUCKETS AUTO`.** Its generator
-  currently drops that spelling (omission has the same Doris default); keep this
-  low priority unless a consumer needs text fidelity. Details:
-  [Doris DDL tracker](TODO-doris-ddl.md).
-- [ ] **SQL-05 — Deliver source-preserving composition/lowering to Engine.** The
-  opt-in SQL API and native/text-diff/engine-result regressions are published on
-  Maven Central in `0.18.0`, including the DDB-001 fix and DuckDB 1.5.6 reference.
-  Remaining consumer integration is tracked as Engine `ENG-01`.
-  Engine applies its slot/binding edits before lowering and decides
-  *when* to call it, not how generic SQL is parsed or lowered. API, proofs,
-  supported/refused boundaries and delivery: [source-preserving lowering](../docs/source-preserving-lowering.md).
-  Consumer policy:
-  [Engine's SQL-preservation policy](https://github.com/brikk/brikk-house/blob/main/brikk-engine/README.md#sql-preservation).
-- [ ] **SQL-06 — Integrate and release the DuckDB 2.0 catch-up.** The reference is final
-  DuckDB 2.0.0 / JDBC 2.0.0.0, not a preview or the former 1.5.6 baseline. The bounded
-  audit has 75 of 78 items complete; remaining broad-suite failures and release checks
-  are explicit in the [DuckDB checklist](TODO-duckdb-2.0.md). Recursive IDE schemas,
-  general matching-session helpers and a new executor remain deferred. No release or
-  downstream dependency adoption follows from checklist completion alone.
+- [ ] SQL-01. Decide multi-output pipe semantics for FORK/TEE and terminal operators,
+  then implement parsing, validation, desugaring and certification. Independent
+  statements do not prove compute-once or atomic multi-write behavior. See
+  [the design](design/pipe-multi-output.md), sections 6 and 7. Engine tracks ENG-07.
+- [ ] SQL-02. Close version-qualified transpile gaps. Nine ledgered cases use
+  versioned corpus keys against unversioned dialects. Model dialect-version
+  settings, then retire exact passing signatures. See [rewrites](TODO-BUGS-rewrites.md).
+- [ ] SQL-03. Address BigQuery execution limits BQ-36 through BQ-38 for dynamic
+  ARRAY_TO_STRING delimiters, offset-preserving timestamp formatting and
+  schema-driven overloads. Current refusals are intentional; no BigQuery parity
+  ledger failures remain. See [BigQuery](TODO-bigquery.md).
+- [ ] SQL-04. Decide whether Doris BUCKETS AUTO needs text fidelity. Omitting it
+  retains the engine default. See [Doris DDL](TODO-doris-ddl.md).
+- [ ] SQL-05. Deliver source-preserving lowering to Engine. The opt-in API and
+  DDB-001 fix are published in 0.18.0 with DuckDB 1.5.6 evidence. Remaining
+  integration is Engine ENG-01. Engine edits slots/bindings before lowering and
+  chooses when to call it. See [the API and boundaries](../docs/source-preserving-lowering.md)
+  and [Engine policy](https://github.com/brikk/brikk-house/blob/main/brikk-engine/README.md#sql-preservation).
+- [ ] SQL-06. Qualify downstream DuckDB 2.0 adoption and deferred integrations.
+  SQL 0.23.0 and support 0.4.0 publish the library catch-up. The
+  [DuckDB tracker](TODO-duckdb-2.0.md) has 75 of 78 bounded deliverables DONE.
+  Recursive IDE schemas, general matching-session helpers and executor work stay
+  deferred. Library publication does not qualify a plugin or change its driver pin.
+- [ ] SQL-08. Improve bounded ClickHouse semantic analysis and consumer adoption.
+  Provenance, primitive root multiplication and ordinary CTE propagation are
+  implemented and published in SQL 0.23.0. These are opt-in hints and separately
+  proved checks, not full validation or exact metadata for every AST node.
+  See [the tracker](TODO-clickhouse-semantic.md) and its
+  [deferred backlog](TODO-clickhouse-semantic.md#deferred-improvement-backlog).
+  CHSEM-034 still needs consumer qualification; P2 expansion remains unscheduled.
 
-## Maintenance (lower priority)
+## Maintenance
 
-- [x] **SQL-07 — Finish the remaining evaluation hygiene.** Completed 2026-10-03:
-  compiler warnings removed; shared SemVer validation and Toolchain-native release
-  overrides with CI regression tests; Doris parser JAR checksum/current-grammar
-  check; structural hazard assertions; standalone mise compiler pin removed.
-  Details: [EVAL-15](archive/TODO-rectify-from-eval.md).
+- [x] SQL-07. Finish evaluation hygiene. Compiler warnings, SemVer/release override
+  tests, Doris parser checksums, hazard assertions and the standalone compiler pin
+  are resolved. See [EVAL-15](archive/TODO-rectify-from-eval.md).
 
-Completed plans with useful detail are in the [archive](archive/README.md).
-Empty completed trackers have been removed. Protected dialect differences remain in the
-[extension registry](../docs/brikk-extensions.md), not in the active backlog.
+Completed plans are in the [archive](archive/README.md). Research files and
+their current references are listed in the [research inventory](research-inventory.md).
