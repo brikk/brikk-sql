@@ -534,6 +534,7 @@ object GeneratorTables {
 
         // --- ALTER family ---
         reg(Alter::class) { e -> alterSql(e as Alter) }
+        reg(ReplaceColumns::class) { e -> replaceColumnsSql(e as ReplaceColumns) }
         reg(AlterColumn::class) { e -> altercolumnSql(e as AlterColumn) }
         reg(AlterRename::class) { e -> alterrenameSql(e as AlterRename) }
         reg(RenameColumn::class) { e -> renamecolumnSql(e as RenameColumn) }

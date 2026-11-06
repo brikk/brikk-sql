@@ -10,6 +10,10 @@ approved only the SG29-014 LIKE/map wrong-result pair, with commit/push at the e
 that bounded round was verified and pushed as `19c29eda`. The owner then approved
 the remainder of SG29-014; those assessed sub-rounds are now implemented and
 verified, with commit/push at the end.
+SG29-015 is separately approved, implemented and verified on 2026-11-06. Do not start
+SG29-019 onward or publish/adopt the branch as part of that approval. The owner
+subsequently approved commit/push of SG29-015 followed by SG29-016 through
+SG29-018 in order, with separate tested commits/pushes between items.
 Remaining items
 in Batches C through F remain proposed, not authorized. Publication and
 downstream adoption require their own authorization.
@@ -224,11 +228,23 @@ baseline explain the bounded drift. No global oracle refresh or release follows.
   tests and 827 IntelliJ tests pass. Three exact parity rows and three extra
   opaque-command warnings are reviewed; all 24,606 native SQL/status/type tuples
   are unchanged. The global oracle pin and generated manifests remain unchanged.
-- [ ] **SG29-015: Fix Spark/Hive string aggregation and ALTER forms.** Review
+- [x] **SG29-015: Fix Spark/Hive string aggregation and ALTER forms.** Review
   `ab043477`/`2748f82e`, `0b001782` and `03744a2a`. Our Spark LISTAGG DISTINCT
   emits an extra separator argument. Test ALL/DISTINCT, ordering, separators,
   DROP COLUMN[S]/IF EXISTS and REPLACE COLUMNS, including scope/catalog effects
   and explicit cross-target refusals where appropriate.
+  [Evidence](../vendor/data/sqlglot-sg29-015/README.md): ALL/DISTINCT and ordered
+  LISTAGG keep their inputs/separators, including Spark's native empty default;
+  generation does not mutate AST children. DROP retains nested/plural targets
+  and IF EXISTS, and REPLACE has an exact bounded upstream AST/serde node.
+  Unsupported/empty replacement definitions stay whole opaque Commands.
+  ALTER has no query output or implicit catalog migration; foreign replacement,
+  plural/nested drops and Hive CASCADE mappings are refused where unqualified.
+  Native Spark 4.0.1 passes 22 SELECT value/type pairs; eight Spark and two Hive
+  2.3.10 parser-plan pairs match without executing ALTER. One source-rejected
+  unwrapped replacement is normalization only, not native equivalence. Build,
+  2,582 JVM tests and 827 IntelliJ tests pass. The full native audit, parity
+  ledgers, global pin and frozen manifest remain unchanged. Commit/push authorized.
 - [ ] **SG29-016: Reconcile BigQuery/Trino translations.** Review
   `d17c7680`, `f536a823` and `a8a7610d` for date parts, FROM_BASE,
   percentiles and array operations. Our weekday probe emits DAY_OF_WEEK instead
@@ -287,16 +303,19 @@ separately approved. The owner subsequently approved SG29-011, SG29-012 and
 SG29-013 in order, with commit/push after each. Commit/push SG29-010 first to
 keep the new items separate. The SG29-014 LIKE/map pair was verified and pushed
 as `19c29eda`, followed by approval of the remaining SG29-014 sub-rounds with
-commit/push after validation. SG29-015 onward is not authorized.
+commit/push after validation. SG29-015 was then separately approved and verified.
+Commit/push for that round and sequential SG29-016 through SG29-018 are now
+authorized, with commit/push between items. SG29-019 onward is not authorized.
 
 SG29-010 through SG29-013 are complete, with the three requested items validated
 and committed/pushed separately. All SG29-014 areas are now assessed and verified,
 with opaque preservation distinguished from structured support and native
-execution. Proposed next is **SG29-015**, Spark/Hive aggregation and ALTER forms,
-pending separate authorization. Six parent items remain open.
+execution. SG29-015 is separately implemented and verified, with commit/push
+authorized before starting SG29-016. SG29-016 through SG29-018 are approved in
+order. Five parent items remain open.
 
 Implementation is isolated on branch/worktree `sqlglot-30-29-batch-a`. The
 planning request initially added this TODO and its index links; later approvals
-cover the implementation/evidence through SG29-014. Earlier
+cover the implementation/evidence through SG29-015. Earlier
 guides' uncommitted-status statements describe their original checkpoints.
 Publication, consumer adoption and PR creation remain unrequested.

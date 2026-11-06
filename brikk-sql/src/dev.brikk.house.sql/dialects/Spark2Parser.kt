@@ -100,7 +100,11 @@ open class Spark2Parser(
         if (matchTextSeq("DROP", "COLUMNS", advance = false)) {
             match(TokenType.DROP)
             matchTextSeq("COLUMNS")
-            return expression(Drop(args("tables" to listOf(parseSchema()), "kind" to "COLUMNS")))
+            val exists = parseExists()
+            val columns = parseWrappedCsv({ parseColumnOps(parseField(anyToken = true)) }, optional = true)
+            if (columns.isEmpty()) return null
+            return expression(Drop(args("tables" to listOf(dev.brikk.house.sql.ast.Schema(args("expressions" to columns))),
+                "kind" to "COLUMNS", "exists" to exists)))
         }
         return super.parseAlterDropAction()
     }

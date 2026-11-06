@@ -781,6 +781,8 @@ private fun registerGeneratedQuery(m: kotlin.collections.MutableMap<kotlin.Strin
     m["RecursiveWithSearch"] = ExpressionRegistry.Entry(module) { RecursiveWithSearch() }
     m["RepeatBlock"] = ExpressionRegistry.Entry(module) { RepeatBlock() }
     m["ReplacePartition"] = ExpressionRegistry.Entry(module) { ReplacePartition() }
+    // SG29-015 bounded upstream node, without refreshing the frozen registry.
+    m["ReplaceColumns"] = ExpressionRegistry.Entry(module) { ReplaceColumns() }
     m["Return"] = ExpressionRegistry.Entry(module) { Return() }
     m["Revoke"] = ExpressionRegistry.Entry(module) { Revoke() }
     m["Rollup"] = ExpressionRegistry.Entry(module) { Rollup() }

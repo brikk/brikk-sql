@@ -9496,6 +9496,7 @@ open class Parser(
                 argsList.addAll(parseCsv { parseDisjunction() })
             }
         } else {
+            match(TokenType.ALL)
             argsList.addAll(parseCsv { parseDisjunction() })
         }
 

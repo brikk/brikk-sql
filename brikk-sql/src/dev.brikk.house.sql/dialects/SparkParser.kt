@@ -132,6 +132,7 @@ open class SparkParser(
     override val functionParsers: Map<String, (Parser) -> Expression?>
         get() = Spark2ParserTables.FUNCTION_PARSERS + mapOf<String, (Parser) -> Expression?>(
             "SUBSTR" to { p -> p.parseSubstring() },
+            "LISTAGG" to { p -> p.parseStringAgg() },
         )
 
     // sqlglot: SparkParser.NO_PAREN_FUNCTIONS (+ SESSION_USER)
@@ -216,7 +217,6 @@ object SparkParserTables {
         put("DATEDIFF", ::buildSparkDatediff)
         put("DATE_DIFF", ::buildSparkDatediff)
         put("JSON_OBJECT_KEYS") { a -> JSONKeys(args("this" to seqGet(a, 0))) }
-        put("LISTAGG") { a -> GroupConcat(args("this" to seqGet(a, 0), "separator" to seqGet(a, 1))) }
         put("TIMESTAMP_LTZ", buildAsCastSpark("TIMESTAMP_LTZ"))
         put("TIMESTAMP_NTZ", buildAsCastSpark("TIMESTAMP_NTZ"))
         put("TRY_ELEMENT_AT") { a ->

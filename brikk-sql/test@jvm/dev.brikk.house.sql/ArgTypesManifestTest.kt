@@ -80,6 +80,11 @@ class ArgTypesManifestTest {
         // allowlisted NATIVE (brikk-original) classes — no gaps, no strays. The Python
         // parity check above is untouched: every manifest class is still verified.
         val native = ExpressionRegistry.entries.filterKeys { it in NATIVE_EXPRESSION_CLASSES }
+        // SG29-015: one exact upstream addition, not a native class or manifest refresh.
+        val bounded = setOf("ReplaceColumns")
+        assertEquals("sqlglot.expressions.query", ExpressionRegistry.entries.getValue("ReplaceColumns").module)
+        assertEquals(listOf("expressions" to true), ExpressionRegistry.entries.getValue("ReplaceColumns").factory().argTypes.entries.map { it.key to it.value })
+        check("ReplaceColumns" !in classes) { "Reconcile SG29-015 node after oracle migration" }
         assertEquals(
             NATIVE_EXPRESSION_CLASSES,
             native.keys,
@@ -92,10 +97,10 @@ class ArgTypesManifestTest {
             if (name in classes.keys) fail("$name: native class collides with a Python manifest class")
         }
         assertEquals(
-            classes.size + native.size,
+            classes.size + native.size + bounded.size,
             ExpressionRegistry.entries.size,
             "registry size != manifest class count + native allowlist; strays: " +
-                (ExpressionRegistry.entries.keys - classes.keys - NATIVE_EXPRESSION_CLASSES),
+                (ExpressionRegistry.entries.keys - classes.keys - NATIVE_EXPRESSION_CLASSES - bounded),
         )
     }
 }

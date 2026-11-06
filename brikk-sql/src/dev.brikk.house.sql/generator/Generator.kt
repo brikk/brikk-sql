@@ -753,6 +753,9 @@ open class Generator(
         }
 
         val nativeDialect = expression.metaOrNull?.get("native_only_dialect") as? String
+        if (expression is GroupConcat && dialect.name in setOf("hive", "spark2")) {
+            unexecutable("Ordered string aggregation has no qualified native LISTAGG mapping for $targetName")
+        }
         if (forExecution && dialect.name != "starrocks" &&
             (expression.metaOrNull?.get("starrocks_native_ddl") == true || expression.metaOrNull?.get("starrocks_to_days") == true ||
                 expression.metaOrNull?.get("starrocks_native_pivot") == true)) {
@@ -1768,6 +1771,14 @@ open class Generator(
 
     // sqlglot: Generator.drop_sql
     open fun dropSql(expression: Drop): String {
+        if (expression.text("kind") == "COLUMNS" && dialect.name !in setOf("spark", "spark2")) {
+            unexecutable("Spark DROP COLUMNS has no qualified execution mapping for $targetName")
+        }
+        if (sourceDialect?.lowercase() in setOf("spark", "spark2") &&
+            expression.text("kind") == "COLUMN" && dialect.name !in setOf("spark", "spark2") &&
+            (expression.args["tables"] as? List<*>)?.filterIsInstance<Column>()?.any { it.parts.size > 1 } == true) {
+            unexecutable("Nested DROP COLUMN paths have no qualified execution mapping for $targetName")
+        }
         val tables = expressions(expression, key = "tables", flat = true)
         var exprs = expressions(expression, flat = true)
         if (exprs.isNotEmpty()) exprs = " ($exprs)"
@@ -4439,6 +4450,16 @@ open class Generator(
         if (thisSql.isNotEmpty()) thisSql = " $thisSql"
 
         return "ALTER $iceberg$kind$exists$only$thisSql$onCluster$check${sep()}$actionsSql$notValid$options$partitions$cascade"
+    }
+
+    open fun replaceColumnsSql(expression: ReplaceColumns): String {
+        if (dialect.name !in setOf("hive", "spark", "spark2")) {
+            unexecutable("REPLACE COLUMNS catalog semantics are not qualified for $targetName")
+        }
+        if ((expression.parent as? Alter)?.args?.get("cascade") == true && dialect.name != "hive") {
+            unexecutable("Hive REPLACE COLUMNS CASCADE partition-metadata effects are not qualified for $targetName")
+        }
+        return "REPLACE COLUMNS (${expressions(expression, flat = true)})"
     }
 
     open val alterPartitionOptions: Set<KClass<out Expression>> get() = emptySet()
