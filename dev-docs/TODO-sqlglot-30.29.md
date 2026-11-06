@@ -261,14 +261,22 @@ baseline explain the bounded drift. No global oracle refresh or release follows.
 
 ## Batch E: shared analysis and compatibility-sensitive changes
 
-- [ ] **SG29-017: Audit shared typing and qualification changes.** Review all-row
+- [x] **SG29-017: Audit shared typing and qualification changes.** Review all-row
   VALUES coercion, nested UNKNOWN propagation, struct-valued subqueries/row
   references, TVF inference, pivot aliases, semi/anti visibility and annotation
   ordering. Relevant commits include `f0b4347b`, `a32ef636`, `fb36fb71`,
   `5e0f7169`, `4678f6cb`, `2bf94d96`, `9d2966ed` and `e54ad9aa`.
   Compare existing ordered recursive set-operation typing before porting; retain
   unknown-schema conservatism, Engine inference policies, native ClickHouse
-  proof provenance and old APIs. Add hand-owned shape/lineage/Engine regressions.
+   proof provenance and old APIs. Add hand-owned shape/lineage/Engine regressions.
+  [Evidence](../vendor/data/sqlglot-sg29-017/README.md): all-row VALUES with
+  exact native-type preservation, conservative MAP/approx-top UNKNOWN guards,
+  complete struct subqueries/row references and ordered query-type evidence.
+  Retained existing recursive set reconciler, inference-policy overloads and
+  uncache API; no broad upstream cache/refactor or unknown-TVF inference port.
+  New shape/lineage/Engine and native DuckDB controls pass. Build, 2,594 JVM tests
+  and 827 IntelliJ tests pass. One annotation-only ledger row reviewed; every
+  native tuple, local classification and engine/setting remains unchanged.
 - [ ] **SG29-018: Decide ArraySort migration and reconcile DuckDB overlap.**
   Upstream `094509aa` merges SortArray into ArraySort with explicit NULL ordering.
   Propose a compatible AST/serde/API transition before replacing nodes. Reuse
@@ -321,7 +329,8 @@ with opaque preservation distinguished from structured support and native
 execution. SG29-015 is separately implemented and verified, with commit/push
 authorized before starting SG29-016. SG29-016 through SG29-018 are approved in
 order. SG29-016 is now implemented and verified, with commit/push authorized.
-Four parent items remain open; SG29-017 is next.
+SG29-017 is also implemented and verified, with commit/push before SG29-018.
+Three parent items remain open; SG29-018 is next.
 
 Implementation is isolated on branch/worktree `sqlglot-30-29-batch-a`. The
 planning request initially added this TODO and its index links; later approvals

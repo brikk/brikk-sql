@@ -1,0 +1,240 @@
+{
+  "scope": "Exactly one annotation-only bounded UNKNOWN propagation delta; no native SQL or AST argument change.",
+  "file": "brikk-sql/testResources/annotate-corpus/known-failures-bigquery-annotated-serde.json",
+  "before_sha256": "cf03e5f09cd72b0477c8d27c9b82605c4e7bc4b2b4574f585ff53cce09b4073b",
+  "after_sha256": "1b30327b51bd11290abe96fea53890a2292815d1e3d01e2471e4805ef0277be9",
+  "added": [
+    {
+      "id": "assertion:v1:sha256:d0cb329bb688da3dec1250a08341b4be2e55d55ba8d42b4d99d46aafc1016ba1:1",
+      "sql": "APPROX_TOP_COUNT(col, 2)",
+      "signature": "type-mismatch:v1:sha256:c17a3a4e0383baed82e3b4b1bb3a5ac8a012f7e10e776a1b223b034f42f72ea4",
+      "reason": "SG29-017/a32ef636/#8818: unknown input now yields UNKNOWN rather than the frozen oracle's ARRAY<STRUCT<UNKNOWN,BIGINT>> wrapper. No known field/type or native execution is invented. The AST arguments, source metadata and SQL are unchanged. Exact bounded annotation-only port; reconcile after SG29-020 oracle migration."
+    }
+  ],
+  "expected": [
+    {
+      "c": "sqlglot.expressions.aggregate.ApproxTopK",
+      "t": [
+        {
+          "c": "sqlglot.expressions.datatypes.DataType"
+        },
+        {
+          "i": 0,
+          "k": "this",
+          "c": "DataType.Type",
+          "v": "ARRAY"
+        },
+        {
+          "i": 0,
+          "k": "expressions",
+          "a": true,
+          "c": "sqlglot.expressions.datatypes.DataType"
+        },
+        {
+          "i": 2,
+          "k": "this",
+          "c": "DataType.Type",
+          "v": "STRUCT"
+        },
+        {
+          "i": 2,
+          "k": "expressions",
+          "a": true,
+          "c": "sqlglot.expressions.datatypes.DataType"
+        },
+        {
+          "i": 4,
+          "k": "this",
+          "c": "DataType.Type",
+          "v": "UNKNOWN"
+        },
+        {
+          "i": 2,
+          "k": "expressions",
+          "a": true,
+          "c": "sqlglot.expressions.datatypes.DataType"
+        },
+        {
+          "i": 6,
+          "k": "this",
+          "c": "DataType.Type",
+          "v": "BIGINT"
+        },
+        {
+          "i": 2,
+          "k": "nested",
+          "v": true
+        },
+        {
+          "i": 0,
+          "k": "nested",
+          "v": true
+        }
+      ],
+      "m": {
+        "bigquery_name": "APPROX_TOP_COUNT"
+      }
+    },
+    {
+      "i": 0,
+      "k": "this",
+      "c": "sqlglot.expressions.core.Column",
+      "t": [
+        {
+          "c": "sqlglot.expressions.datatypes.DataType"
+        },
+        {
+          "i": 0,
+          "k": "this",
+          "c": "DataType.Type",
+          "v": "UNKNOWN"
+        }
+      ]
+    },
+    {
+      "i": 1,
+      "k": "this",
+      "c": "sqlglot.expressions.core.Identifier",
+      "t": [
+        {
+          "c": "sqlglot.expressions.datatypes.DataType"
+        },
+        {
+          "i": 0,
+          "k": "this",
+          "c": "DataType.Type",
+          "v": "UNKNOWN"
+        }
+      ]
+    },
+    {
+      "i": 2,
+      "k": "this",
+      "v": "col"
+    },
+    {
+      "i": 2,
+      "k": "quoted",
+      "v": false
+    },
+    {
+      "i": 0,
+      "k": "expression",
+      "c": "sqlglot.expressions.core.Literal",
+      "t": [
+        {
+          "c": "sqlglot.expressions.datatypes.DataType"
+        },
+        {
+          "i": 0,
+          "k": "this",
+          "c": "DataType.Type",
+          "v": "INT"
+        }
+      ],
+      "m": {
+        "nonnull": true
+      }
+    },
+    {
+      "i": 5,
+      "k": "this",
+      "v": "2"
+    },
+    {
+      "i": 5,
+      "k": "is_string",
+      "v": false
+    }
+  ],
+  "actual": [
+    {
+      "c": "sqlglot.expressions.aggregate.ApproxTopK",
+      "t": [
+        {
+          "c": "sqlglot.expressions.datatypes.DataType"
+        },
+        {
+          "i": 0,
+          "k": "this",
+          "c": "DataType.Type",
+          "v": "UNKNOWN"
+        }
+      ],
+      "m": {
+        "bigquery_name": "APPROX_TOP_COUNT"
+      }
+    },
+    {
+      "i": 0,
+      "k": "this",
+      "c": "sqlglot.expressions.core.Column",
+      "t": [
+        {
+          "c": "sqlglot.expressions.datatypes.DataType"
+        },
+        {
+          "i": 0,
+          "k": "this",
+          "c": "DataType.Type",
+          "v": "UNKNOWN"
+        }
+      ]
+    },
+    {
+      "i": 1,
+      "k": "this",
+      "c": "sqlglot.expressions.core.Identifier",
+      "t": [
+        {
+          "c": "sqlglot.expressions.datatypes.DataType"
+        },
+        {
+          "i": 0,
+          "k": "this",
+          "c": "DataType.Type",
+          "v": "UNKNOWN"
+        }
+      ]
+    },
+    {
+      "i": 2,
+      "k": "this",
+      "v": "col"
+    },
+    {
+      "i": 2,
+      "k": "quoted",
+      "v": false
+    },
+    {
+      "i": 0,
+      "k": "expression",
+      "c": "sqlglot.expressions.core.Literal",
+      "t": [
+        {
+          "c": "sqlglot.expressions.datatypes.DataType"
+        },
+        {
+          "i": 0,
+          "k": "this",
+          "c": "DataType.Type",
+          "v": "INT"
+        }
+      ],
+      "m": {
+        "nonnull": true
+      }
+    },
+    {
+      "i": 5,
+      "k": "this",
+      "v": "2"
+    },
+    {
+      "i": 5,
+      "k": "is_string",
+      "v": false
+    }
+  ]
+}

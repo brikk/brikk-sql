@@ -163,7 +163,10 @@ internal class DuckdbNativeCorpusCoverageTest {
         // percentile origins now warn instead of silently discarding a weight.
         // Corpus hashes/old dispositions unchanged; three inventory counters only.
         // See vendor/data/sqlglot-sg29-016/native-coverage-review.json.
-        val baseline=NativeCorpusAudit.root.resolve("brikk-sql-verify-duckdb/testResources/native-coverage-baseline-sg29-016.json")
+        // SG29-017: only the exact reviewed BigQuery UNKNOWN annotation ledger hash
+        // changes. All native tuples, local dispositions and engine settings stay
+        // identical. See sg29-017/native-coverage-review.json; retain old baselines.
+        val baseline=NativeCorpusAudit.root.resolve("brikk-sql-verify-duckdb/testResources/native-coverage-baseline-sg29-017.json")
         assertTrue(Files.isRegularFile(baseline),"Review build/duckdb-parser-audit/native-coverage.json before adding a baseline")
         assertEquals(Json.parseToJsonElement(Files.readString(baseline)),summary,"Investigate coverage changes; never refresh parity ledgers from native syntax outcomes")
         println("DDB20-050 $summary")

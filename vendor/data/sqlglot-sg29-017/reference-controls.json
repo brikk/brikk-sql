@@ -1,0 +1,46 @@
+{
+  "commit": "2fe25297af5b0f44f5c9e5d03e1b296424b7acbe",
+  "scope": "Exact target annotation controls, not native execution or a global pin change.",
+  "records": [
+    {
+      "dialect": "duckdb",
+      "sql": "SELECT x FROM (VALUES (NULL), (CAST(2.5 AS DOUBLE)), (1)) AS t(x)",
+      "qualified": "SELECT \"t\".\"x\" AS \"x\" FROM (VALUES (NULL), (CAST(2.5 AS DOUBLE)), (1)) AS \"t\"(\"x\")",
+      "projection_types": [
+        "DOUBLE"
+      ]
+    },
+    {
+      "dialect": "duckdb",
+      "sql": "SELECT t.a FROM (SELECT 1 AS a UNION ALL (SELECT 2 AS b UNION ALL SELECT CAST(2.5 AS DOUBLE) AS c)) AS t",
+      "qualified": "SELECT \"t\".\"a\" AS \"a\" FROM (SELECT 1 AS \"a\" UNION ALL (SELECT 2 AS \"b\" UNION ALL SELECT CAST(2.5 AS DOUBLE) AS \"c\")) AS \"t\"",
+      "projection_types": [
+        "DOUBLE"
+      ]
+    },
+    {
+      "dialect": "duckdb",
+      "sql": "SELECT r FROM (SELECT 1 AS x UNION ALL SELECT CAST(2.5 AS DOUBLE) AS x) AS r",
+      "qualified": "SELECT \"r\" AS \"r\" FROM (SELECT 1 AS \"x\" UNION ALL SELECT CAST(2.5 AS DOUBLE) AS \"x\") AS \"r\"",
+      "projection_types": [
+        "STRUCT<x DOUBLE>"
+      ]
+    },
+    {
+      "dialect": "bigquery",
+      "sql": "SELECT (SELECT AS STRUCT 1 AS x, 'a' AS y) AS r",
+      "qualified": "SELECT (SELECT AS STRUCT 1 AS `x`, 'a' AS `y`) AS `r`",
+      "projection_types": [
+        "STRUCT<x INT, y VARCHAR>"
+      ]
+    },
+    {
+      "dialect": "duckdb",
+      "sql": "SELECT MAP(['a'], [missing]) AS m",
+      "qualified": "SELECT MAP(['a'], [\"missing\"]) AS \"m\"",
+      "projection_types": [
+        "UNKNOWN"
+      ]
+    }
+  ]
+}
