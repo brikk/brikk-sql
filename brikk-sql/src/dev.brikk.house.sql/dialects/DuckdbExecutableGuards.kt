@@ -58,9 +58,8 @@ private class DuckdbGuardFacts(expr: Expression) {
             if (node is SetItem && node.text("kind").equals("VARIABLE", ignoreCase = true)) variableSet = true
             if (node is DataType && node.isType(DType.VARIANT) || node.isDuckdbVariantFunction()) variant = true
             if (node.duckdbJsonCall() != null) jsonCall = true
-            // Alias/ordinal
-            // grouping and ungrouped post-aggregate expansions need a proved translation; an
-            // ordinary table-source UNNEST is not this operation.
+            // Alias/ordinal grouping and ungrouped post-aggregate expansions need a proved
+            // translation; an ordinary table-source UNNEST is not this operation.
             if (node is Explode || node is Unnest) {
                 val select = node.findAncestor<Select>()
                 if (select != null && select.args["group"] != null &&
