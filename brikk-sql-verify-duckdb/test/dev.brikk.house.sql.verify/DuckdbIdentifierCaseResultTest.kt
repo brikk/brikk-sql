@@ -37,7 +37,7 @@ internal class DuckdbIdentifierCaseResultTest {
             val facts = RelationFacts(tables = mapOf("$schema.$table" to RelationFact(actualNames.map { ColumnFact(it, "INTEGER") })))
             assertEquals(listOf(mode.foldUnquoted("MiXeDAlias"), "QuotedAlias"), RelationScope.analyze(folded, "duckdb", facts).output!!.columns.map { it.name })
             val functions = c.createStatement().use { s -> s.executeQuery(DUCKDB_FUNCTIONS.sql).use { r -> buildList {
-                while (r.next()) add(DUCKDB_FUNCTIONS.decode(DUCKDB_FUNCTIONS.columns.indices.map { r.getString(it+1) }))
+                while (r.next()) add(DUCKDB_FUNCTIONS.decode(DUCKDB_FUNCTIONS.columns.indices.map { r.getString(it + 1) }))
             } } }
             val macro = DuckdbDump("2.0.0", functions).userFunctions().single { it.schema == schema && it.def.name.equals("mixed", true) }
             assertEquals(mode.foldUnquoted("MiXeD"), macro.def.name)
@@ -48,7 +48,7 @@ internal class DuckdbIdentifierCaseResultTest {
     @Test fun stringSettingMetadataBooleanAliasesErrorsAndResetKeepNativeTypesAndValues() {
         for (generated in listOf(false, true)) DriverManager.getConnection("jdbc:duckdb:").use { c ->
             val setting = c.createStatement().use { s -> s.executeQuery(DUCKDB_SETTINGS.sql).use { r -> buildList {
-                while (r.next()) add(DUCKDB_SETTINGS.decode(DUCKDB_SETTINGS.columns.indices.map { r.getString(it+1) }))
+                while (r.next()) add(DUCKDB_SETTINGS.decode(DUCKDB_SETTINGS.columns.indices.map { r.getString(it + 1) }))
             }.single { it.name == "preserve_identifier_case" } } }
             assertEquals("VARCHAR", setting.inputType)
             assertEquals("GLOBAL", setting.scope)

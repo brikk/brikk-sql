@@ -238,7 +238,7 @@ internal class DuckdbPartitionPathResultTest {
                         assertEquals(3, r.getInt(2))
                         assertFalse(r.next())
                     }
-                    assertEquals(listOf(listOf((iteration*5).toString(), (iteration*3).toString())), c.rows("SELECT currval('source_seq'),currval('path_seq')"))
+                assertEquals(listOf(listOf((iteration * 5).toString(), (iteration * 3).toString())), c.rows("SELECT currval('source_seq'),currval('path_seq')"))
                     assertEquals(listOf(listOf("5", "5", "102", "106")), c.rows("SELECT count(*),count(DISTINCT invocation),min(id),max(id) FROM ${read(directory)}"))
                     assertTrue(files(directory).all { relative(directory, it).startsWith("prefix/") })
                 }
@@ -285,7 +285,7 @@ internal class DuckdbPartitionPathResultTest {
             val sql = "COPY (SELECT i%2 AS p,(i*7919)%24000 AS v,i AS id FROM range(24000)t(i)) TO ${literal(directory)} " +
                 "(FORMAT parquet,PARTITION_BY p,PARTITION_PATH 'part_'||p::VARCHAR,ORDER_BY (v DESC),ROW_GROUP_SIZE 2048,ROW_GROUPS_PER_FILE 1)"
             c.execute(if (generated) render(sql) else sql)
-            assertTrue(files(directory).size>2)
+                assertTrue(files(directory).size > 2)
             assertEquals(setOf("part_0", "part_1"), files(directory).map { relative(directory, it.parent) }.toSet())
             assertEquals(listOf(listOf("0", "24000")), c.rows("SELECT count(*) FILTER(WHERE previous<v),count(*) FROM (SELECT v,lag(v) OVER(PARTITION BY filename ORDER BY file_row_number) previous FROM ${read(directory)})"))
             assertEquals(listOf(listOf("24000", "24000")), c.rows("SELECT count(*),count(DISTINCT id) FROM ${read(directory)}"))

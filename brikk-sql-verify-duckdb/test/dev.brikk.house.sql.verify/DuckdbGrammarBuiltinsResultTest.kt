@@ -36,7 +36,7 @@ internal class DuckdbGrammarBuiltinsResultTest {
         connection().use { c ->
             val bareOnly = listOf("CURRENT_TIMESTAMP", "CURRENT_TIME", "LOCALTIME", "LOCALTIMESTAMP")
             val both = listOf("CURRENT_DATE", "CURRENT_CATALOG", "CURRENT_SCHEMA", "CURRENT_USER", "CURRENT_ROLE", "SESSION_USER", "USER")
-            for (name in bareOnly+both) {
+            for (name in bareOnly + both) {
                 assertIs<SerializedSql.Parsed>(c.serializeSql("SELECT $name"))
                 assertNotNull(c.rows("SELECT $name").single().single(), name)
                 assertIs<SerializedSql.Parsed>(c.serializeSql("SELECT $name()"), "generic call syntax is not registry resolution")

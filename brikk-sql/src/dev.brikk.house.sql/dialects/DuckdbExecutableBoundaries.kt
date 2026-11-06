@@ -36,7 +36,7 @@ internal fun Expression.duckdbExecutableBoundaryIssue(source: String?, target: S
         if (nodes.any { it is Merge }) return "DuckDB MERGE matching/actions/RETURNING have no verified cross-target execution contract"
         if (this is dev.brikk.house.sql.ast.Set || this is Pragma || this is Attach || this is Command)
             return "DuckDB session/storage/raw commands have no verified cross-target execution contract"
-        if (nodes.any { it is Table && it.parts.size>3 }) return "DuckDB nested namespace paths have no verified cross-target mapping"
+        if (nodes.any { it is Table && it.parts.size > 3 }) return "DuckDB nested namespace paths have no verified cross-target mapping"
         if (this is Create && text("kind").equals("TABLE", true) && nodes.filterIsInstance<Select>().any { select ->
                 select.expressionsArg.any { projection ->
                     var value = projection

@@ -81,7 +81,7 @@ internal class DuckdbDivisionPolicyResultTest {
                 val sql = "SELECT CAST(? AS INTEGER) // CAST(? AS INTEGER),CAST(? AS INTEGER) % CAST(? AS INTEGER),? / ?"
                 c.prepareStatement(if (generated) SqlFragment(sql, "duckdb").toExecutable("duckdb").sql else sql).use { p ->
                     assertEquals(6, p.parameterMetaData.parameterCount)
-                    listOf(7, 2, 7, 2, 7, 2).forEachIndexed { index, value -> p.setInt(index+1, value) }
+                listOf(7, 2, 7, 2, 7, 2).forEachIndexed { index, value -> p.setInt(index + 1, value) }
                     p.executeQuery().use { r ->
                         assertTrue(r.next())
                         assertEquals(3, r.getInt(1))

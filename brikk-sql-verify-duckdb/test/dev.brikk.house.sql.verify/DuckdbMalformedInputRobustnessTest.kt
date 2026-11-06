@@ -16,8 +16,8 @@ internal class DuckdbMalformedInputRobustnessTest {
             error("helper must not open for over-budget input")
         })
         for (sql in listOf("SELECT '"+"x".repeat(MAX_DUCKDB_PARSE_CHARACTERS)+"'",
-            "SELECT "+"(".repeat(MAX_DUCKDB_PARSE_NESTING+1), "SELECT "+"[".repeat(MAX_DUCKDB_PARSE_NESTING+1),
-            "SELECT "+"/*".repeat(MAX_DUCKDB_PARSE_NESTING+1), "SELECT 'a\u0000b'", "-- \u0000", "SELECT '\uD800'", "SELECT '\uDC00'"))
+        "SELECT " + "(".repeat(MAX_DUCKDB_PARSE_NESTING + 1), "SELECT " + "[".repeat(MAX_DUCKDB_PARSE_NESTING + 1),
+        "SELECT " + "/*".repeat(MAX_DUCKDB_PARSE_NESTING + 1), "SELECT 'a\u0000b'", "-- \u0000", "SELECT '\uD800'", "SELECT '\uDC00'"))
             assertIs<VerifyResult.Unverified>(verifier.verify(sql))
         assertEquals(0, opens.get())
     }
@@ -28,7 +28,7 @@ internal class DuckdbMalformedInputRobustnessTest {
             assertNull(duckdbParseInputIssue(sql), sql.take(80))
         assertNull(duckdbParseInputIssue("SELECT "+"(".repeat(MAX_DUCKDB_PARSE_NESTING)+"1"+")".repeat(MAX_DUCKDB_PARSE_NESTING)))
         assertNull(duckdbParseInputIssue("SELECT '😀🚀é中'"))
-        assertNotNull(duckdbParseInputIssue("SELECT 1 -- trivia\r"+"(".repeat(MAX_DUCKDB_PARSE_NESTING+1)))
+        assertNotNull(duckdbParseInputIssue("SELECT 1 -- trivia\r" + "(".repeat(MAX_DUCKDB_PARSE_NESTING + 1)))
         val canceled = CancellationException("typing changed")
         assertSame(canceled, assertFailsWith<CancellationException> { duckdbParseInputIssue("SELECT "+"x".repeat(8000)) { throw canceled } })
     }
@@ -42,7 +42,7 @@ internal class DuckdbMalformedInputRobustnessTest {
             }
         }
         ParseOnlyDuckdbVerifier(driver).use { verifier ->
-            val limited = "SELECT "+"(".repeat(MAX_DUCKDB_PARSE_NESTING+1)
+        val limited = "SELECT " + "(".repeat(MAX_DUCKDB_PARSE_NESTING + 1)
             assertIs<VerifyResult.Unverified>(verifier.verify(limited))
             assertEquals(0, opens.get())
             assertIs<VerifyResult.Accepted>(verifier.verify("SELECT 1"))
@@ -57,7 +57,7 @@ internal class DuckdbMalformedInputRobustnessTest {
             "SELECT "+"(".repeat(128)+"1", "SELECT list_transform([1], LAMBDA x, x, x:)",
             "SELECT CASE "+"WHEN true THEN ".repeat(128)+"END")
         val limited = listOf("SELECT "+"abs(".repeat(1100)+"1"+")".repeat(1100), "SELECT "+"(".repeat(8192))
-        val inputs = (malformed+limited+"SELECT 1").mapIndexed { index, sql -> NativeCorpusAudit.Input("robustness/$index", sql) }
+        val inputs = (malformed + limited + "SELECT 1").mapIndexed { index, sql -> NativeCorpusAudit.Input("robustness/$index", sql) }
         val run = NativeCorpusAudit.probe("robustness-200", NativeCorpusAudit.currentJar(), inputs, "v2.0.0", "d54cbbe3df")
         for (sql in malformed) assertEquals("rejected", run.verdicts.getValue(sql).status, sql.take(100))
         assertEquals("unverified", run.verdicts.getValue(limited[0]).status, "valid deep expressions hit an engine budget, not a grammar rejection")
@@ -117,7 +117,7 @@ internal class DuckdbMalformedInputRobustnessTest {
             opens.incrementAndGet()
             object: DuckdbQueryConnection {
                 override fun queryString(sql: String, timeoutSeconds: Int): String {
-                    while (release.count>0) try { release.await() } catch (_: InterruptedException) { /* deliberately broken transport */ }
+                while (release.count > 0) try { release.await() } catch (_: InterruptedException) { /* deliberately broken transport */ }
                     return "{\"error\":false,\"statements\":[]}"
                 }
                 override fun cancel() {

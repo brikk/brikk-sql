@@ -38,10 +38,10 @@ internal class DuckdbGrammarIsolationResultTest {
                 val payload = original.copyOf(original.size-256)
                 val signer = Signature.getInstance("SHA256withRSA").apply { initSign(RepositoryTestKeys.first.private) }
                 val hash = MessageDigest.getInstance("SHA-256")
-                for (start in payload.indices step 1024*1024) signer.update(hash.digest(payload.copyOfRange(start, minOf(start+1024*1024, payload.size))))
+        for (start in payload.indices step 1024 * 1024) signer.update(hash.digest(payload.copyOfRange(start, minOf(start + 1024 * 1024, payload.size))))
                 val location = repository.prefix.resolve(scalar("SELECT version()")).resolve(scalar("PRAGMA platform"))
                 Files.createDirectories(location)
-                GZIPOutputStream(Files.newOutputStream(location.resolve("psql.duckdb_extension.gz"))).use { it.write(payload+signer.sign()) }
+        GZIPOutputStream(Files.newOutputStream(location.resolve("psql.duckdb_extension.gz"))).use { it.write(payload + signer.sign()) }
                 c.createStatement().use { s ->
                     s.execute("CREATE SEQUENCE untouched")
                     s.execute(repository.create("grammar_fixture"))

@@ -44,7 +44,7 @@ internal class DuckdbAcceptanceComparisonTest {
             }) })
         }
         NativeCorpusAudit.report("acceptance-comparison.json", report)
-        assertTrue((old.verdicts.values+current.verdicts.values).none { it.status == "unavailable" }, "transport failures cannot satisfy the comparison")
+        assertTrue((old.verdicts.values + current.verdicts.values).none { it.status == "unavailable" }, "transport failures cannot satisfy the comparison")
         val baseline = NativeCorpusAudit.root.resolve("brikk-sql-verify-duckdb/testResources/acceptance-baseline.json")
         assertTrue(Files.isRegularFile(baseline), "Review build/duckdb-parser-audit/acceptance-comparison.json before creating the baseline")
         val expected = Json.parseToJsonElement(Files.readString(baseline)).jsonObject

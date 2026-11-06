@@ -22,7 +22,7 @@ internal class DuckdbSubqueryColonAliasResultTest {
                         s.executeQuery(text).use { r ->
                             assertTrue(r.next())
                             assertEquals(values, values.indices.map {
-                                r.getInt(it+1)
+                r.getInt(it + 1)
                             })
                             assertFalse(r.next())
                         }

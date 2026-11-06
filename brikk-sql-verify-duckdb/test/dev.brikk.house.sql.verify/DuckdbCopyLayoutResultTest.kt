@@ -200,10 +200,10 @@ internal class DuckdbCopyLayoutResultTest {
                         assertEquals(4, r.getInt(2))
                         assertFalse(r.next())
                     }
-                    assertEquals(listOf(listOf((iteration*8).toString())), c.rows("SELECT currval('copy_seq')"))
+                assertEquals(listOf(listOf((iteration * 8).toString())), c.rows("SELECT currval('copy_seq')"))
                     // Pinned native partitioned COPY evaluates its volatile sorting key twice
                     // per row in this plan. Do not promise once-only ORDER_BY evaluation.
-                    assertEquals(listOf(listOf((iteration*16).toString())), c.rows("SELECT currval('sort_seq')"))
+                assertEquals(listOf(listOf((iteration * 16).toString())), c.rows("SELECT currval('sort_seq')"))
                     assertEquals(listOf(listOf("8", "8")), c.rows("SELECT count(*),count(DISTINCT invocation) FROM read_parquet(${literal(directory.resolve("*/*/*.parquet"))})"))
                     for (file in files(directory)) {
                         val rows = c.rows("SELECT value,id FROM read_parquet(${literal(file)},hive_partitioning=false,file_row_number=true) ORDER BY file_row_number")

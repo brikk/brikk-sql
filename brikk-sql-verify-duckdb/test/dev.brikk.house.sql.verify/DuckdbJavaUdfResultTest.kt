@@ -19,7 +19,7 @@ internal class DuckdbJavaUdfResultTest {
         setProperty("autoinstall_known_extensions", "false")
     }) as DuckDBConnection
     private fun Connection.capture() = createStatement().use { s -> s.executeQuery(DUCKDB_FUNCTIONS.sql).use { r -> buildList {
-        while (r.next()) add(DUCKDB_FUNCTIONS.decode(DUCKDB_FUNCTIONS.columns.indices.map { r.getString(it+1) }))
+                while (r.next()) add(DUCKDB_FUNCTIONS.decode(DUCKDB_FUNCTIONS.columns.indices.map { r.getString(it + 1) }))
     } } }
 
     @Test fun realJavaRegistrationsRetainKindsAndInstanceOwnershipWithoutParseTimeCallbacks() {
@@ -53,7 +53,7 @@ internal class DuckdbJavaUdfResultTest {
                 builder.withName("audit_java").withParameter(Int::class.javaObjectType).withReturnType(Int::class.javaObjectType)
                     .withIntFunction(IntUnaryOperator {
                     scalars.incrementAndGet()
-                    it+1
+                it + 1
                 }).register(owner)
             }
             val captured = owner.capture().filter { it.name == "audit_java" }

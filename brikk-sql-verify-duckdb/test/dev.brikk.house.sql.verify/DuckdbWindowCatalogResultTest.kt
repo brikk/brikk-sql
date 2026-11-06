@@ -32,12 +32,12 @@ internal class DuckdbWindowCatalogResultTest {
     }
     private fun publish(f: RepositoryFixture, c: Connection, source: Path): Path {
         val original = Files.readAllBytes(source)
-        require(original.size>512)
+        require(original.size > 512)
         val payload = original.copyOf(original.size-256)
         val signer = Signature.getInstance("SHA256withRSA").apply { initSign(RepositoryTestKeys.first.private) }
         val hash = MessageDigest.getInstance("SHA-256")
-        for (start in payload.indices step 1024*1024) signer.update(hash.digest(payload.copyOfRange(start, minOf(start+1024*1024, payload.size))))
-        val signed = payload+signer.sign()
+        for (start in payload.indices step 1024 * 1024) signer.update(hash.digest(payload.copyOfRange(start, minOf(start + 1024 * 1024, payload.size))))
+        val signed = payload + signer.sign()
         val binary = f.directory.resolve("brikk_window.duckdb_extension")
         Files.write(binary, signed)
         val location = f.prefix.resolve(c.scalar("SELECT version()")).resolve(c.scalar("PRAGMA platform"))

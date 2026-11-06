@@ -40,7 +40,7 @@ internal class DuckdbCoreExtensionTriageResultTest {
                     "ALTER TABLE dl.events RESET SORTED BY",
                     "ALTER TABLE dl.events SET(target_file_size='256MB')",
                 )
-                for (sql in attach+ddl) {
+        for (sql in attach + ddl) {
                     val parsed = assertIs<SerializedSql.Failed>(c.serializeSql(sql), sql)
                     assertEquals("not implemented", parsed.type, parsed.message) // Parsed; JSON serializer intentionally supports SELECT only.
                 }

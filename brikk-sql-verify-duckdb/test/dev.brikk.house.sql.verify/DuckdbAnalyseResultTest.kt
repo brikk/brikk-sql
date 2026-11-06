@@ -22,7 +22,7 @@ internal class DuckdbAnalyseResultTest {
             execute("CREATE TABLE \"odd.name\"(\"x.y\" INTEGER)")
             execute("CREATE SEQUENCE untouched")
             for (spelling in listOf("ANALYZE", "ANALYSE")) for (tail in listOf("", " t", " memory.main.t(x,y)", " \"odd.name\"(\"x.y\")")) {
-                val original = spelling+tail
+                val original = spelling + tail
                 val tree = parseDuckdbNativeOne(original)
                 for (sql in listOf(original, tree.copy().sql("duckdb"), assertIs<Expression>(Serde.load(Serde.dump(tree))).sql("duckdb"))) {
                     assertEquals("not implemented", assertIs<SerializedSql.Failed>(c.serializeSql(sql)).type)

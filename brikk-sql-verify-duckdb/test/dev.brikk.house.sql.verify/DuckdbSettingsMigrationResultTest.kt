@@ -19,7 +19,7 @@ internal class DuckdbSettingsMigrationResultTest {
     @Test fun removedSettingsErrorAndLiveMetadataMatchesTheVersionedReplacementRows() {
         connection().use { c ->
             val live = c.createStatement().use { s -> s.executeQuery(DUCKDB_SETTINGS.sql).use { r -> buildList {
-                while (r.next()) add(DUCKDB_SETTINGS.decode(DUCKDB_SETTINGS.columns.indices.map { r.getString(it+1) }))
+                while (r.next()) add(DUCKDB_SETTINGS.decode(DUCKDB_SETTINGS.columns.indices.map { r.getString(it + 1) }))
             }.associateBy { it.name } } }
             for (name in listOf("custom_profiling_settings", "enable_http_logging", "http_logging_output", "profiling_mode")) assertFalse(name in live)
             val captured = DUCKDB_DUMPS.single { it.engineVersion == "2.0.0" }.settings!!.associateBy { it.name }
