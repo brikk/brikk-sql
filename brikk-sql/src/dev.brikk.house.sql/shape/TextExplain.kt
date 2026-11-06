@@ -33,7 +33,6 @@ sealed interface ExplainPreparation {
     /** Run [sql] on a connection of its own; its rows are the plan ([explainPlanText]). */
     data class Ready(val sql: String) : ExplainPreparation
 
-    /** Not explained, because of [reason]. */
     data class Refused(val reason: String) : ExplainPreparation
 }
 

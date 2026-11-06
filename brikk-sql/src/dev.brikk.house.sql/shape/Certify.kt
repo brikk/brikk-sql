@@ -54,7 +54,6 @@ enum class TranspileMode {
     STRICT,
 }
 
-/** Severity of a certification [Finding]. */
 enum class Severity {
     /** Strict consumers must not run the emitted SQL. */
     REFUSAL,
@@ -63,7 +62,6 @@ enum class Severity {
     WARNING,
 }
 
-/** What a certification [Finding] is about. */
 enum class FindingKind {
     /** A function name would reach the target engine unregistered (Class-3 hole). */
     UNMAPPABLE_FUNCTION,
@@ -178,16 +176,12 @@ data class TranspileReport(
  *     may emit that name while changing the NULL-on-failure contract, so CAST evidence
  *     cannot certify the source TRY_CAST concept.
  *
- *     VERDICT + RENDERER DRIVE THE DECISION (B — policy #2, middle-ground, 2026-07-13):
- *     the ORIGINAL rule SKIPPED the hazard whenever the target generator had a dedicated
- *     renderer — but for a TRANSLATED function that renderer is exactly what can be wrong
- *     (the doris P1 bugs shipped wrong SQL with ok=true for precisely this reason). The
- *     A+B rewrite made the renderer irrelevant (DIVERGENT/UNCLEAR always REFUSED), which
- *     over-refused ~104 translated functions. Policy #2 softens that:
+ *     VERDICT + RENDERER DRIVE THE DECISION (B — policy #2): a dedicated target renderer
+ *     does not skip the hazard, since for a TRANSLATED function that renderer is exactly
+ *     what can be wrong; it only lowers the severity:
  *       - DIVERGENT/UNCLEAR + the target generator HAS a dedicated renderer for the node
  *         (a real translation) -> WARNING: the translated function is surfaced but non-
- *         blocking. A false ok=true is no longer SILENT — the finding is visible and the
- *         consumer owns the residual risk (okAccepting/hand-edit).
+ *         blocking; the consumer owns the residual risk (okAccepting/hand-edit).
  *       - DIVERGENT/UNCLEAR + NO dedicated renderer (same-name passthrough, or an
  *         unresolved Anonymous call) -> REFUSAL: genuinely unsafe, no translation exists.
  *     Trust still lives in the DATA for the safe verdicts: a probe-verified IDENTICAL
@@ -307,24 +301,13 @@ fun SqlFragment.certify(
         val hazard: FunctionHazard? = HazardRegistry.lookupConcept(dialect, target, keys)
         val subject: String? = keys.firstOrNull()
         if (hazard == null) continue
-        // Policy #2 (dedicated-renderer refinement of the verdict-driven rule B):
-        // whether the TARGET generator has a dedicated renderer for this node (a real
-        // translation) vs. a same-name passthrough decides the SEVERITY of a
-        // DIVERGENT/UNCLEAR verdict — see the severity `when` below. Unresolved
-        // Anonymous/AnonymousAggFunc calls have no dedicated renderer by construction:
+        // Unresolved Anonymous/AnonymousAggFunc calls have no dedicated renderer by construction:
         // their "renderer" is the verbatim passthrough, so they can never be mitigated.
         val hasDedicatedRenderer = node !is Anonymous && node !is AnonymousAggFunc &&
             targetGenerator.hasDedicatedRenderer(node::class)
         // TODO(certify-policy): revisit — options #1 (conservative: DIVERGENT always
         // REFUSAL) vs #3 (target-name refinement; needs clean src->tgt fn-name pairs in
-        // the probe deliverables, not prose). Owner parked on #2 middle-ground 2026-07-13.
-        // Verdict + renderer drive the decision (policy #2): a DIVERGENT/UNCLEAR verdict
-        // with a dedicated target renderer is a TRANSLATED function — surfaced as a
-        // non-blocking WARNING (the false ok=true is no longer silent; the consumer owns
-        // the risk via okAccepting/hand-edit). A DIVERGENT/UNCLEAR verdict with NO
-        // dedicated renderer is a same-name passthrough with no translation — genuinely
-        // unsafe, so REFUSAL. CONDITIONALLY_EQUIVALENT is a WARNING; IDENTICAL/
-        // NO_EQUIVALENT produce nothing (trust lives in the DATA).
+        // the probe deliverables, not prose). Policy #2 (below) is the current middle ground.
         val severity = when (hazard.verdict) {
             HazardVerdict.DIVERGENT, HazardVerdict.UNCLEAR ->
                 if (hasDedicatedRenderer) Severity.WARNING else Severity.REFUSAL
@@ -352,11 +335,6 @@ fun SqlFragment.certify(
     // parses to an Add (not DateAdd) whose `expression` operand is an Interval — an
     // OPERATOR, carrying no function name to look up. The faithful registry entry
     // exists for provenance/documentation; detection is the shape of the AST node.
-    //
-    // Evidence: DuckDB promotes DATE + INTERVAL to TIMESTAMP, Trino keeps DATE — a
-    // transpiled expression round-trips value-equal but returns a different TYPE, which
-    // diverges downstream (casts, comparisons, string rendering). Live corpus:
-    // trino agent add_files_hive_partition_cast.test:51.
     findConstructHazards(target, findings)
 
     return TranspileReport(result, findings.toList())
@@ -489,7 +467,6 @@ private fun SqlFragment.findConstructHazards(target: String, findings: MutableSe
         val left = binary.left
         val right = binary.right
 
-        // The Interval must be one operand; the "base" operand is the other.
         val base = when {
             right is Interval -> left
             left is Interval -> right

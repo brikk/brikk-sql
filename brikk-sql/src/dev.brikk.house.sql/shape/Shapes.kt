@@ -51,7 +51,6 @@ data class ColumnShape(
 @Serializable
 data class Shape(val columns: List<ColumnShape>) {
 
-    /** Column names, in declaration order. */
     fun names(): List<String> = columns.map { it.name }
 
     /**
@@ -117,8 +116,6 @@ data class Shape(val columns: List<ColumnShape>) {
             if (!typesMatch(expected.type, found.type, d)) {
                 typeMismatches.add(expected to found)
             }
-            // Nullability: only when both sides declare it. A not-null contract
-            // (expected=false) is violated by a provably-nullable actual (true).
             if (expected.nullable == false && found.nullable == true) {
                 nullabilityMismatches.add(expected to found)
             }
