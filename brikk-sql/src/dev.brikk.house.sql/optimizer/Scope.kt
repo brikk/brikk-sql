@@ -1026,8 +1026,8 @@ private fun getSourceAlias(expression: Expression): String {
     return aliasName
 }
 
-/** Python truthiness for arg values (None/False/""/empty list are falsy). */
-private fun truthy(value: Any?): Boolean = when (value) {
+// brikk: Unlike generator transforms, optimizer arg checks keep numeric zero truthy.
+internal fun truthy(value: Any?): Boolean = when (value) {
     null, false, "" -> false
     is List<*> -> value.isNotEmpty()
     else -> true

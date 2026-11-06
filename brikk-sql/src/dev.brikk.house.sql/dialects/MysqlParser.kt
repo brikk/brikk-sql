@@ -120,6 +120,7 @@ private fun mysqlFormatTime(expression: Expression?): Expression? {
 }
 
 // sqlglot: parsers.mysql._str_to_date
+// MySQL chooses date or timestamp from the format; ClickHouse casts STR_TO_DATE to DATETIME.
 private fun buildStrToDate(argsList: List<Expression?>): Expression {
     val mysqlDateFormat = seqGet(argsList, 1)
     val dateFormat = mysqlFormatTime(mysqlDateFormat)
@@ -163,18 +164,13 @@ private fun buildDateDeltaWithInterval(
             "this" to argsList[0],
             "expression" to interval.thisArg,
             // sqlglot: unit_to_str(interval), then TimeUnit.__init__ converts to Var
-            "unit" to normalizeTimeUnit(intervalUnitToStr(interval)),
+            "unit" to normalizeTimeUnit(unitToStr(interval)),
         )
     )
 }
 
-// sqlglot: dialect.unit_to_str for Interval nodes
-private fun intervalUnitToStr(interval: Interval): Expression? {
-    val unit = interval.args["unit"] as? Expression ?: return Literal.string("DAY")
-    return if (unit is Var || unit is Literal) Literal.string(unit.name) else unit
-}
-
 // sqlglot: dialect.build_date_delta (unit_mapping=None, default_unit="DAY")
+// Unlike ClickHouse, the two-argument MySQL form defaults to DAY and has no timezone argument.
 private fun buildDateDelta(factory: NodeFactory): (List<Expression?>) -> Expression = { argsList ->
     val unitBased = argsList.size >= 3
     val this_ = if (unitBased) argsList[2] else seqGet(argsList, 0)

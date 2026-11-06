@@ -78,47 +78,12 @@ import dev.brikk.house.sql.ast.Schema
 import dev.brikk.house.sql.ast.Show
 import dev.brikk.house.sql.ast.args
 import dev.brikk.house.sql.parser.ErrorLevel
-import dev.brikk.house.sql.parser.NodeFactory
 import dev.brikk.house.sql.parser.ParseError
 import dev.brikk.house.sql.parser.Parser
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.Tokenizer
 import dev.brikk.house.sql.parser.TokenizerConfig
 import dev.brikk.house.sql.parser.seqGet
-
-// sqlglot: dialect.build_date_delta_with_interval (default_unit="DAY")
-private fun buildDateDeltaWithIntervalDefaultDay(
-    factory: NodeFactory,
-): (List<Expression?>) -> Expression = { argsList ->
-    if (argsList.size < 2) throw ParseError("INTERVAL expression expected")
-    val interval = argsList[1]
-    if (interval !is Interval) {
-        // default_unit branch: DATE_ADD(x, 7) -> DateAdd(this=x, expression=7, unit='DAY')
-        factory(
-            args(
-                "this" to argsList[0],
-                "expression" to interval,
-                // sqlglot: exp.Literal.string(default_unit), then TimeUnit.__init__ -> Var
-                "unit" to normalizeTimeUnit(Literal.string("DAY")),
-            )
-        )
-    } else {
-        factory(
-            args(
-                "this" to argsList[0],
-                "expression" to interval.thisArg,
-                // sqlglot: unit_to_str(interval), then TimeUnit.__init__ converts to Var
-                "unit" to normalizeTimeUnit(dorisIntervalUnitToStr(interval)),
-            )
-        )
-    }
-}
-
-// sqlglot: dialect.unit_to_str for Interval nodes (default "DAY")
-private fun dorisIntervalUnitToStr(interval: Interval): Expression? {
-    val unit = interval.args["unit"] as? Expression ?: return Literal.string("DAY")
-    return if (unit is dev.brikk.house.sql.ast.Var || unit is Literal) Literal.string(unit.name) else unit
-}
 
 // sqlglot: parsers.doris._build_date_trunc — accepts both
 // DATE_TRUNC(datetime, unit) and DATE_TRUNC(unit, datetime)

@@ -28,47 +28,12 @@ import dev.brikk.house.sql.ast.Unnest
 import dev.brikk.house.sql.ast.UniqueKeyProperty
 import dev.brikk.house.sql.ast.args
 import dev.brikk.house.sql.parser.ErrorLevel
-import dev.brikk.house.sql.parser.NodeFactory
 import dev.brikk.house.sql.parser.ParseError
 import dev.brikk.house.sql.parser.Parser
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.TokenizerConfig
 import dev.brikk.house.sql.parser.buildVarMap
 import dev.brikk.house.sql.parser.seqGet
-
-// sqlglot: dialect.build_date_delta_with_interval (default_unit="DAY")
-private fun buildDateDeltaWithIntervalDefaultDay(
-    factory: NodeFactory,
-): (List<Expression?>) -> Expression = { argsList ->
-    if (argsList.size < 2) throw ParseError("INTERVAL expression expected")
-    val interval = argsList[1]
-    if (interval !is Interval) {
-        // default_unit branch: DATE_ADD(x, 7) -> DateAdd(this=x, expression=7, unit='DAY')
-        factory(
-            args(
-                "this" to argsList[0],
-                // sqlglot: exp.Literal.string(default_unit), then TimeUnit.__init__ -> Var
-                "expression" to interval,
-                "unit" to normalizeTimeUnit(Literal.string("DAY")),
-            )
-        )
-    } else {
-        factory(
-            args(
-                "this" to argsList[0],
-                "expression" to interval.thisArg,
-                // sqlglot: unit_to_str(interval), then TimeUnit.__init__ converts to Var
-                "unit" to normalizeTimeUnit(starrocksIntervalUnitToStr(interval)),
-            )
-        )
-    }
-}
-
-// sqlglot: dialect.unit_to_str for Interval nodes (default "DAY")
-private fun starrocksIntervalUnitToStr(interval: Interval): Expression? {
-    val unit = interval.args["unit"] as? Expression ?: return Literal.string("DAY")
-    return if (unit is dev.brikk.house.sql.ast.Var || unit is Literal) Literal.string(unit.name) else unit
-}
 
 // sqlglot: dialect.build_timestamp_trunc -> TimestampTrunc(this=args[1], unit=args[0])
 private fun buildStarrocksTimestampTrunc(argsList: List<Expression?>): Expression =
@@ -94,7 +59,7 @@ private fun buildStarrocksTimeSlice(values: List<Expression?>): Expression {
         else -> throw ParseError("TIME_SLICE boundary must be FLOOR or CEIL")
     }
     return TimeSlice(args("this" to values[0], "expression" to numeric,
-        "unit" to normalizeTimeUnit(if (interval != null) starrocksIntervalUnitToStr(interval) else values.getOrNull(2)),
+        "unit" to normalizeTimeUnit(if (interval != null) unitToStr(interval) else values.getOrNull(2)),
         "kind" to kind))
 }
 

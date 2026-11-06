@@ -603,6 +603,7 @@ fun eliminateDistinctOn(expression: Expression): Expression {
 }
 
 // Python truthiness for raw arg values (matches sqlglot's `if x:` gating).
+// brikk: Unlike optimizer arg checks, transforms also treat numeric zero as false.
 private fun truthy(value: kotlin.Any?): kotlin.Boolean = when (value) {
     null, false, "", 0, 0L, 0.0 -> false
     is List<*> -> value.isNotEmpty()

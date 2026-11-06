@@ -24,15 +24,6 @@ import kotlin.collections.Map
 import kotlin.collections.Set
 import kotlin.reflect.KClass
 
-// sqlglot: dialect.unit_to_var
-private fun unitToVar(expression: Expression, default: String = "DAY"): Expression? {
-    val unit = expression.args["unit"] as? Expression
-        ?: return if (default.isNotEmpty()) Var(args("this" to default)) else null
-    if (unit is Var || unit is Placeholder || unit is WeekStart || unit is Column) return unit
-    val value = unit.name
-    return if (value.isNotEmpty()) Var(args("this" to value)) else null
-}
-
 /**
  * Port of sqlglot's BigQueryGenerator (reference/sqlglot/sqlglot/generators/bigquery.py
  * class BigQueryGenerator(generator.Generator)). TRANSFORMS entries and the bigquery

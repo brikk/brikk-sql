@@ -105,13 +105,6 @@ internal fun setOperationColumnPairs(
     return names.map { name -> Triple(name, left.indexOf(name).takeIf { it >= 0 }, right.indexOf(name).takeIf { it >= 0 }) }
 }
 
-/** Python truthiness for arg values (None/False/""/empty list are falsy). */
-private fun truthy(value: Any?): Boolean = when (value) {
-    null, false, "" -> false
-    is List<*> -> value.isNotEmpty()
-    else -> true
-}
-
 // sqlglot: helper.DATE_UNITS (interval units that operate on date components)
 private val DATE_UNITS = setOf("day", "week", "month", "quarter", "year", "year_month")
 

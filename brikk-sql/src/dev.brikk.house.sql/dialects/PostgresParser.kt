@@ -75,9 +75,6 @@ import dev.brikk.house.sql.parser.formatTimeString
 import dev.brikk.house.sql.parser.fromArgList
 import dev.brikk.house.sql.parser.seqGet
 
-// sqlglot: helper.is_int
-private fun isInt(text: String): Boolean = text.toLongOrNull() != null
-
 // sqlglot: Dialect["postgres"].format_time on a parsed expression
 private fun postgresFormatTime(expression: Expression?): Expression? {
     if (expression is Literal && expression.isString) {
@@ -107,8 +104,8 @@ private fun toInterval(text: String): Expression {
 
 // sqlglot: parsers.postgres._build_generate_series
 private fun buildGenerateSeries(a: List<Expression?>): Expression {
-    // The goal is to convert step values like '1 day' or INTERVAL '1 day' into INTERVAL '1' day
-    // Note: postgres allows calls with just two arguments -- the "step" argument defaults to 1
+    // Unlike DuckDB's zero-start scalar series, PostgreSQL explodes rows and accepts string interval steps.
+    // PostgreSQL allows two arguments: the step defaults to 1.
     val argsList = a.toMutableList()
     val step = seqGet(argsList, 2)
     if (step != null) {

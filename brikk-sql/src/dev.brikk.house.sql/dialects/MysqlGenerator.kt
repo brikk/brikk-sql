@@ -19,16 +19,6 @@ import kotlin.collections.Map
 import kotlin.collections.Set
 import kotlin.reflect.KClass
 
-// sqlglot: dialect.unit_to_var
-private fun unitToVar(expression: Expression, default: String = "DAY"): Expression? {
-    val unit = expression.args["unit"] as? Expression
-
-    if (unit is Var || unit is Placeholder || unit is WeekStart || unit is Column) return unit
-
-    val value = unit?.name ?: default
-    return if (value.isNotEmpty()) Var(args("this" to value)) else null
-}
-
 // sqlglot: time.subsecond_precision (datetime.fromisoformat based; regex approximation)
 private val ISO_TIMESTAMP_RE = Regex(
     "^\\d{4}-\\d{2}-\\d{2}[T ]\\d{2}:\\d{2}(:\\d{2}(\\.(\\d+))?)?([+-]\\d{2}:\\d{2}(:\\d{2})?)?$"

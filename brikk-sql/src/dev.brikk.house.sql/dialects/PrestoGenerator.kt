@@ -26,16 +26,6 @@ import kotlin.collections.Map
 import kotlin.collections.Set
 import kotlin.reflect.KClass
 
-// sqlglot: dialect.unit_to_str
-private fun unitToStr(expression: Expression, default: String = "DAY"): Expression? {
-    val unit = expression.args["unit"] as? Expression
-        ?: return if (default.isNotEmpty()) Literal.string(default) else null
-
-    if (unit is Placeholder || (unit !is Var && unit !is Literal)) return unit
-
-    return Literal.string(unit.name)
-}
-
 // sqlglot: dialects.hive.Hive.INVERSE_TIME_MAPPING (with _with_strict_time_inverse)
 // Used by PrestoGenerator.strtounix_sql and HiveGenerator.
 internal val HIVE_INVERSE_TIME_MAPPING: Map<String, String> =
