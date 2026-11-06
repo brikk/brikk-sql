@@ -74,6 +74,8 @@ open class DuckdbGenerator(
     // brikk extension #55: DuckDB 2.0.0 has no STRAIGHT_JOIN.
     override val unexecutableJoinWords: Set<String> get() = setOf("STRAIGHT_JOIN")
 
+    override fun checkExecutableBoundaries(expr: Expression) = checkDuckdbTargetBoundaries(expr)
+
     // sqlglot: DuckDBGenerator.SELECT_KINDS = ()
     override val selectKinds: Set<String> get() = emptySet()
     override val historicalDataPostAlias: Boolean get() = true

@@ -6,25 +6,8 @@ import dev.brikk.house.sql.ast.*
 import dev.brikk.house.sql.ast.Any as AnyNode
 import dev.brikk.house.sql.ast.Boolean as BooleanNode
 import dev.brikk.house.sql.ast.Set as SetNode
-import dev.brikk.house.sql.dialects.duckdbJsonCall
-import dev.brikk.house.sql.dialects.isDuckdbVariantFunction
+import dev.brikk.house.sql.dialects.checkDuckdbConstructsForForeignTarget
 import dev.brikk.house.sql.dialects.explainProblems
-import dev.brikk.house.sql.dialects.isDuckdbOverlayCall
-import dev.brikk.house.sql.dialects.duckdbOverlayArguments
-import dev.brikk.house.sql.dialects.hasDuckdbCopyLayout
-import dev.brikk.house.sql.dialects.duckdbPathFunctionName
-import dev.brikk.house.sql.dialects.isDuckdbNameShow
-import dev.brikk.house.sql.dialects.isDuckdbSetval
-import dev.brikk.house.sql.dialects.hasDuckdbRegexOverload
-import dev.brikk.house.sql.dialects.hasDuckdbParquetContract
-import dev.brikk.house.sql.dialects.hasDuckdbParquetWriteContract
-import dev.brikk.house.sql.dialects.hasDuckdbGeoJsonContract
-import dev.brikk.house.sql.dialects.hasDuckdbSnapshot
-import dev.brikk.house.sql.dialects.isDuckdbStorageAttach
-import dev.brikk.house.sql.dialects.duckdbDivisionTranslationIssue
-import dev.brikk.house.sql.dialects.duckdbExecutableBoundaryIssue
-import dev.brikk.house.sql.dialects.hasDuckdbZoneOrCollation
-import dev.brikk.house.sql.dialects.isDuckdbCheckpointCommand
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.TokenizerConfig
 import dev.brikk.house.sql.parser.formatTimeString
@@ -318,13 +301,21 @@ open class Generator(
     /** brikk-native (#55): join words the target rejects or reads as something else. */
     protected open val unexecutableJoinWords: Set<String> get() = emptySet()
 
-    private val targetName: String get() = dialect.name.ifBlank { "Target dialect" }
+    internal val targetName: String get() = dialect.name.ifBlank { "Target dialect" }
 
     /** Executable generation refuses [message]; a preview keeps its output and carries it as a finding. */
     internal fun unexecutable(message: String) {
         if (forExecution) throw UnsupportedError(message)
         unsupported(message)
     }
+
+    /**
+     * brikk-native (#55): before rendering, refuses (or flags in a preview) constructs with no
+     * verified executable translation into this target. DuckDB owns both directions: its
+     * generator overrides this, and every other target checks DuckDB-only and DuckDB-sourced
+     * semantics here.
+     */
+    internal open fun checkExecutableBoundaries(expr: Expression) = checkDuckdbConstructsForForeignTarget(expr)
 
     /** Before pipe desugaring: refuses, or flags in a preview, a pipe stage this target cannot execute once lowered. */
     internal fun checkLoweredPipeStages(tree: Expression) {
@@ -410,107 +401,7 @@ open class Generator(
             spanStack.clear()
             spanStack.addLast(mutableListOf())
         }
-        if(duckdbNativeSemantics || forExecution)
-            expr.duckdbDivisionTranslationIssue(sourceDialect, dialect.name)?.let(::unexecutable)
-        if(duckdbNativeSemantics || forExecution)
-            expr.duckdbExecutableBoundaryIssue(sourceDialect,dialect.name,forExecution)?.let(::unexecutable)
-        if((duckdbNativeSemantics || forExecution) && sourceDialect.equals("duckdb",true) && dialect.name!="duckdb" && expr.hasDuckdbZoneOrCollation())
-            unexecutable("DuckDB zone/calendar/collation and nanosecond semantics have no verified cross-target translation")
-        if((duckdbNativeSemantics || forExecution) && sourceDialect.equals("duckdb",true) && dialect.name!="duckdb" && expr.walk().any { it.isDuckdbCheckpointCommand() })
-            unexecutable("DuckDB CHECKPOINT storage control has no verified cross-target translation")
-        if (dialect.name != "duckdb" && expr.hasKeyedCte()) {
-            unexecutable("$targetName has no verified recursive USING KEY translation")
-        }
-        if (dialect.name != "duckdb" && expr.walk().any { it.isDuckdbExtensionManagement() })
-            unexecutable("$targetName has no verified DuckDB extension/repository management translation")
-        if (dialect.name != "duckdb" && expr.walk().any { it.isDuckdbExternalResourceStatement() || it is DuckdbExternalResourceSource })
-            unexecutable("$targetName has no verified DuckDB external-resource lifecycle translation")
-        if (dialect.name != "duckdb" && expr.findAll<DuckdbExplain>().any())
-            unexecutable("$targetName has no verified DuckDB EXPLAIN option/plan translation")
-        if (dialect.name != "duckdb" && expr.walk().any { it.isDuckdbNameShow() })
-            unexecutable("DuckDB SHOW name/query resolution has no verified cross-target translation")
-        if(sourceDialect.equals("duckdb",true) && dialect.name!="duckdb" && expr.find<Factorial>()!=null)
-            unexecutable("DuckDB factorial input, HUGEINT result and error semantics have no verified cross-target translation")
-        if(sourceDialect.equals("duckdb",true) && dialect.name!="duckdb" && (expr.hasDuckdbSnapshot() || expr.walk().any { it.isDuckdbStorageAttach() }))
-            unexecutable("DuckDB extension attachment/snapshot semantics have no verified cross-target translation")
-        if(expr.hasDuckdbParquetContract() && sourceDialect!=null && !sourceDialect.equals(dialect.name,true) &&
-            (dialect.name=="duckdb" || sourceDialect.equals("duckdb",true)))unexecutable("DuckDB Parquet schema/virtual columns have no verified cross-target translation")
-        if(expr.hasDuckdbParquetWriteContract() && sourceDialect!=null && !sourceDialect.equals(dialect.name,true) &&
-            (dialect.name=="duckdb" || sourceDialect.equals("duckdb",true)))unexecutable("DuckDB Parquet writer encoding options have no verified cross-target translation")
-        if(expr.hasDuckdbGeoJsonContract() && sourceDialect!=null && !sourceDialect.equals(dialect.name,true) &&
-            (dialect.name=="duckdb" || sourceDialect.equals("duckdb",true)))unexecutable("DuckDB GeoJSON Feature/geometry semantics have no verified cross-target translation")
-        if (expr.walk().any { it.hasDuckdbRegexOverload() } && sourceDialect != null && !sourceDialect.equals(dialect.name,true) &&
-            (dialect.name == "duckdb" || sourceDialect.equals("duckdb",true)))
-            unexecutable("DuckDB regex options/name-list overload has no verified cross-target translation")
-        if (expr.walk().any { it.isDuckdbSetval() } && sourceDialect != null && !sourceDialect.equals(dialect.name,true) &&
-            (dialect.name == "duckdb" || sourceDialect.equals("duckdb",true)))
-            unexecutable("DuckDB SETVAL sequence-state behavior has no verified cross-target translation")
-        if (dialect.name == "duckdb" && sourceDialect != null && !sourceDialect.equals("duckdb", true) &&
-            expr.walk().any { it is Show || it is Command && it.name.equals("SHOW", true) })
-            unexecutable("DuckDB SHOW is not a verified setting/table resolution translation from $sourceDialect")
-        if (expr.hasDuckdbCopyLayout() && sourceDialect != null && !sourceDialect.equals(dialect.name, true) &&
-            (dialect.name == "duckdb" || sourceDialect.equals("duckdb", true)))
-            unexecutable("DuckDB COPY PARTITION_BY/PARTITION_PATH/ORDER_BY has no verified cross-target file-layout translation")
-        if (expr.walk().any { it.duckdbPathFunctionName() != null } && sourceDialect != null &&
-            !sourceDialect.equals(dialect.name, true) && (dialect.name == "duckdb" || sourceDialect.equals("duckdb", true)))
-            unexecutable("DuckDB path helpers have no verified cross-target escaping/normalization translation")
-        if (expr.walk().any { it.isDuckdbOverlayCall() }) {
-            if (sourceDialect.equals("duckdb", true) && dialect.name != "duckdb")
-                unexecutable("$targetName has no verified DuckDB OVERLAY offset/count/Unicode translation")
-            if (dialect.name == "duckdb" && sourceDialect != null && !sourceDialect.equals("duckdb", true))
-                unexecutable("DuckDB OVERLAY is not a verified same-name translation from $sourceDialect")
-            if (dialect.name == "duckdb" && expr.walk().any { it.isDuckdbOverlayCall() && it.duckdbOverlayArguments() == null })
-                unexecutable("DuckDB OVERLAY has no valid modeled three/four-argument signature")
-        }
-        if (expr.findAll<SecureProperty>().any()) {
-            // Among the implemented targets only DuckDB has a verified secure-view
-            // contract. An origin-less AST is not permission to emit an unsafe DDL.
-            if (dialect.name != "duckdb")
-                unexecutable("$targetName has no verified DuckDB SECURE VIEW information-hiding translation")
-            if (dialect.name == "duckdb" && sourceDialect != null && !sourceDialect.equals("duckdb", ignoreCase = true))
-                unexecutable("DuckDB SECURE VIEW is not a verified same-keyword translation from $sourceDialect")
-        }
-        if (dialect.name != "duckdb" && expr.findAll<DuckdbRecursiveViewProperty>().any())
-            unexecutable("$targetName has no verified DuckDB recursive view translation")
-        val triggerDdl = expr.walk().any { it.isTriggerDdl() }
-        if (triggerDdl && sourceDialect.equals("duckdb", ignoreCase = true) && dialect.name != "duckdb")
-            unexecutable("$targetName has no verified DuckDB trigger translation")
-        if (triggerDdl && dialect.name == "duckdb" && sourceDialect != null && !sourceDialect.equals("duckdb", ignoreCase = true))
-            unexecutable("DuckDB trigger semantics are not a verified translation from $sourceDialect")
-        if (dialect.name == "duckdb" && expr.isTriggerDdl() && expr.findAll<TemporaryProperty>().any())
-            unexecutable("DuckDB 2.0 does not support temporary triggers")
-        if (sourceDialect.equals("duckdb", ignoreCase = true) && dialect.name != "duckdb") {
-            if (duckdbSessionDefaults == true || duckdbSessionDefaults == null && expr.walk().any { parameter ->
-                    (parameter is Parameter || parameter is Placeholder && parameter.thisArg != null) && parameter.name.any { it !in '0'..'9' }
-                } ||
-                expr.findAll<SetItem>().any { it.text("kind").equals("VARIABLE", ignoreCase = true) }) {
-                unexecutable("$targetName has no verified DuckDB session-variable/default translation")
-            }
-            if (expr.walk().any { it is DataType && it.isType(DType.VARIANT) || it.isDuckdbVariantFunction() }) {
-                unexecutable("$targetName has no verified DuckDB VARIANT translation")
-            }
-            if (expr.walk().any { it.duckdbJsonCall() != null }) {
-                unexecutable("$targetName has no verified DuckDB JSON mutation/normalization translation")
-            }
-            // Check before target SELECT transforms move projection UNNESTs into FROM.
-            // Alias/ordinal grouping and ungrouped post-aggregate expansions also need a
-            // proved translation; an ordinary table-source UNNEST is not this operation.
-            if (expr.findAll<Select>().any { select ->
-                select.args["group"] != null && select.walk().any { node ->
-                    (node is Explode || node is Unnest) && node.findAncestor<Select>() === select &&
-                        generateSequence(node.parent) { it.parent }.takeWhile { it !== select }
-                            .none { it is From || it is Join || it is Table || it is Lateral }
-                }
-            }) unexecutable("$targetName has no verified DuckDB grouping UNNEST translation")
-        }
-        if (dialect.name == "duckdb" && sourceDialect != null && !sourceDialect.equals("duckdb", ignoreCase = true) &&
-            expr.walk().any { it.duckdbJsonCall() != null }) {
-            unexecutable("DuckDB JSON mutation/normalization is not a verified same-name translation from $sourceDialect")
-        }
-        if (dialect.name == "duckdb" && sourceDialect != null && !sourceDialect.equals("duckdb", ignoreCase = true) &&
-            expr.walk().any { it is DataType && it.isType(DType.VARIANT) || it.isDuckdbVariantFunction() }) {
-            unexecutable("DuckDB VARIANT is not a verified translation from $sourceDialect")
-        }
+        checkExecutableBoundaries(expr)
         val raw = sql(preprocess(expr))
         var sql = raw.trim()
         if (pretty) sql = sql.replace(SENTINEL_LINE_BREAK, "\n")
