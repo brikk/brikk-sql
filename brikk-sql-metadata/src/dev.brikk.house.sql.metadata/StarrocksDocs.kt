@@ -75,7 +75,6 @@ val STARROCKS_DOCS: EngineDocs = EngineDocs(
         DocsEntry("ANALYZE [FULL|SAMPLE] TABLE", "${STATEMENTS}cbo_stats/ANALYZE_TABLE/", "ANALYZE TABLE"),
         DocsEntry("CREATE [GLOBAL] [AGGREGATE|TABLE] FUNCTION", "${STATEMENTS}Function/CREATE_FUNCTION/", "CREATE FUNCTION"),
         DocsEntry("DROP [GLOBAL] FUNCTION", "${STATEMENTS}Function/DROP_FUNCTION/", "DROP FUNCTION"),
-        // Clauses.
         DocsEntry("PIVOT", "${STATEMENTS}table_bucket_part_index/SELECT/SELECT_PIVOT/", "PIVOT", clause = true),
     ),
     tableFunctions = mapOf(

@@ -33,7 +33,7 @@ val DUCKDB_GRAMMAR_BUILTINS: Set<String> = setOf(
 )
 
 /*
- * Grammar forms for completion (DF-13): every name above, plus the grammar-level names its
+ * Grammar forms for completion: every name above, plus the grammar-level names its
  * inclusion rule leaves out (TRY, CAST, TRY_CAST, EXTRACT), registered IF, bare built-ins,
  * and the special argument syntax of registered functions. Each probed on the
  * 2.0.0 JDBC engine (bare and call spellings both tried).

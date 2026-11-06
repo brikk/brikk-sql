@@ -27,7 +27,7 @@ val STARROCKS_GRAMMAR_BUILTINS: Set<String> = setOf(
 )
 
 /*
- * Grammar forms for completion (DF-13): the names above with their MySQL-family shapes. Not
+ * Grammar forms for completion: the names above with their MySQL-family shapes. Not
  * verified against a StarRocks grammar (none is vendored), so no bare spellings are claimed.
  */
 internal val STARROCKS_GRAMMAR_FORMS: List<GrammarForm> = listOf(

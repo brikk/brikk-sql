@@ -1,6 +1,6 @@
 package dev.brikk.house.sql.metadata
 
-/** Handwritten final-doc vocabulary for DDB20-035 triage, not a runtime validator or
+/** Handwritten vocabulary from the extension docs, not a runtime validator or
  * evidence that an extension is installed. Original option names/values are never rewritten.
  * Sources: DuckLake 1.1 connecting; DuckDB 2.0 Iceberg options and Delta documentation.
  */
