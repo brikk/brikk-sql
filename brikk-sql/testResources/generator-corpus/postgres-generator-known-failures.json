@@ -1,9 +1,153 @@
 {
-    "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
-    "cases": [{
-        "id": "assertion:v1:sha256:1d94871b8d96ab75ea5047634e7f8ae287d1cdcd3467bb925fe1cb8ac31cb8ba:1",
-        "sql": "SHA384(x)",
-        "signature": "sql-mismatch:v1:sha256:3b84d349bf878339d49836073bce0ea93b8e7ff3c1435ed1e3e7d4bb2bd73a08",
-        "reason": "SG29-011/#8764/78b24a74: this frozen generic SHA2 AST means hex text, so PostgreSQL emits ENCODE(SHA384(x), 'hex') instead of silently returning bytea. Native literal digest/hex controls cover all three sizes; no arbitrary input coercion is qualified. Exact row; remove with SG29-020 refresh."
-    }]
+    "sqlglot_version": "v30.29.0",
+    "cases": [
+        {
+            "id": "assertion:v1:sha256:2dd672a836f0eb184a525d3fe8a3fbce9ab32eb62971f2be28bf0a2259f18ace:1",
+            "sql": "CREATE TABLE t (a INT PRIMARY KEY) TABLESPACE pg_default",
+            "signature": "exception:v1:sha256:eb804a394e62381eb920d6d77b7468c1d255a30a1f174a3366aee3447d801871",
+            "reason": "SG29-020: New TABLESPACE/index-option/CREATE lifecycle placement is not qualified. Unknown locations refuse or stay opaque; nonempty new constraint options are guarded for execution. No native DDL is run. Deferred owner: Jayson Minard, separately bounded feature/qualification work; no equivalence claimed."
+        },
+        {
+            "id": "assertion:v1:sha256:a4bdc4b81bc10da9ffd86884734605ec7336591f2f609ae7e1b92c87bddd8e9b:1",
+            "sql": "CREATE TABLE t (a INT) WITH (fillfactor=70) TABLESPACE pg_default",
+            "signature": "exception:v1:sha256:eb804a394e62381eb920d6d77b7468c1d255a30a1f174a3366aee3447d801871",
+            "reason": "SG29-020: New TABLESPACE/index-option/CREATE lifecycle placement is not qualified. Unknown locations refuse or stay opaque; nonempty new constraint options are guarded for execution. No native DDL is run. Deferred owner: Jayson Minard, separately bounded feature/qualification work; no equivalence claimed."
+        },
+        {
+            "id": "assertion:v1:sha256:120b777819ceeb3a74522900858736311132e09887b38098358e2099e4d96ef1:1",
+            "sql": "CREATE INDEX i ON t(a) TABLESPACE pg_default",
+            "signature": "sql-mismatch:v1:sha256:32bf1c35328bfe5eedda5e6952eb813fcca24bfde6f4f83229815c04b325de54",
+            "reason": "SG29-020: New TABLESPACE/index-option/CREATE lifecycle placement is not qualified. Unknown locations refuse or stay opaque; nonempty new constraint options are guarded for execution. No native DDL is run. Deferred owner: Jayson Minard, separately bounded feature/qualification work; no equivalence claimed.",
+            "expected": "CREATE INDEX i ON t(a) TABLESPACE pg_default",
+            "actual": "CREATE INDEX i ON t(a) USING INDEX TABLESPACE pg_default"
+        },
+        {
+            "id": "assertion:v1:sha256:5141cd9d1ac3374bfb380e12332fd5ac6cb561c69c7ec3e4e70d62c3c281f35b:1",
+            "sql": "CREATE MATERIALIZED VIEW mv TABLESPACE pg_default AS SELECT 1 AS a",
+            "signature": "exception:v1:sha256:eb804a394e62381eb920d6d77b7468c1d255a30a1f174a3366aee3447d801871",
+            "reason": "SG29-020: New TABLESPACE/index-option/CREATE lifecycle placement is not qualified. Unknown locations refuse or stay opaque; nonempty new constraint options are guarded for execution. No native DDL is run. Deferred owner: Jayson Minard, separately bounded feature/qualification work; no equivalence claimed."
+        },
+        {
+            "id": "assertion:v1:sha256:b2af6e4ed330e49d70a8c6bbd27a767b5828403ad70c33e0f15e01822854c53d:1",
+            "sql": "CREATE TABLE t (a INT, UNIQUE (a) USING INDEX TABLESPACE pg_default)",
+            "signature": "sql-mismatch:v1:sha256:34b4f827f896bbdfb62606d9887865346266d0ea70a3a1659755208a3428f5c3",
+            "reason": "SG29-020: New TABLESPACE/index-option/CREATE lifecycle placement is not qualified. Unknown locations refuse or stay opaque; nonempty new constraint options are guarded for execution. No native DDL is run. Deferred owner: Jayson Minard, separately bounded feature/qualification work; no equivalence claimed.",
+            "expected": "CREATE TABLE t (a INT, UNIQUE (a) USING INDEX TABLESPACE pg_default)",
+            "actual": "CREATE TABLE t (a INT, UNIQUE (a))"
+        },
+        {
+            "id": "assertion:v1:sha256:7955aa9d0978c370e45a24ef4b85f1687e05d32f2ab1601c27d9ae7ad155ce81:1",
+            "sql": "CREATE TABLE t (a INT PRIMARY KEY USING INDEX TABLESPACE pg_default)",
+            "signature": "sql-mismatch:v1:sha256:5226c60242ff7fb5f416f6fc4129c1d96c3796a7ce2a4095f5e95d0c4fb987e9",
+            "reason": "SG29-020: New TABLESPACE/index-option/CREATE lifecycle placement is not qualified. Unknown locations refuse or stay opaque; nonempty new constraint options are guarded for execution. No native DDL is run. Deferred owner: Jayson Minard, separately bounded feature/qualification work; no equivalence claimed.",
+            "expected": "CREATE TABLE t (a INT PRIMARY KEY USING INDEX TABLESPACE pg_default)",
+            "actual": "CREATE TABLE t (a INT PRIMARY KEY)"
+        },
+        {
+            "id": "assertion:v1:sha256:e9ee3828909c22d732073481c3c8128fb1e4c58fa35c432f640aeb79ee5b4176:1",
+            "sql": "CREATE TABLE t (a INT) TABLESPACE \"pg_default\"",
+            "signature": "exception:v1:sha256:eb804a394e62381eb920d6d77b7468c1d255a30a1f174a3366aee3447d801871",
+            "reason": "SG29-020: New TABLESPACE/index-option/CREATE lifecycle placement is not qualified. Unknown locations refuse or stay opaque; nonempty new constraint options are guarded for execution. No native DDL is run. Deferred owner: Jayson Minard, separately bounded feature/qualification work; no equivalence claimed."
+        },
+        {
+            "id": "assertion:v1:sha256:3ece54ab7383a6f69b666a01e94148ffdc8d68b17507150d487279cadf17f5ca:1",
+            "sql": "CREATE INDEX i ON t(a) TABLESPACE \"pg_default\"",
+            "signature": "sql-mismatch:v1:sha256:06c66d998b56a182e48ff053d8df0c0ba6272d9e5fbe6bebf056644573cdfe88",
+            "reason": "SG29-020: New TABLESPACE/index-option/CREATE lifecycle placement is not qualified. Unknown locations refuse or stay opaque; nonempty new constraint options are guarded for execution. No native DDL is run. Deferred owner: Jayson Minard, separately bounded feature/qualification work; no equivalence claimed.",
+            "expected": "CREATE INDEX i ON t(a) TABLESPACE \"pg_default\"",
+            "actual": "CREATE INDEX i ON t(a) USING INDEX TABLESPACE \"pg_default\""
+        },
+        {
+            "id": "assertion:v1:sha256:ad4136f3ac82f5ccf6c3c0a386d78595c5e8db569078fbafdb52c027163adf03:1",
+            "sql": "CREATE MATERIALIZED VIEW mv TABLESPACE \"pg_default\" AS SELECT 1 AS a",
+            "signature": "exception:v1:sha256:eb804a394e62381eb920d6d77b7468c1d255a30a1f174a3366aee3447d801871",
+            "reason": "SG29-020: New TABLESPACE/index-option/CREATE lifecycle placement is not qualified. Unknown locations refuse or stay opaque; nonempty new constraint options are guarded for execution. No native DDL is run. Deferred owner: Jayson Minard, separately bounded feature/qualification work; no equivalence claimed."
+        },
+        {
+            "id": "assertion:v1:sha256:5427e2dd59a6db84dca6282ce3583df00884c642d6036552e47e94dd4ad4a0fb:1",
+            "sql": "CREATE TABLE t (a INT PRIMARY KEY USING INDEX TABLESPACE \"pg_default\" DEFERRABLE INITIALLY DEFERRED)",
+            "signature": "sql-mismatch:v1:sha256:d4ddcfa57d6e0637d86363d1668209931f2f58224975f445ede34059aff00dc7",
+            "reason": "SG29-020: New TABLESPACE/index-option/CREATE lifecycle placement is not qualified. Unknown locations refuse or stay opaque; nonempty new constraint options are guarded for execution. No native DDL is run. Deferred owner: Jayson Minard, separately bounded feature/qualification work; no equivalence claimed.",
+            "expected": "CREATE TABLE t (a INT PRIMARY KEY USING INDEX TABLESPACE \"pg_default\" DEFERRABLE INITIALLY DEFERRED)",
+            "actual": "CREATE TABLE t (a INT PRIMARY KEY DEFERRABLE INITIALLY DEFERRED)"
+        },
+        {
+            "id": "assertion:v1:sha256:4496d1a9347fbdc1f1ae61599dbbd5f9137504103dbd1af82d0bce5ba600b65f:1",
+            "sql": "CREATE TABLE t (a INT PRIMARY KEY WITH (fillfactor=70) USING INDEX TABLESPACE pg_default)",
+            "signature": "sql-mismatch:v1:sha256:dbf1e5c0ab42344240f08efd540ee8c158fc668ec4e56b404c3f471f55a91fa0",
+            "reason": "SG29-020: New TABLESPACE/index-option/CREATE lifecycle placement is not qualified. Unknown locations refuse or stay opaque; nonempty new constraint options are guarded for execution. No native DDL is run. Deferred owner: Jayson Minard, separately bounded feature/qualification work; no equivalence claimed.",
+            "expected": "CREATE TABLE t (a INT PRIMARY KEY WITH (fillfactor=70) USING INDEX TABLESPACE pg_default)",
+            "actual": "CREATE TABLE t (a INT PRIMARY KEY)"
+        },
+        {
+            "id": "assertion:v1:sha256:ba06a7baaac4d38c9243a42b7c3d08c645c72ee056ebba8f0485c3851c62f453:1",
+            "sql": "CREATE TABLE t (a INT UNIQUE USING INDEX TABLESPACE \"pg_default\" DEFERRABLE)",
+            "signature": "sql-mismatch:v1:sha256:32c4a071bf71014d32fc88e28ef1d469b77a3f21818e3dcd6fef41ba2876155e",
+            "reason": "SG29-020: New TABLESPACE/index-option/CREATE lifecycle placement is not qualified. Unknown locations refuse or stay opaque; nonempty new constraint options are guarded for execution. No native DDL is run. Deferred owner: Jayson Minard, separately bounded feature/qualification work; no equivalence claimed.",
+            "expected": "CREATE TABLE t (a INT UNIQUE USING INDEX TABLESPACE \"pg_default\" DEFERRABLE)",
+            "actual": "CREATE TABLE t (a INT UNIQUE DEFERRABLE)"
+        },
+        {
+            "id": "assertion:v1:sha256:2f0e9cf63c9f47a6b95315b53eba0fa15fc53c5abe8755a3fe95237cb28fea80:1",
+            "sql": "CREATE TABLE t (a INT UNIQUE NULLS NOT DISTINCT WITH (fillfactor=70) USING INDEX TABLESPACE pg_default)",
+            "signature": "sql-mismatch:v1:sha256:02d59abe6a39a569954768df42bf760863e7d3a55807a073c328864db5578357",
+            "reason": "SG29-020: New TABLESPACE/index-option/CREATE lifecycle placement is not qualified. Unknown locations refuse or stay opaque; nonempty new constraint options are guarded for execution. No native DDL is run. Deferred owner: Jayson Minard, separately bounded feature/qualification work; no equivalence claimed.",
+            "expected": "CREATE TABLE t (a INT UNIQUE NULLS NOT DISTINCT WITH (fillfactor=70) USING INDEX TABLESPACE pg_default)",
+            "actual": "CREATE TABLE t (a INT UNIQUE NULLS NOT DISTINCT)"
+        },
+        {
+            "id": "assertion:v1:sha256:8f6e6eaefd65ffaa8cbd7309a1e0601deed638d8c9d7035b1607a94b0c6e10b3:1",
+            "sql": "CREATE TABLE t (a INT, b INT, CONSTRAINT uq UNIQUE (a) INCLUDE (b) WITH (fillfactor=70) USING INDEX TABLESPACE pg_default DEFERRABLE)",
+            "signature": "sql-mismatch:v1:sha256:7384a75c047c60ed6b6b4f92a6f4583dd277bee504a6dcf4bb4db06f3d5eecc1",
+            "reason": "SG29-020: New TABLESPACE/index-option/CREATE lifecycle placement is not qualified. Unknown locations refuse or stay opaque; nonempty new constraint options are guarded for execution. No native DDL is run. Deferred owner: Jayson Minard, separately bounded feature/qualification work; no equivalence claimed.",
+            "expected": "CREATE TABLE t (a INT, b INT, CONSTRAINT uq UNIQUE (a) INCLUDE (b) WITH (fillfactor=70) USING INDEX TABLESPACE pg_default DEFERRABLE)",
+            "actual": "CREATE TABLE t (a INT, b INT, CONSTRAINT uq UNIQUE (a) DEFERRABLE)"
+        },
+        {
+            "id": "assertion:v1:sha256:505f68afd1d9f3f9e7c08e4b20d44afa426f10a3890a98436e7dc8485e5c8df0:1",
+            "sql": "CREATE INDEX i ON t USING btree(a) INCLUDE (b) WITH (fillfactor=70) TABLESPACE \"pg_default\" WHERE a > 0",
+            "signature": "sql-mismatch:v1:sha256:be4c8d08598a1182a8665067144ff4597747fea8673d0ea1897b5f8ba87d99e3",
+            "reason": "SG29-020: New TABLESPACE/index-option/CREATE lifecycle placement is not qualified. Unknown locations refuse or stay opaque; nonempty new constraint options are guarded for execution. No native DDL is run. Deferred owner: Jayson Minard, separately bounded feature/qualification work; no equivalence claimed.",
+            "expected": "CREATE INDEX i ON t USING btree(a) INCLUDE (b) WITH (fillfactor=70) TABLESPACE \"pg_default\" WHERE a > 0",
+            "actual": "CREATE INDEX i ON t USING btree(a) INCLUDE (b) WITH (fillfactor=70) USING INDEX TABLESPACE \"pg_default\" WHERE a > 0"
+        },
+        {
+            "id": "assertion:v1:sha256:2339362d79a74b896ad814b71079052890be10b3b76ed645549f40d6fe0ab7ed:1",
+            "sql": "CREATE TABLE t (a INT) USING heap TABLESPACE pg_default",
+            "signature": "exception:v1:sha256:eb804a394e62381eb920d6d77b7468c1d255a30a1f174a3366aee3447d801871",
+            "reason": "SG29-020: New TABLESPACE/index-option/CREATE lifecycle placement is not qualified. Unknown locations refuse or stay opaque; nonempty new constraint options are guarded for execution. No native DDL is run. Deferred owner: Jayson Minard, separately bounded feature/qualification work; no equivalence claimed."
+        },
+        {
+            "id": "assertion:v1:sha256:5118e21d32e907b3e2bd3debb96bcc3d9c3dc587c06f5c92fb89cd7fefa213e7:1",
+            "sql": "CREATE TABLE t USING heap WITH (fillfactor=70) TABLESPACE pg_default AS SELECT 1 AS a WITH NO DATA",
+            "signature": "exception:v1:sha256:eb804a394e62381eb920d6d77b7468c1d255a30a1f174a3366aee3447d801871",
+            "reason": "SG29-020: New TABLESPACE/index-option/CREATE lifecycle placement is not qualified. Unknown locations refuse or stay opaque; nonempty new constraint options are guarded for execution. No native DDL is run. Deferred owner: Jayson Minard, separately bounded feature/qualification work; no equivalence claimed."
+        },
+        {
+            "id": "assertion:v1:sha256:510cc1d5b107112db5c17b2743a9db706a44870f28f756235b2ce38a14db76ab:1",
+            "sql": "CREATE MATERIALIZED VIEW mv USING heap WITH (fillfactor=70) TABLESPACE pg_default AS SELECT 1 AS a",
+            "signature": "exception:v1:sha256:eb804a394e62381eb920d6d77b7468c1d255a30a1f174a3366aee3447d801871",
+            "reason": "SG29-020: New TABLESPACE/index-option/CREATE lifecycle placement is not qualified. Unknown locations refuse or stay opaque; nonempty new constraint options are guarded for execution. No native DDL is run. Deferred owner: Jayson Minard, separately bounded feature/qualification work; no equivalence claimed."
+        },
+        {
+            "id": "assertion:v1:sha256:78b03d04c129cc8c9941d23e877c08cc224437080571782d00a780f4d632ad7b:1",
+            "sql": "CREATE TEMPORARY TABLE t (a INT) USING heap WITH (fillfactor=70) ON COMMIT DELETE ROWS TABLESPACE pg_default",
+            "signature": "exception:v1:sha256:eb804a394e62381eb920d6d77b7468c1d255a30a1f174a3366aee3447d801871",
+            "reason": "SG29-020: New TABLESPACE/index-option/CREATE lifecycle placement is not qualified. Unknown locations refuse or stay opaque; nonempty new constraint options are guarded for execution. No native DDL is run. Deferred owner: Jayson Minard, separately bounded feature/qualification work; no equivalence claimed."
+        },
+        {
+            "id": "assertion:v1:sha256:92836d23ebc11e180cd59698670cdca208100d65b46477aa04faa2955a25eb4b:1",
+            "sql": "CREATE TEMPORARY TABLE t USING heap WITH (fillfactor=70) ON COMMIT PRESERVE ROWS TABLESPACE pg_default AS SELECT 1 AS a",
+            "signature": "exception:v1:sha256:eb804a394e62381eb920d6d77b7468c1d255a30a1f174a3366aee3447d801871",
+            "reason": "SG29-020: New TABLESPACE/index-option/CREATE lifecycle placement is not qualified. Unknown locations refuse or stay opaque; nonempty new constraint options are guarded for execution. No native DDL is run. Deferred owner: Jayson Minard, separately bounded feature/qualification work; no equivalence claimed."
+        },
+        {
+            "id": "assertion:v1:sha256:f97b004f9b6cecb5ca6cb8d1dc4cb2724467b0dfc2b15e823dd2958319fecf61:1",
+            "sql": "CREATE TEMPORARY TABLE t ON COMMIT DELETE ROWS AS SELECT 1 AS a",
+            "signature": "sql-mismatch:v1:sha256:62218cd474312593fd0e2e1391abebe127752b428d6edb27310de615e841610c",
+            "reason": "SG29-020: New TABLESPACE/index-option/CREATE lifecycle placement is not qualified. Unknown locations refuse or stay opaque; nonempty new constraint options are guarded for execution. No native DDL is run. Deferred owner: Jayson Minard, separately bounded feature/qualification work; no equivalence claimed.",
+            "expected": "CREATE TEMPORARY TABLE t ON COMMIT DELETE ROWS AS SELECT 1 AS a",
+            "actual": "CREATE TEMPORARY TABLE t AS SELECT 1 AS a ON COMMIT DELETE ROWS"
+        }
+    ]
 }

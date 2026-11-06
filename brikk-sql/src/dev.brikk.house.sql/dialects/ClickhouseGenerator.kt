@@ -711,7 +711,7 @@ open class ClickhouseGenerator(
             commentProp = expression.find(SchemaCommentProperty::class)
             if (commentProp != null) {
                 commentProp.pop()
-                query.replace(Paren(args("this" to query.copy())))
+                if (query !is Subquery && query !is Paren) query.replace(Paren(args("this" to query.copy())))
             }
         }
 

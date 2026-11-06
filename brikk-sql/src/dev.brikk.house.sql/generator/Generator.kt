@@ -753,6 +753,20 @@ open class Generator(
         }
 
         val nativeDialect = expression.metaOrNull?.get("native_only_dialect") as? String
+        if (expression is ArraySort && (expression.args["asc"] != null || expression.args["nulls_first"] != null)) {
+            unexecutable("Post-30.29 ArraySort direction/NULL fields require a separately qualified schema migration")
+        }
+        if ((expression is StrToDate || expression is StrToTime) && expression.args["nlsparam"] != null) {
+            unexecutable("Oracle NLS date/time parameters have no qualified executable mapping")
+        }
+        if (expression is TemporaryProperty && expression.args["scoped"] == true) {
+            unexecutable("SCOPED temporary objects have no qualified executable mapping")
+        }
+        val indexOptions = expression.args["include"]
+        val hasIndexOptions = if (indexOptions is Expression) indexOptions.args.values.any(::isTruthyArg) else isTruthyArg(indexOptions)
+        if ((expression is PrimaryKeyColumnConstraint || expression is UniqueColumnConstraint) && hasIndexOptions) {
+            unexecutable("Post-30.29 constraint index parameters require separate native DDL qualification")
+        }
         if (expression is GroupConcat && dialect.name in setOf("hive", "spark2")) {
             unexecutable("Ordered string aggregation has no qualified native LISTAGG mapping for $targetName")
         }
@@ -1689,6 +1703,9 @@ open class Generator(
 
     // sqlglot: Generator.datatype_sql (base: TYPE_PARAM_SETTINGS/UNSUPPORTED_TYPES/TYPE_MAPPING empty)
     open fun datatypeSql(expression: DataType): String {
+        if (forExecution && expression.thisArg == DType.REF) {
+            unexecutable("REF named-reference types have no qualified executable mapping")
+        }
         var nested = ""
         var values = ""
 
@@ -3898,6 +3915,10 @@ open class Generator(
 
     // sqlglot: Generator.foreignkey_sql
     open fun foreignkeySql(expression: ForeignKey): String {
+        val name = sql(expression, "this").let { if (it.isEmpty()) "" else " $it" }
+        if (name.isNotEmpty() && dialect.name !in setOf("mysql", "doris", "starrocks")) {
+            unexecutable("Named FOREIGN KEY indexes have no qualified mapping to $targetName")
+        }
         var exprs = expressions(expression, flat = true)
         if (exprs.isNotEmpty()) exprs = " ($exprs)"
         var reference = sql(expression, "reference")
@@ -3908,7 +3929,7 @@ open class Generator(
         if (update.isNotEmpty()) update = " ON UPDATE $update"
         var options = expressions(expression, key = "options", flat = true, sep = " ")
         if (options.isNotEmpty()) options = " $options"
-        return "FOREIGN KEY$exprs$reference$delete$update$options"
+        return "FOREIGN KEY$name$exprs$reference$delete$update$options"
     }
 
     // sqlglot: Generator.primarykey_sql
@@ -4103,8 +4124,8 @@ open class Generator(
             val thisName = (expression.args["this"] as? Expression)?.name ?: ""
             if (thisName.isNotEmpty()) {
                 intervalKeyword = if (intervalKeyword.isNotEmpty()) "$intervalKeyword " else ""
-                if (unitExpression is IntervalSpan) return "$intervalKeyword'$thisName'$unit"
-                return "$intervalKeyword'$thisName$unit'"
+                if (unitExpression is IntervalSpan) return "$intervalKeyword${sql(Literal.string(thisName))}$unit"
+                return "$intervalKeyword${sql(Literal.string(thisName + unit))}"
             }
             return "$intervalKeyword$unit"
         }
@@ -5892,7 +5913,7 @@ open class Generator(
     // sqlglot: Generator.property_name
     open fun propertyName(expression: Property, stringKey: Boolean = false): String {
         if (expression.thisArg is Dot) return sql(expression, "this")
-        return if (stringKey) "'${expression.name}'" else expression.name
+        return if (stringKey) sql(Literal.string(expression.name)) else expression.name
     }
 
     // sqlglot: Generator.property_sql
@@ -5903,6 +5924,7 @@ open class Generator(
         val propertyName = GeneratorTables.PROPERTY_TO_NAME[expression::class]
         if (propertyName == null) {
             unsupported("Unsupported property ${expression.key}")
+            return ""
         }
         return "$propertyName=${sql(expression, "this")}"
     }

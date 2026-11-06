@@ -1,16 +1,48 @@
 {
     "cases": [
         {
-            "id": "assertion:v1:sha256:e6e630a59bffc6284af16a9665e6334e21f4e7f983554dde8249e0a021570aa8:1",
-            "case": "write|trino|SELECT DATEDIFF('day', t1.\"A\", t1.\"B\") FROM \"table\" AS t1",
-            "signature": "sql-mismatch:v1:sha256:e6e624476e7cb853ca8ce2a4d76097049e5a8cfcd6e8d790370427dbbf9edcb6",
-            "reason": "SG29-011/#8810/991d6ce5: DuckDB DATEDIFF counts DAY boundaries. Its new canonical flag activates Trino's existing endpoint truncation. Only DATE_TRUNC('DAY', ...) wrappers change. Preview provenance, not new native Trino equivalence; strict DuckDB cross-target temporal execution remains refused. Exact row; remove with SG29-020 refresh."
+            "id": "assertion:v1:sha256:affb0f7e54c06882176f5d0a93ebe5954d8c8e6bf7f4b4e3e684bc0bdafc30b2:1",
+            "case": "write|duckdb|SELECT * FROM a JOIN BY (TYPE left) b USING (id)",
+            "signature": "exception:v1:sha256:dba31b552f6b7af1bd62a7b641a58a090d68b4e32b7a28c0b72a89b00c6da47d",
+            "reason": "SG29-020: The newly inventoried BY(TYPE ...) source grammar is unimplemented in this parity path. An ordinary parser diagnostic is not silently accepted as a successful native translation. Deferred owner: Jayson Minard, separately bounded feature/qualification work; no equivalence claimed."
         },
         {
-            "id": "assertion:v1:sha256:065facbe285cac2aad65499d9e1dc68e3cd43730d33a26dec35ba13b37391340:1",
-            "case": "write|trino|SELECT DATE_DIFF('day', DATE '2020-01-01', DATE '2020-01-05')",
-            "signature": "sql-mismatch:v1:sha256:fb0fce19275fd289c8ae792e05c0f531c867c2ec95dcd749ad3e704a64812af3",
-            "reason": "SG29-011/#8810/991d6ce5: the canonical DAY boundary flag activates Trino's existing DATE_TRUNC endpoint wrappers, including already-date operands. Preview-only frozen-pin difference, not a native Trino qualification. Existing DuckDB temporal refusals remain. Exact row; remove with SG29-020 refresh."
+            "id": "assertion:v1:sha256:3e277d8b8477c30dcccaa96d051d7c808d884080b37d5a3d65346fdbb2ac6ebb:1",
+            "case": "write|postgres|SELECT * FROM a JOIN BY (TYPE left) b USING (id)",
+            "signature": "exception:v1:sha256:dba31b552f6b7af1bd62a7b641a58a090d68b4e32b7a28c0b72a89b00c6da47d",
+            "reason": "SG29-020: The newly inventoried BY(TYPE ...) source grammar is unimplemented in this parity path. An ordinary parser diagnostic is not silently accepted as a successful native translation. Deferred owner: Jayson Minard, separately bounded feature/qualification work; no equivalence claimed."
+        },
+        {
+            "id": "assertion:v1:sha256:64b308eb1519f4eb4bfe3ba2502a27543d2b9b1569d22628803c09afead822a5:1",
+            "case": "read|postgres|SELECT ARRAY_TO_STRING(LIST_TRANSFORM([1, 2, 3, NULL, 5], LAMBDA x : COALESCE(CAST(x AS TEXT), '*')), ',')",
+            "signature": "sql-mismatch:v1:sha256:f947395c75d505770b42847936efba7ca5315c4eb1b65601417bc7f884ac975e",
+            "reason": "SG29-020: Retain the independently guarded insertion/null-replacement model; do not import unproved casts, nullability or append semantics from a generic preview expectation.",
+            "expected": "SELECT ARRAY_TO_STRING(LIST_TRANSFORM([1, 2, 3, NULL, 5], LAMBDA x : COALESCE(CAST(x AS TEXT), '*')), ',')",
+            "actual": "SELECT ARRAY_TO_STRING(LIST_TRANSFORM([1, 2, 3, NULL, 5], LAMBDA x : COALESCE(x, '*')), ',')"
+        },
+        {
+            "id": "assertion:v1:sha256:2e8a13edf076afd9153e5838151b94b877f5fdd5f3a71c8d6646e9975bcec850:1",
+            "case": "read|presto|SELECT ARRAY_TO_STRING(LIST_TRANSFORM([1, 2, 3, NULL, 5], LAMBDA x : COALESCE(CAST(x AS TEXT), '*')), ',')",
+            "signature": "sql-mismatch:v1:sha256:f947395c75d505770b42847936efba7ca5315c4eb1b65601417bc7f884ac975e",
+            "reason": "SG29-020: Retain the independently guarded insertion/null-replacement model; do not import unproved casts, nullability or append semantics from a generic preview expectation.",
+            "expected": "SELECT ARRAY_TO_STRING(LIST_TRANSFORM([1, 2, 3, NULL, 5], LAMBDA x : COALESCE(CAST(x AS TEXT), '*')), ',')",
+            "actual": "SELECT ARRAY_TO_STRING(LIST_TRANSFORM([1, 2, 3, NULL, 5], LAMBDA x : COALESCE(x, '*')), ',')"
+        },
+        {
+            "id": "assertion:v1:sha256:f109caab062e45f1bc42b06f6dfa598dcf61b04cade2af7cedc4bb22081a4a48:1",
+            "case": "write|bigquery|SELECT RANGE(5, 1, -1)",
+            "signature": "sql-mismatch:v1:sha256:91fc7804e20ee4f42ec3322bdb44049f8ec01baab86788b3e7a2f6ab6f5e1d68",
+            "reason": "SG29-020: Negative-step exclusive endpoints retain an explicit unqualified preview difference; executable cross-engine series mapping is not granted by native syntax acceptance.",
+            "expected": "SELECT GENERATE_ARRAY(5, 1 + 1, -1)",
+            "actual": "SELECT GENERATE_ARRAY(5, 1, -1)"
+        },
+        {
+            "id": "assertion:v1:sha256:d99e5718633a6b86cc0efb2d98fe207d66eb919d3e75d796b436d2b568dfb56e:1",
+            "case": "write|postgres|SELECT RANGE(5, 1, -1)",
+            "signature": "sql-mismatch:v1:sha256:88460379a0e8cd276ae643f29a3314d1c53deb93b2d2ebdc1f6d04bb8a6c92fd",
+            "reason": "SG29-020: Negative-step exclusive endpoints retain an explicit unqualified preview difference; executable cross-engine series mapping is not granted by native syntax acceptance.",
+            "expected": "SELECT GENERATE_SERIES(5, 1 + 1, -1)",
+            "actual": "SELECT GENERATE_SERIES(5, 1 - 1, -1)"
         },
         {
             "id": "assertion:v1:sha256:5844a49a437a49bac5ca23379cb63990f25d13f63fbb121f7566bd409be5baf7:1",
@@ -25,10 +57,114 @@
             "signature": "sql-mismatch:v1:sha256:d09228106ec191f20ea1600a0b2833613d1e84ec1339e10fec012508d4a74f4c"
         },
         {
+            "id": "assertion:v1:sha256:69fd98205f03dc5c5a2b46213991ca9353f86ea46065962eaa2429f25d4d8042:1",
+            "case": "read|postgres|SELECT JSON_OBJECT('a', 1, 'b', NULL)",
+            "signature": "sql-mismatch:v1:sha256:a6d7cd17a532b0465dd0cab330983da71a5a4e6c0037d72c22e252c2dae3813c",
+            "reason": "SG29-020: Do not drop PostgreSQL SQL/JSON NULL/unique-key clauses merely because the target oracle discards them. Existing unproved-option execution refusals remain.",
+            "expected": "SELECT JSON_OBJECT('a', 1, 'b', NULL)",
+            "actual": "SELECT JSON_OBJECT('a', 1, 'b', NULL NULL ON NULL)"
+        },
+        {
+            "id": "assertion:v1:sha256:a9e2cebf12bd2ddba84f4e2caa4d794234a13f2ded15f80d16541c00204949a0:1",
+            "case": "read|postgres|SELECT JSON_OBJECT('a', 1, 'a', 2)",
+            "signature": "sql-mismatch:v1:sha256:6508b0b6432a3a0f11532d83fc3a989a40eb6b37ca272c6007acb70d89e4d206",
+            "reason": "SG29-020: Do not drop PostgreSQL SQL/JSON NULL/unique-key clauses merely because the target oracle discards them. Existing unproved-option execution refusals remain.",
+            "expected": "SELECT JSON_OBJECT('a', 1, 'a', 2)",
+            "actual": "SELECT JSON_OBJECT('a', 1, 'a', 2 WITHOUT UNIQUE KEYS)"
+        },
+        {
+            "id": "assertion:v1:sha256:04ab17e19a9d28c37f403cf373bc24c3a517d19cf774718a038eb5cd1367cac2:1",
+            "case": "write|postgres|SELECT x ~ y, x !~ y",
+            "signature": "sql-mismatch:v1:sha256:646bd022dda2302394a84676d05de65574ddca2a485df927ad7da3838a1df2a4",
+            "reason": "SG29-020: The direct parser keeps its historical full-match canonical node; native DuckDB 2.0/session operators use the separate native path. Foreign regex equivalence is not claimed.",
+            "expected": "SELECT x ~ y, NOT x ~ y",
+            "actual": "SELECT REGEXP_FULL_MATCH(x, y), NOT REGEXP_FULL_MATCH(x, y)"
+        },
+        {
             "id": "assertion:v1:sha256:1b1c43f1fcf8eee5ae13573936584de1f6d225ec02bfe61eef85042bad063299:1",
             "case": "write|duckdb, version=1.0|COUNT_IF(x)",
             "reason": "expected `SUM(CASE WHEN x THEN 1 ELSE 0 END)` actual `COUNT_IF(x)`",
             "signature": "sql-mismatch:v1:sha256:b62d291cc4b40741eaa065d6b24560d203a947ff1821e248fe5f0212ac012354"
+        },
+        {
+            "id": "assertion:v1:sha256:4f688cb23563b447e27a3907f11138617bbd1a49dd0cab82536607f666e41025:1",
+            "case": "write|postgres|SELECT DATE_DIFF('MONTH', CAST('2026-01-31' AS DATE), CAST('2026-03-01' AS DATE))",
+            "signature": "sql-mismatch:v1:sha256:a9fc2b7eb58b8d399476943d8df246b6df824f752f6a770e31a8a2f669c324f1",
+            "reason": "SG29-020: Retain the separately controlled source-aware boundary lowering and explicit casts; a changed generic cast/SQL spelling does not broaden temporal execution qualification.",
+            "expected": "SELECT CAST(EXTRACT(year FROM AGE(DATE_TRUNC('MONTH', CAST(CAST('2026-03-01' AS DATE) AS TIMESTAMP)), DATE_TRUNC('MONTH', CAST(CAST('2026-01-31' AS DATE) AS TIMESTAMP)))) * 12 + EXTRACT(month FROM AGE(DATE_TRUNC('MONTH', CAST(CAST('2026-03-01' AS DATE) AS TIMESTAMP)), DATE_TRUNC('MONTH', CAST(CAST('2026-01-31' AS DATE) AS TIMESTAMP)))) AS BIGINT)",
+            "actual": "SELECT CAST(EXTRACT(year FROM AGE(DATE_TRUNC('month', CAST(CAST('2026-03-01' AS DATE) AS TIMESTAMP)), DATE_TRUNC('month', CAST(CAST('2026-01-31' AS DATE) AS TIMESTAMP)))) * 12 + EXTRACT(month FROM AGE(DATE_TRUNC('month', CAST(CAST('2026-03-01' AS DATE) AS TIMESTAMP)), DATE_TRUNC('month', CAST(CAST('2026-01-31' AS DATE) AS TIMESTAMP)))) AS BIGINT)"
+        },
+        {
+            "id": "assertion:v1:sha256:4decc79e85126a6428a85b074293cec87b2209f6dce91670958fdf8533707048:1",
+            "case": "write|spark2|SELECT ARRAY_SLICE([1, 2, 3, 4], 2, 3)",
+            "signature": "sql-mismatch:v1:sha256:ba342109e36541336147b250102b5b90eaefe48aabcc32c36cb2c8bf418b98d0",
+            "reason": "SG29-020: This generic endpoint/length/start rewrite is not the native executable slicing contract. Keep exact preview drift and the DDB20-055 refusal rather than infer equivalence.",
+            "expected": "SELECT SLICE(ARRAY(1, 2, 3, 4), 2, 2)",
+            "actual": "SELECT SLICE(ARRAY(1, 2, 3, 4), 2, 3)"
+        },
+        {
+            "id": "assertion:v1:sha256:796abc36ed0ab405742a5d35e3da8738d5198a3cd358a3d1aa93ba56e09592d0:1",
+            "case": "write|spark|SELECT ARRAY_SLICE([1, 2, 3, 4], 2, 3)",
+            "signature": "sql-mismatch:v1:sha256:ba342109e36541336147b250102b5b90eaefe48aabcc32c36cb2c8bf418b98d0",
+            "reason": "SG29-020: This generic endpoint/length/start rewrite is not the native executable slicing contract. Keep exact preview drift and the DDB20-055 refusal rather than infer equivalence.",
+            "expected": "SELECT SLICE(ARRAY(1, 2, 3, 4), 2, 2)",
+            "actual": "SELECT SLICE(ARRAY(1, 2, 3, 4), 2, 3)"
+        },
+        {
+            "id": "assertion:v1:sha256:7b3b7b70e2c60171683bd6157215053775e4b2bcbc6baa9ade8d5131396d1ec4:1",
+            "case": "write|presto|SELECT ARRAY_SLICE([1, 2, 3, 4], 2, 3)",
+            "signature": "sql-mismatch:v1:sha256:fd73a48f39189de911f722466b05bde481936f9e6ac27c9f008936c1ee3483e7",
+            "reason": "SG29-020: This generic endpoint/length/start rewrite is not the native executable slicing contract. Keep exact preview drift and the DDB20-055 refusal rather than infer equivalence.",
+            "expected": "SELECT SLICE(ARRAY[1, 2, 3, 4], 2, 2)",
+            "actual": "SELECT SLICE(ARRAY[1, 2, 3, 4], 2, 3)"
+        },
+        {
+            "id": "assertion:v1:sha256:1ebacdbee3731a5065288cbd13c0129702312b71f703cdcb4e07de6b5424b96f:1",
+            "case": "write|trino|SELECT ARRAY_SLICE([1, 2, 3, 4], 2, 3)",
+            "signature": "sql-mismatch:v1:sha256:fd73a48f39189de911f722466b05bde481936f9e6ac27c9f008936c1ee3483e7",
+            "reason": "SG29-020: This generic endpoint/length/start rewrite is not the native executable slicing contract. Keep exact preview drift and the DDB20-055 refusal rather than infer equivalence.",
+            "expected": "SELECT SLICE(ARRAY[1, 2, 3, 4], 2, 2)",
+            "actual": "SELECT SLICE(ARRAY[1, 2, 3, 4], 2, 3)"
+        },
+        {
+            "id": "assertion:v1:sha256:9e0423c1eabc71e63299f5a1e44839f3681cb72d5f1b52114423f9f2f7855ac8:1",
+            "case": "write|spark|ARRAY_SLICE(x, 0, 2)",
+            "signature": "sql-mismatch:v1:sha256:67fb15d8090784d5045e3d661db0d74fbbbfdee1e57cc7bd5775a5025079ff8a",
+            "reason": "SG29-020: This generic endpoint/length/start rewrite is not the native executable slicing contract. Keep exact preview drift and the DDB20-055 refusal rather than infer equivalence.",
+            "expected": "SLICE(x, 1, 2)",
+            "actual": "SLICE(x, 0, 2)"
+        },
+        {
+            "id": "assertion:v1:sha256:30d1cea2b9ee59b04227d9ffe7e5c6be1f659c01d9fee74ab52667d173a180cd:1",
+            "case": "write|presto|ARRAY_SLICE(x, 0, 2)",
+            "signature": "sql-mismatch:v1:sha256:67fb15d8090784d5045e3d661db0d74fbbbfdee1e57cc7bd5775a5025079ff8a",
+            "reason": "SG29-020: This generic endpoint/length/start rewrite is not the native executable slicing contract. Keep exact preview drift and the DDB20-055 refusal rather than infer equivalence.",
+            "expected": "SLICE(x, 1, 2)",
+            "actual": "SLICE(x, 0, 2)"
+        },
+        {
+            "id": "assertion:v1:sha256:e005d76bf7aa47c76e55c8067cf5ac765f595ca35eed639a0d2351adc6561e9b:1",
+            "case": "write|spark|ARRAY_SLICE(x, 3, 2)",
+            "signature": "sql-mismatch:v1:sha256:9b1839ae812f40b66994236620b362355141e14bea1d30a7037c7f9223d7b064",
+            "reason": "SG29-020: This generic endpoint/length/start rewrite is not the native executable slicing contract. Keep exact preview drift and the DDB20-055 refusal rather than infer equivalence.",
+            "expected": "SLICE(x, 3, 0)",
+            "actual": "SLICE(x, 3, 2)"
+        },
+        {
+            "id": "assertion:v1:sha256:ad6fabeca5fac7b888be965d80dc096620f85baa80222a15e803524497294b1d:1",
+            "case": "write|presto|ARRAY_SLICE(x, 3, 2)",
+            "signature": "sql-mismatch:v1:sha256:9b1839ae812f40b66994236620b362355141e14bea1d30a7037c7f9223d7b064",
+            "reason": "SG29-020: This generic endpoint/length/start rewrite is not the native executable slicing contract. Keep exact preview drift and the DDB20-055 refusal rather than infer equivalence.",
+            "expected": "SLICE(x, 3, 0)",
+            "actual": "SLICE(x, 3, 2)"
+        },
+        {
+            "id": "assertion:v1:sha256:297886cc337c336f1eb0491df0008584229f7a8c057a370e6cd22cfa280e9037:1",
+            "case": "read|spark|CASE WHEN [1, 2, 3] IS NULL THEN NULL ELSE LIST_CONCAT([1, 2, 3], [99]) END",
+            "signature": "sql-mismatch:v1:sha256:3183d08044c5d8c396d6105915be3833060e67636755d7f7fbf3ccc38281e2a4",
+            "reason": "SG29-020: Retain the independently guarded insertion/null-replacement model; do not import unproved casts, nullability or append semantics from a generic preview expectation.",
+            "expected": "CASE WHEN [1, 2, 3] IS NULL THEN NULL ELSE LIST_CONCAT([1, 2, 3], [99]) END",
+            "actual": "CASE WHEN [1, 2, 3] IS NULL THEN NULL ELSE LIST_CONCAT([99], [1, 2, 3]) END"
         },
         {
             "id": "assertion:v1:sha256:0c070cb8dd1812ac8942d0a1953d833cb7e1927a62c15dd9ff4a38bd4518b1b6:1",
@@ -45,6 +181,22 @@
             "signature": "sql-mismatch:v1:sha256:ed0386ce8811098e983a9021804cc94538ed85292f4ab1dd690e3390fd553562",
             "issue": "BQ-5",
             "status": "intentional-divergence"
+        },
+        {
+            "id": "assertion:v1:sha256:c63de6d75d49006e34cdaab8244449cbbf806f838ece9c011ee15b6cf29a5eca:1",
+            "case": "read|postgres|SELECT CAST('2024-01-01' AS TIMESTAMP) + INTERVAL '-10.75 MINUTE'",
+            "signature": "sql-mismatch:v1:sha256:a429edead37c14acd30d8baecbd73583a659e92bb08b0a676168f2321575b06e",
+            "reason": "SG29-020: Preserve separately qualified fractional temporal handling and bounded whole-quarter conversion. Unproved/overflowing values diagnose/refuse instead of being coerced to zero or losing precision.",
+            "expected": "SELECT CAST('2024-01-01' AS TIMESTAMP) + INTERVAL '-10.75 MINUTE'",
+            "actual": "SELECT CAST('2024-01-01' AS TIMESTAMP) + INTERVAL '-10.75' MINUTE"
+        },
+        {
+            "id": "assertion:v1:sha256:7a55488c24f2a693136126b4f5bff0208c0d1352693920e54ec200824367202f:1",
+            "case": "write|postgres|SELECT INTERVAL '1.0 QUARTER'",
+            "signature": "sql-mismatch:v1:sha256:dd4aa5db46efc1e76223517a5249c37cd60f8cbd4ff0e25fe0788a05e2d7968e",
+            "reason": "SG29-020: Preserve separately qualified fractional temporal handling and bounded whole-quarter conversion. Unproved/overflowing values diagnose/refuse instead of being coerced to zero or losing precision.",
+            "expected": "SELECT INTERVAL '3 MONTH'",
+            "actual": "SELECT INTERVAL '1.0 QUARTER'"
         }
     ]
 }

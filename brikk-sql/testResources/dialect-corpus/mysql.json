@@ -1,7 +1,22 @@
 {
-  "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
+  "sqlglot_version": "v30.29.0",
   "dialect": "mysql",
   "identity": [
+    {
+      "sql": "WITH t AS (SELECT '1.000001' AS n) SELECT TIMESTAMPADD(SECOND, n, '2024-01-01') FROM t",
+      "expected": "WITH t AS (SELECT '1.000001' AS n) SELECT DATE_ADD('2024-01-01', INTERVAL n SECOND) FROM t",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT NOT 2 + 1",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT STDDEV_POP(x), VAR_POP(x), STDDEV_SAMP(x), VAR_SAMP(x) FROM t",
+      "expected": null,
+      "pretty": false
+    },
     {
       "sql": "INSERT INTO t VALUE (1)",
       "expected": "INSERT INTO t VALUES (1)",
@@ -169,6 +184,26 @@
       "pretty": false
     },
     {
+      "sql": "ALTER TABLE t ADD FOREIGN KEY fk (a) REFERENCES p (a)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t ADD CONSTRAINT FOREIGN KEY fk (a) REFERENCES p (a)",
+      "expected": "ALTER TABLE t ADD FOREIGN KEY fk (a) REFERENCES p (a)",
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t ADD CONSTRAINT c FOREIGN KEY fk (a) REFERENCES p (a)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CREATE TABLE t (a INT, FOREIGN KEY fk (a) REFERENCES p (a))",
+      "expected": null,
+      "pretty": false
+    },
+    {
       "sql": "ALTER TABLE t DROP PRIMARY KEY",
       "expected": null,
       "pretty": false
@@ -181,6 +216,26 @@
     {
       "sql": "ALTER TABLE t DROP KEY k",
       "expected": "ALTER TABLE t DROP INDEX k",
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t ADD CONSTRAINT UNIQUE uq_a (a)",
+      "expected": "ALTER TABLE t ADD UNIQUE uq_a (a)",
+      "pretty": false
+    },
+    {
+      "sql": "CREATE TABLE t (a INT, CONSTRAINT PRIMARY KEY (a))",
+      "expected": "CREATE TABLE t (a INT, PRIMARY KEY (a))",
+      "pretty": false
+    },
+    {
+      "sql": "CREATE TABLE t (a INT CONSTRAINT CHECK (a > 0))",
+      "expected": "CREATE TABLE t (a INT CHECK (a > 0))",
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t ADD CONSTRAINT FOREIGN KEY (a) REFERENCES p (a)",
+      "expected": "ALTER TABLE t ADD FOREIGN KEY (a) REFERENCES p (a)",
       "pretty": false
     },
     {
@@ -2109,6 +2164,50 @@
   ],
   "transpile": [
     {
+      "sql": "SELECT TIMESTAMPADD(SQL_TSI_DAY, 1, '2024-01-01')",
+      "read": {},
+      "write": {
+        "mysql": "SELECT DATE_ADD('2024-01-01', INTERVAL 1 DAY)",
+        "duckdb": "SELECT CAST('2024-01-01' AS TIMESTAMP) + INTERVAL 1 DAY"
+      }
+    },
+    {
+      "sql": "SELECT TIMESTAMPADD(DAY, 1, '2024-01-01') - TIMESTAMPADD(DAY, 1, '2024-01-01')",
+      "read": {},
+      "write": {
+        "mysql": "SELECT DATE_ADD('2024-01-01', INTERVAL 1 DAY) - DATE_ADD('2024-01-01', INTERVAL 1 DAY)",
+        "duckdb": "SELECT CAST('2024-01-01' AS TIMESTAMP) + INTERVAL 1 DAY - (CAST('2024-01-01' AS TIMESTAMP) + INTERVAL 1 DAY)"
+      }
+    },
+    {
+      "sql": "SELECT TRUE XOR FALSE AND FALSE",
+      "read": {},
+      "write": {
+        "mysql": "SELECT TRUE XOR FALSE AND FALSE",
+        "snowflake": "SELECT BOOLXOR(TRUE, FALSE AND FALSE)"
+      }
+    },
+    {
+      "sql": "SELECT !2 + 1",
+      "read": {},
+      "write": {
+        "mysql": "SELECT (NOT 2) + 1",
+        "sqlite": "SELECT (NOT 2) + 1"
+      }
+    },
+    {
+      "sql": "SELECT STDDEV_POP(x), STDDEV_POP(x), VAR_POP(x) FROM t",
+      "read": {
+        "mysql": "SELECT STD(x), STDDEV(x), VARIANCE(x) FROM t",
+        "starrocks": "SELECT STD(x), STDDEV(x), VARIANCE(x) FROM t",
+        "doris": "SELECT STD(x), STDDEV(x), VARIANCE(x) FROM t",
+        "singlestore": "SELECT STD(x), STDDEV(x), VARIANCE(x) FROM t"
+      },
+      "write": {
+        "duckdb": "SELECT STDDEV_POP(x), STDDEV_POP(x), VAR_POP(x) FROM t"
+      }
+    },
+    {
       "sql": "CREATE TABLE t (a INT, b INT, CONSTRAINT u UNIQUE (a, b))",
       "read": {},
       "write": {
@@ -2356,8 +2455,7 @@
       "sql": "SELECT DATE_FORMAT('2017-06-15', '%w')",
       "read": {},
       "write": {
-        "mysql": "SELECT DATE_FORMAT('2017-06-15', '%w')",
-        "snowflake": "SELECT TO_CHAR(CAST('2017-06-15' AS TIMESTAMP), 'dy')"
+        "mysql": "SELECT DATE_FORMAT('2017-06-15', '%w')"
       }
     },
     {
@@ -2460,7 +2558,8 @@
       "read": {},
       "write": {
         "mysql": "DAYOFWEEK(x)",
-        "": "DAY_OF_WEEK(CAST(x AS DATE))"
+        "": "DAY_OF_WEEK(CAST(x AS DATE))",
+        "bigquery": "EXTRACT(DAYOFWEEK FROM CAST(x AS DATE))"
       }
     },
     {
@@ -2539,7 +2638,25 @@
       "read": {},
       "write": {
         "mysql": "WITH t AS (SELECT CAST('2020-01-10' AS DATE) AS col, 5 AS num_days) SELECT DATE_ADD(col, INTERVAL num_days DAY) FROM t",
-        "postgres": "WITH t AS (SELECT CAST('2020-01-10' AS DATE) AS col, 5 AS num_days) SELECT col + INTERVAL '1 DAY' * num_days FROM t"
+        "postgres": "WITH t AS (SELECT CAST('2020-01-10' AS DATE) AS col, 5 AS num_days) SELECT col + (INTERVAL '1 DAY' * num_days) FROM t"
+      }
+    },
+    {
+      "sql": "SELECT TIMESTAMPADD(MONTH, 1, '2024-01-31')",
+      "read": {},
+      "write": {
+        "mysql": "SELECT DATE_ADD('2024-01-31', INTERVAL 1 MONTH)",
+        "duckdb": "SELECT CAST('2024-01-31' AS TIMESTAMP) + INTERVAL 1 MONTH",
+        "postgres": "SELECT '2024-01-31' + INTERVAL '1 MONTH'"
+      }
+    },
+    {
+      "sql": "SELECT TIMESTAMPADD(SECOND, 30, '2024-01-01 12:00:00')",
+      "read": {},
+      "write": {
+        "mysql": "SELECT DATE_ADD('2024-01-01 12:00:00', INTERVAL 30 SECOND)",
+        "duckdb": "SELECT CAST('2024-01-01 12:00:00' AS TIMESTAMP) + INTERVAL 30 SECOND",
+        "postgres": "SELECT '2024-01-01 12:00:00' + INTERVAL '30 SECOND'"
       }
     },
     {
@@ -3090,8 +3207,8 @@
     }
   ],
   "stats": {
-    "identity_count": 415,
-    "transpile_count": 114,
-    "skipped_dynamic": 41
+    "identity_count": 426,
+    "transpile_count": 121,
+    "skipped_dynamic": 45
   }
 }

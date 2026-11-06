@@ -1198,7 +1198,8 @@ open class PrestoGenerator(
     override fun intervalSql(expression: Interval): String {
         val this_ = expression.thisArg as? Expression
         if (this_ != null && expression.text("unit").uppercase().startsWith("WEEK")) {
-            return "(${this_.name} * INTERVAL '7' DAY)"
+            if (!this_.isString) return "(${sql(this_)} * INTERVAL '7' DAY)"
+            if (this_.name.toDoubleOrNull()?.isFinite() == true) return "(${this_.name} * INTERVAL '7' DAY)"
         }
         return super.intervalSql(expression)
     }

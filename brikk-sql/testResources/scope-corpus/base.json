@@ -1,5 +1,5 @@
 {
- "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
+ "sqlglot_version": "v30.29.0",
  "cases": [
   {
    "sql": "SUM(1)",
@@ -20058,23 +20058,6 @@
      "is_correlated_subquery": false
     },
     {
-     "expression_class": "Union",
-     "scope_type": "SET_OPERATION",
-     "sources": [],
-     "selected_source_names": [],
-     "column_names": [],
-     "external_column_names": [
-      "x",
-      "y"
-     ],
-     "unqualified_column_count": 0,
-     "subquery_count": 0,
-     "cte_count": 0,
-     "derived_count": 0,
-     "udtf_count": 0,
-     "is_correlated_subquery": false
-    },
-    {
      "expression_class": "Select",
      "scope_type": "SET_OPERATION",
      "sources": [
@@ -20101,6 +20084,23 @@
     },
     {
      "expression_class": "Intersect",
+     "scope_type": "SET_OPERATION",
+     "sources": [],
+     "selected_source_names": [],
+     "column_names": [],
+     "external_column_names": [
+      "y",
+      "z"
+     ],
+     "unqualified_column_count": 0,
+     "subquery_count": 0,
+     "cte_count": 0,
+     "derived_count": 0,
+     "udtf_count": 0,
+     "is_correlated_subquery": false
+    },
+    {
+     "expression_class": "Union",
      "scope_type": "ROOT",
      "sources": [],
      "selected_source_names": [],
@@ -21499,11 +21499,17 @@
        "scope"
       ],
       [
+       "a",
+       "scope"
+      ],
+      [
        "",
        "table"
       ]
      ],
-     "selected_source_names": [],
+     "selected_source_names": [
+      "a"
+     ],
      "column_names": [
       "x",
       "y"

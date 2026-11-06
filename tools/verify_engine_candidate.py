@@ -42,6 +42,9 @@ def main():
     parser.add_argument("--scratch-dir", type=pathlib.Path, required=True)
     parser.add_argument("--dependency-model-dir", type=pathlib.Path, required=True)
     parser.add_argument("--candidate-sha", required=True)
+    parser.add_argument("--expected-sqlglot-pin", default=re.search(
+        r'SQLGLOT_PIN: String = "([^"]+)"',
+        (pathlib.Path(__file__).resolve().parents[1] / "brikk-sql/src/dev.brikk.house.sql/BrikkSql.kt").read_text()).group(1))
     args = parser.parse_args()
     client = args.client.resolve()
     require(re.fullmatch(r"[0-9a-f]{40}", args.candidate_sha), "Candidate commit must be a full SHA")
@@ -147,7 +150,7 @@ def main():
             jar = snapshot / relative
             with zipfile.ZipFile(jar) as bundle:
                 pins = [p for p in bundle.namelist() if p.endswith("/BrikkSql.class")]
-                require(pins and all(b"v30.22.0-5-ga00dc2e5c" in bundle.read(p) for p in pins),
+                require(pins and all(args.expected_sqlglot_pin.encode() in bundle.read(p) for p in pins),
                         f"Assembled plugin does not contain the frozen target pin: {jar}")
             plugins[relative] = sha(jar)
         manifest["assembled_plugin_sha256"] = plugins

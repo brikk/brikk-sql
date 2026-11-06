@@ -4577,6 +4577,13 @@ open class Parser(
                 }
             } else if (typeToken in enumTypeTokens) {
                 expressions = parseCsv { parseEquality() }
+            } else if (typeToken == TokenType.REF) {
+                val target = tryParse({ parseTableParts(schema = true) })
+                if (target !is Table || target.name.isEmpty()) {
+                    retreat(startIndex)
+                    return null
+                }
+                expressions = mutableListOf(target)
             } else if (typeToken == TokenType.JSON) {
                 // ClickHouse JSON type supports arguments: JSON(col Type, SKIP col, param=value)
                 expressions = parseCsv { parseJsonTypeArg() }
@@ -5963,7 +5970,9 @@ open class Parser(
 
         val options = mutableListOf<Expression>()
         while (currToken.exists && !match(TokenType.R_PAREN, advance = false)) {
-            val option = parseVar(anyToken = true)
+            val beforeOption = index
+            val option = parseVar(anyToken = true) ?: break
+            if (index == beforeOption) break
             val prev = prevToken.text.uppercase()
 
             // Different dialects might separate options and values by white space, "=" and "AS"
@@ -9155,7 +9164,8 @@ open class Parser(
         val end: Expression?
         if (matchPair(TokenType.DASH, TokenType.COLON, advance = false)) {
             advance()
-            end = Neg(args("this" to Literal.number("1")))
+            // DuckDB's '-' is an omitted end, not the explicit index -1.
+            end = null
         } else {
             end = parseAssignment()
         }
@@ -9632,7 +9642,7 @@ open class Parser(
             }
 
             if (typ != false && typ is Expression) {
-                dotOrId = expression(Cast(args("this" to dotOrId, "to" to typ)))
+                dotOrId = expression(Cast(args("this" to dotOrId, "to" to typ.copy())))
             }
 
             var parent = column.parent

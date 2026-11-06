@@ -1,0 +1,200 @@
+{
+  "base_commit": "e9475518dd879b31c9dc5ee8445d5eea7d28c586",
+  "postgres_before": 17,
+  "postgres_after": 26,
+  "postgres_exact_changes": [
+    {
+      "sql": "SELECT js, js IS JSON ARRAY WITH UNIQUE KEYS AS \"array w. UK?\", js IS JSON ARRAY WITHOUT UNIQUE KEYS AS \"array w/o UK?\", js IS JSON ARRAY UNIQUE KEYS AS \"array w UK 2?\" FROM t",
+      "before": {
+        "sql": "SELECT js, js IS JSON ARRAY WITH UNIQUE KEYS AS \"array w. UK?\", js IS JSON ARRAY WITHOUT UNIQUE KEYS AS \"array w/o UK?\", js IS JSON ARRAY UNIQUE KEYS AS \"array w UK 2?\" FROM t",
+        "generated": "SELECT js, js IS JSON ARRAY WITH UNIQUE KEYS AS \"array w. UK?\", js IS JSON ARRAY WITHOUT UNIQUE KEYS AS \"array w/o UK?\", js IS JSON ARRAY UNIQUE KEYS AS \"array w UK 2?\" FROM t",
+        "error": "statement: 42601: syntax error at or near \"JSON\" (line 1, col 18) | expression: 42601: syntax error at or near \"SELECT\" (line 1, col 1)"
+      },
+      "after": {
+        "sql": "SELECT js, js IS JSON ARRAY WITH UNIQUE KEYS AS \"array w. UK?\", js IS JSON ARRAY WITHOUT UNIQUE KEYS AS \"array w/o UK?\", js IS JSON ARRAY UNIQUE KEYS AS \"array w UK 2?\" FROM t",
+        "generated": "SELECT js, js IS JSON ARRAY WITH UNIQUE KEYS AS \"array w. UK?\", js IS JSON ARRAY WITHOUT UNIQUE KEYS AS \"array w/o UK?\", js IS JSON ARRAY UNIQUE KEYS AS \"array w UK 2?\" FROM t",
+        "error": "statement: 42601: syntax error at or near \"KEYS\" (line 1, col 146) | expression: 42601: syntax error at or near \"SELECT\" (line 1, col 1)"
+      },
+      "reason": "The pinned fidelity PostgreSQL grammar now reaches the unsupported KEYS clause; generated SQL is unchanged. Record the exact native error/cursor, not an old reject-key waiver."
+    },
+    {
+      "sql": "ALTER TABLE tested_table ADD CONSTRAINT unique_example UNIQUE (column_name) NOT VALID",
+      "before": {
+        "sql": "ALTER TABLE tested_table ADD CONSTRAINT unique_example UNIQUE (column_name) NOT VALID",
+        "generated": "ALTER TABLE tested_table ADD CONSTRAINT unique_example UNIQUE (column_name) NOT VALID",
+        "error": "statement: 0A000: UNIQUE constraints cannot be marked NOT VALID | expression: 42601: syntax error at or near \"tested_table\" (line 1, col 13)"
+      },
+      "after": {
+        "sql": "ALTER TABLE tested_table ADD CONSTRAINT unique_example UNIQUE (column_name) NOT VALID",
+        "generated": "ALTER TABLE tested_table ADD CONSTRAINT unique_example UNIQUE (column_name) NOT VALID",
+        "error": "statement: 0A000: UNIQUE constraints cannot be marked NOT VALID (line 1, col 77) | expression: 42601: syntax error at or near \"tested_table\" (line 1, col 13)"
+      },
+      "reason": "The same native unsupported UNIQUE NOT VALID verdict now carries its exact statement cursor; generated SQL is unchanged."
+    },
+    {
+      "sql": "SELECT * FROM ROWS FROM (FUNC1(col1) AS alias1(\"col1\" TEXT), FUNC2(col2) AS alias2(\"col2\" INT)) WITH ORDINALITY",
+      "before": {
+        "sql": "SELECT * FROM ROWS FROM (FUNC1(col1) AS alias1(\"col1\" TEXT), FUNC2(col2) AS alias2(\"col2\" INT)) WITH ORDINALITY",
+        "generated": "",
+        "error": "brikk parse/generate failed: ParseError: ROWS FROM is not supported yet. Line 1, Col: 18.\n  SELECT * FROM \u001b[4mROWS\u001b[0m FROM (FUNC1(col1) AS alias1(\"col1\" TEXT), FUNC2(col2) AS alias"
+      },
+      "after": {
+        "sql": "SELECT * FROM ROWS FROM (FUNC1(col1) AS alias1(\"col1\" TEXT), FUNC2(col2) AS alias2(\"col2\" INT)) WITH ORDINALITY",
+        "generated": "SELECT * FROM ROWS FROM (FUNC1(col1) AS alias1(\"col1\" TEXT), FUNC2(col2) AS alias2(\"col2\" INT)) WITH ORDINALITY",
+        "error": "statement: 42601: syntax error at or near \"alias1\" (line 1, col 41) | expression: 42601: syntax error at or near \"SELECT\" (line 1, col 1)"
+      },
+      "reason": "The current parser retains the raw source instead of the earlier local parse failure; the native parser rejects the same invalid inline-function alias syntax. Not a grammar or execution pass."
+    },
+    {
+      "sql": "SELECT * FROM table1, ROWS FROM (FUNC1(col1) AS alias1(\"col1\" TEXT)) WITH ORDINALITY AS alias3(\"col3\" INT, \"col4\" TEXT)",
+      "before": {
+        "sql": "SELECT * FROM table1, ROWS FROM (FUNC1(col1) AS alias1(\"col1\" TEXT)) WITH ORDINALITY AS alias3(\"col3\" INT, \"col4\" TEXT)",
+        "generated": "",
+        "error": "brikk parse/generate failed: ParseError: Invalid expression / Unexpected token. Line 1, Col: 26.\n  SELECT * FROM table1, \u001b[4mROWS\u001b[0m FROM (FUNC1(col1) AS alias1(\"col1\" TEXT)) WITH "
+      },
+      "after": {
+        "sql": "SELECT * FROM table1, ROWS FROM (FUNC1(col1) AS alias1(\"col1\" TEXT)) WITH ORDINALITY AS alias3(\"col3\" INT, \"col4\" TEXT)",
+        "generated": "SELECT * FROM table1, ROWS FROM (FUNC1(col1) AS alias1(\"col1\" TEXT)) WITH ORDINALITY AS alias3(\"col3\" INT, \"col4\" TEXT)",
+        "error": "statement: 42601: syntax error at or near \"alias1\" (line 1, col 49) | expression: 42601: syntax error at or near \"SELECT\" (line 1, col 1)"
+      },
+      "reason": "The current parser retains the raw source instead of the earlier local parse failure; the native parser rejects the same invalid inline-function alias syntax. Not a grammar or execution pass."
+    },
+    {
+      "sql": "CREATE TABLE t (a INT, CONSTRAINT pk PRIMARY KEY (a) USING INDEX TABLESPACE pg_default)",
+      "before": null,
+      "after": {
+        "sql": "CREATE TABLE t (a INT, CONSTRAINT pk PRIMARY KEY (a) USING INDEX TABLESPACE pg_default)",
+        "generated": "",
+        "error": "brikk parse/generate failed: ParseError: Expecting ). Line 1, Col: 75.\n  CREATE TABLE t (a INT, CONSTRAINT pk PRIMARY KEY (a) USING INDEX \u001b[4mTABLESPACE\u001b[0m pg_default)"
+      },
+      "reason": "Exact PostgreSQL TABLESPACE/index-option/CREATE lifecycle deferral. Owner Jayson Minard. No native DDL execution or semantic equivalence claimed."
+    },
+    {
+      "sql": "CREATE TABLE t (a INT, UNIQUE (a) USING INDEX TABLESPACE pg_default)",
+      "before": null,
+      "after": {
+        "sql": "CREATE TABLE t (a INT, UNIQUE (a) USING INDEX TABLESPACE pg_default)",
+        "generated": "",
+        "error": "brikk parse/generate failed: ParseError: Expecting ). Line 1, Col: 56.\n  CREATE TABLE t (a INT, UNIQUE (a) USING INDEX \u001b[4mTABLESPACE\u001b[0m pg_default)"
+      },
+      "reason": "Exact PostgreSQL TABLESPACE/index-option/CREATE lifecycle deferral. Owner Jayson Minard. No native DDL execution or semantic equivalence claimed."
+    },
+    {
+      "sql": "CREATE TABLE t (a INT PRIMARY KEY USING INDEX TABLESPACE pg_default)",
+      "before": null,
+      "after": {
+        "sql": "CREATE TABLE t (a INT PRIMARY KEY USING INDEX TABLESPACE pg_default)",
+        "generated": "",
+        "error": "brikk parse/generate failed: ParseError: Expecting ). Line 1, Col: 39.\n  CREATE TABLE t (a INT PRIMARY KEY \u001b[4mUSING\u001b[0m INDEX TABLESPACE pg_default)"
+      },
+      "reason": "Exact PostgreSQL TABLESPACE/index-option/CREATE lifecycle deferral. Owner Jayson Minard. No native DDL execution or semantic equivalence claimed."
+    },
+    {
+      "sql": "CREATE TABLE t (a INT PRIMARY KEY USING INDEX TABLESPACE \"pg_default\" DEFERRABLE INITIALLY DEFERRED)",
+      "before": null,
+      "after": {
+        "sql": "CREATE TABLE t (a INT PRIMARY KEY USING INDEX TABLESPACE \"pg_default\" DEFERRABLE INITIALLY DEFERRED)",
+        "generated": "",
+        "error": "brikk parse/generate failed: ParseError: Expecting ). Line 1, Col: 39.\n  CREATE TABLE t (a INT PRIMARY KEY \u001b[4mUSING\u001b[0m INDEX TABLESPACE \"pg_default\" DEFERRABLE INITIALLY DEFERRED)"
+      },
+      "reason": "Exact PostgreSQL TABLESPACE/index-option/CREATE lifecycle deferral. Owner Jayson Minard. No native DDL execution or semantic equivalence claimed."
+    },
+    {
+      "sql": "CREATE TABLE t (a INT PRIMARY KEY WITH (fillfactor=70) USING INDEX TABLESPACE pg_default)",
+      "before": null,
+      "after": {
+        "sql": "CREATE TABLE t (a INT PRIMARY KEY WITH (fillfactor=70) USING INDEX TABLESPACE pg_default)",
+        "generated": "",
+        "error": "brikk parse/generate failed: ParseError: Expecting ). Line 1, Col: 60.\n  CREATE TABLE t (a INT PRIMARY KEY WITH (fillfactor=70) \u001b[4mUSING\u001b[0m INDEX TABLESPACE pg_default)"
+      },
+      "reason": "Exact PostgreSQL TABLESPACE/index-option/CREATE lifecycle deferral. Owner Jayson Minard. No native DDL execution or semantic equivalence claimed."
+    },
+    {
+      "sql": "CREATE TABLE t (a INT UNIQUE USING INDEX TABLESPACE \"pg_default\" DEFERRABLE)",
+      "before": null,
+      "after": {
+        "sql": "CREATE TABLE t (a INT UNIQUE USING INDEX TABLESPACE \"pg_default\" DEFERRABLE)",
+        "generated": "",
+        "error": "brikk parse/generate failed: ParseError: Expecting ). Line 1, Col: 51.\n  CREATE TABLE t (a INT UNIQUE USING INDEX \u001b[4mTABLESPACE\u001b[0m \"pg_default\" DEFERRABLE)"
+      },
+      "reason": "Exact PostgreSQL TABLESPACE/index-option/CREATE lifecycle deferral. Owner Jayson Minard. No native DDL execution or semantic equivalence claimed."
+    },
+    {
+      "sql": "CREATE TABLE t (a INT UNIQUE NULLS NOT DISTINCT WITH (fillfactor=70) USING INDEX TABLESPACE pg_default)",
+      "before": null,
+      "after": {
+        "sql": "CREATE TABLE t (a INT UNIQUE NULLS NOT DISTINCT WITH (fillfactor=70) USING INDEX TABLESPACE pg_default)",
+        "generated": "",
+        "error": "brikk parse/generate failed: ParseError: Expecting ). Line 1, Col: 74.\n  CREATE TABLE t (a INT UNIQUE NULLS NOT DISTINCT WITH (fillfactor=70) \u001b[4mUSING\u001b[0m INDEX TABLESPACE pg_defau"
+      },
+      "reason": "Exact PostgreSQL TABLESPACE/index-option/CREATE lifecycle deferral. Owner Jayson Minard. No native DDL execution or semantic equivalence claimed."
+    },
+    {
+      "sql": "CREATE TABLE t (a INT, b INT, CONSTRAINT uq UNIQUE (a) INCLUDE (b) WITH (fillfactor=70) USING INDEX TABLESPACE pg_default DEFERRABLE)",
+      "before": null,
+      "after": {
+        "sql": "CREATE TABLE t (a INT, b INT, CONSTRAINT uq UNIQUE (a) INCLUDE (b) WITH (fillfactor=70) USING INDEX TABLESPACE pg_default DEFERRABLE)",
+        "generated": "",
+        "error": "brikk parse/generate failed: ParseError: Expecting ). Line 1, Col: 93.\n  CREATE TABLE t (a INT, b INT, CONSTRAINT uq UNIQUE (a) INCLUDE (b) WITH (fillfactor=70) \u001b[4mUSING\u001b[0m INDEX "
+      },
+      "reason": "Exact PostgreSQL TABLESPACE/index-option/CREATE lifecycle deferral. Owner Jayson Minard. No native DDL execution or semantic equivalence claimed."
+    },
+    {
+      "sql": "CREATE TEMPORARY TABLE t ON COMMIT DELETE ROWS AS SELECT 1 AS a",
+      "before": null,
+      "after": {
+        "sql": "CREATE TEMPORARY TABLE t ON COMMIT DELETE ROWS AS SELECT 1 AS a",
+        "generated": "CREATE TEMPORARY TABLE t AS SELECT 1 AS a ON COMMIT DELETE ROWS",
+        "error": "statement: 42601: syntax error at or near \"ON\" (line 1, col 43) | expression: 42601: syntax error at or near \"CREATE\" (line 1, col 1)"
+      },
+      "reason": "Exact PostgreSQL TABLESPACE/index-option/CREATE lifecycle deferral. Owner Jayson Minard. No native DDL execution or semantic equivalence claimed."
+    }
+  ],
+  "duckdb_new_parse_only_classifications": [
+    {
+      "sql": "DISCONNECT",
+      "reason": "SG29-020: the native parse-only SELECT serializer cannot serialize routing statements. Never use prepare/bind or change connection state to obtain a verdict. Unavailable/Rejected/Accepted outcomes remain fatal or stale, not waived."
+    },
+    {
+      "sql": "CONNECT qk",
+      "reason": "SG29-020: routing remains explicitly unverified by the parse-only channel; no connection acquisition or bind fallback is allowed."
+    },
+    {
+      "sql": "CONNECT \"remote db\"",
+      "reason": "SG29-020: routing remains explicitly unverified by the parse-only channel; no connection acquisition or bind fallback is allowed."
+    },
+    {
+      "sql": "CONNECT 'quack:localhost'",
+      "reason": "SG29-020: routing remains explicitly unverified by the parse-only channel; no endpoint is contacted and no bind fallback is allowed."
+    },
+    {
+      "sql": "CONNECT 'postgres:dbname=mydb host=localhost'",
+      "reason": "SG29-020: routing remains explicitly unverified by the parse-only channel; no endpoint is contacted and no bind fallback is allowed."
+    },
+    {
+      "sql": "CONNECT 'postgres:dbname=''my db'' host=localhost'",
+      "reason": "SG29-020: routing remains explicitly unverified by the parse-only channel; no endpoint is contacted and no bind fallback is allowed."
+    }
+  ],
+  "contract": "Exact generated/error signatures enforced. New routing forms must be Unverified, never Unavailable/Accepted/Rejected waivers, and never prepared/bound.",
+  "stable_native_controls": [
+    "SELECT xor(0, 1, 1, 0)",
+    "comparison_zoo",
+    "x >> 1 | 1 & 1 ^ 1",
+    "BIT_GET(11, 0)"
+  ],
+  "duckdb_new_local_parser_rejects": [
+    {
+      "sql": "SELECT a.id, __mark_join_marker FROM a JOIN BY (TYPE MARK) b ON a.id = b.id",
+      "generated": "",
+      "error": "brikk parse/generate failed: ParseError: Expecting ). Line 1, Col: 57.\n  SELECT a.id, __mark_join_marker FROM a JOIN BY (TYPE \u001b[4mMARK\u001b[0m) b ON a.id = b.id",
+      "disposition": "Exact unimplemented parity JOIN BY(TYPE ...) grammar form, already covered by the core/native-inventory deferral; not a native grammar verdict. Owner Jayson Minard."
+    },
+    {
+      "sql": "SELECT * FROM a JOIN BY (TYPE inner) b ON a.id = b.id JOIN c ON b.id = c.id",
+      "generated": "",
+      "error": "brikk parse/generate failed: ParseError: Expecting ). Line 1, Col: 35.\n  SELECT * FROM a JOIN BY (TYPE \u001b[4minner\u001b[0m) b ON a.id = b.id JOIN c ON b.id = c.id",
+      "disposition": "Exact unimplemented parity JOIN BY(TYPE ...) grammar form, already covered by the core/native-inventory deferral; not a native grammar verdict. Owner Jayson Minard."
+    }
+  ]
+}

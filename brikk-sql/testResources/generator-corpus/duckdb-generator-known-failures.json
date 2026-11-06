@@ -1,4 +1,129 @@
 {
-    "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
-    "cases": []
+    "sqlglot_version": "v30.29.0",
+    "cases": [
+        {
+            "id": "assertion:v1:sha256:c21cdd094c6fa39c0e22a2fa059442930ce44723947727febf83cae520394e2a:1",
+            "sql": "SELECT a.id, __mark_join_marker FROM a JOIN BY (TYPE MARK) b ON a.id = b.id",
+            "signature": "sql-mismatch:v1:sha256:7928938995dcc4059344203fb9a0b7962e66b74ecabe05b1da3dec7330916965",
+            "reason": "SG29-020: These newly inventoried BY(TYPE ...) normalization variants are not all modeled in the parity grammar/renderer; do not call a local parse failure a native grammar verdict. Deferred owner: Jayson Minard, separately bounded feature/qualification work; no equivalence claimed.",
+            "expected": "SELECT a.id, __mark_join_marker FROM a JOIN BY (TYPE MARK) b ON a.id = b.id",
+            "actual": "SELECT a.id, __mark_join_marker FROM a MARK JOIN b ON a.id = b.id"
+        },
+        {
+            "id": "assertion:v1:sha256:d684bd78cd2ce064bed10d90d928cc2ead8870366bf143ded0fdf4b65213b784:1",
+            "sql": "SELECT LIST_SORT(x, 'ASC')",
+            "signature": "sql-mismatch:v1:sha256:921b188f426f97b1dbd8e8e9cb27f3d14d9c7f542e7fdd7c89c64c6b523badb5",
+            "reason": "SG29-020: Keep both published sort node/schema identities and native order/NULL ownership. Loaded new ArraySort direction fields now warn/refuse rather than silently qualifying a lossy migration.",
+            "expected": "SELECT LIST_SORT(x)",
+            "actual": "SELECT ARRAY_SORT(x)"
+        },
+        {
+            "id": "assertion:v1:sha256:fb322581b3ad2cdc40ab1ff82b45075c9f7f255a2d776f617efeb120ad7c61e5:1",
+            "sql": "SELECT LIST_SORT(x, 'DESC')",
+            "signature": "sql-mismatch:v1:sha256:cbd7b63c8065fc3013e0d2154036976556ecf9d59ea7a92bb207bfd7acd4abb2",
+            "reason": "SG29-020: Keep both published sort node/schema identities and native order/NULL ownership. Loaded new ArraySort direction fields now warn/refuse rather than silently qualifying a lossy migration.",
+            "expected": "SELECT ARRAY_REVERSE_SORT(x)",
+            "actual": "SELECT ARRAY_SORT(x)"
+        },
+        {
+            "id": "assertion:v1:sha256:fbb3ae1860af361df1c53f4c1eccd81f3fc8b22580d8e7690825d4f011cb53a5:1",
+            "sql": "SELECT LIST_SORT(x, 'ASC', 'NULLS FIRST')",
+            "signature": "sql-mismatch:v1:sha256:816c4e2d3011dd365461efded1ee7ba2c91fe754e7c5f70b928d8f24530d5825",
+            "reason": "SG29-020: Keep both published sort node/schema identities and native order/NULL ownership. Loaded new ArraySort direction fields now warn/refuse rather than silently qualifying a lossy migration.",
+            "expected": "SELECT LIST_SORT(x, 'ASC', 'NULLS FIRST')",
+            "actual": "SELECT ARRAY_SORT(x)"
+        },
+        {
+            "id": "assertion:v1:sha256:14857bf2a817f62ea53963758ec81eaaf5f392cb24c13cac0de906bb72036b71:1",
+            "sql": "SELECT LIST_SORT(x, 'ASC', 'NULLS LAST')",
+            "signature": "sql-mismatch:v1:sha256:921b188f426f97b1dbd8e8e9cb27f3d14d9c7f542e7fdd7c89c64c6b523badb5",
+            "reason": "SG29-020: Keep both published sort node/schema identities and native order/NULL ownership. Loaded new ArraySort direction fields now warn/refuse rather than silently qualifying a lossy migration.",
+            "expected": "SELECT LIST_SORT(x)",
+            "actual": "SELECT ARRAY_SORT(x)"
+        },
+        {
+            "id": "assertion:v1:sha256:c805314f8ace66b9d1381eb6f142d97dd5d5490c34d46d6f96405f424907e025:1",
+            "sql": "SELECT LIST_SORT(x, 'DESC', 'NULLS FIRST')",
+            "signature": "sql-mismatch:v1:sha256:23f6e8b39073ff97bee840fbda6d01dd0c62715afa689c09577c076cdf6612b3",
+            "reason": "SG29-020: Keep both published sort node/schema identities and native order/NULL ownership. Loaded new ArraySort direction fields now warn/refuse rather than silently qualifying a lossy migration.",
+            "expected": "SELECT LIST_SORT(x, 'DESC', 'NULLS FIRST')",
+            "actual": "SELECT ARRAY_SORT(x)"
+        },
+        {
+            "id": "assertion:v1:sha256:09983f99e95373ea70c02308d5ebd888754252e164a267cb1045528b1fc6ea65:1",
+            "sql": "SELECT LIST_SORT(x, 'DESC', 'NULLS LAST')",
+            "signature": "sql-mismatch:v1:sha256:cbd7b63c8065fc3013e0d2154036976556ecf9d59ea7a92bb207bfd7acd4abb2",
+            "reason": "SG29-020: Keep both published sort node/schema identities and native order/NULL ownership. Loaded new ArraySort direction fields now warn/refuse rather than silently qualifying a lossy migration.",
+            "expected": "SELECT ARRAY_REVERSE_SORT(x)",
+            "actual": "SELECT ARRAY_SORT(x)"
+        },
+        {
+            "id": "assertion:v1:sha256:25e46ac886cbf5994cb5ad56f1edab238283780de8cdb82ad378d32f4f6f2180:1",
+            "sql": "SELECT LIST_SORT(x, 'desc', 'nulls first')",
+            "signature": "sql-mismatch:v1:sha256:23f6e8b39073ff97bee840fbda6d01dd0c62715afa689c09577c076cdf6612b3",
+            "reason": "SG29-020: Keep both published sort node/schema identities and native order/NULL ownership. Loaded new ArraySort direction fields now warn/refuse rather than silently qualifying a lossy migration.",
+            "expected": "SELECT LIST_SORT(x, 'DESC', 'NULLS FIRST')",
+            "actual": "SELECT ARRAY_SORT(x)"
+        },
+        {
+            "id": "assertion:v1:sha256:fc683766f9723487113ca4500a6ccd9a17f2aa643ca397d3b6edd64a27e7f672:1",
+            "sql": "SELECT ARRAY_REVERSE_SORT(x, 'NULLS FIRST')",
+            "signature": "sql-mismatch:v1:sha256:23f6e8b39073ff97bee840fbda6d01dd0c62715afa689c09577c076cdf6612b3",
+            "reason": "SG29-020: Keep both published sort node/schema identities and native order/NULL ownership. Loaded new ArraySort direction fields now warn/refuse rather than silently qualifying a lossy migration.",
+            "expected": "SELECT LIST_SORT(x, 'DESC', 'NULLS FIRST')",
+            "actual": "SELECT ARRAY_SORT(x)"
+        },
+        {
+            "id": "assertion:v1:sha256:aa332902c4b98fe3fcd2955d76ee0c8badc1cc320be471e50daf2d7b41ed1d96:1",
+            "sql": "SELECT LIST_REVERSE_SORT(x)",
+            "signature": "sql-mismatch:v1:sha256:cbd7b63c8065fc3013e0d2154036976556ecf9d59ea7a92bb207bfd7acd4abb2",
+            "reason": "SG29-020: Keep both published sort node/schema identities and native order/NULL ownership. Loaded new ArraySort direction fields now warn/refuse rather than silently qualifying a lossy migration.",
+            "expected": "SELECT ARRAY_REVERSE_SORT(x)",
+            "actual": "SELECT ARRAY_SORT(x)"
+        },
+        {
+            "id": "assertion:v1:sha256:f5f58ed93ebddc8e5de288dd3c4bf474d893d80411091bf5194781070d13225c:1",
+            "sql": "SELECT INTERVAL '1.5 DAY'",
+            "signature": "sql-mismatch:v1:sha256:e88273ff1a50b7e944ca52f70f66dd352c94da7e24ea94075840787d52cf87e6",
+            "reason": "SG29-020: Preserve the existing literal/unit AST and native fractional-interval refusal instead of inferring a new execution contract from fraction_in_string metadata.",
+            "expected": "SELECT INTERVAL '1.5 DAY'",
+            "actual": "SELECT INTERVAL '1.5' DAY"
+        },
+        {
+            "id": "assertion:v1:sha256:8d6408079a77b268652947d774591db546bca9defa575afe97bc153f2e9ec946:1",
+            "sql": "DISCONNECT",
+            "signature": "exception:v1:sha256:08af6eae5bcdf7689f8ffbb90bef51fbe85c5abc569ee0d244c01291130774c0",
+            "reason": "SG29-020: Keep Brikk's session/resource-owned routing nodes, credentials redaction and foreign execution refusal. Generic ConnectTo/Disconnect dumps do not automatically gain a connection handler."
+        },
+        {
+            "id": "assertion:v1:sha256:9859f6be5fcf1bc1e5a30262dc735e19735618677158140e06be5612f14fcdb3:1",
+            "sql": "CONNECT qk",
+            "signature": "exception:v1:sha256:b8d5811395f322ec62e8721c2763af456a1a8b475d18f88651c49fe79a8fe688",
+            "reason": "SG29-020: Keep Brikk's session/resource-owned routing nodes, credentials redaction and foreign execution refusal. Generic ConnectTo/Disconnect dumps do not automatically gain a connection handler."
+        },
+        {
+            "id": "assertion:v1:sha256:8510369f61a37a09e40369c1bb94618c8d716c23fd6242a46bd0acb5c1b1731f:1",
+            "sql": "CONNECT \"remote db\"",
+            "signature": "exception:v1:sha256:b8d5811395f322ec62e8721c2763af456a1a8b475d18f88651c49fe79a8fe688",
+            "reason": "SG29-020: Keep Brikk's session/resource-owned routing nodes, credentials redaction and foreign execution refusal. Generic ConnectTo/Disconnect dumps do not automatically gain a connection handler."
+        },
+        {
+            "id": "assertion:v1:sha256:a1436fa1355bc89f401a3925b5e8bfe0ad1e80797492ea634c2845c0f99fb119:1",
+            "sql": "CONNECT 'quack:localhost'",
+            "signature": "exception:v1:sha256:b8d5811395f322ec62e8721c2763af456a1a8b475d18f88651c49fe79a8fe688",
+            "reason": "SG29-020: Keep Brikk's session/resource-owned routing nodes, credentials redaction and foreign execution refusal. Generic ConnectTo/Disconnect dumps do not automatically gain a connection handler."
+        },
+        {
+            "id": "assertion:v1:sha256:99a896532f8a3af5cfa825999602254e35864f07dc9fd1231e69dd0a75ffae76:1",
+            "sql": "CONNECT 'postgres:dbname=mydb host=localhost'",
+            "signature": "exception:v1:sha256:b8d5811395f322ec62e8721c2763af456a1a8b475d18f88651c49fe79a8fe688",
+            "reason": "SG29-020: Keep Brikk's session/resource-owned routing nodes, credentials redaction and foreign execution refusal. Generic ConnectTo/Disconnect dumps do not automatically gain a connection handler."
+        },
+        {
+            "id": "assertion:v1:sha256:d0e90da6fcb023e13de266095a1aa70f7bde4d54c6ab0606ebc690ea18fffe7d:1",
+            "sql": "CONNECT 'postgres:dbname=''my db'' host=localhost'",
+            "signature": "exception:v1:sha256:b8d5811395f322ec62e8721c2763af456a1a8b475d18f88651c49fe79a8fe688",
+            "reason": "SG29-020: Keep Brikk's session/resource-owned routing nodes, credentials redaction and foreign execution refusal. Generic ConnectTo/Disconnect dumps do not automatically gain a connection handler."
+        }
+    ]
 }

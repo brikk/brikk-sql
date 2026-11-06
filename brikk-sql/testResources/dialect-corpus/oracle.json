@@ -1,7 +1,93 @@
 {
-  "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
+  "sqlglot_version": "v30.29.0",
   "dialect": "oracle",
   "identity": [
+    {
+      "sql": "CREATE TABLE t (id NUMBER) TABLESPACE \"Mixed Ts\"",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "create table t (id number) pctfree 10 nologging",
+      "expected": "CREATE TABLE t (id NUMBER) PCTFREE 10 NOLOGGING",
+      "pretty": false
+    },
+    {
+      "sql": "CREATE TABLE \"t\" (\"id\" NUMBER) PCTFREE 10 NOLOGGING",
+      "expected": null,
+      "pretty": false,
+      "identify": true
+    },
+    {
+      "sql": "CREATE TABLE t (id NUMBER) storage (initial 64 k next 1 m) nologging",
+      "expected": "CREATE TABLE t (id NUMBER) STORAGE (INITIAL 64K NEXT 1M) NOLOGGING",
+      "pretty": false
+    },
+    {
+      "sql": "CREATE TABLE t (\n  id NUMBER\n)\nPCTFREE 10\nSTORAGE (INITIAL 64K NEXT 1M)\nLOGGING",
+      "expected": null,
+      "pretty": true
+    },
+    {
+      "sql": "SELECT * FROM \"SH\".\"SALES\" PARTITION (\"P1\") s",
+      "expected": "SELECT * FROM \"SH\".\"SALES\" PARTITION(\"P1\") s",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT s.col1 FROM sales PARTITION(p1) s JOIN sales SUBPARTITION(sp1) t ON s.id = t.id",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "INSERT INTO sales PARTITION (p1) (col1) VALUES (1)",
+      "expected": "INSERT INTO sales PARTITION(p1) (col1) VALUES (1)",
+      "pretty": false
+    },
+    {
+      "sql": "INSERT INTO \"SH\".\"SALES\" SUBPARTITION(\"P1\") s (col1) VALUES (1)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "INSERT INTO sales s (col1) VALUES (1)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "INSERT INTO sales \"PARTITION\" (col1) VALUES (1)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "INSERT INTO sales PARTITION(p1) (col1) SELECT col1 FROM source",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT * FROM sales PARTITION(p1) AS OF SCN 123456 s",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT * FROM sales SAMPLE (10) AS OF SCN 123456 s",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT * FROM sales SUBPARTITION(sp1) SAMPLE (10) AS OF TIMESTAMP SYSDATE - 1 s WHERE s.id = 1",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT s.col1 FROM sales AS OF SCN 123456 s JOIN sales AS OF SCN 123457 t ON s.id = t.id",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT * FROM sales AS s",
+      "expected": "SELECT * FROM sales s",
+      "pretty": false
+    },
     {
       "sql": "1 /* /* */",
       "expected": "1 /* / * */",
@@ -194,6 +280,16 @@
     },
     {
       "sql": "SELECT TO_DATE('January 15, 1989, 11:00 A.M.')",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT TO_DATE(c, 'DD-MON-YYYY', 'NLS_DATE_LANGUAGE = AMERICAN') FROM t",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT TO_TIMESTAMP(c, 'DD-MON-YYYY', 'NLS_DATE_LANGUAGE = AMERICAN') FROM t",
       "expected": null,
       "pretty": false
     },
@@ -573,6 +669,16 @@
       "pretty": true
     },
     {
+      "sql": "SELECT SUBSTR(MIN(SQL_ID || SQL_TEXT), 14, 120) SAMPLE FROM V$SQLAREA",
+      "expected": "SELECT SUBSTR(MIN(SQL_ID || SQL_TEXT), 14, 120) AS SAMPLE FROM V$SQLAREA",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT 1 FETCH FIRST 1 ROWS ONLY",
+      "expected": null,
+      "pretty": false
+    },
+    {
       "sql": "SELECT * FROM JSON_TABLE(foo FORMAT JSON, 'bla' ERROR ON ERROR NULL ON EMPTY COLUMNS(foo PATH 'bar'))",
       "expected": null,
       "pretty": false
@@ -639,6 +745,31 @@
     },
     {
       "sql": "/* COMMENT */ INSERT FIRST WHEN salary > 4000 THEN INTO emp2 WHEN salary > 5000 THEN INTO emp3 WHEN salary > 6000 THEN INTO emp4 SELECT salary FROM employees",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT JSON_VALUE(doc, '$.a') FROM t",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT JSON_VALUE(doc, '$.a' RETURNING NUMBER) FROM t",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT JSON_VALUE(doc, '$.a' RETURNING VARCHAR2(10)) FROM t",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT JSON_VALUE(doc, '$.a' RETURNING NUMBER NULL ON ERROR) FROM t",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT JSON_VALUE(doc, '$.a' RETURNING NUMBER DEFAULT 0 ON ERROR NULL ON EMPTY) FROM t",
       "expected": null,
       "pretty": false
     },
@@ -823,6 +954,21 @@
       "pretty": false
     },
     {
+      "sql": "SELECT q'[a''b]' FROM dual",
+      "expected": "SELECT 'a''''b' FROM dual",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT q'[a]b]' FROM dual",
+      "expected": "SELECT 'a]b' FROM dual",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT q'|\\n|' FROM dual",
+      "expected": "SELECT '\\n' FROM dual",
+      "pretty": false
+    },
+    {
       "sql": "CREATE TRIGGER check_salary BEFORE INSERT ON employees FOR EACH ROW BEGIN :NEW.status := 'PENDING' END",
       "expected": null,
       "pretty": false,
@@ -839,6 +985,21 @@
       "expected": null,
       "pretty": false,
       "check_command_warning": true
+    },
+    {
+      "sql": "CREATE TABLE t PCTFREE 10 NOLOGGING AS SELECT 1 AS id FROM dual",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CREATE TABLE t (id NUMBER) TABLESPACE ts PCTFREE 10 STORAGE (INITIAL 64K)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CREATE TABLE t STORAGE (INITIAL 64K) NOLOGGING AS SELECT 1 AS id FROM dual",
+      "expected": null,
+      "pretty": false
     },
     {
       "sql": "DBMS_RANDOM.VALUE(low, high)",
@@ -930,9 +1091,103 @@
       "expected": null,
       "pretty": false,
       "check_command_warning": true
+    },
+    {
+      "sql": "SELECT q'[it's]' FROM dual",
+      "expected": "SELECT 'it''s' FROM dual",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT q'{it's}' FROM dual",
+      "expected": "SELECT 'it''s' FROM dual",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT q'(it's)' FROM dual",
+      "expected": "SELECT 'it''s' FROM dual",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT q'<it's>' FROM dual",
+      "expected": "SELECT 'it''s' FROM dual",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT q'!it's!' FROM dual",
+      "expected": "SELECT 'it''s' FROM dual",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT Q'#it's#' FROM dual",
+      "expected": "SELECT 'it''s' FROM dual",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT q']it's]' FROM dual",
+      "expected": "SELECT 'it''s' FROM dual",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT q'}it's}' FROM dual",
+      "expected": "SELECT 'it''s' FROM dual",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT q')it's)' FROM dual",
+      "expected": "SELECT 'it''s' FROM dual",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT q'>it's>' FROM dual",
+      "expected": "SELECT 'it''s' FROM dual",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT q''it's'' FROM dual",
+      "expected": "SELECT 'it''s' FROM dual",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT q'ait'sa' FROM dual",
+      "expected": "SELECT 'it''s' FROM dual",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT Q'Ait'sA' FROM dual",
+      "expected": "SELECT 'it''s' FROM dual",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT q'0it's0' FROM dual",
+      "expected": "SELECT 'it''s' FROM dual",
+      "pretty": false
     }
   ],
   "transpile": [
+    {
+      "sql": "SELECT * FROM sales SAMPLE (10) AS OF TIMESTAMP TO_TIMESTAMP('2026-10-10 12:00:00', 'YYYY-MM-DD HH24:MI:SS.FF6') s",
+      "read": {
+        "spark": "SELECT * FROM sales TIMESTAMP AS OF '2026-10-10 12:00:00' TABLESAMPLE (10 PERCENT) AS s"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT * FROM sales AS OF TIMESTAMP TO_TIMESTAMP('2026-10-10 12:00:00', 'YYYY-MM-DD HH24:MI:SS.FF6') s",
+      "read": {
+        "bigquery": "SELECT * FROM sales AS s FOR SYSTEM_TIME AS OF '2026-10-10 12:00:00'"
+      },
+      "write": {
+        "bigquery": "SELECT * FROM sales AS s FOR SYSTEM_TIME AS OF PARSE_TIMESTAMP('%F %H:%M:%E6S', '2026-10-10 12:00:00')"
+      }
+    },
+    {
+      "sql": "SELECT * FROM sales AS OF TIMESTAMP TO_TIMESTAMP('2026-10-10 12:00:00.123456', 'YYYY-MM-DD HH24:MI:SS.FF6') s",
+      "read": {
+        "bigquery": "SELECT * FROM sales AS s FOR SYSTEM_TIME AS OF '2026-10-10 12:00:00.123456'",
+        "spark": "SELECT * FROM sales TIMESTAMP AS OF '2026-10-10 12:00:00.123456' AS s"
+      },
+      "write": {}
+    },
     {
       "sql": "SELECT CONNECT_BY_ROOT x y",
       "read": {},
@@ -1102,6 +1357,20 @@
       }
     },
     {
+      "sql": "SELECT TO_CHAR(x, 'IYYY-IW')",
+      "read": {
+        "duckdb": "SELECT STRFTIME(x, '%G-%V')"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT TO_CHAR(CAST(x AS DATE), 'IYYY-IW')",
+      "read": {
+        "bigquery": "SELECT FORMAT_DATE('%G-%V', x)"
+      },
+      "write": {}
+    },
+    {
       "sql": "x::binary_double",
       "read": {},
       "write": {
@@ -1224,6 +1493,15 @@
       }
     },
     {
+      "sql": "SELECT ADD_MONTHS(DATE '2024-02-29', 1)",
+      "read": {},
+      "write": {
+        "duckdb": "SELECT CAST(CASE WHEN LAST_DAY(CAST('2024-02-29' AS DATE)) = CAST('2024-02-29' AS DATE) THEN LAST_DAY(CAST('2024-02-29' AS DATE) + INTERVAL 1 MONTH) ELSE CAST('2024-02-29' AS DATE) + INTERVAL 1 MONTH END AS DATE)",
+        "oracle": "SELECT ADD_MONTHS(TO_DATE('2024-02-29', 'YYYY-MM-DD'), 1)",
+        "snowflake": "SELECT ADD_MONTHS(CAST('2024-02-29' AS DATE), 1)"
+      }
+    },
+    {
       "sql": "TRUNC(SYSDATE, 'YEAR')",
       "read": {},
       "write": {
@@ -1271,8 +1549,8 @@
     }
   ],
   "stats": {
-    "identity_count": 184,
-    "transpile_count": 34,
-    "skipped_dynamic": 12
+    "identity_count": 230,
+    "transpile_count": 40,
+    "skipped_dynamic": 24
   }
 }

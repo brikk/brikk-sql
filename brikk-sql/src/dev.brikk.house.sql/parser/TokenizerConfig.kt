@@ -168,6 +168,10 @@ class TokenizerConfig(
     internal fun withoutKeywords(names: Set<String>): TokenizerConfig =
         copyWith(emptyMap(), unescapedSequences, keywords = keywords - names)
 
+    /** Keep structured statement bodies tokenized instead of consuming a raw command tail. */
+    internal fun withoutCommands(tokens: Set<TokenType>): TokenizerConfig =
+        copyWith(emptyMap(), unescapedSequences, commands = commands - tokens)
+
     /** This config with additional identifier delimiters, for native lexer rules absent upstream. */
     fun withIdentifiers(extra: Map<Char, String>): TokenizerConfig =
         copyWith(emptyMap(), unescapedSequences, identifiers = identifiers + extra)
@@ -188,6 +192,7 @@ class TokenizerConfig(
         formatStrings: Map<String, StringFormat> = this.formatStrings,
         keywords: Map<String, TokenType> = this.keywords + extra,
         identifierEscapes: Set<Char> = this.identifierEscapes,
+        commands: Set<TokenType> = this.commands,
     ): TokenizerConfig = TokenizerConfig(
         singleTokens = singleTokens,
         keywords = keywords,

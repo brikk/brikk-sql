@@ -1,5 +1,5 @@
 {
-  "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
+  "sqlglot_version": "v30.29.0",
   "dialect": "",
   "identity": [
     {
@@ -49,6 +49,16 @@
     },
     {
       "sql": "CAST(x AS some_udt(1234))",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "LAG(revenue) OVER (PARTITION BY EXCLUDING orders.order_date, orders.order_year ORDER BY orders.order_date)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "LAG(AVG(AGG(revenue) PER (customer))) OVER (ORDER BY year)",
       "expected": null,
       "pretty": false
     },
@@ -133,6 +143,16 @@
       "pretty": false
     },
     {
+      "sql": "CREATE TABLE abc.s.in AS SELECT 1 AS n",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "WITH in AS (SELECT 1 AS in) SELECT in FROM in WHERE in IN (1, 2) AND in NOT IN (3, 4)",
+      "expected": "WITH in AS (SELECT 1 AS in) SELECT in FROM in WHERE in IN (1, 2) AND NOT in IN (3, 4)",
+      "pretty": false
+    },
+    {
       "sql": "WITH sub_query AS (SELECT a FROM table) (SELECT a FROM sub_query)",
       "expected": "WITH sub_query AS (SELECT a FROM table) SELECT a FROM sub_query",
       "pretty": false
@@ -193,6 +213,16 @@
       "pretty": false
     },
     {
+      "sql": "AVG(LAG(AGG(revenue)) OVER (PARTITION BY customer ORDER BY year) PER (customer))",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "AVG(AVG(AGG(x) PER (c)) PER (d))",
+      "expected": null,
+      "pretty": false
+    },
+    {
       "sql": "SELECT CAST('2001-02-17 08:38:40' AS TIMESTAMP) AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tokyo'",
       "expected": null,
       "pretty": false
@@ -209,6 +239,56 @@
     },
     {
       "sql": "CREATE TABLE foo (t1 INT, t2 INT, bar INT AS (t1 * t2 * 2))",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT per FROM t",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT SUM(x) per FROM t",
+      "expected": "SELECT SUM(x) AS per FROM t",
+      "pretty": false
+    },
+    {
+      "sql": "AVG(AGG(revenue) PER (customer))",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "AVG(SUM(x) PER (c, d))",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "AVG(LAG(AGG(revenue)) OVER (PARTITION BY customer ORDER BY year) PER (customer))",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "LAG(AVG(AGG(revenue) PER (customer))) OVER (ORDER BY year)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SUM(SUM(AGG(revenue) PER (customer))) OVER (ORDER BY year)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "AVG(AVG(AGG(x) PER (c)) PER (d))",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SUM(x) FILTER(WHERE y > 0) PER (c)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SUM(x) OVER w PER (c)",
       "expected": null,
       "pretty": false
     },
@@ -610,7 +690,7 @@
       "read": {},
       "write": {
         "postgres": "CAST(a AS TIMESTAMP)",
-        "sqlite": "CAST(a AS DATETIME)"
+        "sqlite": "DATETIME(a)"
       }
     },
     {
@@ -1761,17 +1841,6 @@
       }
     },
     {
-      "sql": "SORT_ARRAY(x)",
-      "read": {},
-      "write": {
-        "duckdb": "LIST_SORT(x)",
-        "hive": "SORT_ARRAY(x)",
-        "presto": "ARRAY_SORT(x)",
-        "snowflake": "ARRAY_SORT(x)",
-        "spark": "SORT_ARRAY(x)"
-      }
-    },
-    {
       "sql": "ARRAY_PREPEND(arr, x)",
       "read": {
         "duckdb": "LIST_PREPEND(x, arr)",
@@ -1852,7 +1921,7 @@
         "trino": "SELECT ARRAY_EXCEPT(ARRAY[1, 2, 3], ARRAY[2])",
         "presto": "SELECT ARRAY_EXCEPT(ARRAY[1, 2, 3], ARRAY[2])",
         "athena": "SELECT ARRAY_EXCEPT(ARRAY[1, 2, 3], ARRAY[2])",
-        "duckdb": "SELECT CASE WHEN [1, 2, 3] IS NULL OR [2] IS NULL THEN NULL ELSE LIST_FILTER(LIST_DISTINCT([1, 2, 3]), e -> LENGTH(LIST_FILTER([2], x -> x IS NOT DISTINCT FROM e)) = 0) END"
+        "duckdb": "SELECT CASE WHEN [1, 2, 3] IS NULL OR [2] IS NULL THEN NULL ELSE LIST_FILTER(LIST_DISTINCT([1, 2, 3]), LAMBDA e : LENGTH(LIST_FILTER([2], LAMBDA x : x IS NOT DISTINCT FROM e)) = 0) END"
       }
     },
     {
@@ -1891,7 +1960,7 @@
       "write": {
         "": "JSON_EXTRACT(x, '$[\"a b\"]')",
         "bigquery": "JSON_EXTRACT(x, '$[\\'a b\\']')",
-        "clickhouse": "JSONExtractString(x, 'a b')",
+        "clickhouse": "JSONExtractRaw(x, 'a b')",
         "duckdb": "x -> '$.\"a b\"'",
         "mysql": "JSON_EXTRACT(x, '$.\"a b\"')",
         "postgres": "JSON_EXTRACT_PATH(x, 'a b')",
@@ -1908,6 +1977,7 @@
       "sql": "JSON_EXTRACT(x, '$.y')",
       "read": {
         "bigquery": "JSON_EXTRACT(x, '$.y')",
+        "clickhouse": "JSONExtractRaw(x, 'y')",
         "duckdb": "x -> 'y'",
         "doris": "JSON_EXTRACT(x, '$.y')",
         "mysql": "JSON_EXTRACT(x, '$.y')",
@@ -1919,7 +1989,7 @@
       },
       "write": {
         "bigquery": "JSON_EXTRACT(x, '$.y')",
-        "clickhouse": "JSONExtractString(x, 'y')",
+        "clickhouse": "JSONExtractRaw(x, 'y')",
         "doris": "JSON_EXTRACT(x, '$.y')",
         "duckdb": "x -> '$.y'",
         "mysql": "JSON_EXTRACT(x, '$.y')",
@@ -1963,6 +2033,7 @@
       "sql": "JSON_EXTRACT(x, '$.y[0].z')",
       "read": {
         "bigquery": "JSON_EXTRACT(x, '$.y[0].z')",
+        "clickhouse": "JSONExtractRaw(x, 'y', 1, 'z')",
         "duckdb": "x -> '$.y[0].z'",
         "doris": "JSON_EXTRACT(x, '$.y[0].z')",
         "mysql": "JSON_EXTRACT(x, '$.y[0].z')",
@@ -1973,7 +2044,7 @@
       },
       "write": {
         "bigquery": "JSON_EXTRACT(x, '$.y[0].z')",
-        "clickhouse": "JSONExtractString(x, 'y', 1, 'z')",
+        "clickhouse": "JSONExtractRaw(x, 'y', 1, 'z')",
         "doris": "JSON_EXTRACT(x, '$.y[0].z')",
         "duckdb": "x -> '$.y[0].z'",
         "mysql": "JSON_EXTRACT(x, '$.y[0].z')",
@@ -2048,7 +2119,7 @@
       "read": {},
       "write": {
         "bigquery": "JSON_EXTRACT(x, '$.y')",
-        "clickhouse": "JSONExtractString(x, 'y')",
+        "clickhouse": "JSONExtractRaw(x, 'y')",
         "postgres": "JSON_EXTRACT_PATH(x, 'y')",
         "redshift": "JSON_EXTRACT_PATH_TEXT(x, 'y')",
         "snowflake": "GET_PATH(PARSE_JSON(x), 'y')",
@@ -2171,6 +2242,14 @@
         "spark": "SELECT * FROM x LATERAL VIEW EXPLODE(a) j AS lista LATERAL VIEW EXPLODE(b) k AS listb LATERAL VIEW EXPLODE(c) l AS listc",
         "hive": "SELECT * FROM x LATERAL VIEW EXPLODE(a) j AS lista LATERAL VIEW EXPLODE(b) k AS listb LATERAL VIEW EXPLODE(c) l AS listc"
       }
+    },
+    {
+      "sql": "SELECT * FROM (VALUES (1), (2)) AS t(x) PIVOT(SUM(x) FOR x IN (1))",
+      "read": {},
+      "write": {
+        "redshift": "SELECT\n  *\nFROM (\n  SELECT\n    1 AS x\n  UNION ALL\n  SELECT\n    2\n) AS t\nPIVOT(SUM(x) FOR x IN (1))"
+      },
+      "pretty": true
     },
     {
       "sql": "SELECT * FROM a UNION SELECT * FROM b OFFSET 1",
@@ -2886,7 +2965,7 @@
       "write": {
         "": "ARRAY_REMOVE(the_array, target)",
         "clickhouse": "arrayFilter(_u -> _u <> target, the_array)",
-        "duckdb": "LIST_FILTER(the_array, _u -> _u <> target)",
+        "duckdb": "LIST_FILTER(the_array, LAMBDA _u : _u <> target)",
         "bigquery": "ARRAY(SELECT _u FROM UNNEST(the_array) AS _u WHERE _u <> target)",
         "hive": "ARRAY_REMOVE(the_array, target)",
         "postgres": "ARRAY_REMOVE(the_array, target)",
@@ -3512,7 +3591,7 @@
         "drill": {
           "error": "UnsupportedError"
         },
-        "duckdb": "(ARRAY_LENGTH(arr) = 0 OR ARRAY_LENGTH(LIST_FILTER(arr, x -> pred)) <> 0)",
+        "duckdb": "(ARRAY_LENGTH(arr) = 0 OR ARRAY_LENGTH(LIST_FILTER(arr, LAMBDA x : pred)) <> 0)",
         "hive": {
           "error": "UnsupportedError"
         },
@@ -3635,6 +3714,92 @@
         "tsql": {
           "error": "UnsupportedError"
         }
+      }
+    },
+    {
+      "sql": "SELECT 1 UNION (SELECT 2 INTERSECT SELECT 3)",
+      "read": {
+        "postgres": "SELECT 1 UNION SELECT 2 INTERSECT SELECT 3",
+        "spark": "SELECT 1 UNION SELECT 2 INTERSECT SELECT 3"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT 1 EXCEPT (SELECT 2 INTERSECT SELECT 3 INTERSECT SELECT 4) UNION SELECT 5",
+      "read": {
+        "postgres": "SELECT 1 EXCEPT SELECT 2 INTERSECT SELECT 3 INTERSECT SELECT 4 UNION SELECT 5"
+      },
+      "write": {}
+    },
+    {
+      "sql": "(SELECT 1 UNION SELECT 2) INTERSECT SELECT 3",
+      "read": {
+        "oracle": "SELECT 1 UNION SELECT 2 INTERSECT SELECT 3",
+        "sqlite": "SELECT 1 UNION SELECT 2 INTERSECT SELECT 3",
+        "hive": "SELECT 1 UNION SELECT 2 INTERSECT SELECT 3"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT 1 INTERSECT SELECT 2 INTERSECT SELECT 3 UNION SELECT 4",
+      "read": {
+        "oracle": "SELECT 1 INTERSECT SELECT 2 INTERSECT SELECT 3 UNION SELECT 4",
+        "postgres": "SELECT 1 INTERSECT SELECT 2 INTERSECT SELECT 3 UNION SELECT 4"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT 1 UNION (SELECT 2 INTERSECT SELECT 3) ORDER BY 1 NULLS LAST LIMIT 10 OFFSET 2",
+      "read": {
+        "postgres": "SELECT 1 UNION SELECT 2 INTERSECT SELECT 3 ORDER BY 1 LIMIT 10 OFFSET 2"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT (SELECT 1 UNION (SELECT 2 INTERSECT SELECT 3) ORDER BY 1 NULLS LAST)",
+      "read": {
+        "postgres": "SELECT (SELECT 1 UNION SELECT 2 INTERSECT SELECT 3 ORDER BY 1)"
+      },
+      "write": {
+        "postgres": "SELECT (SELECT 1 UNION (SELECT 2 INTERSECT SELECT 3) ORDER BY 1)"
+      }
+    },
+    {
+      "sql": "SELECT 1 UNION (SELECT 2 INTERSECT SELECT 3)",
+      "read": {
+        "postgres": "SELECT 1 UNION (SELECT 2 INTERSECT SELECT 3)",
+        "oracle": "SELECT 1 UNION (SELECT 2 INTERSECT SELECT 3)"
+      },
+      "write": {
+        "postgres": "SELECT 1 UNION (SELECT 2 INTERSECT SELECT 3)",
+        "oracle": "SELECT 1 UNION (SELECT 2 INTERSECT SELECT 3)",
+        "sqlite": "SELECT 1 UNION SELECT * FROM (SELECT 2 INTERSECT SELECT 3)"
+      }
+    },
+    {
+      "sql": "(SELECT 1 UNION SELECT 2) INTERSECT SELECT 3",
+      "read": {
+        "postgres": "(SELECT 1 UNION SELECT 2) INTERSECT SELECT 3",
+        "oracle": "(SELECT 1 UNION SELECT 2) INTERSECT SELECT 3"
+      },
+      "write": {
+        "postgres": "(SELECT 1 UNION SELECT 2) INTERSECT SELECT 3",
+        "oracle": "(SELECT 1 UNION SELECT 2) INTERSECT SELECT 3",
+        "sqlite": "SELECT 1 UNION SELECT 2 INTERSECT SELECT 3"
+      }
+    },
+    {
+      "sql": "(SELECT 1 UNION SELECT 2) /* keep */ INTERSECT SELECT 3",
+      "read": {},
+      "write": {
+        "sqlite": "SELECT 1 /* keep */ UNION SELECT 2 INTERSECT SELECT 3"
+      }
+    },
+    {
+      "sql": "((SELECT 1 AS x, 2 AS x UNION SELECT 3, 4)) INTERSECT SELECT 1, 2",
+      "read": {},
+      "write": {
+        "sqlite": "SELECT 1 AS x, 2 AS x UNION SELECT 3, 4 INTERSECT SELECT 1, 2"
       }
     },
     {
@@ -4692,11 +4857,35 @@
         "duckdb": "JSON_KEYS(foo, '$.a')",
         "doris": "JSON_KEYS(foo, '$.a')"
       }
+    },
+    {
+      "sql": "SELECT * FROM (VALUES (1), (2)) AS t(x) PIVOT(SUM(x) FOR x IN (1))",
+      "read": {},
+      "write": {
+        "": "SELECT * FROM (VALUES (1), (2)) AS t(x) PIVOT(SUM(x) FOR x IN (1))",
+        "databricks": "SELECT * FROM VALUES (1), (2) AS t(x) PIVOT(SUM(x) FOR x IN (1))",
+        "duckdb": "SELECT * FROM (VALUES (1), (2)) AS t(x) PIVOT(SUM(x) FOR x IN (1))",
+        "redshift": "SELECT * FROM (SELECT 1 AS x UNION ALL SELECT 2) AS t PIVOT(SUM(x) FOR x IN (1))",
+        "snowflake": "SELECT * FROM (VALUES (1), (2)) AS t(x) PIVOT(SUM(x) FOR x IN (1))",
+        "spark": "SELECT * FROM VALUES (1), (2) AS t(x) PIVOT(SUM(x) FOR x IN (1))"
+      }
+    },
+    {
+      "sql": "SELECT * FROM VALUES (1), (2) AS t(x) PIVOT(SUM(x) FOR x IN (1))",
+      "read": {},
+      "write": {
+        "": "SELECT * FROM (VALUES (1), (2)) AS t(x) PIVOT(SUM(x) FOR x IN (1))",
+        "databricks": "SELECT * FROM VALUES (1), (2) AS t(x) PIVOT(SUM(x) FOR x IN (1))",
+        "duckdb": "SELECT * FROM (VALUES (1), (2)) AS t(x) PIVOT(SUM(x) FOR x IN (1))",
+        "redshift": "SELECT * FROM (SELECT 1 AS x UNION ALL SELECT 2) AS t PIVOT(SUM(x) FOR x IN (1))",
+        "snowflake": "SELECT * FROM (VALUES (1), (2)) AS t(x) PIVOT(SUM(x) FOR x IN (1))",
+        "spark": "SELECT * FROM VALUES (1), (2) AS t(x) PIVOT(SUM(x) FOR x IN (1))"
+      }
     }
   ],
   "stats": {
-    "identity_count": 102,
-    "transpile_count": 286,
-    "skipped_dynamic": 44
+    "identity_count": 118,
+    "transpile_count": 298,
+    "skipped_dynamic": 47
   }
 }

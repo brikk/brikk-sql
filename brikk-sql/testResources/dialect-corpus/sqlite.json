@@ -1,7 +1,22 @@
 {
-  "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
+  "sqlglot_version": "v30.29.0",
   "dialect": "sqlite",
   "identity": [
+    {
+      "sql": "SELECT 'x' LIKE 'x' NOT LIKE '1'",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT NULL IS NULL < FALSE IN (0)",
+      "expected": "SELECT NULL IS (NULL < FALSE) IN (0)",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT NULL IS NULL < FALSE",
+      "expected": "SELECT NULL IS (NULL < FALSE)",
+      "pretty": false
+    },
     {
       "sql": "SELECT 1 IN (0) IN (1)",
       "expected": null,
@@ -193,11 +208,6 @@
       "pretty": false
     },
     {
-      "sql": "SELECT JSON_EXTRACT('[10, 20, [30, 40]]', '$[2]', '$[0]', '$[1]')",
-      "expected": null,
-      "pretty": false
-    },
-    {
       "sql": "SELECT JSON_EXTRACT(a, '$.k') FROM t",
       "expected": null,
       "pretty": false
@@ -259,7 +269,7 @@
     },
     {
       "sql": "SELECT * FROM station WHERE city IS NOT ''",
-      "expected": "SELECT * FROM station WHERE NOT city IS ''",
+      "expected": null,
       "pretty": false
     },
     {
@@ -310,7 +320,7 @@
     },
     {
       "sql": "SELECT * FROM t WHERE NULL IS NOT y",
-      "expected": "SELECT * FROM t WHERE NOT NULL IS y",
+      "expected": null,
       "pretty": false
     },
     {
@@ -404,6 +414,11 @@
       "pretty": false
     },
     {
+      "sql": "SELECT X'0a', 0x0a",
+      "expected": "SELECT x'0a', 10",
+      "pretty": false
+    },
+    {
       "sql": "CREATE TABLE t (a INTEGER, b INTEGER AS (a * 2) STORED)",
       "expected": null,
       "pretty": false
@@ -470,6 +485,16 @@
     },
     {
       "sql": "INSERT OR ROLLBACK INTO foo (x, y) VALUES (1, 2)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "INSERT INTO foo AS f (x, y) VALUES (1, 2)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "INSERT INTO foo AS f (x, y) VALUES (1, 2) ON CONFLICT(x) DO UPDATE SET y = f.y + 1",
       "expected": null,
       "pretty": false
     },
@@ -622,6 +647,16 @@
       "check_command_warning": true
     },
     {
+      "sql": "SELECT a IS b, a IS NOT b FROM t",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT a IS NULL, a IS NOT NULL FROM t",
+      "expected": "SELECT a IS NULL, NOT a IS NULL FROM t",
+      "pretty": false
+    },
+    {
       "sql": "SELECT a -> 'it''s' FROM t",
       "expected": null,
       "pretty": false
@@ -654,6 +689,23 @@
   ],
   "transpile": [
     {
+      "sql": "SELECT FALSE IS DISTINCT FROM TRUE IS DISTINCT FROM FALSE",
+      "read": {},
+      "write": {
+        "sqlite": "SELECT (FALSE IS NOT TRUE) IS NOT FALSE",
+        "postgres": "SELECT (FALSE IS DISTINCT FROM TRUE) IS DISTINCT FROM FALSE"
+      }
+    },
+    {
+      "sql": "SELECT FALSE IS DISTINCT FROM NULL = NULL",
+      "read": {},
+      "write": {
+        "sqlite": "SELECT (FALSE IS NOT NULL) = NULL",
+        "postgres": "SELECT (FALSE IS DISTINCT FROM NULL) = NULL",
+        "duckdb": "SELECT (FALSE IS DISTINCT FROM NULL) = NULL"
+      }
+    },
+    {
       "sql": "SELECT GROUP_CONCAT(x, ',' ORDER BY y)",
       "read": {},
       "write": {
@@ -678,11 +730,38 @@
       "write": {}
     },
     {
+      "sql": "SELECT DATE('2020-01-31', '+1 month')",
+      "read": {
+        "sqlite": "SELECT DATE('2020-01-31', '+1 month')"
+      },
+      "write": {
+        "sqlite": "SELECT DATE('2020-01-31', '+1 month')",
+        "duckdb": "SELECT DATE('2020-01-31', '+1 month')"
+      }
+    },
+    {
+      "sql": "SELECT DATE('2020-03-15', 'start of month', '+1 day')",
+      "read": {
+        "sqlite": "SELECT DATE('2020-03-15', 'start of month', '+1 day')"
+      },
+      "write": {
+        "sqlite": "SELECT DATE('2020-03-15', 'start of month', '+1 day')",
+        "duckdb": "SELECT DATE('2020-03-15', 'start of month', '+1 day')"
+      }
+    },
+    {
       "sql": "SELECT DATE(d, '1 DAY') FROM t",
       "read": {
         "duckdb": "SELECT DATE_ADD(d, INTERVAL 1 DAY) FROM t"
       },
       "write": {}
+    },
+    {
+      "sql": "SELECT DATE_ADD(d, '1'') ; SELECT 1; --')",
+      "read": {},
+      "write": {
+        "sqlite": "SELECT DATE(d, '1'') ; SELECT 1; --')"
+      }
     },
     {
       "sql": "SELECT DATE(d, '-1 DAY') FROM t",
@@ -718,6 +797,14 @@
         "duckdb": "SELECT DATE_ADD(d, INTERVAL (NULL) DAY) FROM t"
       },
       "write": {}
+    },
+    {
+      "sql": "SELECT JSON_EXTRACT('[10, 20, [30, 40]]', '$[2]', '$[0]', '$[1]')",
+      "read": {},
+      "write": {
+        "sqlite": "SELECT JSON_EXTRACT('[10, 20, [30, 40]]', '$[2]', '$[0]', '$[1]')",
+        "duckdb": "SELECT TO_JSON(JSON_EXTRACT('[10, 20, [30, 40]]', ['$[2]', '$[0]', '$[1]']))"
+      }
     },
     {
       "sql": "SELECT JSON_EXTRACT(a, '$.k') FROM t",
@@ -762,14 +849,24 @@
       "read": {
         "sqlite": "SELECT MIN(a, b) FROM t"
       },
-      "write": {}
+      "write": {
+        "sqlite": "SELECT MIN(a, b) FROM t",
+        "duckdb": "SELECT CASE WHEN a IS NULL OR b IS NULL THEN NULL ELSE LEAST(a, b) END FROM t",
+        "trino": "SELECT LEAST(a, b) FROM t",
+        "oracle": "SELECT LEAST(a, b) FROM t"
+      }
     },
     {
       "sql": "SELECT MAX(a, b) FROM t",
       "read": {
         "sqlite": "SELECT MAX(a, b) FROM t"
       },
-      "write": {}
+      "write": {
+        "sqlite": "SELECT MAX(a, b) FROM t",
+        "duckdb": "SELECT CASE WHEN a IS NULL OR b IS NULL THEN NULL ELSE GREATEST(a, b) END FROM t",
+        "trino": "SELECT GREATEST(a, b) FROM t",
+        "oracle": "SELECT GREATEST(a, b) FROM t"
+      }
     },
     {
       "sql": "SELECT MAX(COALESCE(a, b), COALESCE(b, a)) FROM t",
@@ -1002,6 +1099,20 @@
       }
     },
     {
+      "sql": "SELECT a ->> ('$.' || f)",
+      "read": {
+        "spark": "SELECT GET_JSON_OBJECT(a, CONCAT('$.', f))"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT a -> ('$.' || f)",
+      "read": {
+        "mysql": "SELECT JSON_EXTRACT(a, CONCAT('$.', f))"
+      },
+      "write": {}
+    },
+    {
       "sql": "SELECT STRFTIME('%Y-%m-%d', '2020-01-01 12:05:03')",
       "read": {},
       "write": {
@@ -1054,10 +1165,11 @@
       "write": {}
     },
     {
-      "sql": "SELECT 0XCC",
+      "sql": "SELECT x'CC'",
       "read": {},
       "write": {
         "sqlite": "SELECT x'CC'",
+        "duckdb": "SELECT UNHEX('CC')",
         "mysql": "SELECT x'CC'"
       }
     },
@@ -1066,6 +1178,15 @@
       "read": {},
       "write": {
         "sqlite": "SELECT FIRST_VALUE(Name) OVER (PARTITION BY AlbumId ORDER BY Bytes DESC) AS LargestTrack FROM tracks"
+      }
+    },
+    {
+      "sql": "CREATE TABLE t (x REAL, y FLOAT)",
+      "read": {},
+      "write": {
+        "sqlite": "CREATE TABLE t (x REAL, y REAL)",
+        "duckdb": "CREATE TABLE t (x DOUBLE, y DOUBLE)",
+        "postgres": "CREATE TABLE t (x DOUBLE PRECISION, y DOUBLE PRECISION)"
       }
     },
     {
@@ -1112,8 +1233,8 @@
     }
   ],
   "stats": {
-    "identity_count": 129,
-    "transpile_count": 57,
-    "skipped_dynamic": 3
+    "identity_count": 136,
+    "transpile_count": 66,
+    "skipped_dynamic": 11
   }
 }

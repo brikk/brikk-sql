@@ -1,8 +1,3 @@
 {
-    "cases": [{
-        "id": "assertion:v1:sha256:d0cb329bb688da3dec1250a08341b4be2e55d55ba8d42b4d99d46aafc1016ba1:1",
-        "sql": "APPROX_TOP_COUNT(col, 2)",
-        "signature": "type-mismatch:v1:sha256:c17a3a4e0383baed82e3b4b1bb3a5ac8a012f7e10e776a1b223b034f42f72ea4",
-        "reason": "SG29-017/a32ef636/#8818: unknown input now yields UNKNOWN rather than the frozen oracle's ARRAY<STRUCT<UNKNOWN,BIGINT>> wrapper. No known field/type or native execution is invented. The AST arguments, source metadata and SQL are unchanged. Exact bounded annotation-only port; reconcile after SG29-020 oracle migration."
-    }]
+    "cases": []
 }

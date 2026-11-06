@@ -1,5 +1,5 @@
 {
-  "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
+  "sqlglot_version": "v30.29.0",
   "dialect": "databricks",
   "identity": [
     {
@@ -735,6 +735,16 @@
   ],
   "transpile": [
     {
+      "sql": "CREATE TABLE t (ts TIMESTAMP(9))",
+      "read": {},
+      "write": {
+        "databricks": "CREATE TABLE t (ts TIMESTAMP(9))",
+        "hive": "CREATE TABLE t (ts TIMESTAMP)",
+        "spark": "CREATE TABLE t (ts TIMESTAMP)",
+        "spark2": "CREATE TABLE t (ts TIMESTAMP)"
+      }
+    },
+    {
       "sql": "CREATE TABLE t (a INT, b TIMESTAMP, PRIMARY KEY (a, b TIMESERIES))",
       "read": {},
       "write": {
@@ -1011,7 +1021,7 @@
   ],
   "stats": {
     "identity_count": 146,
-    "transpile_count": 32,
-    "skipped_dynamic": 1
+    "transpile_count": 33,
+    "skipped_dynamic": 5
   }
 }

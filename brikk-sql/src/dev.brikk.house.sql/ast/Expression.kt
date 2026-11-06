@@ -542,7 +542,11 @@ abstract class Expression(initArgs: Args = emptyMap()) {
         else -> canonicalNumber(v)
     }
 
-    private fun canonicalNumber(v: kotlin.Any?): kotlin.Any? = if (v is Int) v.toLong() else v
+    private fun canonicalNumber(v: kotlin.Any?): kotlin.Any? = when (v) {
+        is Int -> v.toLong()
+        is List<*> -> v.map(::canonicalNumber)
+        else -> v
+    }
 
     private fun isTruthy(v: kotlin.Any?): kotlin.Boolean = when (v) {
         null, false, "", 0, 0L, 0.0 -> false

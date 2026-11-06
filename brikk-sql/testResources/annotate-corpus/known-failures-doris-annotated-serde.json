@@ -1,3 +1,4426 @@
 {
-    "cases": []
+    "cases": [
+        {
+            "id": "assertion:v1:sha256:37e81edefa8aa06755ba1a3a642161931781b98d62a97ff6707ef28f00048f61:1",
+            "sql": "SELECT * FROM t WHERE c MATCH_PHRASE 'word1 word2 ~3'",
+            "signature": "type-mismatch:v1:sha256:8ac9481fd9fbf6bd79f942a497af97c4b302a9a59f4df869aa225fbfb0ef1d20",
+            "reason": "SG29-020: Retain the native MATCH operator/analyzer representation and parenthesization proved by Doris 4.1.5 parsed/analyzed plans. Do not infer backend/index execution from generic AST equality.",
+            "expected": [
+                {
+                    "c": "sqlglot.expressions.query.Select",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Star",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 0,
+                    "k": "from_",
+                    "c": "sqlglot.expressions.query.From",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 3,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 4,
+                    "k": "this",
+                    "v": "t"
+                },
+                {
+                    "i": 4,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "where",
+                    "c": "sqlglot.expressions.query.Where",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Match",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "BOOLEAN"
+                        }
+                    ]
+                },
+                {
+                    "i": 8,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 10,
+                    "k": "this",
+                    "v": "c"
+                },
+                {
+                    "i": 10,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 8,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "VARCHAR"
+                        }
+                    ],
+                    "m": {
+                        "nonnull": true
+                    }
+                },
+                {
+                    "i": 13,
+                    "k": "this",
+                    "v": "word1 word2 ~3"
+                },
+                {
+                    "i": 13,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 8,
+                    "k": "kind",
+                    "v": "PHRASE"
+                }
+            ],
+            "actual": [
+                {
+                    "c": "sqlglot.expressions.query.Select",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Star",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 0,
+                    "k": "from_",
+                    "c": "sqlglot.expressions.query.From",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 3,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 4,
+                    "k": "this",
+                    "v": "t"
+                },
+                {
+                    "i": 4,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "where",
+                    "c": "sqlglot.expressions.query.Where",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Match",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "BOOLEAN"
+                        }
+                    ],
+                    "m": {
+                        "doris_full_text": true
+                    }
+                },
+                {
+                    "i": 8,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 10,
+                    "k": "this",
+                    "v": "c"
+                },
+                {
+                    "i": 10,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 8,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "VARCHAR"
+                        }
+                    ],
+                    "m": {
+                        "nonnull": true
+                    }
+                },
+                {
+                    "i": 13,
+                    "k": "this",
+                    "v": "word1 word2 ~3"
+                },
+                {
+                    "i": 13,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 8,
+                    "k": "kind",
+                    "v": "PHRASE"
+                }
+            ]
+        },
+        {
+            "id": "assertion:v1:sha256:521bc53ca7fbba1c0452ea5e9298b2c88bee537fef97fe19bfc2e0d56f9490bb:1",
+            "sql": "SELECT * FROM t WHERE c MATCH_PHRASE 'word1 word2 ~3+'",
+            "signature": "type-mismatch:v1:sha256:231206a55632967bc06032978f6709791958e820141108633d8b3583f009a5ab",
+            "reason": "SG29-020: Retain the native MATCH operator/analyzer representation and parenthesization proved by Doris 4.1.5 parsed/analyzed plans. Do not infer backend/index execution from generic AST equality.",
+            "expected": [
+                {
+                    "c": "sqlglot.expressions.query.Select",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Star",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 0,
+                    "k": "from_",
+                    "c": "sqlglot.expressions.query.From",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 3,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 4,
+                    "k": "this",
+                    "v": "t"
+                },
+                {
+                    "i": 4,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "where",
+                    "c": "sqlglot.expressions.query.Where",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Match",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "BOOLEAN"
+                        }
+                    ]
+                },
+                {
+                    "i": 8,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 10,
+                    "k": "this",
+                    "v": "c"
+                },
+                {
+                    "i": 10,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 8,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "VARCHAR"
+                        }
+                    ],
+                    "m": {
+                        "nonnull": true
+                    }
+                },
+                {
+                    "i": 13,
+                    "k": "this",
+                    "v": "word1 word2 ~3+"
+                },
+                {
+                    "i": 13,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 8,
+                    "k": "kind",
+                    "v": "PHRASE"
+                }
+            ],
+            "actual": [
+                {
+                    "c": "sqlglot.expressions.query.Select",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Star",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 0,
+                    "k": "from_",
+                    "c": "sqlglot.expressions.query.From",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 3,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 4,
+                    "k": "this",
+                    "v": "t"
+                },
+                {
+                    "i": 4,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "where",
+                    "c": "sqlglot.expressions.query.Where",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Match",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "BOOLEAN"
+                        }
+                    ],
+                    "m": {
+                        "doris_full_text": true
+                    }
+                },
+                {
+                    "i": 8,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 10,
+                    "k": "this",
+                    "v": "c"
+                },
+                {
+                    "i": 10,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 8,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "VARCHAR"
+                        }
+                    ],
+                    "m": {
+                        "nonnull": true
+                    }
+                },
+                {
+                    "i": 13,
+                    "k": "this",
+                    "v": "word1 word2 ~3+"
+                },
+                {
+                    "i": 13,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 8,
+                    "k": "kind",
+                    "v": "PHRASE"
+                }
+            ]
+        },
+        {
+            "id": "assertion:v1:sha256:f9852141b5cba81fbfab5773180c16eeedd3e80a697aa815381a72fb25e37169:1",
+            "sql": "SELECT * FROM t WHERE c MATCH 'hello world' USING ANALYZER std_analyzer",
+            "signature": "type-mismatch:v1:sha256:eb55c5a8f9a666e72c3d39dabe5f3515e482fd17f670cd444dbf471b454a404b",
+            "reason": "SG29-020: Retain the native MATCH operator/analyzer representation and parenthesization proved by Doris 4.1.5 parsed/analyzed plans. Do not infer backend/index execution from generic AST equality.",
+            "expected": [
+                {
+                    "c": "sqlglot.expressions.query.Select",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Star",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 0,
+                    "k": "from_",
+                    "c": "sqlglot.expressions.query.From",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 3,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 4,
+                    "k": "this",
+                    "v": "t"
+                },
+                {
+                    "i": 4,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "where",
+                    "c": "sqlglot.expressions.query.Where",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Match",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "BOOLEAN"
+                        }
+                    ]
+                },
+                {
+                    "i": 8,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 10,
+                    "k": "this",
+                    "v": "c"
+                },
+                {
+                    "i": 10,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 8,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "VARCHAR"
+                        }
+                    ],
+                    "m": {
+                        "nonnull": true
+                    }
+                },
+                {
+                    "i": 13,
+                    "k": "this",
+                    "v": "hello world"
+                },
+                {
+                    "i": 13,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 8,
+                    "k": "analyzer",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 16,
+                    "k": "this",
+                    "v": "std_analyzer"
+                },
+                {
+                    "i": 16,
+                    "k": "quoted",
+                    "v": false
+                }
+            ],
+            "actual": [
+                {
+                    "c": "sqlglot.expressions.query.Select",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Star",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 0,
+                    "k": "from_",
+                    "c": "sqlglot.expressions.query.From",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 3,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 4,
+                    "k": "this",
+                    "v": "t"
+                },
+                {
+                    "i": 4,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "where",
+                    "c": "sqlglot.expressions.query.Where",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Match",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "BOOLEAN"
+                        }
+                    ],
+                    "m": {
+                        "doris_full_text": true
+                    }
+                },
+                {
+                    "i": 8,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 10,
+                    "k": "this",
+                    "v": "c"
+                },
+                {
+                    "i": 10,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 8,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "VARCHAR"
+                        }
+                    ],
+                    "m": {
+                        "nonnull": true
+                    }
+                },
+                {
+                    "i": 13,
+                    "k": "this",
+                    "v": "hello world"
+                },
+                {
+                    "i": 13,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 8,
+                    "k": "analyzer",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 16,
+                    "k": "this",
+                    "v": "std_analyzer"
+                },
+                {
+                    "i": 16,
+                    "k": "quoted",
+                    "v": false
+                }
+            ]
+        },
+        {
+            "id": "assertion:v1:sha256:86afaa2bfc1295532c54d87f204e92e0f1d09b360c102b8cfa7ca05837d21828:1",
+            "sql": "SELECT * FROM t WHERE c MATCH_ANY 'x' USING ANALYZER `kw_analyzer`",
+            "signature": "type-mismatch:v1:sha256:50ba191496db0757319618513bec3eb342d933776271e3f923aec8ae973ecd46",
+            "reason": "SG29-020: Retain the native MATCH operator/analyzer representation and parenthesization proved by Doris 4.1.5 parsed/analyzed plans. Do not infer backend/index execution from generic AST equality.",
+            "expected": [
+                {
+                    "c": "sqlglot.expressions.query.Select",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Star",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 0,
+                    "k": "from_",
+                    "c": "sqlglot.expressions.query.From",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 3,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 4,
+                    "k": "this",
+                    "v": "t"
+                },
+                {
+                    "i": 4,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "where",
+                    "c": "sqlglot.expressions.query.Where",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Match",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "BOOLEAN"
+                        }
+                    ]
+                },
+                {
+                    "i": 8,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 10,
+                    "k": "this",
+                    "v": "c"
+                },
+                {
+                    "i": 10,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 8,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "VARCHAR"
+                        }
+                    ],
+                    "m": {
+                        "nonnull": true
+                    }
+                },
+                {
+                    "i": 13,
+                    "k": "this",
+                    "v": "x"
+                },
+                {
+                    "i": 13,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 8,
+                    "k": "kind",
+                    "v": "ANY"
+                },
+                {
+                    "i": 8,
+                    "k": "analyzer",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 17,
+                    "k": "this",
+                    "v": "kw_analyzer"
+                },
+                {
+                    "i": 17,
+                    "k": "quoted",
+                    "v": true
+                }
+            ],
+            "actual": [
+                {
+                    "c": "sqlglot.expressions.query.Select",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Star",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 0,
+                    "k": "from_",
+                    "c": "sqlglot.expressions.query.From",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 3,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 4,
+                    "k": "this",
+                    "v": "t"
+                },
+                {
+                    "i": 4,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "where",
+                    "c": "sqlglot.expressions.query.Where",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Match",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "BOOLEAN"
+                        }
+                    ],
+                    "m": {
+                        "doris_full_text": true
+                    }
+                },
+                {
+                    "i": 8,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 10,
+                    "k": "this",
+                    "v": "c"
+                },
+                {
+                    "i": 10,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 8,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "VARCHAR"
+                        }
+                    ],
+                    "m": {
+                        "nonnull": true
+                    }
+                },
+                {
+                    "i": 13,
+                    "k": "this",
+                    "v": "x"
+                },
+                {
+                    "i": 13,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 8,
+                    "k": "kind",
+                    "v": "ANY"
+                },
+                {
+                    "i": 8,
+                    "k": "analyzer",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 17,
+                    "k": "this",
+                    "v": "kw_analyzer"
+                },
+                {
+                    "i": 17,
+                    "k": "quoted",
+                    "v": true
+                }
+            ]
+        },
+        {
+            "id": "assertion:v1:sha256:1a7db690325fad67a4c5be64dc2a91bf589d2a49e47ba42eb734119280acb120:1",
+            "sql": "SELECT * FROM t WHERE c MATCH 'x' USING ANALYZER 'standard'",
+            "signature": "type-mismatch:v1:sha256:10b13dcc95aa630e2dd5220f3759d2390e6231b2b6bb0c69c2dacd67da0f563d",
+            "reason": "SG29-020: Retain the native MATCH operator/analyzer representation and parenthesization proved by Doris 4.1.5 parsed/analyzed plans. Do not infer backend/index execution from generic AST equality.",
+            "expected": [
+                {
+                    "c": "sqlglot.expressions.query.Select",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Star",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 0,
+                    "k": "from_",
+                    "c": "sqlglot.expressions.query.From",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 3,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 4,
+                    "k": "this",
+                    "v": "t"
+                },
+                {
+                    "i": 4,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "where",
+                    "c": "sqlglot.expressions.query.Where",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Match",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "BOOLEAN"
+                        }
+                    ]
+                },
+                {
+                    "i": 8,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 10,
+                    "k": "this",
+                    "v": "c"
+                },
+                {
+                    "i": 10,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 8,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "VARCHAR"
+                        }
+                    ],
+                    "m": {
+                        "nonnull": true
+                    }
+                },
+                {
+                    "i": 13,
+                    "k": "this",
+                    "v": "x"
+                },
+                {
+                    "i": 13,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 8,
+                    "k": "analyzer",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "VARCHAR"
+                        }
+                    ],
+                    "m": {
+                        "nonnull": true
+                    }
+                },
+                {
+                    "i": 16,
+                    "k": "this",
+                    "v": "standard"
+                },
+                {
+                    "i": 16,
+                    "k": "is_string",
+                    "v": true
+                }
+            ],
+            "actual": [
+                {
+                    "c": "sqlglot.expressions.query.Select",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Star",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 0,
+                    "k": "from_",
+                    "c": "sqlglot.expressions.query.From",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 3,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 4,
+                    "k": "this",
+                    "v": "t"
+                },
+                {
+                    "i": 4,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "where",
+                    "c": "sqlglot.expressions.query.Where",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Match",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "BOOLEAN"
+                        }
+                    ],
+                    "m": {
+                        "doris_full_text": true
+                    }
+                },
+                {
+                    "i": 8,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 10,
+                    "k": "this",
+                    "v": "c"
+                },
+                {
+                    "i": 10,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 8,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "VARCHAR"
+                        }
+                    ],
+                    "m": {
+                        "nonnull": true
+                    }
+                },
+                {
+                    "i": 13,
+                    "k": "this",
+                    "v": "x"
+                },
+                {
+                    "i": 13,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 8,
+                    "k": "analyzer",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "VARCHAR"
+                        }
+                    ],
+                    "m": {
+                        "nonnull": true
+                    }
+                },
+                {
+                    "i": 16,
+                    "k": "this",
+                    "v": "standard"
+                },
+                {
+                    "i": 16,
+                    "k": "is_string",
+                    "v": true
+                }
+            ]
+        },
+        {
+            "id": "assertion:v1:sha256:44c92b1eb5f5f7cc59ea0933f5ca721785c339827920f7f7074453a7672a766e:1",
+            "sql": "SELECT * FROM t WHERE c NOT MATCH_ANY ('x') USING ANALYZER 'standard'",
+            "signature": "type-mismatch:v1:sha256:e44353ec152196cf25a5887fae8851bda989a0c815beef823d8b57e13fb3000b",
+            "reason": "SG29-020: Retain the native MATCH operator/analyzer representation and parenthesization proved by Doris 4.1.5 parsed/analyzed plans. Do not infer backend/index execution from generic AST equality.",
+            "expected": [
+                {
+                    "c": "sqlglot.expressions.query.Select",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Star",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 0,
+                    "k": "from_",
+                    "c": "sqlglot.expressions.query.From",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 3,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 4,
+                    "k": "this",
+                    "v": "t"
+                },
+                {
+                    "i": 4,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "where",
+                    "c": "sqlglot.expressions.query.Where",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Not",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "BOOLEAN"
+                        }
+                    ]
+                },
+                {
+                    "i": 8,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Match",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "BOOLEAN"
+                        }
+                    ]
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 10,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 11,
+                    "k": "this",
+                    "v": "c"
+                },
+                {
+                    "i": 11,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 9,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Paren",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "VARCHAR"
+                        }
+                    ],
+                    "m": {
+                        "nonnull": true
+                    }
+                },
+                {
+                    "i": 14,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "VARCHAR"
+                        }
+                    ],
+                    "m": {
+                        "nonnull": true
+                    }
+                },
+                {
+                    "i": 15,
+                    "k": "this",
+                    "v": "x"
+                },
+                {
+                    "i": 15,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 9,
+                    "k": "kind",
+                    "v": "ANY"
+                },
+                {
+                    "i": 9,
+                    "k": "analyzer",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "VARCHAR"
+                        }
+                    ],
+                    "m": {
+                        "nonnull": true
+                    }
+                },
+                {
+                    "i": 19,
+                    "k": "this",
+                    "v": "standard"
+                },
+                {
+                    "i": 19,
+                    "k": "is_string",
+                    "v": true
+                }
+            ],
+            "actual": [
+                {
+                    "c": "sqlglot.expressions.query.Select",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Star",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 0,
+                    "k": "from_",
+                    "c": "sqlglot.expressions.query.From",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 3,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 4,
+                    "k": "this",
+                    "v": "t"
+                },
+                {
+                    "i": 4,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "where",
+                    "c": "sqlglot.expressions.query.Where",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Not",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "BOOLEAN"
+                        }
+                    ]
+                },
+                {
+                    "i": 8,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Match",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "BOOLEAN"
+                        }
+                    ],
+                    "m": {
+                        "doris_full_text": true
+                    }
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 10,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 11,
+                    "k": "this",
+                    "v": "c"
+                },
+                {
+                    "i": 11,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 9,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Paren",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "VARCHAR"
+                        }
+                    ],
+                    "m": {
+                        "nonnull": true
+                    }
+                },
+                {
+                    "i": 14,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "VARCHAR"
+                        }
+                    ],
+                    "m": {
+                        "nonnull": true
+                    }
+                },
+                {
+                    "i": 15,
+                    "k": "this",
+                    "v": "x"
+                },
+                {
+                    "i": 15,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 9,
+                    "k": "kind",
+                    "v": "ANY"
+                },
+                {
+                    "i": 9,
+                    "k": "analyzer",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "VARCHAR"
+                        }
+                    ],
+                    "m": {
+                        "nonnull": true
+                    }
+                },
+                {
+                    "i": 19,
+                    "k": "this",
+                    "v": "standard"
+                },
+                {
+                    "i": 19,
+                    "k": "is_string",
+                    "v": true
+                }
+            ]
+        },
+        {
+            "id": "assertion:v1:sha256:2e361e384d88f8b4572ef54b6affbdd67ef19b0b83488409728d751d935f2058:1",
+            "sql": "SELECT * FROM t WHERE c match_regexp '^key_word.*'",
+            "signature": "type-mismatch:v1:sha256:91030a1a5b6d97c4e45c98228faebe7a3a829bc875a6667b619b82829a1f843e",
+            "reason": "SG29-020: Retain the native MATCH operator/analyzer representation and parenthesization proved by Doris 4.1.5 parsed/analyzed plans. Do not infer backend/index execution from generic AST equality.",
+            "expected": [
+                {
+                    "c": "sqlglot.expressions.query.Select",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Star",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 0,
+                    "k": "from_",
+                    "c": "sqlglot.expressions.query.From",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 3,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 4,
+                    "k": "this",
+                    "v": "t"
+                },
+                {
+                    "i": 4,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "where",
+                    "c": "sqlglot.expressions.query.Where",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Match",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "BOOLEAN"
+                        }
+                    ]
+                },
+                {
+                    "i": 8,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 10,
+                    "k": "this",
+                    "v": "c"
+                },
+                {
+                    "i": 10,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 8,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "VARCHAR"
+                        }
+                    ],
+                    "m": {
+                        "nonnull": true
+                    }
+                },
+                {
+                    "i": 13,
+                    "k": "this",
+                    "v": "^key_word.*"
+                },
+                {
+                    "i": 13,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 8,
+                    "k": "kind",
+                    "v": "REGEXP"
+                }
+            ],
+            "actual": [
+                {
+                    "c": "sqlglot.expressions.query.Select",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Star",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 0,
+                    "k": "from_",
+                    "c": "sqlglot.expressions.query.From",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 3,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 4,
+                    "k": "this",
+                    "v": "t"
+                },
+                {
+                    "i": 4,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "where",
+                    "c": "sqlglot.expressions.query.Where",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Match",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "BOOLEAN"
+                        }
+                    ],
+                    "m": {
+                        "doris_full_text": true
+                    }
+                },
+                {
+                    "i": 8,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 10,
+                    "k": "this",
+                    "v": "c"
+                },
+                {
+                    "i": 10,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 8,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "VARCHAR"
+                        }
+                    ],
+                    "m": {
+                        "nonnull": true
+                    }
+                },
+                {
+                    "i": 13,
+                    "k": "this",
+                    "v": "^key_word.*"
+                },
+                {
+                    "i": 13,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 8,
+                    "k": "kind",
+                    "v": "REGEXP"
+                }
+            ]
+        },
+        {
+            "id": "assertion:v1:sha256:d6853ac1205ca369d73cd9a698cc114b3608f71c552cafb485b54d986b2e8b80:1",
+            "sql": "SELECT * FROM t WHERE NOT c MATCH_ANY 'x' AND d MATCH_ALL 'y' OR e = 1",
+            "signature": "type-mismatch:v1:sha256:2fe1fc0ef3f17e589dfaa1121c45e5be0698f09fbdf519885bed656d7efb1978",
+            "reason": "SG29-020: Retain the native MATCH operator/analyzer representation and parenthesization proved by Doris 4.1.5 parsed/analyzed plans. Do not infer backend/index execution from generic AST equality.",
+            "expected": [
+                {
+                    "c": "sqlglot.expressions.query.Select",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Star",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 0,
+                    "k": "from_",
+                    "c": "sqlglot.expressions.query.From",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 3,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 4,
+                    "k": "this",
+                    "v": "t"
+                },
+                {
+                    "i": 4,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "where",
+                    "c": "sqlglot.expressions.query.Where",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Or",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "BOOLEAN"
+                        }
+                    ]
+                },
+                {
+                    "i": 8,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.And",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "BOOLEAN"
+                        }
+                    ]
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Not",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "BOOLEAN"
+                        }
+                    ]
+                },
+                {
+                    "i": 10,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Match",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "BOOLEAN"
+                        }
+                    ]
+                },
+                {
+                    "i": 11,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 12,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 13,
+                    "k": "this",
+                    "v": "c"
+                },
+                {
+                    "i": 13,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 11,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "VARCHAR"
+                        }
+                    ],
+                    "m": {
+                        "nonnull": true
+                    }
+                },
+                {
+                    "i": 16,
+                    "k": "this",
+                    "v": "x"
+                },
+                {
+                    "i": 16,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 11,
+                    "k": "kind",
+                    "v": "ANY"
+                },
+                {
+                    "i": 9,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Match",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "BOOLEAN"
+                        }
+                    ]
+                },
+                {
+                    "i": 20,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 21,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 22,
+                    "k": "this",
+                    "v": "d"
+                },
+                {
+                    "i": 22,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 20,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "VARCHAR"
+                        }
+                    ],
+                    "m": {
+                        "nonnull": true
+                    }
+                },
+                {
+                    "i": 25,
+                    "k": "this",
+                    "v": "y"
+                },
+                {
+                    "i": 25,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 20,
+                    "k": "kind",
+                    "v": "ALL"
+                },
+                {
+                    "i": 8,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.EQ",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "BOOLEAN"
+                        }
+                    ]
+                },
+                {
+                    "i": 29,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 30,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 31,
+                    "k": "this",
+                    "v": "e"
+                },
+                {
+                    "i": 31,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 29,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "INT"
+                        }
+                    ],
+                    "m": {
+                        "nonnull": true
+                    }
+                },
+                {
+                    "i": 34,
+                    "k": "this",
+                    "v": "1"
+                },
+                {
+                    "i": 34,
+                    "k": "is_string",
+                    "v": false
+                }
+            ],
+            "actual": [
+                {
+                    "c": "sqlglot.expressions.query.Select",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Star",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 0,
+                    "k": "from_",
+                    "c": "sqlglot.expressions.query.From",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 3,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 4,
+                    "k": "this",
+                    "v": "t"
+                },
+                {
+                    "i": 4,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "where",
+                    "c": "sqlglot.expressions.query.Where",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Or",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "BOOLEAN"
+                        }
+                    ]
+                },
+                {
+                    "i": 8,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.And",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "BOOLEAN"
+                        }
+                    ]
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Not",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "BOOLEAN"
+                        }
+                    ]
+                },
+                {
+                    "i": 10,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Match",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "BOOLEAN"
+                        }
+                    ],
+                    "m": {
+                        "doris_full_text": true
+                    }
+                },
+                {
+                    "i": 11,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 12,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 13,
+                    "k": "this",
+                    "v": "c"
+                },
+                {
+                    "i": 13,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 11,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "VARCHAR"
+                        }
+                    ],
+                    "m": {
+                        "nonnull": true
+                    }
+                },
+                {
+                    "i": 16,
+                    "k": "this",
+                    "v": "x"
+                },
+                {
+                    "i": 16,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 11,
+                    "k": "kind",
+                    "v": "ANY"
+                },
+                {
+                    "i": 9,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Match",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "BOOLEAN"
+                        }
+                    ],
+                    "m": {
+                        "doris_full_text": true
+                    }
+                },
+                {
+                    "i": 20,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 21,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 22,
+                    "k": "this",
+                    "v": "d"
+                },
+                {
+                    "i": 22,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 20,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "VARCHAR"
+                        }
+                    ],
+                    "m": {
+                        "nonnull": true
+                    }
+                },
+                {
+                    "i": 25,
+                    "k": "this",
+                    "v": "y"
+                },
+                {
+                    "i": 25,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 20,
+                    "k": "kind",
+                    "v": "ALL"
+                },
+                {
+                    "i": 8,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.EQ",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "BOOLEAN"
+                        }
+                    ]
+                },
+                {
+                    "i": 29,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 30,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 31,
+                    "k": "this",
+                    "v": "e"
+                },
+                {
+                    "i": 31,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 29,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "INT"
+                        }
+                    ],
+                    "m": {
+                        "nonnull": true
+                    }
+                },
+                {
+                    "i": 34,
+                    "k": "this",
+                    "v": "1"
+                },
+                {
+                    "i": 34,
+                    "k": "is_string",
+                    "v": false
+                }
+            ]
+        },
+        {
+            "id": "assertion:v1:sha256:88c25511891af76a05ae4b3df1fe115321e716505bb5e72fc5df11579e11df1f:1",
+            "sql": "SELECT * FROM t WHERE c NOT MATCH_ALL 'word1 word2'",
+            "signature": "type-mismatch:v1:sha256:55e5e04add3a99c75f11afd1b8aeb4ef22affbf6d5319ba2704af7a6a65922cb",
+            "reason": "SG29-020: Retain the native MATCH operator/analyzer representation and parenthesization proved by Doris 4.1.5 parsed/analyzed plans. Do not infer backend/index execution from generic AST equality.",
+            "expected": [
+                {
+                    "c": "sqlglot.expressions.query.Select",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Star",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 0,
+                    "k": "from_",
+                    "c": "sqlglot.expressions.query.From",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 3,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 4,
+                    "k": "this",
+                    "v": "t"
+                },
+                {
+                    "i": 4,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "where",
+                    "c": "sqlglot.expressions.query.Where",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Not",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "BOOLEAN"
+                        }
+                    ]
+                },
+                {
+                    "i": 8,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Match",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "BOOLEAN"
+                        }
+                    ]
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 10,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 11,
+                    "k": "this",
+                    "v": "c"
+                },
+                {
+                    "i": 11,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 9,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "VARCHAR"
+                        }
+                    ],
+                    "m": {
+                        "nonnull": true
+                    }
+                },
+                {
+                    "i": 14,
+                    "k": "this",
+                    "v": "word1 word2"
+                },
+                {
+                    "i": 14,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 9,
+                    "k": "kind",
+                    "v": "ALL"
+                }
+            ],
+            "actual": [
+                {
+                    "c": "sqlglot.expressions.query.Select",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Star",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 0,
+                    "k": "from_",
+                    "c": "sqlglot.expressions.query.From",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 3,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 4,
+                    "k": "this",
+                    "v": "t"
+                },
+                {
+                    "i": 4,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "where",
+                    "c": "sqlglot.expressions.query.Where",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Not",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "BOOLEAN"
+                        }
+                    ]
+                },
+                {
+                    "i": 8,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Match",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "BOOLEAN"
+                        }
+                    ],
+                    "m": {
+                        "doris_full_text": true
+                    }
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 10,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 11,
+                    "k": "this",
+                    "v": "c"
+                },
+                {
+                    "i": 11,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 9,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "VARCHAR"
+                        }
+                    ],
+                    "m": {
+                        "nonnull": true
+                    }
+                },
+                {
+                    "i": 14,
+                    "k": "this",
+                    "v": "word1 word2"
+                },
+                {
+                    "i": 14,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 9,
+                    "k": "kind",
+                    "v": "ALL"
+                }
+            ]
+        }
+    ]
 }

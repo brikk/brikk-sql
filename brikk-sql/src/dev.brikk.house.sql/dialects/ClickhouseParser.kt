@@ -1007,7 +1007,8 @@ open class ClickhouseParser(
     // STREAM is reserved only in the implicit table-alias position. Quoted aliases,
     // explicit AS stream, columns and tables named stream keep their normal meaning.
     override fun parseTableAlias(aliasTokens: Collection<TokenType>?): TableAlias? =
-        if (matchTextSeq("STREAM", advance = false)) null else super.parseTableAlias(aliasTokens)
+        if (matchTextSeq("STREAM", advance = false) || currToken.tokenType == TokenType.PASTE && nextToken.tokenType == TokenType.JOIN)
+            null else super.parseTableAlias(aliasTokens)
 
     private fun parseStreamCursor(depth: Int = 0): Expression {
         if (depth >= 128) raiseError("Stream cursor nesting too deep")
@@ -1669,7 +1670,7 @@ object ClickhouseParserTables {
 
     // sqlglot: ClickHouseParser.FUNC_TOKENS, and brikk-native DICTIONARY: the dictionary(...) table function
     val FUNC_TOKENS: Set<TokenType> = BaseParserTables.FUNC_TOKENS + setOf(
-        TokenType.AND, TokenType.FILE, TokenType.OR, TokenType.SET, TokenType.VIEW, TokenType.DICTIONARY,
+        TokenType.AND, TokenType.FILE, TokenType.OR, TokenType.SET, TokenType.VIEW, TokenType.DICTIONARY, TokenType.PASTE,
     )
 
     // sqlglot: ClickHouseParser.RESERVED_TOKENS = base - {SELECT}
@@ -1677,7 +1678,7 @@ object ClickhouseParserTables {
         BaseParserTables.RESERVED_TOKENS - TokenType.SELECT
 
     // sqlglot: ClickHouseParser.ID_VAR_TOKENS
-    val ID_VAR_TOKENS: Set<TokenType> = BaseParserTables.ID_VAR_TOKENS + TokenType.LIKE
+    val ID_VAR_TOKENS: Set<TokenType> = BaseParserTables.ID_VAR_TOKENS + setOf(TokenType.LIKE, TokenType.PASTE)
 
     // sqlglot: ClickHouseParser.FUNCTION_PARSERS (base minus MATCH)
     val FUNCTION_PARSERS: Map<String, (Parser) -> Expression?> =
@@ -1761,13 +1762,13 @@ object ClickhouseParserTables {
     )
 
     // sqlglot: ClickHouseParser.TABLE_ALIAS_TOKENS
-    val TABLE_ALIAS_TOKENS: Set<TokenType> = BaseParserTables.TABLE_ALIAS_TOKENS - setOf(
+    val TABLE_ALIAS_TOKENS: Set<TokenType> = (BaseParserTables.TABLE_ALIAS_TOKENS + TokenType.PASTE) - setOf(
         TokenType.ALL, TokenType.ANY, TokenType.ARRAY, TokenType.ASOF, TokenType.FINAL,
         TokenType.FORMAT, TokenType.SETTINGS,
     )
 
     // sqlglot: ClickHouseParser.ALIAS_TOKENS
-    val ALIAS_TOKENS: Set<TokenType> = BaseParserTables.ALIAS_TOKENS - setOf(
+    val ALIAS_TOKENS: Set<TokenType> = (BaseParserTables.ALIAS_TOKENS + TokenType.PASTE) - setOf(
         TokenType.FORMAT, TokenType.SETTINGS,
     )
 

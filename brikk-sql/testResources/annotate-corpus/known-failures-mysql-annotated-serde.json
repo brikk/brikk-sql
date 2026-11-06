@@ -1,3 +1,1083 @@
 {
-    "cases": []
+    "cases": [
+        {
+            "id": "assertion:v1:sha256:c0ba73caa98399115756c9a113ac27110dbf55280442682b9c2c7326530a79de:1",
+            "sql": "ALTER TABLE t ADD FOREIGN KEY fk (a) REFERENCES p (a)",
+            "signature": "exception:v1:sha256:0cddc35ac0e3f570bb412bdc34086e83ff18513cc5d75b23b8a8efac19901575",
+            "reason": "SG29-020: The new unnamed-constraint/named-FK-index parser forms are not all modeled. Loaded named FK nodes now retain their name; these exact parser/annotation gaps remain explicit. Deferred owner: Jayson Minard, separately bounded feature/qualification work; no equivalence claimed."
+        },
+        {
+            "id": "assertion:v1:sha256:cf8e6de6efdc21d4904cd7666981699fbe88681de0b4938ce628d22081bf8ce9:1",
+            "sql": "ALTER TABLE t ADD CONSTRAINT FOREIGN KEY fk (a) REFERENCES p (a)",
+            "signature": "type-mismatch:v1:sha256:7608340bb3fbd8e572d7ad33bc8c00e31915b3175bf4ffa9e16e0fe2b9f2036d",
+            "reason": "SG29-020: The new unnamed-constraint/named-FK-index parser forms are not all modeled. Loaded named FK nodes now retain their name; these exact parser/annotation gaps remain explicit. Deferred owner: Jayson Minard, separately bounded feature/qualification work; no equivalence claimed.",
+            "expected": [
+                {
+                    "c": "sqlglot.expressions.ddl.Alter",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 0,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 1,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "v": "t"
+                },
+                {
+                    "i": 2,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "kind",
+                    "v": "TABLE"
+                },
+                {
+                    "i": 0,
+                    "k": "exists",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "actions",
+                    "a": true,
+                    "c": "sqlglot.expressions.constraints.AddConstraint",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 7,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.constraints.ForeignKey",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 8,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "v": "a"
+                },
+                {
+                    "i": 9,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 8,
+                    "k": "reference",
+                    "c": "sqlglot.expressions.constraints.Reference",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 12,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Schema",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 13,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 14,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 15,
+                    "k": "this",
+                    "v": "p"
+                },
+                {
+                    "i": 15,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 13,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 18,
+                    "k": "this",
+                    "v": "a"
+                },
+                {
+                    "i": 18,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 8,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 21,
+                    "k": "this",
+                    "v": "fk"
+                },
+                {
+                    "i": 21,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "only",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "not_valid",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "check",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "cascade",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "iceberg",
+                    "v": false
+                }
+            ],
+            "actual": [
+                {
+                    "c": "sqlglot.expressions.ddl.Alter",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 0,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 1,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "v": "t"
+                },
+                {
+                    "i": 2,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "kind",
+                    "v": "TABLE"
+                },
+                {
+                    "i": 0,
+                    "k": "exists",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "actions",
+                    "a": true,
+                    "c": "sqlglot.expressions.constraints.AddConstraint",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 7,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.constraints.Constraint",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 8,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "v": "FOREIGN KEY"
+                },
+                {
+                    "i": 9,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 8,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Anonymous",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 12,
+                    "k": "this",
+                    "v": "fk"
+                },
+                {
+                    "i": 12,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Column",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 14,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 15,
+                    "k": "this",
+                    "v": "a"
+                },
+                {
+                    "i": 15,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 8,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.constraints.Reference",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 18,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Schema",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 19,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 20,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 21,
+                    "k": "this",
+                    "v": "p"
+                },
+                {
+                    "i": 21,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 19,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 24,
+                    "k": "this",
+                    "v": "a"
+                },
+                {
+                    "i": 24,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "only",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "not_valid",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "check",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "cascade",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "iceberg",
+                    "v": false
+                }
+            ]
+        },
+        {
+            "id": "assertion:v1:sha256:e5529c33628a3bc106abe213fa38729d78dbb63f43de359e381caa4979618774:1",
+            "sql": "ALTER TABLE t ADD CONSTRAINT c FOREIGN KEY fk (a) REFERENCES p (a)",
+            "signature": "exception:v1:sha256:bac3ec113ef5c5f438e0990caa20e1bb799009412f0880f8204532b86188d7d3",
+            "reason": "SG29-020: The new unnamed-constraint/named-FK-index parser forms are not all modeled. Loaded named FK nodes now retain their name; these exact parser/annotation gaps remain explicit. Deferred owner: Jayson Minard, separately bounded feature/qualification work; no equivalence claimed."
+        },
+        {
+            "id": "assertion:v1:sha256:417ae2295892a1fa7b335c5493a73827d197819726b0f35292fe2dceabf31a0e:1",
+            "sql": "CREATE TABLE t (a INT, FOREIGN KEY fk (a) REFERENCES p (a))",
+            "signature": "exception:v1:sha256:33fa880537d8999c4f0aa87af106bf8f35fe8c1b278b238d2fdc0eb2a4a30d00",
+            "reason": "SG29-020: The new unnamed-constraint/named-FK-index parser forms are not all modeled. Loaded named FK nodes now retain their name; these exact parser/annotation gaps remain explicit. Deferred owner: Jayson Minard, separately bounded feature/qualification work; no equivalence claimed."
+        },
+        {
+            "id": "assertion:v1:sha256:1b10e55590b654795c6016c6c112555deedf3c0671539cc48678dd8dad47e218:1",
+            "sql": "ALTER TABLE t ADD CONSTRAINT UNIQUE uq_a (a)",
+            "signature": "type-mismatch:v1:sha256:0c71f90e73ce340797c2cc26bfd789357461899772d196bb5644ff106f586ad3",
+            "reason": "SG29-020: The new unnamed-constraint/named-FK-index parser forms are not all modeled. Loaded named FK nodes now retain their name; these exact parser/annotation gaps remain explicit. Deferred owner: Jayson Minard, separately bounded feature/qualification work; no equivalence claimed.",
+            "expected": [
+                {
+                    "c": "sqlglot.expressions.ddl.Alter",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 0,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 1,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "v": "t"
+                },
+                {
+                    "i": 2,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "kind",
+                    "v": "TABLE"
+                },
+                {
+                    "i": 0,
+                    "k": "exists",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "actions",
+                    "a": true,
+                    "c": "sqlglot.expressions.constraints.AddConstraint",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 7,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.constraints.UniqueColumnConstraint",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 8,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Schema",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 10,
+                    "k": "this",
+                    "v": "uq_a"
+                },
+                {
+                    "i": 10,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 9,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Column",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 13,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 14,
+                    "k": "this",
+                    "v": "a"
+                },
+                {
+                    "i": 14,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "only",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "not_valid",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "check",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "cascade",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "iceberg",
+                    "v": false
+                }
+            ],
+            "actual": [
+                {
+                    "c": "sqlglot.expressions.ddl.Alter",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 0,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 1,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "v": "t"
+                },
+                {
+                    "i": 2,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "kind",
+                    "v": "TABLE"
+                },
+                {
+                    "i": 0,
+                    "k": "exists",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "actions",
+                    "a": true,
+                    "c": "sqlglot.expressions.constraints.AddConstraint",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 7,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.constraints.Constraint",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 8,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "v": "UNIQUE"
+                },
+                {
+                    "i": 9,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 8,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Anonymous",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 12,
+                    "k": "this",
+                    "v": "uq_a"
+                },
+                {
+                    "i": 12,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Column",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 14,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "t": [
+                        {
+                            "c": "sqlglot.expressions.datatypes.DataType"
+                        },
+                        {
+                            "i": 0,
+                            "k": "this",
+                            "c": "DataType.Type",
+                            "v": "UNKNOWN"
+                        }
+                    ]
+                },
+                {
+                    "i": 15,
+                    "k": "this",
+                    "v": "a"
+                },
+                {
+                    "i": 15,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "only",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "not_valid",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "check",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "cascade",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "iceberg",
+                    "v": false
+                }
+            ]
+        },
+        {
+            "id": "assertion:v1:sha256:a2009c6d0d5e774ed4ba441a95c86deafc0bc071a73eb5620869025b7b0ffafb:1",
+            "sql": "CREATE TABLE t (a INT, CONSTRAINT PRIMARY KEY (a))",
+            "signature": "exception:v1:sha256:2c1343f991ef2ad96de56042643dc4a7474515a3be1aa418e111deeaa04cff90",
+            "reason": "SG29-020: The new unnamed-constraint/named-FK-index parser forms are not all modeled. Loaded named FK nodes now retain their name; these exact parser/annotation gaps remain explicit. Deferred owner: Jayson Minard, separately bounded feature/qualification work; no equivalence claimed."
+        },
+        {
+            "id": "assertion:v1:sha256:4eb928be3b9b9478be8c1af7b0eaf1e511a9cdcae3d85d0a35e7256e077fbe83:1",
+            "sql": "CREATE TABLE t (a INT CONSTRAINT CHECK (a > 0))",
+            "signature": "exception:v1:sha256:602a16a757e9eb22235c49545d51903c90015ab39b3181cb7251660abe115066",
+            "reason": "SG29-020: The new unnamed-constraint/named-FK-index parser forms are not all modeled. Loaded named FK nodes now retain their name; these exact parser/annotation gaps remain explicit. Deferred owner: Jayson Minard, separately bounded feature/qualification work; no equivalence claimed."
+        },
+        {
+            "id": "assertion:v1:sha256:c100db3141e8702aad068fef1b74a98d60a7ae443da431c7bc8fc5165b6131a0:1",
+            "sql": "ALTER TABLE t ADD CONSTRAINT FOREIGN KEY (a) REFERENCES p (a)",
+            "signature": "exception:v1:sha256:41bd53bf15412af05bbd05526c05702d9a64f64de67cbdefe74c6ce0a5ce0abd",
+            "reason": "SG29-020: The new unnamed-constraint/named-FK-index parser forms are not all modeled. Loaded named FK nodes now retain their name; these exact parser/annotation gaps remain explicit. Deferred owner: Jayson Minard, separately bounded feature/qualification work; no equivalence claimed."
+        }
+    ]
 }

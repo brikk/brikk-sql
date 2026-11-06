@@ -169,7 +169,11 @@ internal class DuckdbNativeCorpusCoverageTest {
         // SG29-018: exactly two additional unsupported comparator warnings on
         // existing Presto/Spark write origins; no native tuple, file hash or old
         // local classification changes. See sg29-018/native-coverage-review.json.
-        val baseline=NativeCorpusAudit.root.resolve("brikk-sql-verify-duckdb/testResources/native-coverage-baseline-sg29-018.json")
+        // SG29-020 coherently refreshes the target corpus. All 5,419 historical
+        // unique SQL inputs and every new input were replayed under identical
+        // engine/JDBC/settings. Keep the older baselines and the exact new
+        // inventory/local/parser-refusal review; syntax is not execution proof.
+        val baseline=NativeCorpusAudit.root.resolve("brikk-sql-verify-duckdb/testResources/native-coverage-baseline-sg29-020.json")
         assertTrue(Files.isRegularFile(baseline),"Review build/duckdb-parser-audit/native-coverage.json before adding a baseline")
         assertEquals(Json.parseToJsonElement(Files.readString(baseline)),summary,"Investigate coverage changes; never refresh parity ledgers from native syntax outcomes")
         println("DDB20-050 $summary")

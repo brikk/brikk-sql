@@ -1,5 +1,5 @@
 {
-  "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
+  "sqlglot_version": "v30.29.0",
   "dialect": "athena",
   "identity": [
     {
@@ -9,6 +9,16 @@
     },
     {
       "sql": "SELECT 'foo''bar'",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT '\\'",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT * FROM t WHERE name LIKE 'a\\_%' ESCAPE '\\'",
       "expected": null,
       "pretty": false
     },
@@ -40,6 +50,23 @@
       "expected": "/* leading comment */ SELECT * FROM \"foo\"",
       "pretty": false,
       "identify": true
+    },
+    {
+      "sql": "MSCK REPAIR TABLE foo",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
+      "sql": "msck repair table foo",
+      "expected": "MSCK REPAIR table foo",
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
+      "sql": "CREATE DATABASE foo COMMENT \"a\\\"b\"",
+      "expected": "CREATE DATABASE foo COMMENT 'a\"b'",
+      "pretty": false
     },
     {
       "sql": "CREATE EXTERNAL TABLE foo (id INT) COMMENT 'test comment'",
@@ -271,6 +298,27 @@
       "expected": "WITH \"foo\" AS (SELECT \"a\", \"b\" FROM \"bar\") SELECT * FROM \"foo\"",
       "pretty": false,
       "identify": true
+    },
+    {
+      "sql": "CREATE TABLE t WITH (format='PARQUET') AS USING EXTERNAL FUNCTION f(x VARCHAR) RETURNS VARCHAR LAMBDA 'l' SELECT f('a') AS b",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
+      "sql": "CREATE TABLE t WITH (format='PARQUET') AS SELECT 1 AS a",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CREATE TABLE t AS SELECT '\\' AS x",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CREATE VIEW v AS SELECT '\\' AS x",
+      "expected": null,
+      "pretty": false
     }
   ],
   "transpile": [
@@ -287,8 +335,8 @@
     }
   ],
   "stats": {
-    "identity_count": 52,
+    "identity_count": 61,
     "transpile_count": 1,
-    "skipped_dynamic": 0
+    "skipped_dynamic": 1
   }
 }

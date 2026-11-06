@@ -1,5 +1,5 @@
 {
-  "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
+  "sqlglot_version": "v30.29.0",
   "dialect": "clickhouse",
   "identity": [
     {
@@ -110,6 +110,16 @@
     {
       "sql": "SELECT * FROM x LIMIT 1 UNION ALL SELECT * FROM y",
       "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT 1 UNION ALL SELECT 2 INTERSECT SELECT 2 FORMAT JSON",
+      "expected": "SELECT 1 UNION ALL (SELECT 2 INTERSECT SELECT 2) FORMAT JSON",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT 1 UNION ALL SELECT 1 INTERSECT SELECT 1 LIMIT 1 SETTINGS limit = 1",
+      "expected": "SELECT 1 UNION ALL (SELECT 1 INTERSECT SELECT 1 LIMIT 1) SETTINGS limit = 1",
       "pretty": false
     },
     {
@@ -288,6 +298,21 @@
       "pretty": false
     },
     {
+      "sql": "SELECT * FROM foo PASTE JOIN bla",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT * FROM foo AS a PASTE JOIN bla AS b PASTE JOIN baz AS c",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT paste(paste) FROM paste AS paste",
+      "expected": null,
+      "pretty": false
+    },
+    {
       "sql": "SELECT * FROM foo GLOBAL ANY JOIN bla",
       "expected": null,
       "pretty": false
@@ -424,6 +449,11 @@
     },
     {
       "sql": "SELECT JSONExtractString('{\"x\": {\"y\": 1}}', 'x', 'y')",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT JSONExtractRaw('{\"x\": {\"y\": 1}}', 'x', 'y')",
       "expected": null,
       "pretty": false
     },
@@ -1192,6 +1222,11 @@
       "pretty": false
     },
     {
+      "sql": "CREATE TABLE a ENGINE=Memory AS (SELECT 1 AS c) COMMENT 'foo'",
+      "expected": null,
+      "pretty": false
+    },
+    {
       "sql": "CREATE TABLE t1 (\"x\" UInt32, \"y\" Dynamic, \"z\" Dynamic(max_types = 10)) ENGINE=MergeTree ORDER BY x",
       "expected": null,
       "pretty": false
@@ -1781,6 +1816,15 @@
       }
     },
     {
+      "sql": "SELECT JSONExtractRaw(payload, 'amount'), JSONExtractString(payload, 'amount')",
+      "read": {
+        "postgres": "SELECT payload -> 'amount', payload ->> 'amount'"
+      },
+      "write": {
+        "postgres": "SELECT payload -> 'amount', payload ->> 'amount'"
+      }
+    },
+    {
       "sql": "SELECT SUBSTRING_INDEX('a.b.c.d', '.', 2)",
       "read": {},
       "write": {
@@ -1941,6 +1985,30 @@
       "sql": "SELECT match('ThOmAs', CONCAT('(?i)', x)) FROM t",
       "read": {
         "postgres": "SELECT 'ThOmAs' ~* x FROM t"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT countMatches(s, 'a')",
+      "read": {
+        "clickhouse": "SELECT countMatches(s, 'a')",
+        "snowflake": "SELECT REGEXP_COUNT(s, 'a')"
+      },
+      "write": {
+        "snowflake": "SELECT REGEXP_COUNT(s, 'a')"
+      }
+    },
+    {
+      "sql": "SELECT countMatches(substringUTF8(s, 3), CONCAT('(?is)', 'a.b'))",
+      "read": {
+        "snowflake": "SELECT REGEXP_COUNT(s, 'a.b', 3, 'cis')"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT countMatches(substringUTF8(s, 1), 'a')",
+      "read": {
+        "snowflake": "SELECT REGEXP_COUNT(s, 'a', 1, 'ic')"
       },
       "write": {}
     },
@@ -2183,6 +2251,13 @@
       "write": {}
     },
     {
+      "sql": "SELECT (POSITION(s, 'a') > 0) IN (0)",
+      "read": {
+        "snowflake": "SELECT CONTAINS(s, 'a') IN (0)"
+      },
+      "write": {}
+    },
+    {
       "sql": "SELECT STARTS_WITH('a', 'b'), STARTSWITH('a', 'b')",
       "read": {},
       "write": {
@@ -2233,6 +2308,20 @@
       "write": {
         "duckdb": "SELECT LTRIM(s), RTRIM(s), TRIM(s)"
       }
+    },
+    {
+      "sql": "SELECT CAST(JSONExtractRaw(v, 'a') AS Nullable(String)) FROM data",
+      "read": {
+        "postgres": "SELECT CAST(v -> 'a' AS TEXT) FROM data"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT JSONExtractRaw(v, 'a') FROM data",
+      "read": {
+        "snowflake": "SELECT v:a FROM data"
+      },
+      "write": {}
     },
     {
       "sql": "a / b",
@@ -2503,11 +2592,20 @@
         "clickhouse": "SELECT col[1]",
         "presto": "SELECT col[1]"
       }
+    },
+    {
+      "sql": "SELECT JSONExtract(JSONExtractRaw(v, 'a'), 'Nullable(String)') FROM data",
+      "read": {
+        "snowflake": {
+          "error": "sql"
+        }
+      },
+      "write": {}
     }
   ],
   "stats": {
-    "identity_count": 332,
-    "transpile_count": 96,
-    "skipped_dynamic": 25
+    "identity_count": 339,
+    "transpile_count": 104,
+    "skipped_dynamic": 28
   }
 }

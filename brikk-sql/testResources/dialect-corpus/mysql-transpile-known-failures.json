@@ -1,10 +1,20 @@
 {
     "cases": [
         {
-            "id": "assertion:v1:sha256:145b41f19ff19c75da4d4482012d74ae0d07b16df9b7740d04c3c955520ad512:1",
-            "case": "write|postgres|WITH t AS (SELECT CAST('2020-01-10' AS DATE) AS col, 5 AS num_days) SELECT DATE_ADD(col, INTERVAL num_days DAY) FROM t",
-            "signature": "sql-mismatch:v1:sha256:f75adc8e62f506fb3b95f0279715b2da9fb81b0c10891a2a8ef8a6bd3c123875",
-            "reason": "SG29-009 frozen-pin output drift, SQLGlot #8815/3cca3ea4: the interval-times-count operand is now explicitly grouped as col + (INTERVAL '1 DAY' * num_days), matching the reviewed upstream fix. Same value/type for this flat control; dynamic n+1 and right-nested subtraction controls prove why grouping is needed. Exact assertion only, remove with coherent SG29-020 oracle refresh. No general mismatch allowance."
+            "id": "assertion:v1:sha256:0e0ff50691f8b5ada5fb3c95636e003e3a7d5493db5ee1ec794fc6e05b59ccaf:1",
+            "case": "write|postgres|SELECT TIMESTAMPADD(MONTH, 1, '2024-01-31')",
+            "signature": "sql-mismatch:v1:sha256:ee00bd4aef4d4c72ada07f8af97c3fcc14772e6f04dc2425837331060ae8a12d",
+            "reason": "SG29-020: Keep the explicit TIMESTAMP cast required by the independently tested source-aware lowering rather than rely on an untyped PostgreSQL literal's operator binding.",
+            "expected": "SELECT '2024-01-31' + INTERVAL '1 MONTH'",
+            "actual": "SELECT CAST('2024-01-31' AS TIMESTAMP) + INTERVAL '1 MONTH'"
+        },
+        {
+            "id": "assertion:v1:sha256:4ec4b308cfd3eb65fb606c350a99961150b59e1e513b72446d257ceccaedf6f2:1",
+            "case": "write|postgres|SELECT TIMESTAMPADD(SECOND, 30, '2024-01-01 12:00:00')",
+            "signature": "sql-mismatch:v1:sha256:4f00e393d9af09de73ae471dcdc377e1da2bb4e43863e9ec49ac49626a3ea4e8",
+            "reason": "SG29-020: Keep the explicit TIMESTAMP cast required by the independently tested source-aware lowering rather than rely on an untyped PostgreSQL literal's operator binding.",
+            "expected": "SELECT '2024-01-01 12:00:00' + INTERVAL '30 SECOND'",
+            "actual": "SELECT CAST('2024-01-01 12:00:00' AS TIMESTAMP) + INTERVAL '30 SECOND'"
         }
     ]
 }

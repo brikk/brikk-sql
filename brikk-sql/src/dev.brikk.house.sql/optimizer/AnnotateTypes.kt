@@ -1,6 +1,7 @@
 package dev.brikk.house.sql.optimizer
 
 import dev.brikk.house.sql.ast.Alias
+import dev.brikk.house.sql.ast.Add
 import dev.brikk.house.sql.ast.AnnotatorRef
 import dev.brikk.house.sql.ast.Anonymous
 import dev.brikk.house.sql.ast.CTE
@@ -984,6 +985,21 @@ class TypeAnnotator(
                 setType(e, if (operand.isType(DType.DATE, DType.TIMESTAMP_S, DType.TIMESTAMP_MS, DType.TIMESTAMP_NS))
                     DType.TIMESTAMP else operand.type)
             }
+            is AnnotatorRef.AddSubDuckdb -> {
+                annotateBinary(e)
+                val binary = e as Binary
+                var left = binary.left
+                var right = binary.right
+                if (e is Add && left.isType(DType.INTERVAL)) {
+                    left = binary.right
+                    right = binary.left
+                }
+                if (right.isType(DType.INTERVAL)) {
+                    if (left.isType(DType.DATE, DType.DATETIME, DType.TIMESTAMP, DType.TIMESTAMPNTZ,
+                            DType.TIMESTAMP_S, DType.TIMESTAMP_MS, DType.TIMESTAMP_NS)) setType(e, DType.TIMESTAMP)
+                    else if (left.isType(DType.TIME, DType.TIMETZ, DType.TIMESTAMPTZ)) setType(e, left.type)
+                }
+            }
             is AnnotatorRef.BinaryAnn -> annotateBinary(e)
             is AnnotatorRef.UnaryAnn -> annotateUnary(e)
             is AnnotatorRef.ByArgs ->
@@ -1639,7 +1655,7 @@ class TypeAnnotator(
                 }
             }
         } else {
-            resultType = literalType ?: nonLiteralType ?: DType.UNKNOWN
+            resultType = literalType ?: nonLiteralType ?: if (array) DType.NULL else DType.UNKNOWN
         }
 
         setType(expression, resultType ?: maybeCoerce(nonLiteralType, literalType))

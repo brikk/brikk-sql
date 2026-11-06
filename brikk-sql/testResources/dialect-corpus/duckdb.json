@@ -1,10 +1,95 @@
 {
-  "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
+  "sqlglot_version": "v30.29.0",
   "dialect": "duckdb",
   "identity": [
     {
+      "sql": "SELECT a.id, __mark_join_marker FROM a JOIN BY (TYPE MARK) b ON a.id = b.id",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT * FROM a JOIN BY (TYPE inner) b ON a.id = b.id JOIN c ON b.id = c.id",
+      "expected": "SELECT * FROM a INNER JOIN b ON a.id = b.id JOIN c ON b.id = c.id",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT connect, disconnect FROM t",
+      "expected": "SELECT connect, disconnect FROM t",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT $\"my var\", $my",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT $1, ?",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT $\"my var\"[1]",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT a.id, b.id FROM a JOIN b NEAREST 1 BY DISTANCE ABS(a.id - b.id)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT a.id, b.id FROM a JOIN b APPROX NEAREST 1 BY DISTANCE ABS(a.id - b.id)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT a.id, b.id FROM a JOIN b NEAREST 1 BY DISTANCE ABS(a.id - b.id) JOIN c ON b.id = c.id WHERE a.id > 0 ORDER BY a.id",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT * FROM a JOIN b NEAREST 1 BY DISTANCE ABS(a.id - b.id) JOIN c NEAREST 2 BY DISTANCE ABS(b.id - c.id)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT * FROM a LEFT JOIN (SELECT * FROM b WHERE id > 0) AS b NEAREST 1 BY DISTANCE ABS(a.id - b.id)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT * FROM a nearest JOIN b approx ON nearest.id = approx.id",
+      "expected": "SELECT * FROM a AS nearest JOIN b AS approx ON nearest.id = approx.id",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT * FROM a JOIN b AS \"nearest\" NEAREST 1 BY DISTANCE ABS(a.id - \"nearest\".id)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT a.id, b.id FROM a LEFT JOIN b NEAREST 1 BY DISTANCE ABS(a.id - b.id)",
+      "expected": "SELECT\n  a.id,\n  b.id\nFROM a\nLEFT JOIN b NEAREST 1 BY DISTANCE ABS(a.id - b.id)",
+      "pretty": true
+    },
+    {
+      "sql": "SELECT NULL IS NOT NULL IS NULL",
+      "expected": "SELECT (NOT NULL IS NULL) IS NULL",
+      "pretty": false
+    },
+    {
       "sql": "SELECT ([1,2,3])[:-:-1]",
-      "expected": "SELECT ([1, 2, 3])[:-1:-1]",
+      "expected": "SELECT ([1, 2, 3])[:-:-1]",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT ([1,2,3,4,5])[4:-:-2]",
+      "expected": "SELECT ([1, 2, 3, 4, 5])[4:-:-2]",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT ([1,2,3,4,5])[2:-:1]",
+      "expected": "SELECT ([1, 2, 3, 4, 5])[2:-:1]",
       "pretty": false
     },
     {
@@ -204,6 +289,11 @@
     },
     {
       "sql": "INSERT INTO x BY NAME SELECT 1 AS y",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "INSERT INTO abc.s.sort BY NAME SELECT 1 AS n",
       "expected": null,
       "pretty": false
     },
@@ -549,12 +639,12 @@
     },
     {
       "sql": "x ~ y",
-      "expected": "REGEXP_FULL_MATCH(x, y)",
+      "expected": "REGEXP_MATCHES(x, y)",
       "pretty": false
     },
     {
       "sql": "x !~ y",
-      "expected": "NOT REGEXP_FULL_MATCH(x, y)",
+      "expected": "NOT REGEXP_MATCHES(x, y)",
       "pretty": false
     },
     {
@@ -609,12 +699,12 @@
     },
     {
       "sql": "SELECT LIST_SORT(x, 'ASC')",
-      "expected": null,
+      "expected": "SELECT LIST_SORT(x)",
       "pretty": false
     },
     {
       "sql": "SELECT LIST_SORT(x, 'DESC')",
-      "expected": null,
+      "expected": "SELECT ARRAY_REVERSE_SORT(x)",
       "pretty": false
     },
     {
@@ -624,7 +714,7 @@
     },
     {
       "sql": "SELECT LIST_SORT(x, 'ASC', 'NULLS LAST')",
-      "expected": null,
+      "expected": "SELECT LIST_SORT(x)",
       "pretty": false
     },
     {
@@ -634,11 +724,41 @@
     },
     {
       "sql": "SELECT LIST_SORT(x, 'DESC', 'NULLS LAST')",
-      "expected": null,
+      "expected": "SELECT ARRAY_REVERSE_SORT(x)",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT LIST_SORT(x, 'desc', 'nulls first')",
+      "expected": "SELECT LIST_SORT(x, 'DESC', 'NULLS FIRST')",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT ARRAY_REVERSE_SORT(x, 'NULLS FIRST')",
+      "expected": "SELECT LIST_SORT(x, 'DESC', 'NULLS FIRST')",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT LIST_REVERSE_SORT(x)",
+      "expected": "SELECT ARRAY_REVERSE_SORT(x)",
       "pretty": false
     },
     {
       "sql": "SELECT LIST_SORT(x, 'DE' || 'SC')",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT LIST_SORT(x, 'foo')",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT LIST_SORT(x, \"asc\")",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT ARRAY_SORT(x, 'ASC', 'bad')",
       "expected": null,
       "pretty": false
     },
@@ -783,8 +903,8 @@
       "pretty": false
     },
     {
-      "sql": "SELECT COLUMNS(c -> c LIKE '%num%') FROM numbers",
-      "expected": "SELECT COLUMNS(LAMBDA c : c LIKE '%num%') FROM numbers",
+      "sql": "SELECT COLUMNS(LAMBDA c : c LIKE '%num%') FROM numbers",
+      "expected": null,
       "pretty": false
     },
     {
@@ -1073,12 +1193,42 @@
       "pretty": false
     },
     {
+      "sql": "SELECT DATE_ADD(TIMESTAMP '2024-01-01', INTERVAL 1 DAY) - DATE_ADD(TIMESTAMP '2024-01-01', INTERVAL 1 DAY)",
+      "expected": "SELECT CAST('2024-01-01' AS TIMESTAMP) + INTERVAL '1' DAY - (CAST('2024-01-01' AS TIMESTAMP) + INTERVAL '1' DAY)",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT INTERVAL 1 DAY + DATE_ADD(TIMESTAMP '2024-01-30', INTERVAL 1 MONTH)",
+      "expected": "SELECT INTERVAL '1' DAY + (CAST('2024-01-30' AS TIMESTAMP) + INTERVAL '1' MONTH)",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT DATE_ADD(TIMESTAMP '2024-01-01', INTERVAL 1 DAY) AT TIME ZONE 'UTC'",
+      "expected": "SELECT (CAST('2024-01-01' AS TIMESTAMP) + INTERVAL '1' DAY) AT TIME ZONE 'UTC'",
+      "pretty": false
+    },
+    {
       "sql": "SELECT CURRENT_DATE",
       "expected": null,
       "pretty": false
     },
     {
       "sql": "SELECT CURRENT_TIMESTAMP",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT INTERVAL '1.5 DAY'",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT INTERVAL '1.5' DAY",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT INTERVAL '1.5' MONTH",
       "expected": null,
       "pretty": false
     },
@@ -1720,6 +1870,11 @@
       "check_command_warning": true
     },
     {
+      "sql": "SELECT MAP {t.k: t.v} FROM (SELECT 'a' AS k, 10 AS v) AS t",
+      "expected": null,
+      "pretty": false
+    },
+    {
       "sql": "MAP {1: 'a', 2: 'b'}",
       "expected": null,
       "pretty": false
@@ -1871,6 +2026,11 @@
       "pretty": false
     },
     {
+      "sql": "DISCONNECT",
+      "expected": null,
+      "pretty": false
+    },
+    {
       "sql": "TRUNC(3.14)",
       "expected": null,
       "pretty": false
@@ -1974,9 +2134,67 @@
       "sql": "SELECT file[256] FROM GLOB('*')",
       "expected": null,
       "pretty": false
+    },
+    {
+      "sql": "CONNECT qk",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CONNECT \"remote db\"",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CONNECT 'quack:localhost'",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CONNECT 'postgres:dbname=mydb host=localhost'",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CONNECT 'postgres:dbname=''my db'' host=localhost'",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "DROP TRIGGER audit_t ON t",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "DROP TRIGGER IF EXISTS audit_t ON main.t",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "DROP TRIGGER \"audit t\" ON \"main\".\"t\"",
+      "expected": null,
+      "pretty": false
     }
   ],
   "transpile": [
+    {
+      "sql": "SELECT * FROM a JOIN BY (TYPE left) b USING (id)",
+      "read": {},
+      "write": {
+        "duckdb": "SELECT * FROM a LEFT JOIN b USING (id)",
+        "postgres": "SELECT * FROM a LEFT JOIN b USING (id)"
+      }
+    },
+    {
+      "sql": "SELECT * FROM a JOIN b NEAREST 1 BY DISTANCE ABS(a.id - b.id)",
+      "read": {},
+      "write": {
+        "duckdb": "SELECT * FROM a JOIN b NEAREST 1 BY DISTANCE ABS(a.id - b.id)",
+        "postgres": {
+          "error": "UnsupportedError"
+        }
+      }
+    },
     {
       "sql": "TRUNC(3.14159, 2)",
       "read": {
@@ -2082,9 +2300,17 @@
       }
     },
     {
-      "sql": "SELECT CASE WHEN delim IS NULL THEN NULL ELSE ARRAY_TO_STRING(LIST_TRANSFORM(arr, x -> COALESCE(CAST(x AS TEXT), '')), delim) END",
+      "sql": "SELECT CASE WHEN delim IS NULL THEN NULL ELSE ARRAY_TO_STRING(LIST_TRANSFORM(arr, LAMBDA x : COALESCE(CAST(x AS TEXT), '')), delim) END",
       "read": {
         "snowflake": "SELECT ARRAY_TO_STRING(arr, delim)"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT ARRAY_TO_STRING(LIST_TRANSFORM([1, 2, 3, NULL, 5], LAMBDA x : COALESCE(CAST(x AS TEXT), '*')), ',')",
+      "read": {
+        "postgres": "SELECT ARRAY_TO_STRING(ARRAY[1, 2, 3, NULL, 5], ',', '*')",
+        "presto": "SELECT ARRAY_JOIN(ARRAY[1, 2, 3, NULL, 5], ',', '*')"
       },
       "write": {}
     },
@@ -2174,7 +2400,9 @@
       "sql": "SELECT RANGE(5, 1, -1)",
       "read": {},
       "write": {
+        "bigquery": "SELECT GENERATE_ARRAY(5, 1 + 1, -1)",
         "duckdb": "SELECT RANGE(5, 1, -1)",
+        "postgres": "SELECT GENERATE_SERIES(5, 1 + 1, -1)",
         "spark": "SELECT SEQUENCE(5, 2, -1)",
         "snowflake": "SELECT ARRAY_GENERATE_RANGE(5, 1, -1)"
       }
@@ -2382,6 +2610,15 @@
       "write": {}
     },
     {
+      "sql": "SELECT DATE_DIFF('X'') ; SELECT 1; --', CAST('2020-01-01' AS TIMESTAMP), CAST('2025-10-12' AS TIMESTAMP))",
+      "read": {
+        "redshift": "SELECT DATEDIFF('x'') ; SELECT 1; --', '2020-01-01', '2025-10-12')"
+      },
+      "write": {
+        "duckdb": "SELECT DATE_DIFF('X'') ; SELECT 1; --', CAST('2020-01-01' AS TIMESTAMP), CAST('2025-10-12' AS TIMESTAMP))"
+      }
+    },
+    {
       "sql": "SELECT DATE_DIFF('SECOND', CAST('2020-01-01' AS DATE), CAST('2025-10-12 00:56:42.345' AS TIMESTAMP))",
       "read": {
         "duckdb": "SELECT DATE_DIFF('SECOND', CAST('2020-01-01' AS DATE), CAST('2025-10-12 00:56:42.345' AS TIMESTAMP))",
@@ -2411,6 +2648,28 @@
         "duckdb": "SELECT JSON_ARRAY('a', 'b', 'c')",
         "snowflake": "SELECT TO_VARIANT(ARRAY_CONSTRUCT('a', 'b', 'c'))"
       }
+    },
+    {
+      "sql": "SELECT JSON_ARRAY(1, NULL, 2)",
+      "read": {
+        "oracle": "SELECT JSON_ARRAY(1, NULL, 2 NULL ON NULL)"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT JSON_OBJECT('a', 1, 'b', NULL)",
+      "read": {
+        "oracle": "SELECT JSON_OBJECT('a' VALUE 1, 'b' VALUE NULL NULL ON NULL)",
+        "postgres": "SELECT JSON_OBJECT('a': 1, 'b': NULL NULL ON NULL)"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT JSON_OBJECT('a', 1, 'a', 2)",
+      "read": {
+        "postgres": "SELECT JSON_OBJECT('a': 1, 'a': 2 WITHOUT UNIQUE KEYS)"
+      },
+      "write": {}
     },
     {
       "sql": "SELECT JSON_ARRAY(NULL, 'a', 1)",
@@ -2452,6 +2711,14 @@
       "write": {}
     },
     {
+      "sql": "SELECT a ->> ('$.' || f)",
+      "read": {
+        "databricks": "SELECT GET_JSON_OBJECT(a, CONCAT('$.', f))",
+        "duckdb": "SELECT JSON_EXTRACT_STRING(a, '$.' || f)"
+      },
+      "write": {}
+    },
+    {
       "sql": "SELECT NOT (data -> '$.value')",
       "read": {
         "snowflake": "SELECT NOT data:value"
@@ -2487,6 +2754,21 @@
       }
     },
     {
+      "sql": "SELECT x ~ y, x !~ y",
+      "read": {},
+      "write": {
+        "postgres": "SELECT x ~ y, NOT x ~ y"
+      }
+    },
+    {
+      "sql": "SELECT REGEXP_FULL_MATCH(x, y), NOT REGEXP_FULL_MATCH(x, y)",
+      "read": {
+        "duckdb, version=1.0": "SELECT x ~ y, x !~ y",
+        "duckdb, version=1.5": "SELECT x ~ y, x !~ y"
+      },
+      "write": {}
+    },
+    {
       "sql": "SELECT * FROM 'x.y'",
       "read": {},
       "write": {
@@ -2517,7 +2799,7 @@
       }
     },
     {
-      "sql": "SELECT LIST_TRANSFORM(STR_SPLIT_REGEX('abc , dfg ', ','), x -> TRIM(x))",
+      "sql": "SELECT LIST_TRANSFORM(STR_SPLIT_REGEX('abc , dfg ', ','), LAMBDA x : TRIM(x))",
       "read": {},
       "write": {
         "duckdb": "SELECT LIST_TRANSFORM(STR_SPLIT_REGEX('abc , dfg ', ','), LAMBDA x : TRIM(x))",
@@ -2525,7 +2807,7 @@
       }
     },
     {
-      "sql": "SELECT LIST_FILTER([4, 5, 6], x -> x > 4)",
+      "sql": "SELECT LIST_FILTER([4, 5, 6], LAMBDA x : x > 4)",
       "read": {},
       "write": {
         "duckdb": "SELECT LIST_FILTER([4, 5, 6], LAMBDA x : x > 4)",
@@ -2703,7 +2985,11 @@
       },
       "write": {
         "": "VARIANCE_POP(x)",
-        "duckdb": "VAR_POP(x)"
+        "duckdb": "VAR_POP(x)",
+        "mysql": "VAR_POP(x)",
+        "starrocks": "VAR_POP(x)",
+        "doris": "VAR_POP(x)",
+        "singlestore": "VAR_POP(x)"
       }
     },
     {
@@ -2758,7 +3044,7 @@
       "read": {},
       "write": {
         "duckdb": "SELECT DATE_DIFF('DAY', t1.\"A\", t1.\"B\") FROM \"table\" AS t1",
-        "trino": "SELECT DATE_DIFF('DAY', t1.\"A\", t1.\"B\") FROM \"table\" AS t1"
+        "trino": "SELECT DATE_DIFF('DAY', DATE_TRUNC('DAY', t1.\"A\"), DATE_TRUNC('DAY', t1.\"B\")) FROM \"table\" AS t1"
       }
     },
     {
@@ -2766,7 +3052,15 @@
       "read": {},
       "write": {
         "duckdb": "SELECT DATE_DIFF('DAY', CAST('2020-01-01' AS DATE), CAST('2020-01-05' AS DATE))",
-        "trino": "SELECT DATE_DIFF('DAY', CAST('2020-01-01' AS DATE), CAST('2020-01-05' AS DATE))"
+        "trino": "SELECT DATE_DIFF('DAY', DATE_TRUNC('DAY', CAST('2020-01-01' AS DATE)), DATE_TRUNC('DAY', CAST('2020-01-05' AS DATE)))"
+      }
+    },
+    {
+      "sql": "SELECT DATE_DIFF('MONTH', CAST('2026-01-31' AS DATE), CAST('2026-03-01' AS DATE))",
+      "read": {},
+      "write": {
+        "duckdb": "SELECT DATE_DIFF('MONTH', CAST('2026-01-31' AS DATE), CAST('2026-03-01' AS DATE))",
+        "postgres": "SELECT CAST(EXTRACT(year FROM AGE(DATE_TRUNC('MONTH', CAST(CAST('2026-03-01' AS DATE) AS TIMESTAMP)), DATE_TRUNC('MONTH', CAST(CAST('2026-01-31' AS DATE) AS TIMESTAMP)))) * 12 + EXTRACT(month FROM AGE(DATE_TRUNC('MONTH', CAST(CAST('2026-03-01' AS DATE) AS TIMESTAMP)), DATE_TRUNC('MONTH', CAST(CAST('2026-01-31' AS DATE) AS TIMESTAMP)))) AS BIGINT)"
       }
     },
     {
@@ -2933,33 +3227,10 @@
       }
     },
     {
-      "sql": "ARRAY_REVERSE_SORT(x)",
+      "sql": "LIST_SORT(x, 'DE' || 'SC')",
       "read": {},
       "write": {
-        "duckdb": "ARRAY_REVERSE_SORT(x)",
-        "presto": "ARRAY_SORT(x, (a, b) -> CASE WHEN a < b THEN 1 WHEN a > b THEN -1 ELSE 0 END)",
-        "hive": "SORT_ARRAY(x, FALSE)",
-        "spark": "SORT_ARRAY(x, FALSE)"
-      }
-    },
-    {
-      "sql": "LIST_REVERSE_SORT(x)",
-      "read": {},
-      "write": {
-        "duckdb": "ARRAY_REVERSE_SORT(x)",
-        "presto": "ARRAY_SORT(x, (a, b) -> CASE WHEN a < b THEN 1 WHEN a > b THEN -1 ELSE 0 END)",
-        "hive": "SORT_ARRAY(x, FALSE)",
-        "spark": "SORT_ARRAY(x, FALSE)"
-      }
-    },
-    {
-      "sql": "LIST_SORT(x)",
-      "read": {},
-      "write": {
-        "duckdb": "LIST_SORT(x)",
-        "presto": "ARRAY_SORT(x)",
-        "hive": "SORT_ARRAY(x)",
-        "spark": "SORT_ARRAY(x)"
+        "snowflake": "LIST_SORT(x, 'DE' || 'SC')"
       }
     },
     {
@@ -3090,6 +3361,10 @@
       "read": {},
       "write": {
         "duckdb": "VARIANCE(a)",
+        "mysql": "VAR_SAMP(a)",
+        "starrocks": "VAR_SAMP(a)",
+        "doris": "VAR_SAMP(a)",
+        "singlestore": "VAR_SAMP(a)",
         "clickhouse": "varSamp(a)"
       }
     },
@@ -3098,6 +3373,10 @@
       "read": {},
       "write": {
         "duckdb": "STDDEV(a)",
+        "mysql": "STDDEV_SAMP(a)",
+        "starrocks": "STDDEV_SAMP(a)",
+        "doris": "STDDEV_SAMP(a)",
+        "singlestore": "STDDEV_SAMP(a)",
         "clickhouse": "stddevSamp(a)"
       }
     },
@@ -3131,7 +3410,24 @@
       "read": {
         "postgres": "SELECT 'ThOmAs' ~* 'thomas'"
       },
-      "write": {}
+      "write": {
+        "postgres": "SELECT 'ThOmAs' ~* 'thomas'",
+        "redshift": "SELECT 'ThOmAs' ~* 'thomas'"
+      }
+    },
+    {
+      "sql": "SELECT REGEXP_MATCHES(x, 'a', 'ic')",
+      "read": {},
+      "write": {
+        "postgres": "SELECT x ~ 'a'"
+      }
+    },
+    {
+      "sql": "SELECT REGEXP_MATCHES(x, 'a', '')",
+      "read": {},
+      "write": {
+        "postgres": "SELECT x ~ 'a'"
+      }
     },
     {
       "sql": "LIST_CONTAINS([1, 2, NULL], 1)",
@@ -3231,6 +3527,42 @@
       "write": {}
     },
     {
+      "sql": "SELECT ARRAY_SLICE([1, 2, 3, 4], 2, 3)",
+      "read": {},
+      "write": {
+        "duckdb": "SELECT ARRAY_SLICE([1, 2, 3, 4], 2, 3)",
+        "spark2": "SELECT SLICE(ARRAY(1, 2, 3, 4), 2, 2)",
+        "spark": "SELECT SLICE(ARRAY(1, 2, 3, 4), 2, 2)",
+        "databricks": "SELECT SLICE(ARRAY(1, 2, 3, 4), 2, 2)",
+        "presto": "SELECT SLICE(ARRAY[1, 2, 3, 4], 2, 2)",
+        "trino": "SELECT SLICE(ARRAY[1, 2, 3, 4], 2, 2)"
+      }
+    },
+    {
+      "sql": "ARRAY_SLICE(x, 0, 2)",
+      "read": {},
+      "write": {
+        "spark": "SLICE(x, 1, 2)",
+        "presto": "SLICE(x, 1, 2)"
+      }
+    },
+    {
+      "sql": "ARRAY_SLICE(x, 3, 2)",
+      "read": {},
+      "write": {
+        "spark": "SLICE(x, 3, 0)",
+        "presto": "SLICE(x, 3, 0)"
+      }
+    },
+    {
+      "sql": "ARRAY_SLICE(CASE WHEN RANDOM() < 0.5 THEN [1] ELSE [1, 2] END, -1, 2)",
+      "read": {},
+      "write": {
+        "spark": "SLICE(CASE WHEN RAND() < 0.5 THEN ARRAY(1) ELSE ARRAY(1, 2) END, -1, 2)",
+        "presto": "SLICE(CASE WHEN RAND() < 0.5 THEN ARRAY[1] ELSE ARRAY[1, 2] END, -1, 2)"
+      }
+    },
+    {
       "sql": "CASE WHEN [1, 2, 3] IS NULL THEN NULL ELSE LIST_CONCAT([99], [1, 2, 3]) END",
       "read": {
         "": "ARRAY_INSERT([1, 2, 3], 0, 99)",
@@ -3267,21 +3599,29 @@
       "write": {}
     },
     {
-      "sql": "CASE WHEN target IS NULL THEN NULL ELSE LIST_FILTER(the_array, _u -> _u <> target) END",
+      "sql": "CASE WHEN [1, 2, 3] IS NULL THEN NULL ELSE LIST_CONCAT([1, 2, 3], [99]) END",
+      "read": {
+        "spark": "ARRAY_INSERT(ARRAY(1, 2, 3), -1, 99)",
+        "databricks": "ARRAY_INSERT(ARRAY(1, 2, 3), -1, 99)"
+      },
+      "write": {}
+    },
+    {
+      "sql": "CASE WHEN target IS NULL THEN NULL ELSE LIST_FILTER(the_array, LAMBDA _u : _u <> target) END",
       "read": {
         "snowflake": "ARRAY_REMOVE(the_array, target)"
       },
       "write": {}
     },
     {
-      "sql": "LIST_FILTER([1, 2, 3], _u -> _u <> 2)",
+      "sql": "LIST_FILTER([1, 2, 3], LAMBDA _u : _u <> 2)",
       "read": {
         "snowflake": "ARRAY_REMOVE([1, 2, 3], 2)"
       },
       "write": {}
     },
     {
-      "sql": "CASE WHEN NULL IS NULL THEN NULL ELSE LIST_FILTER([1, 2, 3], _u -> _u <> NULL) END",
+      "sql": "CASE WHEN NULL IS NULL THEN NULL ELSE LIST_FILTER([1, 2, 3], LAMBDA _u : _u <> NULL) END",
       "read": {
         "snowflake": "ARRAY_REMOVE([1, 2, 3], NULL)"
       },
@@ -3436,6 +3776,27 @@
       "read": {},
       "write": {
         "duckdb": "SELECT INTERVAL '1' QUARTER"
+      }
+    },
+    {
+      "sql": "SELECT CAST('2024-01-01' AS TIMESTAMP) + INTERVAL '-10.75 MINUTE'",
+      "read": {
+        "postgres": "SELECT CAST('2024-01-01' AS TIMESTAMP) + INTERVAL '-10.75 MINUTE'"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT INTERVAL '1.5 SECOND'",
+      "read": {},
+      "write": {
+        "trino": "SELECT INTERVAL '1.5' SECOND"
+      }
+    },
+    {
+      "sql": "SELECT INTERVAL '1.0 QUARTER'",
+      "read": {},
+      "write": {
+        "postgres": "SELECT INTERVAL '3 MONTH'"
       }
     },
     {
@@ -3903,7 +4264,7 @@
       }
     },
     {
-      "sql": "SELECT MAP_FROM_ENTRIES(LIST_FILTER(MAP_ENTRIES(CAST({'a': 1, 'b': 2, 'c': 3} AS MAP(TEXT, DECIMAL(38, 0)))), x -> NOT x.key IN ('a', 'b')))",
+      "sql": "SELECT MAP_FROM_ENTRIES(LIST_FILTER(MAP_ENTRIES(CAST({'a': 1, 'b': 2, 'c': 3} AS MAP(TEXT, DECIMAL(38, 0)))), LAMBDA x : NOT x.key IN ('a', 'b')))",
       "read": {
         "snowflake": "SELECT MAP_DELETE({'a':1,'b':2,'c':3}::MAP(VARCHAR,NUMBER),'a','b')"
       },
@@ -3912,7 +4273,7 @@
       }
     },
     {
-      "sql": "SELECT id, MAP_FROM_ENTRIES(LIST_FILTER(MAP_ENTRIES(attrs), x -> NOT x.key IN (del_key1, del_key2))) AS attrs_after_delete FROM demo_maps",
+      "sql": "SELECT id, MAP_FROM_ENTRIES(LIST_FILTER(MAP_ENTRIES(attrs), LAMBDA x : NOT x.key IN (del_key1, del_key2))) AS attrs_after_delete FROM demo_maps",
       "read": {
         "snowflake": "SELECT id, MAP_DELETE(attrs, del_key1, del_key2) AS attrs_after_delete FROM demo_maps"
       },
@@ -4021,6 +4382,15 @@
       }
     },
     {
+      "sql": "SELECT [] AS result",
+      "read": {
+        "snowflake": {
+          "error": "sql"
+        }
+      },
+      "write": {}
+    },
+    {
       "sql": "SELECT [(SELECT 1)]",
       "read": {},
       "write": {
@@ -4062,8 +4432,8 @@
     }
   ],
   "stats": {
-    "identity_count": 393,
-    "transpile_count": 244,
-    "skipped_dynamic": 17
+    "identity_count": 433,
+    "transpile_count": 264,
+    "skipped_dynamic": 29
   }
 }

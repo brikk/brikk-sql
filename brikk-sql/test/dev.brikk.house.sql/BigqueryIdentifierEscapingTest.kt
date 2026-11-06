@@ -20,7 +20,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-/** SG29-004, upstream c39005c3 and follow-ups through 2fe25297; no oracle refresh. */
+/** SG29-004 runtime behavior, now also emitted by the coherent SG29-020 target tables. */
 class BigqueryIdentifierEscapingTest {
     private val spellings = listOf(
         "a`b\\c" to "`a\\`b\\\\c`",
@@ -64,8 +64,7 @@ class BigqueryIdentifierEscapingTest {
             assertEquals(name, throughDialect.findAll<Identifier>().single().name)
             assertEquals(throughDialect, direct)
         }
-        // Frozen generated tables remain the historical oracle, not the runtime overlay.
-        assertTrue(BigqueryTokenizerTables.IDENTIFIER_ESCAPES.isEmpty())
+        assertEquals(setOf('\\'), BigqueryTokenizerTables.IDENTIFIER_ESCAPES)
     }
 
     @Test
@@ -81,7 +80,7 @@ class BigqueryIdentifierEscapingTest {
             assertEquals(original.byteStringsAreBytes, config.byteStringsAreBytes)
             assertEquals("a`b\\c", Tokenizer(config).tokenize("`a\\`b\\\\c`").single().text)
         }
-        assertTrue(original.identifierEscapes.isEmpty())
+        assertEquals(setOf('\\'), original.identifierEscapes)
         assertEquals("`select`", BigqueryGenerator().generate(Identifier(args("this" to "select"))))
         assertEquals("`plain`", BigqueryGenerator(identify = true).generate(Identifier(args("this" to "plain"))))
     }

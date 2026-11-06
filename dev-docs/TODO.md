@@ -9,7 +9,7 @@ native resource packaging is tracked in [brikk-chdb](https://github.com/brikk/br
 
 ## Design and correctness
 
-- [ ] **SQL-09: Review and implement the SQLGlot 30.29 catch-up.** Proposed scope
+- [x] **SQL-09: Review and implement the SQLGlot 30.29 catch-up.** Approved scope
   and ordered batches are in [the catch-up tracker](TODO-sqlglot-30.29.md).
   Approved Batches A and B implement robustness, identifier escaping and
   precedence/grouping in worktree `sqlglot-30-29-batch-a`. Separately approved
@@ -22,15 +22,20 @@ native resource packaging is tracked in [brikk-chdb](https://github.com/brikk/br
   Separately approved SG29-015 Spark/Hive aggregation and ALTER forms are verified,
   with commit/push authorized. SG29-016 through SG29-018 are approved in order,
   with separate commit/push between items. SG29-016 through SG29-018 are complete;
-  SG29-019's complete 250-commit disposition ledger is also verified. SG29-020
-  is the remaining catch-up item and is now separately authorized, in progress.
+  SG29-019's complete 250-commit disposition ledger and SG29-020's coherent
+  v30.29.0 metadata/corpus integration are also verified. All 20 parent items
+  are complete. Exact owned feature/correctness deferrals remain in
+  [the final integration evidence](../vendor/data/sqlglot-sg29-020/README.md),
+  not hidden as semantic equivalence. Build, 2,608 JVM tests, all 829 IntelliJ
+  tests and 241 tooling tests pass, with 72 existing optional JVM assumptions.
   SG29-018's unrelated IntelliJ streaming-cancel RMI failure is separately fixed
-  and pushed as `17a3d5d4`; full build, 2,598 JVM tests and all 829 IntelliJ
-  tests, including the original 827 and two regressions, now pass.
+  and pushed as `17a3d5d4`; its own checkpoint passed full build, 2,598 JVM tests
+  and all 829 IntelliJ tests, the original 827 plus two regressions.
   Native coverage drift is individually reviewed; the
   [evidence guide](../vendor/data/sqlglot-30.29-batch-b/README.md) retains limits.
-  Preserve the separate DuckDB native/executable safeguards; global
-  oracle migration, publication and consumer adoption are not yet authorized.
+  Preserve the separate DuckDB native/executable safeguards. The bounded global
+  oracle migration is complete; publication and consumer adoption remain separate
+  and are not authorized by this work.
 - [ ] **SQL-08: Improve bounded ClickHouse semantic analysis.** The user accepted
   the CHSEM-001 through CHSEM-023 scope as opt-in hints and separately proved
   checks, not full validation or native-exact metadata for every AST node.

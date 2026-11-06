@@ -1,5 +1,5 @@
 {
-  "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
+  "sqlglot_version": "v30.29.0",
   "dialect": "trino",
   "identity": [
     {
@@ -618,6 +618,55 @@
   ],
   "transpile": [
     {
+      "sql": "DAY_OF_WEEK(x) * 2",
+      "read": {},
+      "write": {
+        "bigquery": "(MOD(EXTRACT(DAYOFWEEK FROM x) + 5, 7) + 1) * 2"
+      }
+    },
+    {
+      "sql": "CAST(FROM_BASE(SUBSTR(TO_HEX(MD5(CAST(CAST(col AS VARCHAR) AS VARBINARY))),1,14),16) AS DECIMAL(38, 0))",
+      "read": {},
+      "write": {
+        "bigquery": "CAST(CAST(REGEXP_REPLACE(SUBSTRING(UPPER(TO_HEX(MD5(CAST(CAST(col AS STRING) AS BYTES)))), 1, 14), '^([+-]?)', '\\\\10x') AS INT64) AS BIGNUMERIC)"
+      }
+    },
+    {
+      "sql": "FROM_BASE('-ff', 16)",
+      "read": {},
+      "write": {
+        "bigquery": "CAST(REGEXP_REPLACE('-ff', '^([+-]?)', '\\\\10x') AS INT64)"
+      }
+    },
+    {
+      "sql": "CAST(x AS DECIMAL(30, 0))",
+      "read": {},
+      "write": {
+        "bigquery": "CAST(x AS BIGNUMERIC)"
+      }
+    },
+    {
+      "sql": "CAST(x AS DECIMAL(29, 0))",
+      "read": {},
+      "write": {
+        "bigquery": "CAST(x AS NUMERIC)"
+      }
+    },
+    {
+      "sql": "CAST(x AS DECIMAL(20, 10))",
+      "read": {},
+      "write": {
+        "bigquery": "CAST(x AS BIGNUMERIC)"
+      }
+    },
+    {
+      "sql": "CAST(x AS DECIMAL(38))",
+      "read": {},
+      "write": {
+        "bigquery": "CAST(x AS BIGNUMERIC)"
+      }
+    },
+    {
       "sql": "SELECT TIME '01:02:03.456 -08:00'",
       "read": {},
       "write": {
@@ -653,11 +702,25 @@
         "snowflake": "SELECT TO_CHAR(123)",
         "trino": "SELECT FORMAT('%s', 123)"
       }
+    },
+    {
+      "sql": "CAST(x AS DECIMAL(p, 0))",
+      "read": {},
+      "write": {
+        "bigquery": "CAST(x AS NUMERIC)"
+      }
+    },
+    {
+      "sql": "CAST(x AS DECIMAL(38, s))",
+      "read": {},
+      "write": {
+        "bigquery": "CAST(x AS NUMERIC)"
+      }
     }
   ],
   "stats": {
     "identity_count": 121,
-    "transpile_count": 4,
-    "skipped_dynamic": 6
+    "transpile_count": 13,
+    "skipped_dynamic": 9
   }
 }

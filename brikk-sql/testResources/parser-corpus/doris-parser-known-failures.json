@@ -1,4 +1,2495 @@
 {
-    "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
-    "cases": []
+    "sqlglot_version": "v30.29.0",
+    "cases": [
+        {
+            "id": "assertion:v1:sha256:e178d3ac365953fba60314d5a7283eecdf191d03bc80692e11c47862f0a9b99f:1",
+            "sql": "SELECT * FROM t WHERE c MATCH_PHRASE 'word1 word2 ~3'",
+            "signature": "ast-mismatch:v1:sha256:2eabad29cf0ddcdc0a0d1a05a9461b9084df6aa102cf3e434a01fd803f1edcc9",
+            "reason": "SG29-020: Retain the native MATCH operator/analyzer representation and parenthesization proved by Doris 4.1.5 parsed/analyzed plans. Do not infer backend/index execution from generic AST equality.",
+            "expected": [
+                {
+                    "c": "sqlglot.expressions.query.Select"
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Star",
+                    "m": {
+                        "line": 1,
+                        "col": 8,
+                        "start": 7,
+                        "end": 7
+                    }
+                },
+                {
+                    "i": 0,
+                    "k": "from_",
+                    "c": "sqlglot.expressions.query.From"
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table"
+                },
+                {
+                    "i": 3,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 15,
+                        "start": 14,
+                        "end": 14
+                    }
+                },
+                {
+                    "i": 4,
+                    "k": "this",
+                    "v": "t"
+                },
+                {
+                    "i": 4,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "where",
+                    "c": "sqlglot.expressions.query.Where"
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Match"
+                },
+                {
+                    "i": 8,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column"
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 23,
+                        "start": 22,
+                        "end": 22
+                    }
+                },
+                {
+                    "i": 10,
+                    "k": "this",
+                    "v": "c"
+                },
+                {
+                    "i": 10,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 8,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "m": {
+                        "line": 1,
+                        "col": 53,
+                        "start": 37,
+                        "end": 52
+                    }
+                },
+                {
+                    "i": 13,
+                    "k": "this",
+                    "v": "word1 word2 ~3"
+                },
+                {
+                    "i": 13,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 8,
+                    "k": "kind",
+                    "v": "PHRASE"
+                }
+            ],
+            "actual": [
+                {
+                    "c": "sqlglot.expressions.query.Select"
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Star",
+                    "m": {
+                        "line": 1,
+                        "col": 8,
+                        "start": 7,
+                        "end": 7
+                    }
+                },
+                {
+                    "i": 0,
+                    "k": "from_",
+                    "c": "sqlglot.expressions.query.From"
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table"
+                },
+                {
+                    "i": 3,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 15,
+                        "start": 14,
+                        "end": 14
+                    }
+                },
+                {
+                    "i": 4,
+                    "k": "this",
+                    "v": "t"
+                },
+                {
+                    "i": 4,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "where",
+                    "c": "sqlglot.expressions.query.Where"
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Match",
+                    "m": {
+                        "doris_full_text": true
+                    }
+                },
+                {
+                    "i": 8,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column"
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 23,
+                        "start": 22,
+                        "end": 22
+                    }
+                },
+                {
+                    "i": 10,
+                    "k": "this",
+                    "v": "c"
+                },
+                {
+                    "i": 10,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 8,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "m": {
+                        "line": 1,
+                        "col": 53,
+                        "start": 37,
+                        "end": 52
+                    }
+                },
+                {
+                    "i": 13,
+                    "k": "this",
+                    "v": "word1 word2 ~3"
+                },
+                {
+                    "i": 13,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 8,
+                    "k": "kind",
+                    "v": "PHRASE"
+                }
+            ]
+        },
+        {
+            "id": "assertion:v1:sha256:94d45970386a3f6600b816ce22b3fb1d75977a4c93df21d86a38ae95f171e391:1",
+            "sql": "SELECT * FROM t WHERE c MATCH_PHRASE 'word1 word2 ~3+'",
+            "signature": "ast-mismatch:v1:sha256:d820421577533bdc3f004cfe4d5c11569b7b93f4783f82068cc97dbbcc206292",
+            "reason": "SG29-020: Retain the native MATCH operator/analyzer representation and parenthesization proved by Doris 4.1.5 parsed/analyzed plans. Do not infer backend/index execution from generic AST equality.",
+            "expected": [
+                {
+                    "c": "sqlglot.expressions.query.Select"
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Star",
+                    "m": {
+                        "line": 1,
+                        "col": 8,
+                        "start": 7,
+                        "end": 7
+                    }
+                },
+                {
+                    "i": 0,
+                    "k": "from_",
+                    "c": "sqlglot.expressions.query.From"
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table"
+                },
+                {
+                    "i": 3,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 15,
+                        "start": 14,
+                        "end": 14
+                    }
+                },
+                {
+                    "i": 4,
+                    "k": "this",
+                    "v": "t"
+                },
+                {
+                    "i": 4,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "where",
+                    "c": "sqlglot.expressions.query.Where"
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Match"
+                },
+                {
+                    "i": 8,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column"
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 23,
+                        "start": 22,
+                        "end": 22
+                    }
+                },
+                {
+                    "i": 10,
+                    "k": "this",
+                    "v": "c"
+                },
+                {
+                    "i": 10,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 8,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "m": {
+                        "line": 1,
+                        "col": 54,
+                        "start": 37,
+                        "end": 53
+                    }
+                },
+                {
+                    "i": 13,
+                    "k": "this",
+                    "v": "word1 word2 ~3+"
+                },
+                {
+                    "i": 13,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 8,
+                    "k": "kind",
+                    "v": "PHRASE"
+                }
+            ],
+            "actual": [
+                {
+                    "c": "sqlglot.expressions.query.Select"
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Star",
+                    "m": {
+                        "line": 1,
+                        "col": 8,
+                        "start": 7,
+                        "end": 7
+                    }
+                },
+                {
+                    "i": 0,
+                    "k": "from_",
+                    "c": "sqlglot.expressions.query.From"
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table"
+                },
+                {
+                    "i": 3,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 15,
+                        "start": 14,
+                        "end": 14
+                    }
+                },
+                {
+                    "i": 4,
+                    "k": "this",
+                    "v": "t"
+                },
+                {
+                    "i": 4,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "where",
+                    "c": "sqlglot.expressions.query.Where"
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Match",
+                    "m": {
+                        "doris_full_text": true
+                    }
+                },
+                {
+                    "i": 8,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column"
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 23,
+                        "start": 22,
+                        "end": 22
+                    }
+                },
+                {
+                    "i": 10,
+                    "k": "this",
+                    "v": "c"
+                },
+                {
+                    "i": 10,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 8,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "m": {
+                        "line": 1,
+                        "col": 54,
+                        "start": 37,
+                        "end": 53
+                    }
+                },
+                {
+                    "i": 13,
+                    "k": "this",
+                    "v": "word1 word2 ~3+"
+                },
+                {
+                    "i": 13,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 8,
+                    "k": "kind",
+                    "v": "PHRASE"
+                }
+            ]
+        },
+        {
+            "id": "assertion:v1:sha256:a3d31c9a3f4e433cd66f048866be5999e6ff90f143507c4f60c811010a03f6c5:1",
+            "sql": "SELECT * FROM t WHERE c MATCH 'hello world' USING ANALYZER std_analyzer",
+            "signature": "ast-mismatch:v1:sha256:03e1243a2db0bf72c6672efebdbd8bfd79a4feb66af8657c366b275f9c09d58b",
+            "reason": "SG29-020: Retain the native MATCH operator/analyzer representation and parenthesization proved by Doris 4.1.5 parsed/analyzed plans. Do not infer backend/index execution from generic AST equality.",
+            "expected": [
+                {
+                    "c": "sqlglot.expressions.query.Select"
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Star",
+                    "m": {
+                        "line": 1,
+                        "col": 8,
+                        "start": 7,
+                        "end": 7
+                    }
+                },
+                {
+                    "i": 0,
+                    "k": "from_",
+                    "c": "sqlglot.expressions.query.From"
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table"
+                },
+                {
+                    "i": 3,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 15,
+                        "start": 14,
+                        "end": 14
+                    }
+                },
+                {
+                    "i": 4,
+                    "k": "this",
+                    "v": "t"
+                },
+                {
+                    "i": 4,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "where",
+                    "c": "sqlglot.expressions.query.Where"
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Match"
+                },
+                {
+                    "i": 8,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column"
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 23,
+                        "start": 22,
+                        "end": 22
+                    }
+                },
+                {
+                    "i": 10,
+                    "k": "this",
+                    "v": "c"
+                },
+                {
+                    "i": 10,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 8,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "m": {
+                        "line": 1,
+                        "col": 43,
+                        "start": 30,
+                        "end": 42
+                    }
+                },
+                {
+                    "i": 13,
+                    "k": "this",
+                    "v": "hello world"
+                },
+                {
+                    "i": 13,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 8,
+                    "k": "analyzer",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 71,
+                        "start": 59,
+                        "end": 70
+                    }
+                },
+                {
+                    "i": 16,
+                    "k": "this",
+                    "v": "std_analyzer"
+                },
+                {
+                    "i": 16,
+                    "k": "quoted",
+                    "v": false
+                }
+            ],
+            "actual": [
+                {
+                    "c": "sqlglot.expressions.query.Select"
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Star",
+                    "m": {
+                        "line": 1,
+                        "col": 8,
+                        "start": 7,
+                        "end": 7
+                    }
+                },
+                {
+                    "i": 0,
+                    "k": "from_",
+                    "c": "sqlglot.expressions.query.From"
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table"
+                },
+                {
+                    "i": 3,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 15,
+                        "start": 14,
+                        "end": 14
+                    }
+                },
+                {
+                    "i": 4,
+                    "k": "this",
+                    "v": "t"
+                },
+                {
+                    "i": 4,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "where",
+                    "c": "sqlglot.expressions.query.Where"
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Match",
+                    "m": {
+                        "doris_full_text": true
+                    }
+                },
+                {
+                    "i": 8,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column"
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 23,
+                        "start": 22,
+                        "end": 22
+                    }
+                },
+                {
+                    "i": 10,
+                    "k": "this",
+                    "v": "c"
+                },
+                {
+                    "i": 10,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 8,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "m": {
+                        "line": 1,
+                        "col": 43,
+                        "start": 30,
+                        "end": 42
+                    }
+                },
+                {
+                    "i": 13,
+                    "k": "this",
+                    "v": "hello world"
+                },
+                {
+                    "i": 13,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 8,
+                    "k": "analyzer",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 71,
+                        "start": 59,
+                        "end": 70
+                    }
+                },
+                {
+                    "i": 16,
+                    "k": "this",
+                    "v": "std_analyzer"
+                },
+                {
+                    "i": 16,
+                    "k": "quoted",
+                    "v": false
+                }
+            ]
+        },
+        {
+            "id": "assertion:v1:sha256:73d28ff9c317f91689260d79e39967dc9e152c93953ceb7e15753355ffe40f4e:1",
+            "sql": "SELECT * FROM t WHERE c MATCH_ANY 'x' USING ANALYZER `kw_analyzer`",
+            "signature": "ast-mismatch:v1:sha256:df67287b4b00d5ab2d1860da2e1f1876d1833ed35e2ad1f7f28d8520c7481a69",
+            "reason": "SG29-020: Retain the native MATCH operator/analyzer representation and parenthesization proved by Doris 4.1.5 parsed/analyzed plans. Do not infer backend/index execution from generic AST equality.",
+            "expected": [
+                {
+                    "c": "sqlglot.expressions.query.Select"
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Star",
+                    "m": {
+                        "line": 1,
+                        "col": 8,
+                        "start": 7,
+                        "end": 7
+                    }
+                },
+                {
+                    "i": 0,
+                    "k": "from_",
+                    "c": "sqlglot.expressions.query.From"
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table"
+                },
+                {
+                    "i": 3,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 15,
+                        "start": 14,
+                        "end": 14
+                    }
+                },
+                {
+                    "i": 4,
+                    "k": "this",
+                    "v": "t"
+                },
+                {
+                    "i": 4,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "where",
+                    "c": "sqlglot.expressions.query.Where"
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Match"
+                },
+                {
+                    "i": 8,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column"
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 23,
+                        "start": 22,
+                        "end": 22
+                    }
+                },
+                {
+                    "i": 10,
+                    "k": "this",
+                    "v": "c"
+                },
+                {
+                    "i": 10,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 8,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "m": {
+                        "line": 1,
+                        "col": 37,
+                        "start": 34,
+                        "end": 36
+                    }
+                },
+                {
+                    "i": 13,
+                    "k": "this",
+                    "v": "x"
+                },
+                {
+                    "i": 13,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 8,
+                    "k": "kind",
+                    "v": "ANY"
+                },
+                {
+                    "i": 8,
+                    "k": "analyzer",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 66,
+                        "start": 53,
+                        "end": 65
+                    }
+                },
+                {
+                    "i": 17,
+                    "k": "this",
+                    "v": "kw_analyzer"
+                },
+                {
+                    "i": 17,
+                    "k": "quoted",
+                    "v": true
+                }
+            ],
+            "actual": [
+                {
+                    "c": "sqlglot.expressions.query.Select"
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Star",
+                    "m": {
+                        "line": 1,
+                        "col": 8,
+                        "start": 7,
+                        "end": 7
+                    }
+                },
+                {
+                    "i": 0,
+                    "k": "from_",
+                    "c": "sqlglot.expressions.query.From"
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table"
+                },
+                {
+                    "i": 3,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 15,
+                        "start": 14,
+                        "end": 14
+                    }
+                },
+                {
+                    "i": 4,
+                    "k": "this",
+                    "v": "t"
+                },
+                {
+                    "i": 4,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "where",
+                    "c": "sqlglot.expressions.query.Where"
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Match",
+                    "m": {
+                        "doris_full_text": true
+                    }
+                },
+                {
+                    "i": 8,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column"
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 23,
+                        "start": 22,
+                        "end": 22
+                    }
+                },
+                {
+                    "i": 10,
+                    "k": "this",
+                    "v": "c"
+                },
+                {
+                    "i": 10,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 8,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "m": {
+                        "line": 1,
+                        "col": 37,
+                        "start": 34,
+                        "end": 36
+                    }
+                },
+                {
+                    "i": 13,
+                    "k": "this",
+                    "v": "x"
+                },
+                {
+                    "i": 13,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 8,
+                    "k": "kind",
+                    "v": "ANY"
+                },
+                {
+                    "i": 8,
+                    "k": "analyzer",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 66,
+                        "start": 53,
+                        "end": 65
+                    }
+                },
+                {
+                    "i": 17,
+                    "k": "this",
+                    "v": "kw_analyzer"
+                },
+                {
+                    "i": 17,
+                    "k": "quoted",
+                    "v": true
+                }
+            ]
+        },
+        {
+            "id": "assertion:v1:sha256:23bb383a9f487039e4be571a5425c668f1eba9a07c83334bea59f0699aec2327:1",
+            "sql": "SELECT * FROM t WHERE c MATCH 'x' USING ANALYZER 'standard'",
+            "signature": "ast-mismatch:v1:sha256:86504736e8f8a9fc24b3c4ccd36cd413ceec28b22bd831d5a346c4716ad1bc69",
+            "reason": "SG29-020: Retain the native MATCH operator/analyzer representation and parenthesization proved by Doris 4.1.5 parsed/analyzed plans. Do not infer backend/index execution from generic AST equality.",
+            "expected": [
+                {
+                    "c": "sqlglot.expressions.query.Select"
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Star",
+                    "m": {
+                        "line": 1,
+                        "col": 8,
+                        "start": 7,
+                        "end": 7
+                    }
+                },
+                {
+                    "i": 0,
+                    "k": "from_",
+                    "c": "sqlglot.expressions.query.From"
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table"
+                },
+                {
+                    "i": 3,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 15,
+                        "start": 14,
+                        "end": 14
+                    }
+                },
+                {
+                    "i": 4,
+                    "k": "this",
+                    "v": "t"
+                },
+                {
+                    "i": 4,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "where",
+                    "c": "sqlglot.expressions.query.Where"
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Match"
+                },
+                {
+                    "i": 8,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column"
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 23,
+                        "start": 22,
+                        "end": 22
+                    }
+                },
+                {
+                    "i": 10,
+                    "k": "this",
+                    "v": "c"
+                },
+                {
+                    "i": 10,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 8,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "m": {
+                        "line": 1,
+                        "col": 33,
+                        "start": 30,
+                        "end": 32
+                    }
+                },
+                {
+                    "i": 13,
+                    "k": "this",
+                    "v": "x"
+                },
+                {
+                    "i": 13,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 8,
+                    "k": "analyzer",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "m": {
+                        "line": 1,
+                        "col": 59,
+                        "start": 49,
+                        "end": 58
+                    }
+                },
+                {
+                    "i": 16,
+                    "k": "this",
+                    "v": "standard"
+                },
+                {
+                    "i": 16,
+                    "k": "is_string",
+                    "v": true
+                }
+            ],
+            "actual": [
+                {
+                    "c": "sqlglot.expressions.query.Select"
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Star",
+                    "m": {
+                        "line": 1,
+                        "col": 8,
+                        "start": 7,
+                        "end": 7
+                    }
+                },
+                {
+                    "i": 0,
+                    "k": "from_",
+                    "c": "sqlglot.expressions.query.From"
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table"
+                },
+                {
+                    "i": 3,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 15,
+                        "start": 14,
+                        "end": 14
+                    }
+                },
+                {
+                    "i": 4,
+                    "k": "this",
+                    "v": "t"
+                },
+                {
+                    "i": 4,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "where",
+                    "c": "sqlglot.expressions.query.Where"
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Match",
+                    "m": {
+                        "doris_full_text": true
+                    }
+                },
+                {
+                    "i": 8,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column"
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 23,
+                        "start": 22,
+                        "end": 22
+                    }
+                },
+                {
+                    "i": 10,
+                    "k": "this",
+                    "v": "c"
+                },
+                {
+                    "i": 10,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 8,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "m": {
+                        "line": 1,
+                        "col": 33,
+                        "start": 30,
+                        "end": 32
+                    }
+                },
+                {
+                    "i": 13,
+                    "k": "this",
+                    "v": "x"
+                },
+                {
+                    "i": 13,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 8,
+                    "k": "analyzer",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "m": {
+                        "line": 1,
+                        "col": 59,
+                        "start": 49,
+                        "end": 58
+                    }
+                },
+                {
+                    "i": 16,
+                    "k": "this",
+                    "v": "standard"
+                },
+                {
+                    "i": 16,
+                    "k": "is_string",
+                    "v": true
+                }
+            ]
+        },
+        {
+            "id": "assertion:v1:sha256:4d851bef76495d189c2715adf63e85edfa2f115d8e0a425aaa949497be1b682c:1",
+            "sql": "SELECT * FROM t WHERE c NOT MATCH_ANY ('x') USING ANALYZER 'standard'",
+            "signature": "ast-mismatch:v1:sha256:1120d18950db91e37dfd9161a68fb38e7fb20707ace87c00c5f37e07d1f90d5c",
+            "reason": "SG29-020: Retain the native MATCH operator/analyzer representation and parenthesization proved by Doris 4.1.5 parsed/analyzed plans. Do not infer backend/index execution from generic AST equality.",
+            "expected": [
+                {
+                    "c": "sqlglot.expressions.query.Select"
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Star",
+                    "m": {
+                        "line": 1,
+                        "col": 8,
+                        "start": 7,
+                        "end": 7
+                    }
+                },
+                {
+                    "i": 0,
+                    "k": "from_",
+                    "c": "sqlglot.expressions.query.From"
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table"
+                },
+                {
+                    "i": 3,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 15,
+                        "start": 14,
+                        "end": 14
+                    }
+                },
+                {
+                    "i": 4,
+                    "k": "this",
+                    "v": "t"
+                },
+                {
+                    "i": 4,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "where",
+                    "c": "sqlglot.expressions.query.Where"
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Not"
+                },
+                {
+                    "i": 8,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Match"
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column"
+                },
+                {
+                    "i": 10,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 23,
+                        "start": 22,
+                        "end": 22
+                    }
+                },
+                {
+                    "i": 11,
+                    "k": "this",
+                    "v": "c"
+                },
+                {
+                    "i": 11,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 9,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Paren"
+                },
+                {
+                    "i": 14,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "m": {
+                        "line": 1,
+                        "col": 42,
+                        "start": 39,
+                        "end": 41
+                    }
+                },
+                {
+                    "i": 15,
+                    "k": "this",
+                    "v": "x"
+                },
+                {
+                    "i": 15,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 9,
+                    "k": "kind",
+                    "v": "ANY"
+                },
+                {
+                    "i": 9,
+                    "k": "analyzer",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "m": {
+                        "line": 1,
+                        "col": 69,
+                        "start": 59,
+                        "end": 68
+                    }
+                },
+                {
+                    "i": 19,
+                    "k": "this",
+                    "v": "standard"
+                },
+                {
+                    "i": 19,
+                    "k": "is_string",
+                    "v": true
+                }
+            ],
+            "actual": [
+                {
+                    "c": "sqlglot.expressions.query.Select"
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Star",
+                    "m": {
+                        "line": 1,
+                        "col": 8,
+                        "start": 7,
+                        "end": 7
+                    }
+                },
+                {
+                    "i": 0,
+                    "k": "from_",
+                    "c": "sqlglot.expressions.query.From"
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table"
+                },
+                {
+                    "i": 3,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 15,
+                        "start": 14,
+                        "end": 14
+                    }
+                },
+                {
+                    "i": 4,
+                    "k": "this",
+                    "v": "t"
+                },
+                {
+                    "i": 4,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "where",
+                    "c": "sqlglot.expressions.query.Where"
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Not"
+                },
+                {
+                    "i": 8,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Match",
+                    "m": {
+                        "doris_full_text": true
+                    }
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column"
+                },
+                {
+                    "i": 10,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 23,
+                        "start": 22,
+                        "end": 22
+                    }
+                },
+                {
+                    "i": 11,
+                    "k": "this",
+                    "v": "c"
+                },
+                {
+                    "i": 11,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 9,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Paren"
+                },
+                {
+                    "i": 14,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "m": {
+                        "line": 1,
+                        "col": 42,
+                        "start": 39,
+                        "end": 41
+                    }
+                },
+                {
+                    "i": 15,
+                    "k": "this",
+                    "v": "x"
+                },
+                {
+                    "i": 15,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 9,
+                    "k": "kind",
+                    "v": "ANY"
+                },
+                {
+                    "i": 9,
+                    "k": "analyzer",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "m": {
+                        "line": 1,
+                        "col": 69,
+                        "start": 59,
+                        "end": 68
+                    }
+                },
+                {
+                    "i": 19,
+                    "k": "this",
+                    "v": "standard"
+                },
+                {
+                    "i": 19,
+                    "k": "is_string",
+                    "v": true
+                }
+            ]
+        },
+        {
+            "id": "assertion:v1:sha256:1f5ded48f0d2c279aaca9b3e9bc4b50dd618880aaa9b3d02ae066e78836b282c:1",
+            "sql": "SELECT * FROM t WHERE c match_regexp '^key_word.*'",
+            "signature": "ast-mismatch:v1:sha256:fd61a413cb2e4ebb91d29d6aa5c5347579e239341f41366d76fe9ea0e0f0632e",
+            "reason": "SG29-020: Retain the native MATCH operator/analyzer representation and parenthesization proved by Doris 4.1.5 parsed/analyzed plans. Do not infer backend/index execution from generic AST equality.",
+            "expected": [
+                {
+                    "c": "sqlglot.expressions.query.Select"
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Star",
+                    "m": {
+                        "line": 1,
+                        "col": 8,
+                        "start": 7,
+                        "end": 7
+                    }
+                },
+                {
+                    "i": 0,
+                    "k": "from_",
+                    "c": "sqlglot.expressions.query.From"
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table"
+                },
+                {
+                    "i": 3,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 15,
+                        "start": 14,
+                        "end": 14
+                    }
+                },
+                {
+                    "i": 4,
+                    "k": "this",
+                    "v": "t"
+                },
+                {
+                    "i": 4,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "where",
+                    "c": "sqlglot.expressions.query.Where"
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Match"
+                },
+                {
+                    "i": 8,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column"
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 23,
+                        "start": 22,
+                        "end": 22
+                    }
+                },
+                {
+                    "i": 10,
+                    "k": "this",
+                    "v": "c"
+                },
+                {
+                    "i": 10,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 8,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "m": {
+                        "line": 1,
+                        "col": 50,
+                        "start": 37,
+                        "end": 49
+                    }
+                },
+                {
+                    "i": 13,
+                    "k": "this",
+                    "v": "^key_word.*"
+                },
+                {
+                    "i": 13,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 8,
+                    "k": "kind",
+                    "v": "REGEXP"
+                }
+            ],
+            "actual": [
+                {
+                    "c": "sqlglot.expressions.query.Select"
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Star",
+                    "m": {
+                        "line": 1,
+                        "col": 8,
+                        "start": 7,
+                        "end": 7
+                    }
+                },
+                {
+                    "i": 0,
+                    "k": "from_",
+                    "c": "sqlglot.expressions.query.From"
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table"
+                },
+                {
+                    "i": 3,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 15,
+                        "start": 14,
+                        "end": 14
+                    }
+                },
+                {
+                    "i": 4,
+                    "k": "this",
+                    "v": "t"
+                },
+                {
+                    "i": 4,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "where",
+                    "c": "sqlglot.expressions.query.Where"
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Match",
+                    "m": {
+                        "doris_full_text": true
+                    }
+                },
+                {
+                    "i": 8,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column"
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 23,
+                        "start": 22,
+                        "end": 22
+                    }
+                },
+                {
+                    "i": 10,
+                    "k": "this",
+                    "v": "c"
+                },
+                {
+                    "i": 10,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 8,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "m": {
+                        "line": 1,
+                        "col": 50,
+                        "start": 37,
+                        "end": 49
+                    }
+                },
+                {
+                    "i": 13,
+                    "k": "this",
+                    "v": "^key_word.*"
+                },
+                {
+                    "i": 13,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 8,
+                    "k": "kind",
+                    "v": "REGEXP"
+                }
+            ]
+        },
+        {
+            "id": "assertion:v1:sha256:1d760ff2a5db623d6620cfecb8f76519d6640294426f15030856ae30c87dbff4:1",
+            "sql": "SELECT * FROM t WHERE NOT c MATCH_ANY 'x' AND d MATCH_ALL 'y' OR e = 1",
+            "signature": "ast-mismatch:v1:sha256:f278a7baab32a5a4d830a8f992c12d28b7c92aa0cb5df24652b0eb675bc934fe",
+            "reason": "SG29-020: Retain the native MATCH operator/analyzer representation and parenthesization proved by Doris 4.1.5 parsed/analyzed plans. Do not infer backend/index execution from generic AST equality.",
+            "expected": [
+                {
+                    "c": "sqlglot.expressions.query.Select"
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Star",
+                    "m": {
+                        "line": 1,
+                        "col": 8,
+                        "start": 7,
+                        "end": 7
+                    }
+                },
+                {
+                    "i": 0,
+                    "k": "from_",
+                    "c": "sqlglot.expressions.query.From"
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table"
+                },
+                {
+                    "i": 3,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 15,
+                        "start": 14,
+                        "end": 14
+                    }
+                },
+                {
+                    "i": 4,
+                    "k": "this",
+                    "v": "t"
+                },
+                {
+                    "i": 4,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "where",
+                    "c": "sqlglot.expressions.query.Where"
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Or"
+                },
+                {
+                    "i": 8,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.And"
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Not"
+                },
+                {
+                    "i": 10,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Match"
+                },
+                {
+                    "i": 11,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column"
+                },
+                {
+                    "i": 12,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 27,
+                        "start": 26,
+                        "end": 26
+                    }
+                },
+                {
+                    "i": 13,
+                    "k": "this",
+                    "v": "c"
+                },
+                {
+                    "i": 13,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 11,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "m": {
+                        "line": 1,
+                        "col": 41,
+                        "start": 38,
+                        "end": 40
+                    }
+                },
+                {
+                    "i": 16,
+                    "k": "this",
+                    "v": "x"
+                },
+                {
+                    "i": 16,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 11,
+                    "k": "kind",
+                    "v": "ANY"
+                },
+                {
+                    "i": 9,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Match"
+                },
+                {
+                    "i": 20,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column"
+                },
+                {
+                    "i": 21,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 47,
+                        "start": 46,
+                        "end": 46
+                    }
+                },
+                {
+                    "i": 22,
+                    "k": "this",
+                    "v": "d"
+                },
+                {
+                    "i": 22,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 20,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "m": {
+                        "line": 1,
+                        "col": 61,
+                        "start": 58,
+                        "end": 60
+                    }
+                },
+                {
+                    "i": 25,
+                    "k": "this",
+                    "v": "y"
+                },
+                {
+                    "i": 25,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 20,
+                    "k": "kind",
+                    "v": "ALL"
+                },
+                {
+                    "i": 8,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.EQ"
+                },
+                {
+                    "i": 29,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column"
+                },
+                {
+                    "i": 30,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 66,
+                        "start": 65,
+                        "end": 65
+                    }
+                },
+                {
+                    "i": 31,
+                    "k": "this",
+                    "v": "e"
+                },
+                {
+                    "i": 31,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 29,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "m": {
+                        "line": 1,
+                        "col": 70,
+                        "start": 69,
+                        "end": 69
+                    }
+                },
+                {
+                    "i": 34,
+                    "k": "this",
+                    "v": "1"
+                },
+                {
+                    "i": 34,
+                    "k": "is_string",
+                    "v": false
+                }
+            ],
+            "actual": [
+                {
+                    "c": "sqlglot.expressions.query.Select"
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Star",
+                    "m": {
+                        "line": 1,
+                        "col": 8,
+                        "start": 7,
+                        "end": 7
+                    }
+                },
+                {
+                    "i": 0,
+                    "k": "from_",
+                    "c": "sqlglot.expressions.query.From"
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table"
+                },
+                {
+                    "i": 3,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 15,
+                        "start": 14,
+                        "end": 14
+                    }
+                },
+                {
+                    "i": 4,
+                    "k": "this",
+                    "v": "t"
+                },
+                {
+                    "i": 4,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "where",
+                    "c": "sqlglot.expressions.query.Where"
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Or"
+                },
+                {
+                    "i": 8,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.And"
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Not"
+                },
+                {
+                    "i": 10,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Match",
+                    "m": {
+                        "doris_full_text": true
+                    }
+                },
+                {
+                    "i": 11,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column"
+                },
+                {
+                    "i": 12,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 27,
+                        "start": 26,
+                        "end": 26
+                    }
+                },
+                {
+                    "i": 13,
+                    "k": "this",
+                    "v": "c"
+                },
+                {
+                    "i": 13,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 11,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "m": {
+                        "line": 1,
+                        "col": 41,
+                        "start": 38,
+                        "end": 40
+                    }
+                },
+                {
+                    "i": 16,
+                    "k": "this",
+                    "v": "x"
+                },
+                {
+                    "i": 16,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 11,
+                    "k": "kind",
+                    "v": "ANY"
+                },
+                {
+                    "i": 9,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Match",
+                    "m": {
+                        "doris_full_text": true
+                    }
+                },
+                {
+                    "i": 20,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column"
+                },
+                {
+                    "i": 21,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 47,
+                        "start": 46,
+                        "end": 46
+                    }
+                },
+                {
+                    "i": 22,
+                    "k": "this",
+                    "v": "d"
+                },
+                {
+                    "i": 22,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 20,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "m": {
+                        "line": 1,
+                        "col": 61,
+                        "start": 58,
+                        "end": 60
+                    }
+                },
+                {
+                    "i": 25,
+                    "k": "this",
+                    "v": "y"
+                },
+                {
+                    "i": 25,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 20,
+                    "k": "kind",
+                    "v": "ALL"
+                },
+                {
+                    "i": 8,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.EQ"
+                },
+                {
+                    "i": 29,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column"
+                },
+                {
+                    "i": 30,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 66,
+                        "start": 65,
+                        "end": 65
+                    }
+                },
+                {
+                    "i": 31,
+                    "k": "this",
+                    "v": "e"
+                },
+                {
+                    "i": 31,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 29,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "m": {
+                        "line": 1,
+                        "col": 70,
+                        "start": 69,
+                        "end": 69
+                    }
+                },
+                {
+                    "i": 34,
+                    "k": "this",
+                    "v": "1"
+                },
+                {
+                    "i": 34,
+                    "k": "is_string",
+                    "v": false
+                }
+            ]
+        },
+        {
+            "id": "assertion:v1:sha256:8979b186b1628316b80e579690079fdef9ea4d9b37d88bb8e39771ea92e8c2e1:1",
+            "sql": "SELECT * FROM t WHERE c NOT MATCH_ALL 'word1 word2'",
+            "signature": "ast-mismatch:v1:sha256:99d9cfbf5566791fd074d66a9eaf96032e687ab36b0c8627420593a5ab9fc43c",
+            "reason": "SG29-020: Retain the native MATCH operator/analyzer representation and parenthesization proved by Doris 4.1.5 parsed/analyzed plans. Do not infer backend/index execution from generic AST equality.",
+            "expected": [
+                {
+                    "c": "sqlglot.expressions.query.Select"
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Star",
+                    "m": {
+                        "line": 1,
+                        "col": 8,
+                        "start": 7,
+                        "end": 7
+                    }
+                },
+                {
+                    "i": 0,
+                    "k": "from_",
+                    "c": "sqlglot.expressions.query.From"
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table"
+                },
+                {
+                    "i": 3,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 15,
+                        "start": 14,
+                        "end": 14
+                    }
+                },
+                {
+                    "i": 4,
+                    "k": "this",
+                    "v": "t"
+                },
+                {
+                    "i": 4,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "where",
+                    "c": "sqlglot.expressions.query.Where"
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Not"
+                },
+                {
+                    "i": 8,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Match"
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column"
+                },
+                {
+                    "i": 10,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 23,
+                        "start": 22,
+                        "end": 22
+                    }
+                },
+                {
+                    "i": 11,
+                    "k": "this",
+                    "v": "c"
+                },
+                {
+                    "i": 11,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 9,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "m": {
+                        "line": 1,
+                        "col": 51,
+                        "start": 38,
+                        "end": 50
+                    }
+                },
+                {
+                    "i": 14,
+                    "k": "this",
+                    "v": "word1 word2"
+                },
+                {
+                    "i": 14,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 9,
+                    "k": "kind",
+                    "v": "ALL"
+                }
+            ],
+            "actual": [
+                {
+                    "c": "sqlglot.expressions.query.Select"
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.core.Star",
+                    "m": {
+                        "line": 1,
+                        "col": 8,
+                        "start": 7,
+                        "end": 7
+                    }
+                },
+                {
+                    "i": 0,
+                    "k": "from_",
+                    "c": "sqlglot.expressions.query.From"
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "c": "sqlglot.expressions.query.Table"
+                },
+                {
+                    "i": 3,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 15,
+                        "start": 14,
+                        "end": 14
+                    }
+                },
+                {
+                    "i": 4,
+                    "k": "this",
+                    "v": "t"
+                },
+                {
+                    "i": 4,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 0,
+                    "k": "where",
+                    "c": "sqlglot.expressions.query.Where"
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Not"
+                },
+                {
+                    "i": 8,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Match",
+                    "m": {
+                        "doris_full_text": true
+                    }
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Column"
+                },
+                {
+                    "i": 10,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Identifier",
+                    "m": {
+                        "line": 1,
+                        "col": 23,
+                        "start": 22,
+                        "end": 22
+                    }
+                },
+                {
+                    "i": 11,
+                    "k": "this",
+                    "v": "c"
+                },
+                {
+                    "i": 11,
+                    "k": "quoted",
+                    "v": false
+                },
+                {
+                    "i": 9,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "m": {
+                        "line": 1,
+                        "col": 51,
+                        "start": 38,
+                        "end": 50
+                    }
+                },
+                {
+                    "i": 14,
+                    "k": "this",
+                    "v": "word1 word2"
+                },
+                {
+                    "i": 14,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 9,
+                    "k": "kind",
+                    "v": "ALL"
+                }
+            ]
+        }
+    ]
 }

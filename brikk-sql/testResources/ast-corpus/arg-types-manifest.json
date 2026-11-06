@@ -1,6 +1,6 @@
 {
- "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
- "class_count": 1037,
+ "sqlglot_version": "v30.29.0",
+ "class_count": 1049,
  "traits": [
   "AggFunc",
   "Binary",
@@ -133,6 +133,12 @@
    "module": "sqlglot.expressions.aggregate",
    "arg_types": {
     "this": true
+   }
+  },
+  "AggregateKeyProperty": {
+   "module": "sqlglot.expressions.properties",
+   "arg_types": {
+    "expressions": true
    }
   },
   "AlgorithmProperty": {
@@ -689,7 +695,9 @@
    "module": "sqlglot.expressions.array",
    "arg_types": {
     "this": true,
-    "expression": false
+    "expression": false,
+    "asc": false,
+    "nulls_first": false
    }
   },
   "ArraySum": {
@@ -1474,6 +1482,12 @@
     "this": true
    }
   },
+  "ConnectTo": {
+   "module": "sqlglot.expressions.ddl",
+   "arg_types": {
+    "this": true
+   }
+  },
   "Constraint": {
    "module": "sqlglot.expressions.constraints",
    "arg_types": {
@@ -1537,6 +1551,10 @@
     "expression": false,
     "expressions": false
    }
+  },
+  "CopyTagsProperty": {
+   "module": "sqlglot.expressions.properties",
+   "arg_types": {}
   },
   "Corr": {
    "module": "sqlglot.expressions.aggregate",
@@ -2183,6 +2201,10 @@
     "this": true
    }
   },
+  "Disconnect": {
+   "module": "sqlglot.expressions.ddl",
+   "arg_types": {}
+  },
   "DistKeyProperty": {
    "module": "sqlglot.expressions.properties",
    "arg_types": {
@@ -2652,6 +2674,7 @@
   "ForeignKey": {
    "module": "sqlglot.expressions.constraints",
    "arg_types": {
+    "this": false,
     "expressions": false,
     "reference": false,
     "delete": false,
@@ -3295,6 +3318,10 @@
     "expression": true
    }
   },
+  "InteractiveProperty": {
+   "module": "sqlglot.expressions.properties",
+   "arg_types": {}
+  },
   "Intersect": {
    "module": "sqlglot.expressions.query",
    "arg_types": {
@@ -3335,7 +3362,8 @@
    "module": "sqlglot.expressions.datatypes",
    "arg_types": {
     "this": false,
-    "unit": false
+    "unit": false,
+    "fraction_in_string": false
    }
   },
   "IntervalSpan": {
@@ -3822,11 +3850,11 @@
     "global_": false,
     "hint": false,
     "match_condition": false,
+    "nearest": false,
     "directed": false,
     "expressions": false,
-    "pivots": false,
-    "nearest": false
-    }
+    "pivots": false
+   }
   },
   "JoinHint": {
    "module": "sqlglot.expressions.core",
@@ -3909,8 +3937,7 @@
    "module": "sqlglot.expressions.query",
    "arg_types": {
     "this": true,
-    "expressions": true,
-    "colon": false
+    "expressions": true
    }
   },
   "LanguageProperty": {
@@ -4342,7 +4369,9 @@
    "module": "sqlglot.expressions.core",
    "arg_types": {
     "this": true,
-    "expression": true
+    "expression": true,
+    "kind": false,
+    "analyzer": false
    }
   },
   "MatchAgainst": {
@@ -4554,9 +4583,8 @@
    "module": "sqlglot.expressions.query",
    "arg_types": {
     "this": true,
-    "count": false,
+    "count": true,
     "approximate": false,
-    "exact": false,
     "similarity": false
    }
   },
@@ -4980,6 +5008,12 @@
     "to_expressions": false
    }
   },
+  "PartitionByExcluding": {
+   "module": "sqlglot.expressions.query",
+   "arg_types": {
+    "expressions": true
+   }
+  },
   "PartitionByListProperty": {
    "module": "sqlglot.expressions.properties",
    "arg_types": {
@@ -5057,6 +5091,13 @@
     "this": true
    }
   },
+  "Per": {
+   "module": "sqlglot.expressions.core",
+   "arg_types": {
+    "this": true,
+    "expressions": true
+   }
+  },
   "PercentRank": {
    "module": "sqlglot.expressions.aggregate",
    "arg_types": {
@@ -5082,6 +5123,13 @@
    "arg_types": {
     "this": true,
     "expression": true
+   }
+  },
+  "PhysicalProperty": {
+   "module": "sqlglot.expressions.properties",
+   "arg_types": {
+    "this": true,
+    "value": false
    }
   },
   "Pi": {
@@ -5198,7 +5246,8 @@
    "module": "sqlglot.expressions.constraints",
    "arg_types": {
     "desc": false,
-    "options": false
+    "options": false,
+    "include": false
    }
   },
   "Prior": {
@@ -5410,7 +5459,11 @@
    "module": "sqlglot.expressions.core",
    "arg_types": {
     "this": true,
-    "kind": true
+    "kind": true,
+    "partition_start": false,
+    "partition_end": false,
+    "force": false,
+    "mode": false
    }
   },
   "RefreshTriggerProperty": {
@@ -5649,6 +5702,12 @@
     "this": true,
     "expression": true,
     "replacement": false
+   }
+  },
+  "ReplaceColumns": {
+   "module": "sqlglot.expressions.query",
+   "arg_types": {
+    "expressions": true
    }
   },
   "ReplacePartition": {
@@ -6224,14 +6283,6 @@
     "siblings": false
    }
   },
-  "SortArray": {
-   "module": "sqlglot.expressions.array",
-   "arg_types": {
-    "this": true,
-    "asc": false,
-    "nulls_first": false
-   }
-  },
   "SortKeyProperty": {
    "module": "sqlglot.expressions.properties",
    "arg_types": {
@@ -6385,6 +6436,12 @@
     "this": true
    }
   },
+  "StorageProperty": {
+   "module": "sqlglot.expressions.properties",
+   "arg_types": {
+    "expressions": true
+   }
+  },
   "StoredProcedure": {
    "module": "sqlglot.expressions.query",
    "arg_types": {
@@ -6409,7 +6466,8 @@
     "this": true,
     "format": false,
     "safe": false,
-    "default_year": false
+    "default_year": false,
+    "nlsparam": false
    }
   },
   "StrToMap": {
@@ -6429,7 +6487,8 @@
     "zone": false,
     "safe": false,
     "target_type": false,
-    "default_year": false
+    "default_year": false,
+    "nlsparam": false
    }
   },
   "StrToUnix": {
@@ -6480,6 +6539,13 @@
     "this": true,
     "delimiter": false,
     "part_index": false
+   }
+  },
+  "StrtokSplitToTable": {
+   "module": "sqlglot.expressions.array",
+   "arg_types": {
+    "this": true,
+    "expression": false
    }
   },
   "StrtokToArray": {
@@ -6654,6 +6720,12 @@
     "seed": false
    }
   },
+  "TableSpaceProperty": {
+   "module": "sqlglot.expressions.properties",
+   "arg_types": {
+    "this": true
+   }
+  },
   "Tag": {
    "module": "sqlglot.expressions.query",
    "arg_types": {
@@ -6683,7 +6755,8 @@
   "TemporaryProperty": {
    "module": "sqlglot.expressions.properties",
    "arg_types": {
-    "this": false
+    "this": false,
+    "scoped": false
    }
   },
   "Time": {
@@ -7314,7 +7387,8 @@
     "index_type": false,
     "on_conflict": false,
     "nulls": false,
-    "options": false
+    "options": false,
+    "include": false
    }
   },
   "UniqueKeyProperty": {
@@ -7489,7 +7563,8 @@
     "alias": false,
     "order": false,
     "limit": false,
-    "offset": false
+    "offset": false,
+    "pivots": false
    }
   },
   "Var": {
@@ -7812,5 +7887,36 @@
     "expressions": false
    }
   }
+ },
+ "compatibility_arg_types": {
+  "ArraySort": {
+   "this": true,
+   "expression": false
+  },
+  "Lambda": {
+   "this": true,
+   "expressions": true,
+   "colon": false
+  },
+  "Nearest": {
+   "this": true,
+   "count": false,
+   "approximate": false,
+   "exact": false,
+   "similarity": false
+  }
+ },
+ "legacy_classes": {
+  "SortArray": {
+   "module": "sqlglot.expressions.array",
+   "arg_types": {
+    "this": true,
+    "asc": false,
+    "nulls_first": false
+   }
+  }
+ },
+ "native_module_overrides": {
+  "AggregateKeyProperty": "brikk.doris"
  }
 }

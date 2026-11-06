@@ -11,6 +11,14 @@
             "case": "write|postgres, version=13.9|SELECT ANY_VALUE(1) AS col",
             "reason": "expected `SELECT MAX(1) AS col` actual `SELECT ANY_VALUE(1) AS col`",
             "signature": "sql-mismatch:v1:sha256:118ed46e45105e1b0af96fb72abae3137077d61f3c7f4d9085b67645b829e1ab"
+        },
+        {
+            "id": "assertion:v1:sha256:42b0fe3f137e65f32f8b8b7dc04e1662a450af4e9232affb3cd64e56fbab8919:1",
+            "case": "write|duckdb|SELECT U&'d\\0061t\\0061', U&'d!+000061ta' UESCAPE '!', U&'a\\\\b', U&'\\D83D\\DE00'",
+            "signature": "sql-mismatch:v1:sha256:466f07514b7788fae71c720bed0968798de34cfe9665e0f1076b3c18df9fa162",
+            "reason": "SG29-020: Incoming Unicode escape conversion retains its explicit native qualification/refusal boundary; a decoded oracle preview is not proof of cross-engine execution.",
+            "expected": "SELECT 'data', 'data', 'a\\b', '😀'",
+            "actual": "SELECT 'd\\u0061t\\u0061', 'd!+000061ta' UESCAPE '!', 'a\\\\b', '\\D83D\\DE00'"
         }
     ]
 }

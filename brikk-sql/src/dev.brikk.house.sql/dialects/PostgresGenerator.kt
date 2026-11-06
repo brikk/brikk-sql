@@ -459,9 +459,15 @@ open class PostgresGenerator(
 
         val this_ = expression.thisArg
         if (unit.startsWith("quarter") && this_ is Literal) {
-            val months = (this_.name.toIntOrNull() ?: 0) * 3
-            this_.replace(Literal.string(months.toString()))
-            (expression.args["unit"] as Expression).replace(Var(args("this" to "MONTH")))
+            val quarters = this_.name.toLongOrNull()
+            if (quarters == null || quarters !in Long.MIN_VALUE / 3..Long.MAX_VALUE / 3) {
+                unsupported("Postgres intervals need a bounded whole number of quarters")
+            } else {
+                val rewritten = expression.copy()
+                rewritten.set("this", Literal.string((quarters * 3).toString()))
+                rewritten.set("unit", Var(args("this" to "MONTH")))
+                return super.intervalSql(rewritten as Interval)
+            }
         }
 
         return super.intervalSql(expression)

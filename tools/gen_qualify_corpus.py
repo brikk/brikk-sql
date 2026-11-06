@@ -108,7 +108,14 @@ def load_sql_fixture_pairs(path: pathlib.Path):
 
 
 def load_sql_fixtures(path: pathlib.Path):
-    yield from _filter_comments(path.read_text(encoding="utf-8")).splitlines()
+    lines = []
+    for line in _filter_comments(path.read_text(encoding="utf-8")).splitlines():
+        lines.append(line)
+        if not line.startswith("#"):
+            yield "\n".join(lines)
+            lines.clear()
+    if lines:
+        raise ValueError(f"Unattached fixture metadata in {path}")
 
 
 def string_to_bool(string):
@@ -198,10 +205,16 @@ def build_pair_corpus(fixture_name, runner, schema=None, visible=None):
 
 def build_invalid_corpus():
     cases = []
-    for sql in load_sql_fixtures(FIXTURES / "qualify_columns__invalid.sql"):
+    for source in load_sql_fixtures(FIXTURES / "qualify_columns__invalid.sql"):
+        sql, meta = _extract_meta(source)
+        dialect = meta.get("dialect")
         case = {"sql": sql, "raises": True}
+        if dialect:
+            case["dialect"] = dialect
+        if (dialect or "").split(",")[0].strip().lower() not in SUPPORTED_DIALECTS:
+            case["dialect_supported"] = False
         try:
-            expression = qualify_columns_mod.qualify_columns(parse_one(sql), schema=SCHEMA)
+            expression = qualify_columns_mod.qualify_columns(parse_one(sql, dialect=dialect), schema=SCHEMA, dialect=dialect)
             qualify_columns_mod.validate_qualify_columns(expression)
         except (OptimizeError, SchemaError):
             pass

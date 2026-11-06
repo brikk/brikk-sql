@@ -7,9 +7,9 @@ import dev.brikk.house.sql.shape.*
 import kotlin.test.*
 
 class DuckdbUpstreamSortIdentifierTest {
-    @Test fun upstreamSortByNameLexicalFixIsNativeOnlyAndKeepsRangesAndSerde() {
+    @Test fun upstreamSortByNameLexicalFixKeepsRangesAndSerdeAfterTheCoherentRefresh() {
         val sql="INSERT INTO s.sort BY NAME SELECT ? AS n"
-        assertTrue(Dialects.DUCKDB.tokenize(sql).any { it.tokenType==TokenType.SORT_BY })
+        assertFalse(Dialects.DUCKDB.tokenize(sql).any { it.tokenType==TokenType.SORT_BY })
         val tokens=nativeDuckdbAnalysisDialect().tokenize(sql)
         assertFalse(tokens.any { it.tokenType==TokenType.SORT_BY })
         assertEquals(sql.indexOf('?'),tokens.single { it.text=="?" }.start)

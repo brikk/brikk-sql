@@ -4,7 +4,7 @@ Generated Python-oracle token corpus for the brikk-sql tokenizer differential te
 
 - Source SQL: `reference/sqlglot/tests/fixtures/identity.sql` from sqlglot's
   MIT-licensed test fixtures (copyright Toby Mao, see `reference/sqlglot/LICENSE`).
-- sqlglot version pin: `v30.22.0-5-ga00dc2e5c`.
+- sqlglot version pin: `v30.29.0`.
 - One JSON file per dialect; each case holds the exact token stream produced by
   `Dialect.get_or_raise(<dialect> or None).tokenize(sql)`.
 

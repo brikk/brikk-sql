@@ -1,7 +1,52 @@
 {
-  "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
+  "sqlglot_version": "v30.29.0",
   "dialect": "postgres",
   "identity": [
+    {
+      "sql": "SELECT NULL IS NULL = FALSE",
+      "expected": "SELECT (NULL IS NULL) = FALSE",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT a = b IS NOT NULL FROM t",
+      "expected": "SELECT (a = b) IS NOT NULL FROM t",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT a = b NOTNULL FROM t",
+      "expected": "SELECT (a = b) IS NOT NULL FROM t",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT a = (b IS NULL) FROM t",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT a IS NOT NULL IS NULL FROM t",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT a IS NULL IS NOT NULL FROM t",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT NULL IS NOT NULL IS FALSE",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CREATE TABLE t (a INT, b BOOLEAN GENERATED ALWAYS AS (a IS NULL) STORED)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CREATE TABLE t (a INT, b BOOLEAN GENERATED ALWAYS AS (a = 1 IS NULL) STORED)",
+      "expected": "CREATE TABLE t (a INT, b BOOLEAN GENERATED ALWAYS AS ((a = 1) IS NULL) STORED)",
+      "pretty": false
+    },
     {
       "sql": "SELECT JSON_VALUE(j, '$.a' RETURNING BIGINT) FROM t",
       "expected": null,
@@ -431,6 +476,16 @@
     },
     {
       "sql": "SELECT INTERVAL '0.123456789 SECOND'",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT INTERVAL '1'' SECOND; SELECT 1; --'",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT INTERVAL '1''; SELECT 1; --' DAY TO SECOND",
       "expected": null,
       "pretty": false
     },
@@ -1329,7 +1384,7 @@
     },
     {
       "sql": "INSERT INTO newtable AS t(a, b, c) VALUES (1, 2, 3) ON CONFLICT(c) DO UPDATE SET a = t.a + 1 WHERE t.a < 1",
-      "expected": null,
+      "expected": "INSERT INTO newtable AS t (a, b, c) VALUES (1, 2, 3) ON CONFLICT(c) DO UPDATE SET a = t.a + 1 WHERE t.a < 1",
       "pretty": false
     },
     {
@@ -2140,6 +2195,126 @@
       "pretty": false
     },
     {
+      "sql": "CREATE TABLE t (a INT PRIMARY KEY) TABLESPACE pg_default",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CREATE TABLE t (a INT) WITH (fillfactor=70) TABLESPACE pg_default",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CREATE INDEX i ON t(a) TABLESPACE pg_default",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CREATE MATERIALIZED VIEW mv TABLESPACE pg_default AS SELECT 1 AS a",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CREATE TABLE t (a INT, CONSTRAINT pk PRIMARY KEY (a) USING INDEX TABLESPACE pg_default)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CREATE TABLE t (a INT, UNIQUE (a) USING INDEX TABLESPACE pg_default)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CREATE TABLE t (a INT PRIMARY KEY USING INDEX TABLESPACE pg_default)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CREATE TABLE t (a INT) TABLESPACE \"pg_default\"",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CREATE INDEX i ON t(a) TABLESPACE \"pg_default\"",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CREATE MATERIALIZED VIEW mv TABLESPACE \"pg_default\" AS SELECT 1 AS a",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CREATE TABLE t (a INT PRIMARY KEY USING INDEX TABLESPACE \"pg_default\" DEFERRABLE INITIALLY DEFERRED)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CREATE TABLE t (a INT PRIMARY KEY WITH (fillfactor=70) USING INDEX TABLESPACE pg_default)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CREATE TABLE t (a INT UNIQUE USING INDEX TABLESPACE \"pg_default\" DEFERRABLE)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CREATE TABLE t (a INT UNIQUE NULLS NOT DISTINCT WITH (fillfactor=70) USING INDEX TABLESPACE pg_default)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CREATE TABLE t (a INT, b INT, PRIMARY KEY (a) INCLUDE (b) WITH (fillfactor=70) USING INDEX TABLESPACE pg_default DEFERRABLE)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CREATE TABLE t (a INT, b INT, CONSTRAINT uq UNIQUE (a) INCLUDE (b) WITH (fillfactor=70) USING INDEX TABLESPACE pg_default DEFERRABLE)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CREATE INDEX i ON t USING btree(a) INCLUDE (b) WITH (fillfactor=70) TABLESPACE \"pg_default\" WHERE a > 0",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CREATE TABLE t (a INT4RANGE, EXCLUDE USING gist(a WITH &&) USING INDEX TABLESPACE pg_default WHERE (NOT a IS NULL))",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CREATE TABLE t (a INT) USING heap TABLESPACE pg_default",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CREATE TABLE t USING heap WITH (fillfactor=70) TABLESPACE pg_default AS SELECT 1 AS a WITH NO DATA",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CREATE MATERIALIZED VIEW mv USING heap WITH (fillfactor=70) TABLESPACE pg_default AS SELECT 1 AS a",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CREATE TEMPORARY TABLE t (a INT) USING heap WITH (fillfactor=70) ON COMMIT DELETE ROWS TABLESPACE pg_default",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CREATE TEMPORARY TABLE t USING heap WITH (fillfactor=70) ON COMMIT PRESERVE ROWS TABLESPACE pg_default AS SELECT 1 AS a",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CREATE TEMPORARY TABLE t ON COMMIT DELETE ROWS AS SELECT 1 AS a",
+      "expected": null,
+      "pretty": false
+    },
+    {
       "sql": "SELECT JSON_VALUE('{\"a\":42}', '$.a')",
       "expected": null,
       "pretty": false
@@ -2422,6 +2597,46 @@
   ],
   "transpile": [
     {
+      "sql": "SELECT CAST('2024-01-01 12:00:00' AS TIMESTAMP) + INTERVAL '30 SECOND' - (CAST('2024-01-01 12:00:00' AS TIMESTAMP) + INTERVAL '30 SECOND')",
+      "read": {
+        "duckdb": "SELECT DATE_ADD(TIMESTAMP '2024-01-01 12:00:00', INTERVAL 30 SECOND) - DATE_ADD(TIMESTAMP '2024-01-01 12:00:00', INTERVAL 30 SECOND)"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT a = (b IS NULL) FROM t",
+      "read": {
+        "snowflake": "SELECT a = b IS NULL FROM t",
+        "redshift": "SELECT a = b IS NULL FROM t"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT FALSE IS DISTINCT FROM NULL = NULL",
+      "read": {},
+      "write": {
+        "postgres": "SELECT FALSE IS DISTINCT FROM (NULL = NULL)",
+        "sqlite": "SELECT FALSE IS NOT (NULL = NULL)",
+        "snowflake": "SELECT FALSE IS DISTINCT FROM (NULL = NULL)"
+      }
+    },
+    {
+      "sql": "SELECT SHA256(x)",
+      "read": {},
+      "write": {
+        "duckdb": "SELECT UNHEX(SHA256(x))"
+      }
+    },
+    {
+      "sql": "SELECT ENCODE(SHA256(x), 'hex')",
+      "read": {
+        "duckdb": "SELECT SHA256(x)",
+        "snowflake": "SELECT SHA2(x, 256)",
+        "spark": "SELECT SHA2(x, 256)"
+      },
+      "write": {}
+    },
+    {
       "sql": "SELECT BTRIM(x, 'ab')",
       "read": {},
       "write": {
@@ -2470,6 +2685,48 @@
       "write": {
         "mysql": "SELECT CURRENT_TIMESTAMP() - INTERVAL 1 YEAR - INTERVAL 2 MONTH - INTERVAL 3 DAY",
         "postgres": "SELECT CURRENT_TIMESTAMP - MAKE_INTERVAL(years => 1, months => 2, days => 3)"
+      }
+    },
+    {
+      "sql": "SELECT MAKE_INTERVAL(days => 3)",
+      "read": {},
+      "write": {
+        "duckdb": "SELECT INTERVAL '3 day'",
+        "mysql": "SELECT INTERVAL 3 DAY",
+        "postgres": "SELECT MAKE_INTERVAL(days => 3)",
+        "snowflake": "SELECT INTERVAL '3 day'"
+      }
+    },
+    {
+      "sql": "SELECT MAKE_INTERVAL(1, hours => 2, mins => 30)",
+      "read": {},
+      "write": {
+        "duckdb": "SELECT INTERVAL '1 year 2 hour 30 minute'",
+        "postgres": "SELECT MAKE_INTERVAL(1, hours => 2, mins => 30)"
+      }
+    },
+    {
+      "sql": "SELECT MAKE_INTERVAL(secs => 7.5, mins => 6, hours => 5, DAYS => 4, weeks => 3, months => 2, years => 1)",
+      "read": {},
+      "write": {
+        "duckdb": "SELECT INTERVAL '7.5 second 6 minute 5 hour 4 day 3 week 2 month 1 year'",
+        "postgres": "SELECT MAKE_INTERVAL(years => 1, months => 2, weeks => 3, DAYS => 4, hours => 5, mins => 6, secs => 7.5)"
+      }
+    },
+    {
+      "sql": "SELECT MAKE_INTERVAL(1, 2, 3, 4, 5, 6, 7.5)",
+      "read": {},
+      "write": {
+        "duckdb": "SELECT INTERVAL '1 year 2 month 3 week 4 day 5 hour 6 minute 7.5 second'",
+        "postgres": "SELECT MAKE_INTERVAL(1, 2, 3, 4, 5, 6, 7.5)"
+      }
+    },
+    {
+      "sql": "SELECT MAKE_INTERVAL(days => 3) /* sqlglot.anonymous */",
+      "read": {},
+      "write": {
+        "duckdb": "SELECT MAKE_INTERVAL(days => 3) /* sqlglot.anonymous */",
+        "postgres": "SELECT MAKE_INTERVAL(days => 3) /* sqlglot.anonymous */"
       }
     },
     {
@@ -3011,6 +3268,17 @@
       }
     },
     {
+      "sql": "SELECT TO_CHAR(x, 'IYYY-IW')",
+      "read": {
+        "duckdb": "SELECT STRFTIME(x, '%G-%V')",
+        "postgres": "SELECT TO_CHAR(x, 'iyyy-iw')"
+      },
+      "write": {
+        "duckdb": "SELECT STRFTIME(x, '%G-%V')",
+        "postgres": "SELECT TO_CHAR(x, 'IYYY-IW')"
+      }
+    },
+    {
       "sql": "SELECT JSONB_EXISTS('{\"a\": [1,2,3]}', 'a')",
       "read": {},
       "write": {
@@ -3168,6 +3436,13 @@
         "duckdb": "a || b",
         "postgres": "a || b",
         "presto": "CONCAT(CAST(a AS VARCHAR), CAST(b AS VARCHAR))"
+      }
+    },
+    {
+      "sql": "SELECT U&'d\\0061t\\0061', U&'d!+000061ta' UESCAPE '!', U&'a\\\\b', U&'\\D83D\\DE00'",
+      "read": {},
+      "write": {
+        "duckdb": "SELECT 'data', 'data', 'a\\b', '😀'"
       }
     },
     {
@@ -3374,8 +3649,8 @@
     }
   ],
   "stats": {
-    "identity_count": 479,
-    "transpile_count": 100,
-    "skipped_dynamic": 20
+    "identity_count": 514,
+    "transpile_count": 112,
+    "skipped_dynamic": 25
   }
 }

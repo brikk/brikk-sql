@@ -1,10 +1,176 @@
 {
- "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
+ "sqlglot_version": "v30.29.0",
  "fixture": "dialect-corpus/hive.json",
  "dialect": "hive",
- "case_count": 74,
+ "case_count": 79,
  "skipped": [],
  "cases": [
+  {
+   "sql": "CREATE TABLE t (a INT) TBLPROPERTIES ('a\\') ; SELECT 1; --'='1')",
+   "generated": "CREATE TABLE t (a INT) TBLPROPERTIES ('a\\') ; SELECT 1; --'='1')",
+   "dump": [
+    {
+     "c": "sqlglot.expressions.ddl.Create"
+    },
+    {
+     "i": 0,
+     "k": "this",
+     "c": "sqlglot.expressions.query.Schema"
+    },
+    {
+     "i": 1,
+     "k": "this",
+     "c": "sqlglot.expressions.query.Table"
+    },
+    {
+     "i": 2,
+     "k": "this",
+     "c": "sqlglot.expressions.core.Identifier",
+     "m": {
+      "line": 1,
+      "col": 14,
+      "start": 13,
+      "end": 13
+     }
+    },
+    {
+     "i": 3,
+     "k": "this",
+     "v": "t"
+    },
+    {
+     "i": 3,
+     "k": "quoted",
+     "v": false
+    },
+    {
+     "i": 1,
+     "k": "expressions",
+     "a": true,
+     "c": "sqlglot.expressions.query.ColumnDef"
+    },
+    {
+     "i": 6,
+     "k": "this",
+     "c": "sqlglot.expressions.core.Identifier",
+     "m": {
+      "line": 1,
+      "col": 17,
+      "start": 16,
+      "end": 16
+     }
+    },
+    {
+     "i": 7,
+     "k": "this",
+     "v": "a"
+    },
+    {
+     "i": 7,
+     "k": "quoted",
+     "v": false
+    },
+    {
+     "i": 6,
+     "k": "kind",
+     "c": "sqlglot.expressions.datatypes.DataType"
+    },
+    {
+     "i": 10,
+     "k": "this",
+     "c": "DataType.Type",
+     "v": "INT"
+    },
+    {
+     "i": 10,
+     "k": "nested",
+     "v": false
+    },
+    {
+     "i": 0,
+     "k": "kind",
+     "v": "TABLE"
+    },
+    {
+     "i": 0,
+     "k": "replace",
+     "v": false
+    },
+    {
+     "i": 0,
+     "k": "refresh",
+     "v": false
+    },
+    {
+     "i": 0,
+     "k": "unique",
+     "v": false
+    },
+    {
+     "i": 0,
+     "k": "exists",
+     "v": false
+    },
+    {
+     "i": 0,
+     "k": "properties",
+     "c": "sqlglot.expressions.properties.Properties"
+    },
+    {
+     "i": 18,
+     "k": "expressions",
+     "a": true,
+     "c": "sqlglot.expressions.properties.Property"
+    },
+    {
+     "i": 19,
+     "k": "this",
+     "c": "sqlglot.expressions.core.Literal",
+     "m": {
+      "line": 1,
+      "col": 59,
+      "start": 38,
+      "end": 58
+     }
+    },
+    {
+     "i": 20,
+     "k": "this",
+     "v": "a') ; SELECT 1; --"
+    },
+    {
+     "i": 20,
+     "k": "is_string",
+     "v": true
+    },
+    {
+     "i": 19,
+     "k": "value",
+     "c": "sqlglot.expressions.core.Literal",
+     "m": {
+      "line": 1,
+      "col": 63,
+      "start": 60,
+      "end": 62
+     }
+    },
+    {
+     "i": 23,
+     "k": "this",
+     "v": "1"
+    },
+    {
+     "i": 23,
+     "k": "is_string",
+     "v": true
+    },
+    {
+     "i": 0,
+     "k": "concurrently",
+     "v": false
+    }
+   ]
+  },
   {
    "sql": "ALTER TABLE x PARTITION(y = z) ADD COLUMN a VARCHAR(10)",
    "generated": "ALTER TABLE x PARTITION(y = z) ADD COLUMN a VARCHAR(10)",
@@ -678,6 +844,200 @@
     },
     {
      "i": 19,
+     "k": "nested",
+     "v": false
+    },
+    {
+     "i": 0,
+     "k": "only",
+     "v": false
+    },
+    {
+     "i": 0,
+     "k": "not_valid",
+     "v": false
+    },
+    {
+     "i": 0,
+     "k": "check",
+     "v": false
+    },
+    {
+     "i": 0,
+     "k": "cascade",
+     "v": true
+    },
+    {
+     "i": 0,
+     "k": "iceberg",
+     "v": false
+    }
+   ]
+  },
+  {
+   "sql": "ALTER TABLE X REPLACE COLUMNS (y INT COMMENT 'c', z STRING) CASCADE",
+   "generated": "ALTER TABLE X REPLACE COLUMNS (y INT COMMENT 'c', z STRING) CASCADE",
+   "dump": [
+    {
+     "c": "sqlglot.expressions.ddl.Alter"
+    },
+    {
+     "i": 0,
+     "k": "this",
+     "c": "sqlglot.expressions.query.Table"
+    },
+    {
+     "i": 1,
+     "k": "this",
+     "c": "sqlglot.expressions.core.Identifier",
+     "m": {
+      "line": 1,
+      "col": 13,
+      "start": 12,
+      "end": 12
+     }
+    },
+    {
+     "i": 2,
+     "k": "this",
+     "v": "X"
+    },
+    {
+     "i": 2,
+     "k": "quoted",
+     "v": false
+    },
+    {
+     "i": 0,
+     "k": "kind",
+     "v": "TABLE"
+    },
+    {
+     "i": 0,
+     "k": "exists",
+     "v": false
+    },
+    {
+     "i": 0,
+     "k": "actions",
+     "a": true,
+     "c": "sqlglot.expressions.query.ReplaceColumns"
+    },
+    {
+     "i": 7,
+     "k": "expressions",
+     "a": true,
+     "c": "sqlglot.expressions.query.ColumnDef"
+    },
+    {
+     "i": 8,
+     "k": "this",
+     "c": "sqlglot.expressions.core.Identifier",
+     "m": {
+      "line": 1,
+      "col": 32,
+      "start": 31,
+      "end": 31
+     }
+    },
+    {
+     "i": 9,
+     "k": "this",
+     "v": "y"
+    },
+    {
+     "i": 9,
+     "k": "quoted",
+     "v": false
+    },
+    {
+     "i": 8,
+     "k": "kind",
+     "c": "sqlglot.expressions.datatypes.DataType"
+    },
+    {
+     "i": 12,
+     "k": "this",
+     "c": "DataType.Type",
+     "v": "INT"
+    },
+    {
+     "i": 12,
+     "k": "nested",
+     "v": false
+    },
+    {
+     "i": 8,
+     "k": "constraints",
+     "a": true,
+     "c": "sqlglot.expressions.constraints.ColumnConstraint"
+    },
+    {
+     "i": 15,
+     "k": "kind",
+     "c": "sqlglot.expressions.constraints.CommentColumnConstraint"
+    },
+    {
+     "i": 16,
+     "k": "this",
+     "c": "sqlglot.expressions.core.Literal",
+     "m": {
+      "line": 1,
+      "col": 48,
+      "start": 45,
+      "end": 47
+     }
+    },
+    {
+     "i": 17,
+     "k": "this",
+     "v": "c"
+    },
+    {
+     "i": 17,
+     "k": "is_string",
+     "v": true
+    },
+    {
+     "i": 7,
+     "k": "expressions",
+     "a": true,
+     "c": "sqlglot.expressions.query.ColumnDef"
+    },
+    {
+     "i": 20,
+     "k": "this",
+     "c": "sqlglot.expressions.core.Identifier",
+     "m": {
+      "line": 1,
+      "col": 51,
+      "start": 50,
+      "end": 50
+     }
+    },
+    {
+     "i": 21,
+     "k": "this",
+     "v": "z"
+    },
+    {
+     "i": 21,
+     "k": "quoted",
+     "v": false
+    },
+    {
+     "i": 20,
+     "k": "kind",
+     "c": "sqlglot.expressions.datatypes.DataType"
+    },
+    {
+     "i": 24,
+     "k": "this",
+     "c": "DataType.Type",
+     "v": "TEXT"
+    },
+    {
+     "i": 24,
      "k": "nested",
      "v": false
     },
@@ -13456,6 +13816,63 @@
      "i": 51,
      "k": "quoted",
      "v": false
+    }
+   ]
+  },
+  {
+   "sql": "ALTER TABLE t REPLACE COLUMNS (a INT COMMENT 'it''s')",
+   "generated": "ALTER TABLE t REPLACE COLUMNS (a INT COMMENT 'it''s')",
+   "dump": [
+    {
+     "c": "sqlglot.expressions.ddl.Command"
+    },
+    {
+     "i": 0,
+     "k": "this",
+     "v": "ALTER"
+    },
+    {
+     "i": 0,
+     "k": "expression",
+     "v": " TABLE t REPLACE COLUMNS (a INT COMMENT 'it''s')"
+    }
+   ]
+  },
+  {
+   "sql": "ALTER TABLE t REPLACE COLUMNS (a UNIONTYPE<INT, STRING>)",
+   "generated": "ALTER TABLE t REPLACE COLUMNS (a UNIONTYPE<INT, STRING>)",
+   "dump": [
+    {
+     "c": "sqlglot.expressions.ddl.Command"
+    },
+    {
+     "i": 0,
+     "k": "this",
+     "v": "ALTER"
+    },
+    {
+     "i": 0,
+     "k": "expression",
+     "v": " TABLE t REPLACE COLUMNS (a UNIONTYPE<INT, STRING>)"
+    }
+   ]
+  },
+  {
+   "sql": "ALTER TABLE t REPLACE COLUMNS (a TIMESTAMPLOCALTZ)",
+   "generated": "ALTER TABLE t REPLACE COLUMNS (a TIMESTAMPLOCALTZ)",
+   "dump": [
+    {
+     "c": "sqlglot.expressions.ddl.Command"
+    },
+    {
+     "i": 0,
+     "k": "this",
+     "v": "ALTER"
+    },
+    {
+     "i": 0,
+     "k": "expression",
+     "v": " TABLE t REPLACE COLUMNS (a TIMESTAMPLOCALTZ)"
     }
    ]
   }

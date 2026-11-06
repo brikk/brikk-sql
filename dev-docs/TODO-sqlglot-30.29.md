@@ -16,15 +16,18 @@ subsequently approved commit/push of SG29-015 followed by SG29-016 through
 SG29-018 in order, with separate tested commits/pushes between items.
 The owner subsequently authorized the final two items, SG29-019 and SG29-020,
 while the separately authorized streaming-cancellation validation runs.
-SG29-019's complete frozen-target ledger is now verified; SG29-020 is in progress.
+SG29-019's complete frozen-target ledger and SG29-020's coherent integration are
+now verified, with separate commit/push for each. The library oracle is v30.29.0.
 Publication and downstream adoption still require their own authorization.
 
 ## Baselines and evidence
 
-- Global oracle remains `v30.22.0-5-ga00dc2e5c`, commit
+- Global oracle is now `v30.29.0`, commit
+  `2fe25297af5b0f44f5c9e5d03e1b296424b7acbe`, coherently refreshed in SG29-020.
+  The initial baseline was `v30.22.0-5-ga00dc2e5c`, commit
   `a00dc2e5c489214bea53bacbbeba8713f21ebce1`, dated October 9. The previous
   [full sync](archive/TODO-sqlglot-a00dc2e.md) finished October 11.
-- Proposed frozen target is `v30.29.0`, commit
+- Frozen target is `v30.29.0`, commit
   `2fe25297af5b0f44f5c9e5d03e1b296424b7acbe`. The November 3 review inspected
   upstream main `f7a36727`, which adds the release changelog after that target.
   There are 250 commits from our global pin to the release, 251 to reviewed main.
@@ -320,7 +323,7 @@ baseline explain the bounded drift. No global oracle refresh or release follows.
   work retains named owners. No pin, generated corpus or native baseline moved.
   The separately committed cancellation fix is `17a3d5d4`; its full build/JVM/IDE
   gates are green before this documentation/tooling-only round is committed.
-- [ ] **SG29-020: Refresh coherently and qualify integration.** Once scope and
+- [x] **SG29-020: Refresh coherently and qualify integration.** Once scope and
   compatibility decisions are approved, regenerate target AST/tokenizer/typing
   metadata and corpora together, update FixturePinSyncTest and pin declarations,
   and review exact ledger changes. Run build/core/other JVM suites, tooling tests,
@@ -328,6 +331,21 @@ baseline explain the bounded drift. No global oracle refresh or release follows.
   Run shared IDE contracts and API-risk checks where affected. Record exact
   versions, failures, skips and unrun oracles; no pass-by-count ledger changes.
   Keep publication, consumer qualification and adoption separate.
+  [Integration evidence and explicit limits](../vendor/data/sqlglot-sg29-020/README.md):
+  target AST/tokenizer/function/typing metadata and all behavioral corpora are
+  regenerated together. Exact legacy schemas/serde modules and public JVM shapes
+  remain; no implicit SortArray migration. Bounded quoting, scope/ownership,
+  numeric, REF and native preservation fixes have regressions. All 37 invalid
+  qualification inputs pass without lowering the 90% gate. Exact core/native
+  ledger changes retain their reasons or explicit owned deferrals, never counts.
+  Full build, 1,843 core plus 765 other JVM tests, all 829 IntelliJ 261.25134.95
+  tests and 241 tooling tests pass. The 72 existing optional JVM assumptions
+  remain; the tooling release-model check runs. All 5,678 old/new unique native
+  syntax inputs replay under identical engine/JDBC/settings; shared verdicts do
+  not change. Thirty-five regeneration commands reproduce 400 files byte-for-byte.
+  Prior core/metadata non-local JVM signatures and Java 17 bytecode are preserved.
+  SQL-side Engine contracts run; no new peer-consumer qualification, publication
+  or adoption is claimed. Historical native/provenance evidence remains unchanged.
 
 ## Review decision
 
@@ -357,11 +375,13 @@ SG29-017 is also implemented and verified, with commit/push before SG29-018.
 SG29-018 is complete with the compatibility decision and native fix. The owner
 authorized continuing its commit/push while the unrelated IntelliJ cancellation
 blocker is fixed in a separate session. A later request authorizes the last two
-items. SG29-019's complete disposition ledger is verified; SG29-020 remains in
-progress. The cancellation fix retains its own commit and full validation.
+items. SG29-019's complete disposition ledger and SG29-020's coherent integration
+are verified. No parent SG29 item remains open. Owned feature/correctness
+deferrals and excluded external/optimizer work remain explicit, not equivalence
+claims. The cancellation fix retains its own commit and full validation.
 
 Implementation is isolated on branch/worktree `sqlglot-30-29-batch-a`. The
 planning request initially added this TODO and its index links; later approvals
-cover the implementation/evidence through SG29-015. Earlier
+cover the implementation/evidence through SG29-020. Earlier
 guides' uncommitted-status statements describe their original checkpoints.
 Publication, consumer adoption and PR creation remain unrequested.

@@ -229,7 +229,7 @@ object BaseParserTables {
         TokenType.BIGSERIAL, TokenType.XML, TokenType.YEAR, TokenType.USERDEFINED,
         TokenType.MONEY, TokenType.SMALLMONEY, TokenType.ROWVERSION, TokenType.IMAGE,
         TokenType.VARIANT, TokenType.VECTOR, TokenType.VOID, TokenType.OBJECT,
-        TokenType.OBJECT_IDENTIFIER, TokenType.INET, TokenType.IPADDRESS,
+        TokenType.OBJECT_IDENTIFIER, TokenType.REF, TokenType.INET, TokenType.IPADDRESS,
         TokenType.IPPREFIX, TokenType.IPV4, TokenType.IPV6, TokenType.UNKNOWN,
         TokenType.NOTHING, TokenType.NULL, TokenType.NAME, TokenType.TDIGEST,
         TokenType.DYNAMIC,

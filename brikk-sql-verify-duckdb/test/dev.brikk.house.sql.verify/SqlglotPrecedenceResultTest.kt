@@ -135,10 +135,13 @@ internal class SqlglotPrecedenceResultTest {
 
     @Test
     fun exactCoverageDeltaFormsKeepTheirFrozenAstMeaning() = native { c ->
+        fun fixture(file: String, key: String, value: String): JsonObject =
+            NativeCorpusAudit.json("ast-corpus/$file").getValue("cases").jsonArray
+                .map { it.jsonObject }.single { it[key]?.jsonPrimitive?.content == value }
         for (file in listOf("clickhouse-serde.json", "clickhouse-annotated-serde.json")) {
-            val fixture = NativeCorpusAudit.json("ast-corpus/$file").getValue("cases").jsonArray[136].jsonObject
-            val loaded = Serde.loadExpression(fixture.getValue("dump").jsonArray)
-            val original = Dialects.CLICKHOUSE.parseOne(fixture.getValue("sql").jsonPrimitive.content)
+            val input = fixture(file, "sql", "SELECT xor(0, 1, 1, 0)")
+            val loaded = Serde.loadExpression(input.getValue("dump").jsonArray)
+            val original = Dialects.CLICKHOUSE.parseOne(input.getValue("sql").jsonPrimitive.content)
             for (tree in listOf(loaded, original)) {
                 val output = Dialects.DUCKDB.generator(sourceDialect = "clickhouse").generate(tree)
                 assertEquals(listOf(listOf("false")), c.rows(output), output)
@@ -146,18 +149,18 @@ internal class SqlglotPrecedenceResultTest {
         }
         // The handbuilt XOR has an AND operand and an OR operand. Both need to remain
         // units, including when negated. Check all nullable comparison outcomes.
-        val handbuilt = NativeCorpusAudit.json("ast-corpus/handbuilt.json").getValue("cases").jsonArray[8].jsonObject
+        val handbuilt = fixture("handbuilt.json", "id", "comparison_zoo")
         val tree = Serde.loadExpression(handbuilt.getValue("dump").jsonArray)
         val values = " FROM (VALUES(NULL),(1),(2)) ta(a) CROSS JOIN (VALUES(NULL),(0),(2)) tb(b)" +
             " CROSS JOIN (VALUES(NULL),(3),(4)) tc(c) CROSS JOIN (VALUES(NULL),(1),(2)) td(d)" +
             " ORDER BY a NULLS FIRST,b NULLS FIRST,c NULLS FIRST,d NULLS FIRST"
         val reference = "SELECT (a <> 1 AND b >= 2) <> (c <= 3 OR d IS NOT DISTINCT FROM NULL)" + values
         assertEquals(c.rows(reference), c.rows("SELECT " + tree.sql("duckdb") + values))
-        val identity = NativeCorpusAudit.json("ast-corpus/identity-serde.json").getValue("cases").jsonArray[51].jsonObject
+        val identity = fixture("identity-serde.json", "sql", "x >> 1 | 1 & 1 ^ 1")
         val bitwise = Serde.loadExpression(identity.getValue("dump").jsonArray).sql("duckdb")
         assertEquals(listOf(listOf(null),listOf("0"),listOf("0"),listOf("0"),listOf("0")),
             c.rows("SELECT $bitwise FROM (VALUES(NULL::INTEGER),(-2),(0),(1),(8)) t(x) ORDER BY x NULLS FIRST"))
-        val spark = NativeCorpusAudit.json("ast-corpus/spark-annotated-serde.json").getValue("cases").jsonArray[76].jsonObject
+        val spark = fixture("spark-annotated-serde.json", "sql", "BIT_GET(11, 0)")
         assertEquals(listOf(listOf("1")), c.rows("SELECT " + Serde.loadExpression(spark.getValue("dump").jsonArray).sql("duckdb")))
     }
 }

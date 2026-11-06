@@ -1,7 +1,17 @@
 {
-  "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
+  "sqlglot_version": "v30.29.0",
   "dialect": "bigquery",
   "identity": [
+    {
+      "sql": "SELECT 0 isnull",
+      "expected": "SELECT 0 AS isnull",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT CASE WHEN TRUE THEN 0 ELSE 1 END isnull",
+      "expected": "SELECT CASE WHEN TRUE THEN 0 ELSE 1 END AS isnull",
+      "pretty": false
+    },
     {
       "sql": "SELECT 'foo' 'bar'",
       "expected": "SELECT CONCAT('foo', 'bar')",
@@ -10,6 +20,16 @@
     {
       "sql": "SELECT 'foo'/* c */'bar'",
       "expected": "SELECT CONCAT('foo' /* c */, 'bar')",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT `a\\`b`",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT `a\\\\b`",
+      "expected": null,
       "pretty": false
     },
     {
@@ -1889,6 +1909,14 @@
       }
     },
     {
+      "sql": "SELECT MAKE_INTERVAL(1, day => '2\\'; SELECT 1; --')",
+      "read": {},
+      "write": {
+        "duckdb": "SELECT INTERVAL '1 year 2''; SELECT 1; -- day'",
+        "snowflake": "SELECT INTERVAL '1 year, 2\\'; SELECT 1; -- day'"
+      }
+    },
+    {
       "sql": "SELECT TRUE IS TRUE",
       "read": {},
       "write": {
@@ -3069,7 +3097,7 @@
       "write": {
         "bigquery": "DATE_DIFF(CAST('2010-07-07' AS DATE), CAST('2008-12-25' AS DATE), DAY)",
         "mysql": "DATEDIFF(CAST('2010-07-07' AS DATE), CAST('2008-12-25' AS DATE))",
-        "starrocks": "DATE_DIFF('DAY', CAST('2010-07-07' AS DATE), CAST('2008-12-25' AS DATE))"
+        "starrocks": "DATEDIFF(CAST('2010-07-07' AS DATE), CAST('2008-12-25' AS DATE))"
       }
     },
     {
@@ -3324,7 +3352,7 @@
       "read": {},
       "write": {
         "bigquery": "SELECT ARRAY_TO_STRING(['cake', 'pie', NULL], '--', 'MISSING') AS text",
-        "duckdb": "SELECT ARRAY_TO_STRING(LIST_TRANSFORM(['cake', 'pie', NULL], LAMBDA x : COALESCE(x, 'MISSING')), '--') AS text"
+        "duckdb": "SELECT ARRAY_TO_STRING(LIST_TRANSFORM(['cake', 'pie', NULL], LAMBDA x : COALESCE(CAST(x AS TEXT), 'MISSING')), '--') AS text"
       }
     },
     {
@@ -4581,6 +4609,20 @@
       }
     },
     {
+      "sql": "SELECT SUM(APPROX_QUANTILES(x, 2)[1]) OVER () FROM t",
+      "read": {
+        "trino": "SELECT SUM(APPROX_PERCENTILE(x, 0.5)) OVER () FROM t"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT SUM((SELECT APPROX_QUANTILES(x, 2)[1] FROM t)) OVER () FROM u",
+      "read": {
+        "trino": "SELECT SUM((SELECT APPROX_PERCENTILE(x, 0.5) FROM t)) OVER () FROM u"
+      },
+      "write": {}
+    },
+    {
       "sql": "APPROX_QUANTILES(x, 1)",
       "read": {},
       "write": {
@@ -4715,8 +4757,8 @@
     }
   ],
   "stats": {
-    "identity_count": 368,
-    "transpile_count": 296,
-    "skipped_dynamic": 31
+    "identity_count": 372,
+    "transpile_count": 299,
+    "skipped_dynamic": 35
   }
 }

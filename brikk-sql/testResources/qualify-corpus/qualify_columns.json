@@ -1,5 +1,5 @@
 {
- "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
+ "sqlglot_version": "v30.29.0",
  "fixture": "qualify_columns",
  "schema": {
   "x": {
@@ -314,6 +314,41 @@
   {
    "sql": "SELECT t.x FROM READ_PARQUET('path.parquet', hive_partition=1) AS t",
    "expected": "SELECT t.x AS x FROM READ_PARQUET('path.parquet', hive_partition = 1) AS t"
+  },
+  {
+   "sql": "SELECT r FROM range(3) AS r(range)",
+   "expected": "SELECT r AS r FROM RANGE(0, 3) AS r(range)",
+   "dialect": "duckdb"
+  },
+  {
+   "sql": "SELECT r.range AS x FROM range(3) AS r ORDER BY SUM(x) OVER ()",
+   "expected": "SELECT r.range AS x FROM RANGE(0, 3) AS r ORDER BY SUM(x) OVER ()",
+   "dialect": "duckdb"
+  },
+  {
+   "sql": "SELECT range + 1 AS range FROM range(3) AS r",
+   "expected": "SELECT r.range + 1 AS range FROM RANGE(0, 3) AS r",
+   "dialect": "duckdb"
+  },
+  {
+   "sql": "SELECT range + 1 AS x FROM range(3) AS r(range) WHERE x > 1",
+   "expected": "SELECT r.range + 1 AS x FROM RANGE(0, 3) AS r(range) WHERE (r.range + 1) > 1",
+   "dialect": "duckdb"
+  },
+  {
+   "sql": "SELECT x, y + 1 FROM READ_PARQUET('data.parquet') AS r WHERE x > 0",
+   "expected": "SELECT r.x AS x, r.y + 1 AS _col_1 FROM READ_PARQUET('data.parquet') AS r WHERE r.x > 0",
+   "dialect": "duckdb"
+  },
+  {
+   "sql": "SELECT payload.field AS payload FROM READ_PARQUET('data.parquet') AS r",
+   "expected": "SELECT r.payload.field AS payload FROM READ_PARQUET('data.parquet') AS r",
+   "dialect": "duckdb"
+  },
+  {
+   "sql": "SELECT *, x FROM READ_PARQUET('data.parquet') AS r",
+   "expected": "SELECT *, r.x AS x FROM READ_PARQUET('data.parquet') AS r",
+   "dialect": "duckdb"
   },
   {
    "sql": "SELECT 1 AS z FROM (SELECT * FROM t) c WHERE z > 0",
@@ -1165,8 +1200,8 @@
    "dialect_supported": false
   },
   {
-   "sql": "WITH cte AS (SELECT 1 AS col) SELECT * FROM cte LEFT JOIN UNNEST((SELECT ARRAY_AGG(DISTINCT x) AS agg FROM UNNEST([1]) AS x WHERE col = 1))",
-   "expected": "WITH cte AS (SELECT 1 AS col) SELECT * FROM cte AS cte LEFT JOIN UNNEST((SELECT ARRAY_AGG(DISTINCT x) AS agg FROM UNNEST([1]) AS x WHERE cte.col = 1))",
+   "sql": "WITH cte AS (SELECT 1 AS col) SELECT * FROM cte LEFT JOIN UNNEST((SELECT ARRAY_AGG(DISTINCT x) AS agg FROM UNNEST([1]) AS x WHERE col = 1)) AS unnested",
+   "expected": "WITH cte AS (SELECT 1 AS col) SELECT cte.col AS col, unnested AS unnested FROM cte AS cte LEFT JOIN UNNEST((SELECT ARRAY_AGG(DISTINCT x) AS agg FROM UNNEST([1]) AS x WHERE cte.col = 1)) AS unnested",
    "dialect": "bigquery"
   },
   {
@@ -1261,6 +1296,47 @@
    "sql": "SELECT DISTINCT ON (new_col, b + 1, 1) t1.a AS new_col FROM x AS t1 ORDER BY new_col",
    "expected": "SELECT DISTINCT ON (new_col, t1.b + 1, new_col) t1.a AS new_col FROM x AS t1 ORDER BY new_col",
    "title": "expand DISTINCT ON ordinals / projection names"
+  },
+  {
+   "sql": "SELECT k, ANY_VALUE(j.Foo) AS v FROM t GROUP BY k ORDER BY ANY_VALUE(j.Foo), ANY_VALUE(j.foo)",
+   "expected": "SELECT t.k AS k, ANY_VALUE(t.j.foo) AS v FROM t AS t GROUP BY t.k ORDER BY v, ANY_VALUE(t.j.foo)",
+   "schema": {
+    "t": {
+     "k": "INT",
+     "j": "JSON"
+    }
+   },
+   "title": "ORDER BY matches original JSON keys",
+   "dialect": "duckdb"
+  },
+  {
+   "sql": "SELECT k, ANY_VALUE(j.Foo) AS v FROM t GROUP BY k ORDER BY ANY_VALUE(j.Foo), ANY_VALUE(j.foo)",
+   "expected": "SELECT t.k AS k, ANY_VALUE(t.j.`Foo`) AS v FROM t AS t GROUP BY k ORDER BY v, ANY_VALUE(t.j.`foo`)",
+   "schema": {
+    "t": {
+     "k": "INT",
+     "j": "JSON"
+    }
+   },
+   "title": "ORDER BY preserves BigQuery JSON key case",
+   "dialect": "bigquery"
+  },
+  {
+   "sql": "SELECT DISTINCT ON (ANY_VALUE(j.Foo || j.foo), ANY_VALUE(j.foo || j.Foo)) k, ANY_VALUE(j.Foo || j.foo) AS v FROM t GROUP BY k",
+   "expected": "SELECT DISTINCT ON (v, ANY_VALUE(t.j.foo || t.j.foo)) t.k AS k, ANY_VALUE(t.j.foo || t.j.foo) AS v FROM t AS t GROUP BY t.k",
+   "schema": {
+    "t": {
+     "k": "INT",
+     "j": "JSON"
+    }
+   },
+   "title": "DISTINCT ON distinguishes swapped JSON keys",
+   "dialect": "duckdb"
+  },
+  {
+   "sql": "SELECT a, SUM(b) AS b FROM x GROUP BY a ORDER BY SUM(b)",
+   "expected": "SELECT x.a AS a, SUM(x.b) AS b FROM x AS x GROUP BY x.a ORDER BY b",
+   "title": "ORDER BY aggregate argument shares the projection alias"
   },
   {
    "sql": "SELECT COALESCE(COUNT(DISTINCT a)) AS a FROM x",
@@ -1437,6 +1513,18 @@
    "dialect": "duckdb"
   },
   {
+   "sql": "SELECT b FROM x SEMI JOIN y USING (b)",
+   "expected": "SELECT x.b AS b FROM x AS x SEMI JOIN y AS y ON x.b = y.b",
+   "title": "bare USING column after SEMI JOIN resolves to the left table",
+   "dialect": "duckdb"
+  },
+  {
+   "sql": "SELECT a FROM x ANTI JOIN y USING (b) WHERE b > 0",
+   "expected": "SELECT x.a AS a FROM x AS x ANTI JOIN y AS y ON x.b = y.b WHERE x.b > 0",
+   "title": "bare USING column in WHERE after ANTI JOIN resolves to the left table",
+   "dialect": "duckdb"
+  },
+  {
    "sql": "SELECT * FROM x LEFT SEMI JOIN y USING (b)",
    "expected": "SELECT x.b AS b, x.a AS a FROM x AS x LEFT SEMI JOIN y AS y ON x.b = y.b",
    "title": "SEMI join USING columns come first",
@@ -1545,6 +1633,19 @@
    "expected": "WITH c AS (SELECT unpivotable.id AS id, unpivotable.jan AS jan, unpivotable.feb AS feb FROM unpivotable AS unpivotable) SELECT piv.id AS id, piv.month AS month, piv.revenue AS revenue FROM c AS c UNPIVOT(revenue FOR month IN (jan, feb)) AS piv",
    "title": "qualified star over the pivot alias of a pivoted CTE",
    "dialect": "duckdb"
+  },
+  {
+   "sql": "WITH c AS (SELECT id, jan, feb FROM unpivotable) SELECT piv.* FROM c AS m UNPIVOT(revenue FOR month IN (jan, feb)) AS piv",
+   "expected": "WITH c AS (SELECT unpivotable.id AS id, unpivotable.jan AS jan, unpivotable.feb AS feb FROM unpivotable AS unpivotable) SELECT piv.id AS id, piv.month AS month, piv.revenue AS revenue FROM c AS m UNPIVOT(revenue FOR month IN (jan, feb)) AS piv",
+   "title": "qualified star over the pivot alias of an aliased pivoted CTE",
+   "dialect": "duckdb"
+  },
+  {
+   "sql": "WITH base AS (SELECT id, jan, feb FROM unpivotable) SELECT p.amount FROM base AS m UNPIVOT(amount FOR metric IN (jan, feb)) AS p",
+   "expected": "WITH BASE AS (SELECT UNPIVOTABLE.ID AS ID, UNPIVOTABLE.JAN AS JAN, UNPIVOTABLE.FEB AS FEB FROM UNPIVOTABLE AS UNPIVOTABLE) SELECT P.AMOUNT AS AMOUNT FROM BASE AS M UNPIVOT(AMOUNT FOR METRIC IN (JAN, FEB)) AS P",
+   "title": "UNPIVOT over an aliased CTE that also has an UNPIVOT alias",
+   "dialect": "snowflake",
+   "dialect_supported": false
   },
   {
    "sql": "SELECT piv.* FROM (SELECT id, jan, feb FROM unpivotable) UNPIVOT(revenue FOR month IN (jan, feb)) AS piv",
@@ -1661,6 +1762,18 @@
    "expected": "SELECT COALESCE(y.b, z.b) AS b, COALESCE(y.c, z.c) AS c FROM y AS y JOIN z AS z ON y.c = z.c AND y.b = z.b",
    "title": "MySQL lists multiple USING columns first in the left table's order",
    "dialect": "mysql"
+  },
+  {
+   "sql": "SELECT unp FROM (SELECT 7 AS unp, 1 AS a, 2 AS b) UNPIVOT(v FOR k IN (a, b)) AS unp",
+   "expected": "SELECT unp AS unp FROM (SELECT 7 AS unp, 1 AS a, 2 AS b) AS _0 UNPIVOT(v FOR k IN (_0.a, _0.b)) AS unp",
+   "title": "BigQuery unpivot row alias takes precedence over a same-named input column",
+   "dialect": "bigquery"
+  },
+  {
+   "sql": "SELECT ARRAY_AGG(piv) AS arr FROM unknown_table AS u PIVOT(SUM(u.v) FOR u.k IN (82 AS a)) AS piv",
+   "expected": "SELECT ARRAY_AGG(piv) AS arr FROM unknown_table AS u PIVOT(SUM(u.v) FOR u.k IN (82 AS a)) AS piv",
+   "title": "BigQuery pivot row alias resolves without a source schema",
+   "dialect": "bigquery"
   }
  ]
 }

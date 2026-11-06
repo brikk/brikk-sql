@@ -25,6 +25,27 @@ class ArgTypesManifestTest {
         val manifest = loadManifest()
         val classes = manifest.getValue("classes").jsonObject
         check(classes.isNotEmpty()) { "empty manifest" }
+        val compatibility = manifest.getValue("compatibility_arg_types").jsonObject
+        assertEquals(setOf("ArraySort", "Lambda", "Nearest"), compatibility.keys)
+        val upstreamShapes = mapOf(
+            "ArraySort" to listOf("this" to true, "expression" to false, "asc" to false, "nulls_first" to false),
+            "Lambda" to listOf("this" to true, "expressions" to true),
+            "Nearest" to listOf("this" to true, "count" to true, "approximate" to false, "similarity" to false),
+        )
+        val retainedShapes = mapOf(
+            "ArraySort" to listOf("this" to true, "expression" to false),
+            "Lambda" to listOf("this" to true, "expressions" to true, "colon" to false),
+            "Nearest" to listOf("this" to true, "count" to false, "approximate" to false, "exact" to false, "similarity" to false),
+        )
+        fun fields(obj: kotlinx.serialization.json.JsonObject) = obj.entries.map { (k, v) -> k to v.jsonPrimitive.boolean }
+        for ((name, shape) in retainedShapes) assertEquals(shape, fields(compatibility.getValue(name).jsonObject))
+        assertEquals(setOf("AggregateKeyProperty"), manifest.getValue("native_module_overrides").jsonObject.keys)
+        assertEquals("brikk.doris", manifest.getValue("native_module_overrides").jsonObject.getValue("AggregateKeyProperty").jsonPrimitive.content)
+        val legacy = manifest.getValue("legacy_classes").jsonObject
+        assertEquals(setOf("SortArray"), legacy.keys)
+        assertEquals("sqlglot.expressions.array", legacy.getValue("SortArray").jsonObject.getValue("module").jsonPrimitive.content)
+        assertEquals(listOf("this" to true, "asc" to false, "nulls_first" to false),
+            fields(legacy.getValue("SortArray").jsonObject.getValue("arg_types").jsonObject))
 
         val failures = mutableListOf<String>()
 
@@ -36,7 +57,10 @@ class ArgTypesManifestTest {
                 continue
             }
 
-            val expectedModule = obj.getValue("module").jsonPrimitive.content
+            val expectedModule = if (name == "AggregateKeyProperty") {
+                assertEquals("sqlglot.expressions.properties", obj.getValue("module").jsonPrimitive.content)
+                "brikk.doris"
+            } else obj.getValue("module").jsonPrimitive.content
             if (entry.module != expectedModule) {
                 failures.add("$name: module ${entry.module} != $expectedModule")
             }
@@ -49,22 +73,9 @@ class ArgTypesManifestTest {
 
             var expected = obj.getValue("arg_types").jsonObject
                 .entries.map { (k, v) -> k to v.jsonPrimitive.boolean }
-            if (name == "Values") {
-                // SG29-012/#8876 bounded optional schema port, not a manifest refresh.
-                // Keep checking the entire frozen base and the exact appended shape;
-                // fail on a later oracle refresh so this disposition must be reconciled.
-                assertEquals(listOf("expressions" to true, "alias" to false, "order" to false,
-                    "limit" to false, "offset" to false), expected, "Reconcile SG29-012 schema extension with the new pin")
-                expected = expected + ("pivots" to false)
-            } else if (name == "Match") {
-                // SG29-013/#8585: exact optional suffix, not a global schema refresh.
-                assertEquals(listOf("this" to true, "expression" to true), expected,
-                    "Reconcile SG29-013 schema extension with the new pin")
-                expected = expected + listOf("kind" to false, "analyzer" to false)
-            } else if (name == "Refresh") {
-                assertEquals(listOf("this" to true,"kind" to true),expected,
-                    "Reconcile SG29-014 Refresh schema extension with the new pin")
-                expected = expected + listOf("partition_start" to false,"partition_end" to false,"force" to false,"mode" to false)
+            if (name in upstreamShapes) {
+                assertEquals(upstreamShapes.getValue(name), expected, "Review a changed upstream compatibility shape")
+                expected = retainedShapes.getValue(name)
             }
             val actual = node.argTypes.entries.map { (k, v) -> k to v }
             if (expected != actual) {
@@ -80,11 +91,13 @@ class ArgTypesManifestTest {
         // allowlisted NATIVE (brikk-original) classes — no gaps, no strays. The Python
         // parity check above is untouched: every manifest class is still verified.
         val native = ExpressionRegistry.entries.filterKeys { it in NATIVE_EXPRESSION_CLASSES }
-        // SG29-015: one exact upstream addition, not a native class or manifest refresh.
-        val bounded = setOf("ReplaceColumns")
-        assertEquals("sqlglot.expressions.query", ExpressionRegistry.entries.getValue("ReplaceColumns").module)
-        assertEquals(listOf("expressions" to true), ExpressionRegistry.entries.getValue("ReplaceColumns").factory().argTypes.entries.map { it.key to it.value })
-        check("ReplaceColumns" !in classes) { "Reconcile SG29-015 node after oracle migration" }
+        val bounded = legacy.keys
+        for ((name, spec) in legacy) {
+            val entry = ExpressionRegistry.entries.getValue(name)
+            assertEquals(spec.jsonObject.getValue("module").jsonPrimitive.content, entry.module)
+            assertEquals(fields(spec.jsonObject.getValue("arg_types").jsonObject), entry.factory().argTypes.entries.map { it.key to it.value })
+            check(name !in classes)
+        }
         assertEquals(
             NATIVE_EXPRESSION_CLASSES,
             native.keys,
@@ -94,10 +107,10 @@ class ArgTypesManifestTest {
             if (!entry.module.startsWith("brikk.")) {
                 fail("$name: native class must use a brikk module, got ${entry.module}")
             }
-            if (name in classes.keys) fail("$name: native class collides with a Python manifest class")
+            if (name in classes.keys && name != "AggregateKeyProperty") fail("$name: native class collides with a Python manifest class")
         }
         assertEquals(
-            classes.size + native.size + bounded.size,
+            classes.size + native.size + bounded.size - 1,
             ExpressionRegistry.entries.size,
             "registry size != manifest class count + native allowlist; strays: " +
                 (ExpressionRegistry.entries.keys - classes.keys - NATIVE_EXPRESSION_CLASSES - bounded),

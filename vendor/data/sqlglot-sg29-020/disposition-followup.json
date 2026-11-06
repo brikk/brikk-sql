@@ -1,0 +1,96 @@
+{
+  "scope": "Final disposition of every SG29-019 group assigned to SG29-020; historical ledger remains unchanged",
+  "owner": "Jayson Minard",
+  "resolutions": [
+    {
+      "groups": ["shared-escaping", "nested-explode", "generated-case-sensitivity", "ref-type"],
+      "disposition": "bounded port/tested",
+      "reason": "Shared quoting, in-scope EXPLODE discovery, case-sensitive flags/raw-list serde and named REF parsing are implemented with hand-owned regressions. Unqualified REF execution refuses.",
+      "evidence": "brikk-sql/test/dev.brikk.house.sql/FrozenTargetIntegrationTest.kt"
+    },
+    {
+      "groups": ["copy-progress"],
+      "disposition": "bounded guard/tested, non-reproduction retained",
+      "reason": "COPY has a null/progress guard and finite malformed-input controls. The original Kotlin infinite-loop non-reproduction is not relabeled as a reproduced bug.",
+      "evidence": "brikk-sql/test/dev.brikk.house.sql/FrozenTargetIntegrationTest.kt"
+    },
+    {
+      "groups": ["review-d747f5b2", "review-ca870e84", "review-e3d0dfb2", "review-c068aefd"],
+      "disposition": "bounded port/tested",
+      "reason": "Quarter conversion is bounded and detached; unknown properties diagnose without emitting a null key; repeated ORDER aliases and synthesized lambda casts own separate child nodes. No arbitrary-precision simplifier is added.",
+      "evidence": "brikk-sql/test/dev.brikk.house.sql/FrozenTargetIntegrationTest.kt"
+    },
+    {
+      "groups": ["review-33c72094", "review-9943dc46"],
+      "disposition": "bounded strict-policy port/tested",
+      "reason": "Strict unknown-source alias/correlation ownership does not invent bindings. Explicit legacy true/null inference, physical-table whole-row spelling and projection aliases retain their existing contracts. All 37 correctly dialect-tagged invalid cases pass without lowering the 90% gate.",
+      "evidence": "brikk-sql/test@jvm/dev.brikk.house.sql/QualifyCorpusTest.kt"
+    },
+    {
+      "groups": ["review-91143554", "review-676ba365", "review-c0a94574"],
+      "disposition": "parser feature deferred, loaded-node name loss fixed",
+      "reason": "Named FK index fields render without being discarded; the new unnamed-constraint/named-index parser forms remain individually ledgered and do not claim native DDL execution.",
+      "next_work": "Separately bounded MySQL constraint/index parser and native DDL qualification",
+      "evidence": "vendor/data/sqlglot-sg29-020/ledger-decisions.json"
+    },
+    {
+      "groups": ["review-b50e43e4", "review-2444b6db"],
+      "disposition": "new join feature deferred, contextual identifier regression fixed",
+      "reason": "PASTE identifiers/functions remain usable and PASTE JOIN is not consumed as a table alias. New PASTE JOIN grammar, rows and scope behavior remain unqualified.",
+      "next_work": "Separately bounded ClickHouse PASTE JOIN qualification",
+      "evidence": "vendor/data/sqlglot-sg29-020/ledger-decisions.json"
+    },
+    {
+      "groups": ["review-7af2aa8d", "review-67961afb", "review-e6c7d527", "review-9fedfa5f", "review-3377b957"],
+      "disposition": "explicit correctness/representation deferrals",
+      "reason": "Pivoted-CTE alias source registration, unresolved JSON alias matching and INSERT alias/target-column ownership remain exact, owned corpus differences. They are not labeled semantic equivalence.",
+      "next_work": "Bounded shared scope/alias and INSERT ownership corrections, preserving old APIs",
+      "evidence": "vendor/data/sqlglot-sg29-020/ledger-decisions.json"
+    },
+    {
+      "groups": ["review-a357b7d9"],
+      "disposition": "native DDL qualification deferred",
+      "reason": "TABLESPACE/index-option/lifecycle syntax has target metadata but no newly qualified PostgreSQL DDL execution contract. Nonempty unimplemented options refuse rather than silently qualify a rewrite.",
+      "next_work": "Bounded PostgreSQL TABLESPACE/index/CREATE lifecycle parser and native qualification",
+      "evidence": "vendor/data/sqlglot-sg29-020/ledger-decisions.json"
+    },
+    {
+      "groups": ["review-d44db25a", "review-b0842a1e", "review-04f4a440"],
+      "disposition": "generic syntax feature deferred",
+      "reason": "PARTITION BY EXCLUDING, PER and contextual IN additions are inventoried with target metadata/local parser outcomes. No new grammar or executable engine contract is inferred from metadata generation.",
+      "next_work": "Separately bounded generic grammar work and affected native qualification",
+      "evidence": "vendor/data/sqlglot-sg29-020/native-coverage-review.json"
+    },
+    {
+      "groups": ["review-b1b244b1", "review-5d588c0f", "review-43fbff20", "review-7c4e124f", "review-76001235", "review-5f3b52da"],
+      "disposition": "existing bounded inference/typing policy retained",
+      "reason": "Keep disabled default unknown-TVF back-projection, conservative struct stars, ordered recursive output reconciliation and identity-cache/public uncache contracts. Remaining pivot-row gaps are explicit; no wholesale upstream cache/inference refactor is imported.",
+      "evidence": "vendor/data/sqlglot-sg29-017/README.md"
+    },
+    {
+      "groups": ["review-fdba492c", "review-a9f1309c"],
+      "disposition": "excluded query-plan transformation deferred",
+      "reason": "Merge-subquery alias collisions and UNION-BY-NAME internal plan renaming are not this parser/transpiler/analysis integration.",
+      "next_work": "Separately approved query-plan optimizer work",
+      "evidence": "dev-docs/TODO-sqlglot-30.29.md"
+    },
+    {
+      "groups": ["review-069a7517", "review-8c5600ad", "review-bffbfbe4"],
+      "disposition": "existing bounded native/grouping behavior retained",
+      "reason": "Existing ClickHouse NATURAL guards and generic unary grouping remain; the new supported target assertions do not introduce an additional ledger difference for unary Contains. No new backend execution is claimed.",
+      "evidence": "vendor/data/sqlglot-sg29-019/dispositions.json"
+    },
+    {
+      "groups": ["review-06aa274a", "review-90759771"],
+      "disposition": "coherent fixture warning inventory reviewed",
+      "reason": "Target warning expectations are regenerated and exact per-ID differences reviewed. No global command/property warning suppression is added.",
+      "evidence": "vendor/data/sqlglot-sg29-020/ledger-decisions.json"
+    },
+    {
+      "groups": ["review-7e4d995f"],
+      "disposition": "bounded renderer port/tested",
+      "reason": "Already parenthesized ClickHouse CTAS queries do not gain another wrapper when a COMMENT is placed. Target generator contracts run; no DDL is executed.",
+      "evidence": "brikk-sql/test@jvm/dev.brikk.house.sql/ClickhouseGeneratorCorpusTest.kt"
+    }
+  ]
+}

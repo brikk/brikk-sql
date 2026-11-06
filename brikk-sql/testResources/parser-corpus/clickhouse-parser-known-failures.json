@@ -1,4 +1,476 @@
 {
-    "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
-    "cases": []
+    "sqlglot_version": "v30.29.0",
+    "cases": [
+        {
+            "id": "assertion:v1:sha256:abe875c87d40ba62403afbe763b3f92a6b0dc2651e6014ea0e6935042e769ce0:1",
+            "sql": "SELECT * FROM foo PASTE JOIN bla",
+            "signature": "exception:v1:sha256:bd41c41707686c8cf19803f00d5d00e55a8bc9e6f61fa6ea981d87c88d51ab23",
+            "reason": "SG29-020: PASTE remains an ordinary identifier/function name, but new PASTE JOIN grammar is explicitly unimplemented, not mistaken for a table alias or silently erased. Deferred owner: Jayson Minard, separately bounded feature/qualification work; no equivalence claimed."
+        },
+        {
+            "id": "assertion:v1:sha256:0f1272767a2ccc4d5e6cf689256cbb64b127022a2b540f8066bc2f04c11adeab:1",
+            "sql": "SELECT * FROM foo AS a PASTE JOIN bla AS b PASTE JOIN baz AS c",
+            "signature": "exception:v1:sha256:642be28caa186aadf6659ad4a969746667533389106a811c388f41b0df2f6b5c",
+            "reason": "SG29-020: PASTE remains an ordinary identifier/function name, but new PASTE JOIN grammar is explicitly unimplemented, not mistaken for a table alias or silently erased. Deferred owner: Jayson Minard, separately bounded feature/qualification work; no equivalence claimed."
+        },
+        {
+            "id": "assertion:v1:sha256:518dbb66cd71ea9e6db379fdc5a80f6737fc968ef2cb072cb53242315fa33086:1",
+            "sql": "SELECT JSONExtractString('{\"x\": {\"y\": 1}}', 'x', 'y')",
+            "signature": "ast-mismatch:v1:sha256:68b89fea9bc22c5fc4fd27caf5368e9699ea0a5ba78dc0b3006f45d2170e20f6",
+            "reason": "SG29-020: Retain the independently native-tested raw/String extraction model and only_json_types/source markers. Cross-engine JSON String/missing/null equivalence remains refused.",
+            "expected": [
+                {
+                    "c": "sqlglot.expressions.query.Select"
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.json.JSONExtractScalar",
+                    "m": {
+                        "clickhouse_name": "JSONExtractString",
+                        "line": 1,
+                        "col": 24,
+                        "start": 7,
+                        "end": 23
+                    }
+                },
+                {
+                    "i": 1,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "m": {
+                        "line": 1,
+                        "col": 42,
+                        "start": 25,
+                        "end": 41
+                    }
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "v": "{\"x\": {\"y\": 1}}"
+                },
+                {
+                    "i": 2,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 1,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.query.JSONPath"
+                },
+                {
+                    "i": 5,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.query.JSONPathRoot"
+                },
+                {
+                    "i": 5,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.query.JSONPathKey"
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "v": "x"
+                },
+                {
+                    "i": 5,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.query.JSONPathKey"
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "v": "y"
+                },
+                {
+                    "i": 1,
+                    "k": "only_json_types",
+                    "v": true
+                }
+            ],
+            "actual": [
+                {
+                    "c": "sqlglot.expressions.query.Select"
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.json.JSONExtractScalar",
+                    "m": {
+                        "clickhouse_name": "JSONExtractString",
+                        "line": 1,
+                        "col": 24,
+                        "start": 7,
+                        "end": 23
+                    }
+                },
+                {
+                    "i": 1,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "m": {
+                        "line": 1,
+                        "col": 42,
+                        "start": 25,
+                        "end": 41
+                    }
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "v": "{\"x\": {\"y\": 1}}"
+                },
+                {
+                    "i": 2,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 1,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.query.JSONPath"
+                },
+                {
+                    "i": 5,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.query.JSONPathRoot"
+                },
+                {
+                    "i": 5,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.query.JSONPathKey"
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "v": "x"
+                },
+                {
+                    "i": 5,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.query.JSONPathKey"
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "v": "y"
+                },
+                {
+                    "i": 1,
+                    "k": "only_json_types",
+                    "v": false
+                }
+            ]
+        },
+        {
+            "id": "assertion:v1:sha256:89bc6c823f7c1762093e15f4bfb35749d4f4e7c316e4220cd8befe000880b14d:1",
+            "sql": "SELECT JSONExtractRaw('{\"x\": {\"y\": 1}}', 'x', 'y')",
+            "signature": "ast-mismatch:v1:sha256:b7e65fba6d23b17f678a385ae98b3d798e33ace372d698a1f2ae31d60e6a17f0",
+            "reason": "SG29-020: Retain the independently native-tested raw/String extraction model and only_json_types/source markers. Cross-engine JSON String/missing/null equivalence remains refused.",
+            "expected": [
+                {
+                    "c": "sqlglot.expressions.query.Select"
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.json.JSONExtract",
+                    "m": {
+                        "clickhouse_name": "JSONExtractRaw",
+                        "line": 1,
+                        "col": 21,
+                        "start": 7,
+                        "end": 20
+                    }
+                },
+                {
+                    "i": 1,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "m": {
+                        "line": 1,
+                        "col": 39,
+                        "start": 22,
+                        "end": 38
+                    }
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "v": "{\"x\": {\"y\": 1}}"
+                },
+                {
+                    "i": 2,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 1,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.query.JSONPath"
+                },
+                {
+                    "i": 5,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.query.JSONPathRoot"
+                },
+                {
+                    "i": 5,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.query.JSONPathKey"
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "v": "x"
+                },
+                {
+                    "i": 5,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.query.JSONPathKey"
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "v": "y"
+                },
+                {
+                    "i": 1,
+                    "k": "only_json_types",
+                    "v": true
+                }
+            ],
+            "actual": [
+                {
+                    "c": "sqlglot.expressions.query.Select"
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.json.JSONExtract",
+                    "m": {
+                        "clickhouse_json_extract_raw": true,
+                        "clickhouse_name": "JSONExtractRaw",
+                        "line": 1,
+                        "col": 21,
+                        "start": 7,
+                        "end": 20
+                    }
+                },
+                {
+                    "i": 1,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "m": {
+                        "line": 1,
+                        "col": 39,
+                        "start": 22,
+                        "end": 38
+                    }
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "v": "{\"x\": {\"y\": 1}}"
+                },
+                {
+                    "i": 2,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 1,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.query.JSONPath"
+                },
+                {
+                    "i": 5,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.query.JSONPathRoot"
+                },
+                {
+                    "i": 5,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.query.JSONPathKey"
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "v": "x"
+                },
+                {
+                    "i": 5,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.query.JSONPathKey"
+                },
+                {
+                    "i": 9,
+                    "k": "this",
+                    "v": "y"
+                },
+                {
+                    "i": 1,
+                    "k": "only_json_types",
+                    "v": false
+                }
+            ]
+        },
+        {
+            "id": "assertion:v1:sha256:0283c4cf2f62ab0f7ca784e66002f5db68c4ce05c0bd2ff26e58f0319d0f0015:1",
+            "sql": "SELECT JSONExtractString('{\"a\": \"hello\", \"b\": [-100, 200.0, 300]}', 'a')",
+            "signature": "ast-mismatch:v1:sha256:ab015d9e33a3bae1f0e18c79cb7edd067ba59da00dea59d4adde3f1d2dc71f10",
+            "reason": "SG29-020: Retain the independently native-tested raw/String extraction model and only_json_types/source markers. Cross-engine JSON String/missing/null equivalence remains refused.",
+            "expected": [
+                {
+                    "c": "sqlglot.expressions.query.Select"
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.json.JSONExtractScalar",
+                    "m": {
+                        "clickhouse_name": "JSONExtractString",
+                        "line": 1,
+                        "col": 24,
+                        "start": 7,
+                        "end": 23
+                    }
+                },
+                {
+                    "i": 1,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "m": {
+                        "line": 1,
+                        "col": 66,
+                        "start": 25,
+                        "end": 65
+                    }
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "v": "{\"a\": \"hello\", \"b\": [-100, 200.0, 300]}"
+                },
+                {
+                    "i": 2,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 1,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.query.JSONPath"
+                },
+                {
+                    "i": 5,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.query.JSONPathRoot"
+                },
+                {
+                    "i": 5,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.query.JSONPathKey"
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "v": "a"
+                },
+                {
+                    "i": 1,
+                    "k": "only_json_types",
+                    "v": true
+                }
+            ],
+            "actual": [
+                {
+                    "c": "sqlglot.expressions.query.Select"
+                },
+                {
+                    "i": 0,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.json.JSONExtractScalar",
+                    "m": {
+                        "clickhouse_name": "JSONExtractString",
+                        "line": 1,
+                        "col": 24,
+                        "start": 7,
+                        "end": 23
+                    }
+                },
+                {
+                    "i": 1,
+                    "k": "this",
+                    "c": "sqlglot.expressions.core.Literal",
+                    "m": {
+                        "line": 1,
+                        "col": 66,
+                        "start": 25,
+                        "end": 65
+                    }
+                },
+                {
+                    "i": 2,
+                    "k": "this",
+                    "v": "{\"a\": \"hello\", \"b\": [-100, 200.0, 300]}"
+                },
+                {
+                    "i": 2,
+                    "k": "is_string",
+                    "v": true
+                },
+                {
+                    "i": 1,
+                    "k": "expression",
+                    "c": "sqlglot.expressions.query.JSONPath"
+                },
+                {
+                    "i": 5,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.query.JSONPathRoot"
+                },
+                {
+                    "i": 5,
+                    "k": "expressions",
+                    "a": true,
+                    "c": "sqlglot.expressions.query.JSONPathKey"
+                },
+                {
+                    "i": 7,
+                    "k": "this",
+                    "v": "a"
+                },
+                {
+                    "i": 1,
+                    "k": "only_json_types",
+                    "v": false
+                }
+            ]
+        }
+    ]
 }

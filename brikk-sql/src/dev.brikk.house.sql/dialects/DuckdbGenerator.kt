@@ -94,6 +94,16 @@ open class DuckdbGenerator(
 
     override val parameterToken: String get() = "$"
     override val namedPlaceholderToken: String get() = "$"
+
+    override fun placeholderSql(expression: Placeholder): String =
+        if (expression.thisArg is Identifier) "$${sql(expression, "this")}" else super.placeholderSql(expression)
+
+    override fun sliceSql(expression: Slice): String {
+        val step = expression.args["step"]
+        // DuckDB requires the '-' end placeholder when an explicit step has no end.
+        if (step != null && expression.expressionArg == null) return "${sql(expression.thisArg)}:-:${sql(step)}"
+        return super.sliceSql(expression)
+    }
     override val joinHints: Boolean get() = false
     override val tableHints: Boolean get() = false
     override val queryHints: Boolean get() = false

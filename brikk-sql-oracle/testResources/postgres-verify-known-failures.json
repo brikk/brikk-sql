@@ -24,7 +24,7 @@
         {
             "sql": "SELECT js, js IS JSON ARRAY WITH UNIQUE KEYS AS \"array w. UK?\", js IS JSON ARRAY WITHOUT UNIQUE KEYS AS \"array w/o UK?\", js IS JSON ARRAY UNIQUE KEYS AS \"array w UK 2?\" FROM t",
             "generated": "SELECT js, js IS JSON ARRAY WITH UNIQUE KEYS AS \"array w. UK?\", js IS JSON ARRAY WITHOUT UNIQUE KEYS AS \"array w/o UK?\", js IS JSON ARRAY UNIQUE KEYS AS \"array w UK 2?\" FROM t",
-            "error": "statement: 42601: syntax error at or near \"JSON\" (line 1, col 18) | expression: 42601: syntax error at or near \"SELECT\" (line 1, col 1)"
+            "error": "statement: 42601: syntax error at or near \"KEYS\" (line 1, col 146) | expression: 42601: syntax error at or near \"SELECT\" (line 1, col 1)"
         },
         {
             "sql": "SELECT * FROM foo WHERE id = %s",
@@ -49,7 +49,7 @@
         {
             "sql": "ALTER TABLE tested_table ADD CONSTRAINT unique_example UNIQUE (column_name) NOT VALID",
             "generated": "ALTER TABLE tested_table ADD CONSTRAINT unique_example UNIQUE (column_name) NOT VALID",
-            "error": "statement: 0A000: UNIQUE constraints cannot be marked NOT VALID | expression: 42601: syntax error at or near \"tested_table\" (line 1, col 13)"
+            "error": "statement: 0A000: UNIQUE constraints cannot be marked NOT VALID (line 1, col 77) | expression: 42601: syntax error at or near \"tested_table\" (line 1, col 13)"
         },
         {
             "sql": "CREATE TABLE A (LIKE B INCLUDING CONSTRAINT INCLUDING COMPRESSION EXCLUDING COMMENTS)",
@@ -68,13 +68,13 @@
         },
         {
             "sql": "SELECT * FROM ROWS FROM (FUNC1(col1) AS alias1(\"col1\" TEXT), FUNC2(col2) AS alias2(\"col2\" INT)) WITH ORDINALITY",
-            "generated": "",
-            "error": "brikk parse/generate failed: ParseError: ROWS FROM is not supported yet. Line 1, Col: 18.\n  SELECT * FROM \u001b[4mROWS\u001b[0m FROM (FUNC1(col1) AS alias1(\"col1\" TEXT), FUNC2(col2) AS alias"
+            "generated": "SELECT * FROM ROWS FROM (FUNC1(col1) AS alias1(\"col1\" TEXT), FUNC2(col2) AS alias2(\"col2\" INT)) WITH ORDINALITY",
+            "error": "statement: 42601: syntax error at or near \"alias1\" (line 1, col 41) | expression: 42601: syntax error at or near \"SELECT\" (line 1, col 1)"
         },
         {
             "sql": "SELECT * FROM table1, ROWS FROM (FUNC1(col1) AS alias1(\"col1\" TEXT)) WITH ORDINALITY AS alias3(\"col3\" INT, \"col4\" TEXT)",
-            "generated": "",
-            "error": "brikk parse/generate failed: ParseError: Invalid expression / Unexpected token. Line 1, Col: 26.\n  SELECT * FROM table1, \u001b[4mROWS\u001b[0m FROM (FUNC1(col1) AS alias1(\"col1\" TEXT)) WITH "
+            "generated": "SELECT * FROM table1, ROWS FROM (FUNC1(col1) AS alias1(\"col1\" TEXT)) WITH ORDINALITY AS alias3(\"col3\" INT, \"col4\" TEXT)",
+            "error": "statement: 42601: syntax error at or near \"alias1\" (line 1, col 49) | expression: 42601: syntax error at or near \"SELECT\" (line 1, col 1)"
         },
         {
             "sql": "ANALYZE VERBOSE SKIP_LOCKED TBL(col1, col2)",
@@ -85,6 +85,51 @@
             "sql": "ANALYZE BUFFER_USAGE_LIMIT 1337 TBL",
             "generated": "ANALYZE BUFFER_USAGE_LIMIT 1337 TBL",
             "error": "statement: 42601: syntax error at or near \"1337\" (line 1, col 28) | expression: 42601: syntax error at or near \"ANALYZE\" (line 1, col 1)"
+        },
+        {
+            "sql": "CREATE TABLE t (a INT, CONSTRAINT pk PRIMARY KEY (a) USING INDEX TABLESPACE pg_default)",
+            "generated": "",
+            "error": "brikk parse/generate failed: ParseError: Expecting ). Line 1, Col: 75.\n  CREATE TABLE t (a INT, CONSTRAINT pk PRIMARY KEY (a) USING INDEX \u001b[4mTABLESPACE\u001b[0m pg_default)"
+        },
+        {
+            "sql": "CREATE TABLE t (a INT, UNIQUE (a) USING INDEX TABLESPACE pg_default)",
+            "generated": "",
+            "error": "brikk parse/generate failed: ParseError: Expecting ). Line 1, Col: 56.\n  CREATE TABLE t (a INT, UNIQUE (a) USING INDEX \u001b[4mTABLESPACE\u001b[0m pg_default)"
+        },
+        {
+            "sql": "CREATE TABLE t (a INT PRIMARY KEY USING INDEX TABLESPACE pg_default)",
+            "generated": "",
+            "error": "brikk parse/generate failed: ParseError: Expecting ). Line 1, Col: 39.\n  CREATE TABLE t (a INT PRIMARY KEY \u001b[4mUSING\u001b[0m INDEX TABLESPACE pg_default)"
+        },
+        {
+            "sql": "CREATE TABLE t (a INT PRIMARY KEY USING INDEX TABLESPACE \"pg_default\" DEFERRABLE INITIALLY DEFERRED)",
+            "generated": "",
+            "error": "brikk parse/generate failed: ParseError: Expecting ). Line 1, Col: 39.\n  CREATE TABLE t (a INT PRIMARY KEY \u001b[4mUSING\u001b[0m INDEX TABLESPACE \"pg_default\" DEFERRABLE INITIALLY DEFERRED)"
+        },
+        {
+            "sql": "CREATE TABLE t (a INT PRIMARY KEY WITH (fillfactor=70) USING INDEX TABLESPACE pg_default)",
+            "generated": "",
+            "error": "brikk parse/generate failed: ParseError: Expecting ). Line 1, Col: 60.\n  CREATE TABLE t (a INT PRIMARY KEY WITH (fillfactor=70) \u001b[4mUSING\u001b[0m INDEX TABLESPACE pg_default)"
+        },
+        {
+            "sql": "CREATE TABLE t (a INT UNIQUE USING INDEX TABLESPACE \"pg_default\" DEFERRABLE)",
+            "generated": "",
+            "error": "brikk parse/generate failed: ParseError: Expecting ). Line 1, Col: 51.\n  CREATE TABLE t (a INT UNIQUE USING INDEX \u001b[4mTABLESPACE\u001b[0m \"pg_default\" DEFERRABLE)"
+        },
+        {
+            "sql": "CREATE TABLE t (a INT UNIQUE NULLS NOT DISTINCT WITH (fillfactor=70) USING INDEX TABLESPACE pg_default)",
+            "generated": "",
+            "error": "brikk parse/generate failed: ParseError: Expecting ). Line 1, Col: 74.\n  CREATE TABLE t (a INT UNIQUE NULLS NOT DISTINCT WITH (fillfactor=70) \u001b[4mUSING\u001b[0m INDEX TABLESPACE pg_defau"
+        },
+        {
+            "sql": "CREATE TABLE t (a INT, b INT, CONSTRAINT uq UNIQUE (a) INCLUDE (b) WITH (fillfactor=70) USING INDEX TABLESPACE pg_default DEFERRABLE)",
+            "generated": "",
+            "error": "brikk parse/generate failed: ParseError: Expecting ). Line 1, Col: 93.\n  CREATE TABLE t (a INT, b INT, CONSTRAINT uq UNIQUE (a) INCLUDE (b) WITH (fillfactor=70) \u001b[4mUSING\u001b[0m INDEX "
+        },
+        {
+            "sql": "CREATE TEMPORARY TABLE t ON COMMIT DELETE ROWS AS SELECT 1 AS a",
+            "generated": "CREATE TEMPORARY TABLE t AS SELECT 1 AS a ON COMMIT DELETE ROWS",
+            "error": "statement: 42601: syntax error at or near \"ON\" (line 1, col 43) | expression: 42601: syntax error at or near \"CREATE\" (line 1, col 1)"
         }
     ]
 }

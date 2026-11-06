@@ -86,6 +86,8 @@ def classify(src: str) -> str:
         return "AnnotatorRef.AtTimeZoneDuckdb"
     if "def _annotate_date_trunc(" in src:
         return "AnnotatorRef.DateTruncDuckdb"
+    if "def _annotate_add_sub(" in src:
+        return "AnnotatorRef.AddSubDuckdb"
     # presto Rand: conditional by_args/DOUBLE
     if "_annotate_by_args(e, \"this\") if e.this else self._set_type(e, exp.DType.DOUBLE)" in src:
         return "AnnotatorRef.RandThisOrDouble"
@@ -263,6 +265,8 @@ def build_entries(metadata) -> dict[str, str]:
         if name in entries:
             raise SystemExit(f"duplicate class name in metadata: {name}")
         entries[name] = classify_spec(cls, spec)
+    # Both published sort nodes retain their old array-element type behavior.
+    entries["SortArray"] = 'TypingSpec.Annotate(AnnotatorRef.ByArgs(listOf("this")))'
     return entries
 
 

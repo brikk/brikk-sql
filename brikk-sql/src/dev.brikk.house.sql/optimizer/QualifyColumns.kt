@@ -116,6 +116,9 @@ fun <E : Expression> qualifyColumns(
     val legacyAliasOrder = inferSchema != false
     val resolvedDialect = resolvedSchema.dialect ?: Dialects.BASE
     val pseudocolumns = resolvedDialect.pseudocolumns
+    // An unqualified name in an unknown child source must not acquire an outer
+    // owner merely because the outer source has a same-named field.
+    val unknownCorrelations = mutableSetOf<Long>()
     preserveComprehensionIdentifierCase(expression, resolvedDialect)
 
     for (scope in traverseScope(expression)) {
@@ -151,6 +154,8 @@ fun <E : Expression> qualifyColumns(
             scope,
             resolver,
             allowPartialQualification = allowPartialQualification,
+            unknownCorrelations = unknownCorrelations,
+            strictUnknownOwnership = !legacyAliasOrder,
         )
 
         // Refresh classification caches: a column just qualified in place may have been
@@ -186,6 +191,9 @@ fun <E : Expression> qualifyColumns(
 
         if (resolvedDialect.annotateAllScopes) {
             annotator.annotateScope(scope)
+        }
+        if (!legacyAliasOrder && resolver.hasUnknownSources) {
+            unknownCorrelations.addAll(scope.externalColumns.filter { it.table.isEmpty() }.map { it.objectId })
         }
     }
 
@@ -522,6 +530,7 @@ private fun expandAliasRefsInScope(
         node: Expression?,
         resolveTable: Boolean = false,
         literalIndex: Boolean = false,
+        inProjection: Boolean = false,
     ) {
         val isGroupBy = node is Group
         val isHaving = node is dev.brikk.house.sql.ast.Having
@@ -591,6 +600,9 @@ private fun expandAliasRefsInScope(
             if (table != null && (aliasExpr == null || skipReplace)) {
                 column.set("table", table)
             } else if (column.table.isEmpty() && aliasExpr != null && !skipReplace) {
+                if (!legacyAliasOrder && !inProjection && resolver.hasUnknownSources) {
+                    throw OptimizeError("Cannot resolve '${column.name}' due to missing source schemas")
+                }
                 if ((aliasExpr is Literal || aliasExpr.isNumber) &&
                     (literalIndex || resolveTable)
                 ) {
@@ -625,7 +637,7 @@ private fun expandAliasRefsInScope(
 
     for ((i, projection) in expression.selects.withIndex()) {
         if (projection !is Expression) continue
-        replaceColumns(projection)
+        replaceColumns(projection, inProjection = true)
         if (projection is Alias) {
             aliasToExpression[projection.alias] = (projection.thisArg as Expression) to (i + 1)
         }
@@ -750,7 +762,7 @@ private fun expandOrderByAndDistinctOn(scope: Scope, resolver: Resolver) {
             }
 
             for (node in modifierExpressions) {
-                if (!node.isInt) node.replace(selectsMap[node] ?: node)
+                if (!node.isInt) node.replace((selectsMap[node] ?: node).copy())
             }
         }
     }
@@ -998,9 +1010,12 @@ private fun qualifyColumnsInScope(
     scope: Scope,
     resolver: Resolver,
     allowPartialQualification: Boolean,
+    unknownCorrelations: Set<Long>,
+    strictUnknownOwnership: Boolean,
 ) {
     for (column in scope.columns) {
         if (column.isStarRenameSource()) continue
+        if (column.table.isEmpty() && column.objectId in unknownCorrelations) continue
         val columnTable = column.table
         val columnName = column.name
 
@@ -1055,7 +1070,9 @@ private fun qualifyColumnsInScope(
                 column.set("table", table)
             } else if (resolver.dialect.tablesReferenceableAsColumns &&
                 column.parts.size == 1 &&
-                columnName in scope.selectedSources
+                columnName in scope.selectedSources &&
+                (!strictUnknownOwnership || !resolver.hasUnknownSources ||
+                    (scope.sources[columnName] as? Table)?.thisArg is Identifier)
             ) {
                 // BigQuery and Postgres allow tables to be referenced as columns,
                 // treating them as structs/records
