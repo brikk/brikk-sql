@@ -43,7 +43,7 @@ fun <E : Expression> normalizeIdentifiers(
 
             if (node is Identifier) {
                 val dot = node.parent as? Dot
-                if (resolved.name == "duckdb" && dot?.expressionArg === node &&
+                if (resolved.variantAccessYieldsVariant && dot?.expressionArg === node &&
                     (dot.thisArg as? Expression)?.hasExplicitDuckdbVariantRoot() == true) continue
                 resolved.normalizeIdentifier(node)
             }
