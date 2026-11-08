@@ -188,4 +188,18 @@ class DatafusionAnalysisTest {
         val nested = "SELECT r.id FROM rrf(vector_search(docs, 'q'), text_search(docs, 'q')) r"
         assertEquals(setOf("docs"), SqlFragment(nested, "spice").columnDependencies("id", catalog)["id"])
     }
+
+    @Test
+    fun valuesColumnsArePositionalAndTypedPerColumn() {
+        fun columns(sql: String, dialect: String) = scope(sql, dialect, RelationFacts()).output!!.columns
+            .map { Triple(it.name, it.sqlType, it.nullability) }
+        val unnamed = "SELECT * FROM (VALUES (1, 'a'), (2, NULL)) AS v"
+        val named = "SELECT * FROM (VALUES (1, 'a'), (2, NULL)) AS v(p, q)"
+        for (dialect in listOf("datafusion", "spice")) {
+            assertEquals(listOf(Triple("column1", "BIGINT", Nullability.NON_NULL), Triple("column2", null, Nullability.NULLABLE)), columns(unnamed, dialect))
+            assertEquals(listOf(Triple("p", "BIGINT", Nullability.NON_NULL), Triple("q", null, Nullability.NULLABLE)), columns(named, dialect))
+        }
+        assertEquals(emptyList(), columns(unnamed, "duckdb"))
+        assertEquals(listOf(Triple("p", null, Nullability.UNKNOWN), Triple("q", null, Nullability.UNKNOWN)), columns(named, "duckdb"))
+    }
 }

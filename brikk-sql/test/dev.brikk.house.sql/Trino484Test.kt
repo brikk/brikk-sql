@@ -74,6 +74,17 @@ class Trino484Test {
     }
 
     @Test
+    fun jsonPathCallsAndArraysTypeFromReturning() {
+        val sql = "SELECT JSON_EXISTS(j, 'lax $.x' PASSING 1 AS n), JSON_QUERY(j, 'lax $.x' RETURNING VARBINARY), " +
+            "JSON_QUERY(j, 'lax $.x' PASSING 1 AS n), JSON_ARRAY(1, 2 RETURNING VARBINARY), JSON_ARRAY(j FORMAT JSON)"
+        val typed = annotateTypes(parseOne(sql, "trino"), dialect = "trino")
+        assertEquals(listOf(DType.BOOLEAN, DType.VARBINARY, DType.VARCHAR), typed.findAll(TrinoJsonPathCall::class).map { it.type!!.thisArg }.toList())
+        assertEquals(listOf(DType.VARBINARY, DType.VARCHAR), typed.findAll(JSONArray::class).map { it.type!!.thisArg }.toList())
+        val presto = annotateTypes(parseOne(sql, "trino"), dialect = "presto")
+        assertTrue((presto.findAll(TrinoJsonPathCall::class) + presto.findAll(JSONArray::class)).all { it.type!!.thisArg == DType.UNKNOWN })
+    }
+
+    @Test
     fun intervalQualifiersAndDatetimeSubtraction() {
         for (source in listOf(
             "SELECT INTERVAL '340' DAY(3)",

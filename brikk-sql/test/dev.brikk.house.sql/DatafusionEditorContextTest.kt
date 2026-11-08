@@ -60,6 +60,16 @@ class DatafusionEditorContextTest {
     }
 
     @Test
+    fun cteCompletionKeepsNamesThatDifferOnlyByQuotedCase() {
+        val sql = "WITH \"A\" AS (SELECT 1 AS x), a AS (SELECT 2 AS y) SELECT * FROM "
+        fun ctes(dialect: String) = RelationScope.complete(sql, dialect, RelationFacts(), sql.length).items
+            .filter { it.kind == CompletionKind.RELATION }.map { it.name }
+        assertEquals(listOf("a", "A"), ctes("datafusion"))
+        assertEquals(listOf("a", "A"), ctes("spice"))
+        assertEquals(listOf("a"), ctes("postgres"))
+    }
+
+    @Test
     fun onlyAuthoritativeSignaturesAndStubContextProduceDiagnostics() {
         fun df(sql: String) = datafusionFunctionDiagnostics(sql, "datafusion", DATAFUSION_METADATA.default)
         assertTrue(df("SELECT sqrt(1,2)").single().message.contains("expects 1"))
