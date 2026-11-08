@@ -90,13 +90,13 @@ fun <E : Expression> qualify(
 ): E {
     val resolvedDialect = dialect ?: Dialects.BASE
     if(expression.hasDuckdbRegexSelector())throw OptimizeError("Runtime regex column-selector qualification is not modeled")
-    if(resolvedDialect.name=="duckdb" && expression.hasDuckdbSnapshot())throw OptimizeError("Snapshot qualification is not modeled")
-    if(resolvedDialect.name=="duckdb" && expression.hasDuckdbGeoJsonContract())throw OptimizeError("GeoJSON file/Feature rewriting is not modeled")
-    if(resolvedDialect.name=="duckdb" && expression.hasDuckdbParquetContract())throw OptimizeError("Parquet schema/virtual-column rewriting is not modeled; preserve the native scan")
-    if (resolvedDialect.name == "duckdb" && expression.walk().any { it.isDuckdbSetval() })
+    if(resolvedDialect.nativeStorageContracts && expression.hasDuckdbSnapshot())throw OptimizeError("Snapshot qualification is not modeled")
+    if(resolvedDialect.nativeFunctionContracts && expression.hasDuckdbGeoJsonContract())throw OptimizeError("GeoJSON file/Feature rewriting is not modeled")
+    if(resolvedDialect.nativeFunctionContracts && expression.hasDuckdbParquetContract())throw OptimizeError("Parquet schema/virtual-column rewriting is not modeled; preserve the native scan")
+    if (resolvedDialect.nativeFunctionContracts && expression.walk().any { it.isDuckdbSetval() })
         throw OptimizeError("Automatic rewriting across SETVAL sequence mutation is not modeled")
     if (expression.isDuckdbNameShow()) throw OptimizeError("SHOW resolution requires runtime catalog/show_behavior, not SELECT qualification")
-    if (resolvedDialect.name == "duckdb" && expression.hasDuckdbCopyLayout())
+    if (resolvedDialect.copyLayoutOptions && expression.hasDuckdbCopyLayout())
         throw OptimizeError("COPY layout options bind against output columns; automatic qualification is not modeled")
     if (expression is dev.brikk.house.sql.ast.DuckdbExplain) throw OptimizeError("Qualify an EXPLAIN child explicitly; automatic wrapper rewriting is not modeled")
     if (expression.isDuckdbExternalResourceStatement()) throw OptimizeError("External-resource options and handles are not SELECT qualification inputs")
@@ -106,10 +106,10 @@ fun <E : Expression> qualify(
     if (expression is dev.brikk.house.sql.ast.SessionConnect || expression is dev.brikk.house.sql.ast.SessionDisconnect) {
         throw OptimizeError("Session routing is not a query to qualify")
     }
-    if (resolvedDialect.name == "duckdb" && expression.hasKeyedCte()) {
+    if (resolvedDialect.statefulCtes && expression.hasKeyedCte()) {
         throw OptimizeError("Automatic qualification across recursive USING KEY state is not modeled")
     }
-    if (resolvedDialect.name == "duckdb" && expression.hasSideEffectingCte()) {
+    if (resolvedDialect.statefulCtes && expression.hasSideEffectingCte()) {
         throw OptimizeError("Automatic qualification across side-effecting CTEs is not modeled")
     }
     val resolvedSchema = ensureSchema(schema, dialect = dialect)
