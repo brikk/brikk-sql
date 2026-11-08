@@ -1,12 +1,18 @@
 package dev.brikk.house.sql.dialects
 
+import dev.brikk.house.sql.ast.DType
+import dev.brikk.house.sql.ast.DataType
+import dev.brikk.house.sql.ast.Expression
+import dev.brikk.house.sql.ast.args
 import dev.brikk.house.sql.generator.Generator
 import dev.brikk.house.sql.metadata.DUCKDB_FUNCTION_CATALOG
 import dev.brikk.house.sql.metadata.FunctionCatalog
+import dev.brikk.house.sql.optimizer.NullabilityRules
 import dev.brikk.house.sql.parser.ErrorLevel
 import dev.brikk.house.sql.parser.PIPE_STAGES_RUN_EVERYWHERE
 import dev.brikk.house.sql.parser.Parser
 import dev.brikk.house.sql.parser.TokenizerConfig
+import dev.brikk.house.sql.scope.Nullability
 
 /**
  * Port of sqlglot's DuckDB dialect umbrella (reference/sqlglot/sqlglot/dialects/duckdb.py
@@ -56,6 +62,47 @@ open class DuckdbDialect: Dialect() {
 
     // brikk-native: see Dialect.deduplicatesDerivedColumnNames.
     override val deduplicatesDerivedColumnNames: Boolean get() = true
+
+    // brikk-native: see the Dialect members of the same names.
+    override val variantAccessYieldsVariant: Boolean get() = true
+    override val triggerScopes: Boolean get() = true
+    override val statefulCtes: Boolean get() = true
+    override val nativeStorageContracts: Boolean get() = true
+    override val nativeFunctionContracts: Boolean get() = true
+    override val copyLayoutOptions: Boolean get() = true
+    override val dmlScopes: Boolean get() = true
+    override val statementResultRows: Boolean get() = true
+    override val parametersDefaultToSessionVariables: Boolean get() = true
+    override val parametersFromSourceTokens: Boolean get() = true
+    override val nestedCatalogPaths: Boolean get() = true
+    override val setOperationsIgnoreNullType: Boolean get() = true
+    override val usingColumnTakesJoinSide: Boolean get() = true
+    override val lambdaNamesKeepCase: Boolean get() = true
+    override val preservesWholeRowReferences: Boolean get() = true
+    override val integerDivisionByZeroYieldsNull: Boolean get() = true
+    override val unnestDepthOptions: Boolean get() = true
+    override val requiresConnectTarget: Boolean get() = true
+    override val executesSessionStatements: Boolean get() = true
+    override val supportsMergeInsertByName: Boolean get() = true
+    override val executesExtensionManagement: Boolean get() = true
+    override val executesExternalResources: Boolean get() = true
+    override val executesExplainOptions: Boolean get() = true
+    override val executesBinaryLiterals: Boolean get() = true
+    override val executesRegexOperators: Boolean get() = true
+    override val executesRecursiveViews: Boolean get() = true
+
+    // Native catalog spelling, not a user-defined type called NULL. Keep the parity
+    // parser/annotator unchanged when native NULL-type analysis was not requested.
+    override fun parseNativeType(dtype: String): DataType? =
+        if (supportsNullType && dtype.trim() == "\"NULL\"") DataType(args("this" to DType.NULL)) else null
+
+    override fun inferExpressionType(expression: Expression): Expression? = expression.duckdbExpressionType(supportsNullType)
+
+    override fun temporalCastType(expression: Expression): DataType? =
+        if (supportsNullType) expression.duckdbTemporalCastType() else null
+
+    override fun functionNullability(expression: Expression, rules: NullabilityRules): Nullability? =
+        expression.duckdbFunctionNullability(rules)
 
     // sqlglot: DuckDB.ASCII_ONLY_NORMALIZATION = True
     override val asciiOnlyNormalization: Boolean get() = true

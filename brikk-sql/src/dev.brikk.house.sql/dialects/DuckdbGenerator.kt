@@ -54,6 +54,39 @@ open class DuckdbGenerator(
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.DUCKDB
 
+    override fun triggerpropertiesSql(expression: TriggerProperties): String {
+        checkDuckdbTriggerMode(expression)
+        return super.triggerpropertiesSql(expression)
+    }
+
+    private fun checkDuckdbTriggerMode(properties: TriggerProperties) {
+        val timing = properties.text("timing").uppercase()
+        val row = properties.text("for_each").equals("ROW", ignoreCase = true)
+        val events = (properties.args["events"] as? List<*>).orEmpty().filterIsInstance<TriggerEvent>()
+        val event = events.singleOrNull()?.name
+        val referencing = properties.args["referencing"] as? TriggerReferencing
+        val body = properties.args["execute"]
+        val updateColumns = events.singleOrNull()?.args?.get("columns") as? List<*>
+        if (body !is Insert && body !is Update && body !is Delete && body !is Merge)
+            unexecutable("DuckDB triggers require one inline INSERT/UPDATE/DELETE/MERGE action")
+        if (event !in setOf("INSERT", "UPDATE", "DELETE") || timing == "INSTEAD OF")
+            unexecutable("DuckDB 2.0 does not support this trigger event/timing")
+        if (row && (timing != "AFTER" || event == "UPDATE" || body is Update || referencing != null))
+            unexecutable("DuckDB 2.0 does not support this FOR EACH ROW trigger form")
+        if (referencing != null && (timing != "AFTER" || event == "INSERT" && referencing.args["old"] != null ||
+                event == "DELETE" && referencing.args["new"] != null || !updateColumns.isNullOrEmpty()))
+            unexecutable("DuckDB 2.0 does not support these transition tables for this event")
+    }
+
+    override fun divSql(expression: Div): String {
+        // Executable preflight proved the incoming typed operands integral and the
+        // divisor nonzero/NULL. Bare integer atoms need this too: parity does not
+        // annotate their type slots, and falling through would emit fractional /.
+        if(forExecution && sourceDialect!=null && !sourceDialect.equals("duckdb",true) && expression.args["typed"]==true)
+            return sql(IntDiv(args("this" to expression.left.copy(),"expression" to expression.right.copy())))
+        return super.divSql(expression)
+    }
+
     override fun copyparameterSql(expression: CopyParameter): String {
         val value = expression.expressionArg
         if (expression.isDuckdbCopyLayout() && (expression.thisArg as? Expression)?.name.equals("ORDER_BY", true) && value is Tuple) {

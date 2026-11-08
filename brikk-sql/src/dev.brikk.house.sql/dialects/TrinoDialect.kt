@@ -57,6 +57,10 @@ class TrinoDialect : PrestoDialect() {
     }
     override val qualifiedStarUsing: QualifiedStarUsing get() = QualifiedStarUsing.OMIT
 
+    // brikk-native: see the Dialect members of the same names.
+    override val jsonValueDefaultsToText: Boolean get() = true
+    override val jsonReturningTypes: Boolean get() = true
+
     // Generated from Trino 484's SHOW FUNCTIONS registry. Presto's registry differs.
     override val functionCatalog: FunctionCatalog get() = TRINO_FUNCTION_CATALOG
 

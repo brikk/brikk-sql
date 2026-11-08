@@ -1,6 +1,7 @@
 package dev.brikk.house.sql.dialects
 
 import dev.brikk.house.sql.ast.DType
+import dev.brikk.house.sql.ast.DataType
 import dev.brikk.house.sql.ast.Expression
 import dev.brikk.house.sql.ast.GeneratedTypingMetadata
 import dev.brikk.house.sql.ast.Identifier
@@ -10,6 +11,7 @@ import dev.brikk.house.sql.ast.TypingSpec
 import dev.brikk.house.sql.ast.args
 import dev.brikk.house.sql.generator.Generator
 import dev.brikk.house.sql.metadata.FunctionCatalog
+import dev.brikk.house.sql.optimizer.NullabilityRules
 import dev.brikk.house.sql.parser.ErrorLevel
 import dev.brikk.house.sql.parser.ParseError
 import dev.brikk.house.sql.parser.Parser
@@ -19,6 +21,7 @@ import dev.brikk.house.sql.parser.Tokenizer
 import dev.brikk.house.sql.parser.TokenizerConfig
 import dev.brikk.house.sql.parser.formatTimeString
 import dev.brikk.house.sql.parser.withStrictTimeInverse
+import dev.brikk.house.sql.scope.Nullability
 
 /**
  * Port of sqlglot's Dialect (reference/sqlglot/sqlglot/dialects/dialect.py) — the
@@ -146,6 +149,142 @@ open class Dialect {
     // brikk-native: a table function's arguments may declare its columns, by a structure string or a
     // query (ClickHouse `file('x', 'CSV', 'a UInt32')`, `values('a UInt8', ...)`, `view(SELECT ...)`).
     internal open val tableFunctionArgumentsDeclareColumns: Boolean get() = false
+
+    // brikk-native: `v.a` and `v['a']` on a VARIANT value are VARIANT, and its field names keep their
+    // authored spelling through normalization and qualification (DuckDB).
+    internal open val variantAccessYieldsVariant: Boolean get() = false
+
+    // brikk-native: trigger DDL is analyzed as a scope: its inline action, NEW/OLD transition tables and
+    // the trigger's own name. Type annotation refuses it (DuckDB).
+    internal open val triggerScopes: Boolean get() = false
+
+    // brikk-native: WITH may hold recursive USING KEY state and data-modifying CTEs. Scope analysis and
+    // shapes model them; qualification and type annotation refuse to rewrite across them (DuckDB).
+    internal open val statefulCtes: Boolean get() = false
+
+    // brikk-native: storage layout/property DDL, snapshot reads and CHECKPOINT are native storage
+    // contracts that no pass rewrites (DuckDB).
+    internal open val nativeStorageContracts: Boolean get() = false
+
+    // brikk-native: GeoJSON, Parquet reader, regex, SETVAL, path, overlay, JSON and VARIANT functions follow
+    // reviewed native contracts that analysis models and rewrites refuse (DuckDB).
+    internal open val nativeFunctionContracts: Boolean get() = false
+
+    // brikk-native: COPY takes PARTITION_BY/ORDER_BY layout options that bind against its output (DuckDB).
+    internal open val copyLayoutOptions: Boolean get() = false
+
+    // brikk-native: INSERT, UPDATE, DELETE, MERGE and COPY are analyzed as scopes with result rows (DuckDB).
+    internal open val dmlScopes: Boolean get() = false
+
+    // brikk-native: extension, external-resource and EXPLAIN statements have modeled result rows (DuckDB).
+    internal open val statementResultRows: Boolean get() = false
+
+    // brikk-native: a `$name` parameter left unbound falls back to the session variable of that name (DuckDB).
+    internal open val parametersDefaultToSessionVariables: Boolean get() = false
+
+    // brikk-native: scalar parameters are found in the source tokens, not only the parsed tree (DuckDB).
+    internal open val parametersFromSourceTokens: Boolean get() = false
+
+    // brikk-native: catalog paths may nest deeper than catalog.schema.table (DuckDB).
+    internal open val nestedCatalogPaths: Boolean get() = false
+
+    // brikk-native: a set operation column that is NULL-typed in some branches takes the others' type (DuckDB).
+    internal open val setOperationsIgnoreNullType: Boolean get() = false
+
+    // brikk-native: a USING column of a non-FULL join is the preserved side's column, not a COALESCE (DuckDB).
+    internal open val usingColumnTakesJoinSide: Boolean get() = false
+
+    // brikk-native: lambda parameter lookup tells spellings apart before case-insensitive column lookup (DuckDB).
+    internal open val lambdaNamesKeepCase: Boolean get() = false
+
+    // brikk-native: a column named like a selected source that has no such column is a whole-row reference (DuckDB).
+    internal open val preservesWholeRowReferences: Boolean get() = false
+
+    // brikk-native: integer division and modulo by zero yield NULL (DuckDB).
+    internal open val integerDivisionByZeroYieldsNull: Boolean get() = false
+
+    // brikk-native: UNNEST's recursive/max_depth options can remove several list levels (DuckDB).
+    internal open val unnestDepthOptions: Boolean get() = false
+
+    // brikk-native: the target runs as written, as verified against the engine: CONNECT needs a target
+    // (bare CONNECT and CONNECT LOCAL are not implemented), PREPARE/EXECUTE/DEALLOCATE/RESET VARIABLE,
+    // MERGE ... INSERT BY NAME, extension and repository management, external resources, EXPLAIN options,
+    // BLOB/BIT literals, the session-dependent regex operators and recursive views (DuckDB).
+    internal open val requiresConnectTarget: Boolean get() = false
+    internal open val executesSessionStatements: Boolean get() = false
+    internal open val supportsMergeInsertByName: Boolean get() = false
+    internal open val executesExtensionManagement: Boolean get() = false
+    internal open val executesExternalResources: Boolean get() = false
+    internal open val executesExplainOptions: Boolean get() = false
+    internal open val executesBinaryLiterals: Boolean get() = false
+    internal open val executesRegexOperators: Boolean get() = false
+    internal open val executesRecursiveViews: Boolean get() = false
+
+    // brikk-native: -Tuple aggregate combinators (sumTuple, ...) (ClickHouse).
+    internal open val supportsTupleAggregateCombinators: Boolean get() = false
+
+    // brikk-native: a contextual pass proves expression types after the generic node rules leave
+    // settings-dependent division and builtin calls to it (ClickHouse).
+    internal open val contextualTypeInference: Boolean get() = false
+
+    // brikk-native: a field of a Nullable tuple is nullable (ClickHouse).
+    internal open val nullableTupleFields: Boolean get() = false
+
+    // brikk-native: JSON_VALUE without RETURNING is TEXT (PostgreSQL, Trino).
+    internal open val jsonValueDefaultsToText: Boolean get() = false
+
+    // brikk-native: JSON_SERIALIZE, JSON_EXISTS/JSON_QUERY and JSON_ARRAY take their type from RETURNING (Trino).
+    internal open val jsonReturningTypes: Boolean get() = false
+
+    // brikk-native: unqualified PARSE_TO_VARIANT and TRY_PARSE_TO_VARIANT return VARIANT (Doris).
+    internal open val parseToVariantFunctions: Boolean get() = false
+
+    // brikk-native: column slots match ignoring case even where the written names differ only by case,
+    // so star renames and schema columns must not collide that way (Doris Scope.findSlotIgnoreCase).
+    internal open val columnSlotsIgnoreCase: Boolean get() = false
+
+    // brikk-native: FULL JOIN USING star slots behave natively; keep the star as written (StarRocks).
+    internal open val preservesFullUsingStar: Boolean get() = false
+
+    // brikk-native: values carry Arrow types: inferred, rendered and shaped by DatafusionTypes, with
+    // Arrow function nullability (DataFusion, Spice).
+    internal open val arrowTypes: Boolean get() = false
+
+    // brikk-native: completion compares relation names under the dialect's identifier normalization
+    // rather than ignoring case (DataFusion, Spice).
+    internal open val relationNamesFollowNormalization: Boolean get() = false
+
+    // brikk-native: a column alias list over a relation of unknown width names only the listed columns,
+    // since an appended column has no proven ordinal (DataFusion, Spice).
+    internal open val aliasColumnsNeedKnownWidth: Boolean get() = false
+
+    // brikk-native: VALUES columns are column1, column2, ... typed from their rows (DataFusion, Spice).
+    internal open val typesValuesColumns: Boolean get() = false
+
+    // brikk-native: `a.b.c` may read nested struct fields of a column of a known relation (DataFusion, Spice).
+    internal open val nestedStructFields: Boolean get() = false
+
+    // brikk-native: length() of a LargeUtf8 value is BIGINT (DataFusion, not Spice).
+    internal open val largeUtf8LengthIsBigint: Boolean get() = false
+
+    // brikk-native: bundled function libraries (json_get*, AI functions) with modeled types and nullability (Spice).
+    internal open val bundledFunctionExtensions: Boolean get() = false
+
+    // brikk-native: built-in table functions (vector_search, text_search, flatten_json, ...) whose columns,
+    // types and lineage are modeled by SpiceCalls (Spice).
+    internal open val builtinTableFunctions: Boolean get() = false
+
+    /** brikk-native: the type of a catalog type string this dialect spells natively, or null for the parser. */
+    internal open fun parseNativeType(dtype: String): DataType? = null
+
+    /** brikk-native: the dialect's own type for [expression], ahead of the shared typing rules; null leaves it to them. */
+    internal open fun inferExpressionType(expression: Expression): Expression? = null
+
+    /** brikk-native: a temporal CAST type that replaces an earlier annotation (DuckDB native analysis). */
+    internal open fun temporalCastType(expression: Expression): DataType? = null
+
+    /** brikk-native: the dialect's own nullability for a function call, or null to apply the shared rules. */
+    internal open fun functionNullability(expression: Expression, rules: NullabilityRules): Nullability? = null
 
     // sqlglot: Dialect.SUPPORTS_STRUCT_STAR_EXPANSION (BigQuery, RisingWave)
     open val supportsStructStarExpansion: Boolean get() = false

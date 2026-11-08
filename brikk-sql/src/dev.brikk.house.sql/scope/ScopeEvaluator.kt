@@ -180,20 +180,20 @@ internal class ScopeEvaluator(
         if (node.isDuckdbExternalResourceStatement()) return true
         if (node.isDuckdbExtensionManagement()) return true
         if (node.isDuckdbRecursiveViewDefinition()) throw dev.brikk.house.sql.generator.UnsupportedError("Recursive view self-reference scope is not modeled")
-        if (dialect.name == "duckdb" && node.isTriggerDdl()) {
+        if (dialect.triggerScopes && node.isTriggerDdl()) {
             if (node is Create) trigger(node, env)
             return true
         }
         if (node is dev.brikk.house.sql.ast.SessionConnect || node is dev.brikk.house.sql.ast.SessionDisconnect) return true
-        if (node is Update && dialect.name == "duckdb") {
+        if (node is Update && dialect.dmlScopes) {
             update(node, withClause(node, env))
             return true
         }
-        if (node is Merge && dialect.name == "duckdb") {
+        if (node is Merge && dialect.dmlScopes) {
             merge(node, env)
             return true
         }
-        if (dialect.name == "duckdb" && (node is Insert || node is Delete || node is Copy)) {
+        if (dialect.dmlScopes && (node is Insert || node is Delete || node is Copy)) {
             query(node, env)
             return true
         }
@@ -438,10 +438,10 @@ internal class ScopeEvaluator(
                 row
             }
             is Values -> values(node, scoped)
-            is Update -> if (dialect.name == "duckdb") update(node, scoped) else Row(emptyList(), Knowledge.UNKNOWN)
-            is Insert -> if (dialect.name == "duckdb") insert(node, scoped) else Row(emptyList(), Knowledge.UNKNOWN)
-            is Delete -> if (dialect.name == "duckdb") delete(node, scoped) else Row(emptyList(), Knowledge.UNKNOWN)
-            is Copy -> if (dialect.name == "duckdb" && node.args["kind"] != true) copy(node, scoped) else Row(emptyList(), Knowledge.UNKNOWN)
+            is Update -> if (dialect.dmlScopes) update(node, scoped) else Row(emptyList(), Knowledge.UNKNOWN)
+            is Insert -> if (dialect.dmlScopes) insert(node, scoped) else Row(emptyList(), Knowledge.UNKNOWN)
+            is Delete -> if (dialect.dmlScopes) delete(node, scoped) else Row(emptyList(), Knowledge.UNKNOWN)
+            is Copy -> if (dialect.dmlScopes && node.args["kind"] != true) copy(node, scoped) else Row(emptyList(), Knowledge.UNKNOWN)
             else -> {
                 expression(node, env.outer, scoped)
                 Row(emptyList(), Knowledge.UNKNOWN)
@@ -458,7 +458,7 @@ internal class ScopeEvaluator(
             val body = cte.thisArg as? Expression ?: continue
             val synthetic = !names.positioned(name)
             val union = body.unnest() as? Union
-            if (dialect.name == "duckdb" && with.recursive && union != null && !(cte.args["key_expressions"] as? List<*>).isNullOrEmpty()) {
+            if (dialect.statefulCtes && with.recursive && union != null && !(cte.args["key_expressions"] as? List<*>).isNullOrEmpty()) {
                 val row = keyedCte(cte, alias, name, union, Env(ctes, env.outer, env.recurring, env.keyedAnchor), synthetic)
                 if (!synthetic) reference(ReferenceKind.TABLE, name, Resolution.RESOLVED, row.knowledge,
                     ScopeRelation(stored(name), RelationKind.CTE, row.knowledge, stored(name), declaration = declared(name)))
@@ -737,7 +737,7 @@ internal class ScopeEvaluator(
     /** A FROM item whose columns only its alias names: UNNEST, an unmodelled table expression. */
     private fun opaque(node: Expression, lateral: Frame, env: Env): Binding {
         expression(node, lateral, env)
-        if (dialect.name in setOf("datafusion", "spice") && node is Unnest) {
+        if (dialect.arrowTypes && node is Unnest) {
             val columns = node.expressionsArg.filterIsInstance<Expression>().map { value ->
                 val array = sqlTypeOf(value)?.let { runCatching { dataTypeFromStr(it, dialect) }.getOrNull() }
                 val element = if (array?.thisArg == DType.ARRAY) array.expressionsArg.firstOrNull() as? DataType else null
@@ -751,7 +751,7 @@ internal class ScopeEvaluator(
     }
 
     private fun table(node: Table, env: Env, lateral: Frame): Binding {
-        if (dialect.name == "duckdb" && node.hasDuckdbSnapshot()) throw dev.brikk.house.sql.generator.UnsupportedError("Snapshot table schemas are not current-table scope facts")
+        if (dialect.nativeStorageContracts && node.hasDuckdbSnapshot()) throw dev.brikk.house.sql.generator.UnsupportedError("Snapshot table schemas are not current-table scope facts")
         val function = node.thisArg as? Anonymous
         if (function != null) return tableFunction(node, function, function.name, function.expressionsArg.filterIsInstance<Expression>(), env, lateral)
         // A function core parses as its own node (ClickHouse's format(...)): its arguments in order.
@@ -762,7 +762,7 @@ internal class ScopeEvaluator(
         val parts = pathParts.filterIsInstance<Identifier>()
         val name = parts.lastOrNull() ?: return unknownRelation(node.name, RelationKind.OTHER)
         if (caretMarker != null && caretMarker in name.name && caretCtes == null) caretCtes = env.ctes.filterNot { it.synthetic }
-        if (dialect.name == "duckdb" && parts.size == 2 && same(parts[0], "recurring", columns = false)) {
+        if (dialect.statefulCtes && parts.size == 2 && same(parts[0], "recurring", columns = false)) {
             env.recurring.lastOrNull { same(name, stored(it.name), columns = false) }?.let { cte ->
                 val relation = bound(cte.row, name, cte.synthetic, RelationKind.CTE, cte.name.name, declared(cte.name))
                 if (!cte.synthetic) reference(ReferenceKind.TABLE, name, Resolution.RESOLVED, cte.row.knowledge, relation = relation.relation, start = parts.first())
@@ -803,7 +803,7 @@ internal class ScopeEvaluator(
     }
 
     private fun tableFunction(node: Table, function: Expression, name: String, arguments: List<Expression>, env: Env, lateral: Frame): Binding {
-        if (dialect.name == "spice" && node.db.isEmpty() && node.catalog.isEmpty() &&
+        if (dialect.builtinTableFunctions && node.db.isEmpty() && node.catalog.isEmpty() &&
             (function.thisArg !is Identifier || (function.thisArg as Identifier).name == name.lowercase())) {
             spiceFunction(function, name.lowercase(), arguments, env, lateral)?.let { return it }
         }
@@ -830,8 +830,8 @@ internal class ScopeEvaluator(
             !qualified && name in facts.calls -> Triple(RelationKind.CALL, name, facts.calls.getValue(name))
             else -> Triple(RelationKind.FUNCTION, null, null)
         }
-        val parquet = dialect.name == "duckdb" && !qualified && function.isDuckdbParquetCall()
-        val nativePairs = if (dialect.name == "duckdb" && !qualified && fact == null) {
+        val parquet = dialect.nativeFunctionContracts && !qualified && function.isDuckdbParquetCall()
+        val nativePairs = if (dialect.nativeFunctionContracts && !qualified && fact == null) {
             if (parquet) function.duckdbParquetDeclaredColumns() else function.duckdbGeoJsonDeclaredColumns()
         } else null
         val nativeDeclared = nativePairs?.map { (column, type) ->
@@ -983,7 +983,7 @@ internal class ScopeEvaluator(
         val label = alias.thisArg as? Identifier
         val name = label?.let(::stored) ?: binding.name
         val qualifiable = if (label != null) names.positioned(label) else binding.qualifiable
-        val named = if (dialect.name in setOf("datafusion", "spice") && binding.knowledge != Knowledge.FULL && alias.columns.isNotEmpty()) {
+        val named = if (dialect.aliasColumnsNeedKnownWidth && binding.knowledge != Knowledge.FULL && alias.columns.isNotEmpty()) {
             // Unknown input width means a known appended score has no proven alias ordinal.
             alias.columns.filterIsInstance<Identifier>().map { computed(stored(it), Nullability.UNKNOWN, "ALIAS").copy(declaration = declared(it)) }
         } else renamedColumns(binding.columns, alias)
@@ -1132,9 +1132,9 @@ internal class ScopeEvaluator(
     /** The type from the expression and its columns' exact SQL types, never from display types. */
     private fun sqlTypeOf(value: Expression): String? {
         val copy = value.copy()
-        if (dialect.name == "duckdb") for (node in copy.walk()) node.duckdbGeoJsonScalarType()?.let { node.typeSlot = it }
+        if (dialect.nativeFunctionContracts) for (node in copy.walk()) node.duckdbGeoJsonScalarType()?.let { node.typeSlot = it }
         // Native shape evidence stays outside the SQLGlot-faithful annotation corpus.
-        if (dialect.name == "duckdb") for (node in copy.walk()) if (node.duckdbRegexName() != null)
+        if (dialect.nativeFunctionContracts) for (node in copy.walk()) if (node.duckdbRegexName() != null)
             node.typeSlot = node.duckdbRegexReturnType() ?: DataType(args("this" to DType.UNKNOWN))
         for ((original, typed) in value.walk().zip(copy.walk())) {
             val sqlType = resolved[original]?.sqlType ?: continue
@@ -1203,7 +1203,7 @@ internal class ScopeEvaluator(
         }
         if (first.source != null && all.all { it.source == first.source }) return first.copy(nullability = nullability)
         val types = all.map { it.sqlType?.let(::canonical) }
-        val commonType = if (dialect.name == "duckdb" && types.none { it == null }) {
+        val commonType = if (dialect.setOperationsIgnoreNullType && types.none { it == null }) {
             val concrete = types.filterNot { it == "NULL" }.distinct()
             if (concrete.isEmpty()) "NULL" else concrete.singleOrNull()
         } else types.distinct().singleOrNull()
@@ -1280,7 +1280,7 @@ internal class ScopeEvaluator(
     }
 
     private fun values(node: Values, env: Env): Row {
-        if (dialect.name == "duckdb" && env.keyedAnchor) return keyedValues(node, env)
+        if (dialect.statefulCtes && env.keyedAnchor) return keyedValues(node, env)
         node.expressionsArg.filterIsInstance<Expression>().forEach { expression(it, env.outer, env) }
         // Unnamed VALUES columns get dialect-specific names (col0, _col0, column1): only an alias's names are known.
         val names = (node.args["alias"] as? TableAlias)?.columns.orEmpty().filterIsInstance<Identifier>()
@@ -1291,7 +1291,7 @@ internal class ScopeEvaluator(
                 return Row(columns.map { ScopeColumn(it.name, "", ColumnOrigin.DECLARED, Nullability.UNKNOWN, it.sqlType) }, Knowledge.FULL)
             }
         }
-        if (dialect.name in setOf("datafusion", "spice")) {
+        if (dialect.typesValuesColumns) {
             val rows = node.expressionsArg.filterIsInstance<Tuple>().map { it.expressionsArg.filterIsInstance<Expression>() }
             val width = rows.firstOrNull()?.size ?: return Row(emptyList(), Knowledge.UNKNOWN)
             if (rows.any { it.size != width }) return Row(emptyList(), Knowledge.UNKNOWN)
@@ -1346,7 +1346,7 @@ internal class ScopeEvaluator(
                 }
                 is Kwarg -> (current.expressionArg as? Expression)?.let { pending.addLast(it to hidden) }
                 is Anonymous -> {
-                    val native = if (dialect.name == "spice" && current.parent !is dev.brikk.house.sql.ast.Dot &&
+                    val native = if (dialect.builtinTableFunctions && current.parent !is dev.brikk.house.sql.ast.Dot &&
                         (current.thisArg !is Identifier || current.name == current.name.lowercase()))
                         spiceFunction(current, current.name.lowercase(), current.expressionsArg.filterIsInstance<Expression>(), env, frame ?: Frame(emptyList(), env.outer)) else null
                     if (native == null) current.iterExpressions(reverse = true).forEach { pending.addLast(it to hidden) }
@@ -1381,10 +1381,10 @@ internal class ScopeEvaluator(
             record(identifier, node, Lookup(candidates, bindings.fold(Knowledge.FULL) { knowledge, it -> worst(knowledge, it.knowledge) }))
             return
         }
-        if (dialect.name == "duckdb" && variantField(node, qualifier + identifier, frame)) return
+        if (dialect.variantAccessYieldsVariant && variantField(node, qualifier + identifier, frame)) return
         val first = qualifier.first()
         val last = qualifier.last()
-        if (dialect.name in setOf("datafusion", "spice") && frame != null && nestedField(node, identifier, qualifier, frame)) return
+        if (dialect.nestedStructFields && frame != null && nestedField(node, identifier, qualifier, frame)) return
         val field = frame?.let { unqualified(it, first) } ?: Lookup(emptyList(), Knowledge.UNKNOWN)
         if (field.candidates.isNotEmpty()) {
             // A struct field: the qualifier is a column, the field is beyond what facts describe.
@@ -1460,7 +1460,7 @@ internal class ScopeEvaluator(
     }
 
     internal fun nestedFields(frame: Frame, qualifier: List<Identifier>): Pair<List<ScopeColumn>, Knowledge>? {
-        if (dialect.name !in setOf("datafusion", "spice")) return null
+        if (!dialect.nestedStructFields) return null
         for (prefix in qualifier.size - 1 downTo 0) {
             val base = qualifier[prefix]
             val candidates = if (prefix == 0) unqualified(frame, base).candidates else findBindings(frame, qualifier.take(prefix))

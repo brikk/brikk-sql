@@ -1192,7 +1192,7 @@ private class ClickhouseCompositionValidator(
             (select.args["joins"] as? List<*>)?.filterIsInstance<Join>().orEmpty().mapNotNull { it.thisArg as? Expression }
         for (relation in relations) {
             if (relation is Table && relation.thisArg is Identifier && relation.name !in withNames) {
-                val nativeSchema = (schema as? MappingSchema)?.takeIf { it.dialect.name == "clickhouse" }
+                val nativeSchema = (schema as? MappingSchema)?.takeIf { it.dialect.name == Dialects.CLICKHOUSE.name }
                 val found = nativeSchema?.find(relation, raiseOnMissing = false) as? Map<*, *>
                 if (found == null) uncertain = true else {
                     columns.addAll(found.keys.map { it.toString() })
@@ -1247,7 +1247,7 @@ private class ClickhouseCompositionValidator(
                     source is Scope && source.expression is Select && source.outerColumns.isEmpty() &&
                         compatibleCteSettings(source.expression as Select, select) -> selectOutput(source.expression as Select)
                     relation is Table && relation.thisArg is Identifier && !hiddenCteReference(relation) -> {
-                        val nativeSchema = (schema as? MappingSchema)?.takeIf { it.dialect.name == "clickhouse" }
+                        val nativeSchema = (schema as? MappingSchema)?.takeIf { it.dialect.name == Dialects.CLICKHOUSE.name }
                         val found = nativeSchema?.find(relation, raiseOnMissing = false) as? Map<*, *>
                         found?.keys?.map { key -> key.toString() to nativeType(nativeSchema.getColumnType(relation, key.toString())) }
                     }

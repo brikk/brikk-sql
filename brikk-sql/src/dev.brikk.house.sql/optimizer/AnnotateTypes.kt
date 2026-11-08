@@ -53,27 +53,7 @@ import dev.brikk.house.sql.ast.unpivot
 import dev.brikk.house.sql.ast.intoExpr
 import dev.brikk.house.sql.dialects.Dialect
 import dev.brikk.house.sql.dialects.Dialects
-import dev.brikk.house.sql.dialects.duckdbJsonCall
-import dev.brikk.house.sql.dialects.duckdbOverlayArguments
-import dev.brikk.house.sql.dialects.duckdbPathFunctionName
-import dev.brikk.house.sql.dialects.duckdbPathArguments
-import dev.brikk.house.sql.dialects.isDuckdbSetval
 import dev.brikk.house.sql.dialects.hasDuckdbRegexSelector
-import dev.brikk.house.sql.dialects.duckdbDivisionResultType
-import dev.brikk.house.sql.dialects.duckdbNativeTimeZoneType
-import dev.brikk.house.sql.ast.Div
-import dev.brikk.house.sql.ast.IntDiv
-import dev.brikk.house.sql.ast.Mod
-import dev.brikk.house.sql.ast.Binary
-import dev.brikk.house.sql.dialects.duckdbSetvalArguments
-import dev.brikk.house.sql.dialects.isDuckdbOverlayCall
-import dev.brikk.house.sql.dialects.duckdbVariantReturnType
-import dev.brikk.house.sql.dialects.reviewedDuckdbFunctionName
-import dev.brikk.house.sql.dialects.reviewedDuckdbFunctionType
-import dev.brikk.house.sql.dialects.duckdbNativeSumType
-import dev.brikk.house.sql.dialects.duckdbTemporalCastType
-import dev.brikk.house.sql.ast.Sum
-import dev.brikk.house.sql.dialects.isDuckdbVariantFunction
 import dev.brikk.house.sql.parser.seqGet
 
 /**
@@ -401,8 +381,8 @@ class TypeAnnotator(
         if (expression.isDuckdbExtensionManagement() && expression !is dev.brikk.house.sql.ast.Install)
             throw OptimizeError("Extension/repository management requires its native result contract")
         if (expression.isDuckdbRecursiveViewDefinition()) throw OptimizeError("Recursive view self-reference typing is not modeled")
-        if (dialect.name == "duckdb" && expression.isTriggerDdl()) throw OptimizeError("Trigger definitions require image/transition scope contracts")
-        if (dialect.name == "duckdb" && expression.hasKeyedAggregatePayload()) {
+        if (dialect.triggerScopes && expression.isTriggerDdl()) throw OptimizeError("Trigger definitions require image/transition scope contracts")
+        if (dialect.statefulCtes && expression.hasKeyedAggregatePayload()) {
             throw OptimizeError("Recursive USING KEY aggregate types require the declarative CTE contract, not SELECT type annotation")
         }
         // This flag is used to avoid costly scope traversals when we only care about
@@ -575,7 +555,7 @@ class TypeAnnotator(
 
     // sqlglot: TypeAnnotator.annotate_scope
     fun annotateScope(scope: Scope) {
-        if (dialect.name == "duckdb" && (scope.expression.hasKeyedAggregatePayload() ||
+        if (dialect.statefulCtes && (scope.expression.hasKeyedAggregatePayload() ||
                 scope.expression.findAncestor<CTE>()?.hasKeyedAggregatePayload() == true)) {
             throw OptimizeError("Recursive USING KEY aggregate types require the declarative CTE contract")
         }
@@ -653,9 +633,8 @@ class TypeAnnotator(
     private fun annotateExpression(expression: Expression, scope: Scope?) {
         if (expression.objectId in visited ||
             (!overwriteTypes && expression.type != null && !expression.isType(DType.UNKNOWN) &&
-                !(expression.typeSlot == null && dialect.name == "duckdb" && dialect.supportsNullType &&
-                    expression.duckdbTemporalCastType() != null))) return
-        if (dialect.name == "clickhouse") {
+                !(expression.typeSlot == null && dialect.temporalCastType(expression) != null))) return
+        if (dialect.contextualTypeInference) {
             val ignoredIds = if (overwriteTypes) emptySet() else expression.walk().filter {
                 it.typeSlot != null && !it.isType(DType.UNKNOWN) && it.objectId !in clickhouseNativeTypes
             }.map { it.objectId }.toSet()
@@ -695,7 +674,7 @@ class TypeAnnotator(
             if (
                 expr.objectId in visited ||
                 (!overwriteTypes && expr.type != null && !expr.isType(DType.UNKNOWN) &&
-                    !(expr.typeSlot == null && dialect.name == "duckdb" && dialect.supportsNullType && expr.duckdbTemporalCastType()!=null))
+                    !(expr.typeSlot == null && dialect.temporalCastType(expr) != null))
             ) {
                 continue // We've already inferred the expression's type
             }
@@ -719,7 +698,7 @@ class TypeAnnotator(
             annotateColumn(expr, scope)
             return
         }
-        val nativeType = DatafusionTypes.infer(expr, dialect)
+        val nativeType = dialect.inferExpressionType(expr)
         if (nativeType != null) {
             setType(expr, nativeType)
             return
@@ -727,34 +706,32 @@ class TypeAnnotator(
 
         // brikk extension #49: PostgreSQL JSON_VALUE has explicit RETURNING
         // evidence, or its documented TEXT default (not a fabricated path type).
-        if (expr is JSONValue && dialect.name in setOf("postgres", "trino")) {
+        if (expr is JSONValue && dialect.jsonValueDefaultsToText) {
             setType(expr, expr.args["returning"] as? DataType ?: DType.TEXT)
             return
         }
-        if (expr is dev.brikk.house.sql.ast.TrinoJsonSerialize && dialect.name == "trino") {
+        if (expr is dev.brikk.house.sql.ast.TrinoJsonSerialize && dialect.jsonReturningTypes) {
             val returning = expr.args["returning"] as? Expression
             val type = if (returning is dev.brikk.house.sql.ast.TrinoJsonInput) returning.thisArg else returning
             setType(expr, type as? DataType ?: DType.VARCHAR)
             return
         }
-        if (expr is dev.brikk.house.sql.ast.TrinoJsonPathCall && dialect.name == "trino") {
+        if (expr is dev.brikk.house.sql.ast.TrinoJsonPathCall && dialect.jsonReturningTypes) {
             val returning = expr.args["returning"] as? Expression
             val type = if (returning is dev.brikk.house.sql.ast.TrinoJsonInput) returning.thisArg else returning
             setType(expr, type as? DataType ?: if (expr.text("kind") == "JSON_EXISTS") DType.BOOLEAN else DType.VARCHAR)
             return
         }
-        if (expr is dev.brikk.house.sql.ast.JSONArray && dialect.name == "trino") {
+        if (expr is dev.brikk.house.sql.ast.JSONArray && dialect.jsonReturningTypes) {
             val returning = expr.args["return_type"] as? Expression
             val type = if (returning is dev.brikk.house.sql.ast.TrinoJsonInput) returning.thisArg else returning
             setType(expr, type as? DataType ?: DType.VARCHAR)
             return
         }
 
-        val duckdbJson = if (dialect.name == "duckdb") expr.duckdbJsonCall() else null
-        val duckdbTemporalCast = if (dialect.name == "duckdb" && dialect.supportsNullType) expr.duckdbTemporalCastType() else null
         val spec = expressionMetadata[expr::class]
 
-        if (dialect.name == "clickhouse" && expr is dev.brikk.house.sql.ast.Div &&
+        if (dialect.contextualTypeInference && expr is dev.brikk.house.sql.ast.Div &&
             expr::class !in callerTypingClasses &&
             dev.brikk.house.sql.dialects.clickhouseBooleanSetting(expr, "sql_compatible_division_for_integers") == true) {
             // The contextual proof pass applies an exact result after this fallback.
@@ -762,7 +739,7 @@ class TypeAnnotator(
             return
         }
 
-        if (dialect.name == "clickhouse" && expr is dev.brikk.house.sql.ast.ClickhouseBuiltin) {
+        if (dialect.contextualTypeInference && expr is dev.brikk.house.sql.ast.ClickhouseBuiltin) {
             setType(expr, when (expr.name.uppercase()) {
                 "LOCALTIME" -> DType.TIME
                 "LOCALTIMESTAMP", "NOW", "CURRENT_TIMESTAMP" -> DType.DATETIME
@@ -776,29 +753,10 @@ class TypeAnnotator(
         // exact results backed by native proofs after these generic node rules.
 
         when {
-            duckdbTemporalCast != null -> setType(expr, duckdbTemporalCast)
-            dialect.name == "duckdb" && dialect.supportsNullType && expr is Sum ->
-                setType(expr, expr.duckdbNativeSumType())
-            dialect.name == "duckdb" && dialect.supportsNullType && expr.reviewedDuckdbFunctionName() != null ->
-                setType(expr, expr.reviewedDuckdbFunctionType() ?: DType.UNKNOWN)
-            dialect.name == "duckdb" && dialect.supportsNullType && expr is dev.brikk.house.sql.ast.AtTimeZone ->
-                setType(expr, expr.duckdbNativeTimeZoneType())
-            dialect.name == "duckdb" && dialect.supportsNullType && expr is dev.brikk.house.sql.ast.Try ->
-                setType(expr, (expr.thisArg as? Expression)?.type ?: DType.UNKNOWN)
-            dialect.name == "duckdb" && dialect.supportsNullType && (expr is Div || expr is IntDiv || expr is Mod) ->
-                setType(expr, (expr as Binary).duckdbDivisionResultType())
             expr is dev.brikk.house.sql.ast.DuckdbBinaryLiteral ->
                 setType(expr, if (expr.text("kind") == "X") DType.BINARY else DType.BIT)
             expr is dev.brikk.house.sql.ast.DuckdbRegexOperator ->
                 setType(expr, if (expr.hasDuckdbRegexSelector()) DType.UNKNOWN else DType.BOOLEAN)
-            dialect.name == "duckdb" && expr.isDuckdbSetval() ->
-                setType(expr, if (expr.duckdbSetvalArguments() != null) DType.BIGINT else DType.UNKNOWN)
-            dialect.name == "duckdb" && expr.duckdbPathFunctionName() != null ->
-                setType(expr, if (expr.duckdbPathArguments() != null) DType.VARCHAR else DType.UNKNOWN)
-            dialect.name == "duckdb" && (expr is dev.brikk.house.sql.ast.Overlay || expr.isDuckdbOverlayCall()) ->
-                setType(expr, if (expr.duckdbOverlayArguments() != null) DType.VARCHAR else DType.UNKNOWN)
-            duckdbJson != null -> setType(expr, duckdbJson.returnType ?: DType.UNKNOWN)
-            dialect.name == "duckdb" && expr.isDuckdbVariantFunction() -> setType(expr, expr.duckdbVariantReturnType() ?: DType.UNKNOWN)
             spec is TypingSpec.Annotate -> runAnnotator(spec.ref, expr)
             spec is TypingSpec.Returns -> setType(expr, spec.dtype)
             spec is TypingSpec.ReturnsDataType -> setType(expr, spec.dtype)
@@ -826,7 +784,7 @@ class TypeAnnotator(
 
         if (source is Table) {
             val function = source.thisArg as? Anonymous
-            if (dialect.name == "spice" && source.db.isEmpty() && source.catalog.isEmpty() && function != null && SpiceCalls.name(function) != null) {
+            if (dialect.builtinTableFunctions && source.db.isEmpty() && source.catalog.isEmpty() && function != null && SpiceCalls.name(function) != null) {
                 val type = SpiceCalls.type(function, expr.name) { input, name ->
                     val cte = if (input.db.isEmpty()) sourceScope?.cteSources?.get(input.name) as? Scope else null
                     if (cte != null) getScopeSourceSelects(sourceScope ?: scope, input.name)[name] as? DataType
@@ -950,7 +908,7 @@ class TypeAnnotator(
                 // brikk-native (docs/brikk-extensions.md #19): these Doris 4.1.4
                 // builtins use generic call nodes but have a fixed VARIANT return type.
                 // Qualified calls may be UDFs and must continue through the schema.
-                if (dialect.name == "doris" && e is Anonymous && e.parent !is dev.brikk.house.sql.ast.Dot &&
+                if (dialect.parseToVariantFunctions && e is Anonymous && e.parent !is dev.brikk.house.sql.ast.Dot &&
                     e.expressionsArg.size == 1 && e.name.uppercase() in setOf("PARSE_TO_VARIANT", "TRY_PARSE_TO_VARIANT")
                 ) {
                     setType(e, DType.VARIANT)
@@ -1664,7 +1622,7 @@ class TypeAnnotator(
 
         if (bracketArg is Slice) {
             setType(expression, exprThis.type)
-        } else if (dialect.name == "duckdb" && thisType?.isType(DType.VARIANT) == true) {
+        } else if (dialect.variantAccessYieldsVariant && thisType?.isType(DType.VARIANT) == true) {
             setType(expression, DType.VARIANT)
         } else if (thisType != null && thisType.isType(DType.ARRAY)) {
             setType(expression, seqGet(thisType.expressionsArg.filterIsInstance<Expression>(), 0))
@@ -1731,13 +1689,13 @@ class TypeAnnotator(
 
         val thisType = (expression.thisArg as Expression).type as? DataType
 
-        if (dialect.name == "duckdb" && thisType?.isType(DType.VARIANT) == true) {
+        if (dialect.variantAccessYieldsVariant && thisType?.isType(DType.VARIANT) == true) {
             setType(expression, DType.VARIANT)
         } else if (thisType != null && thisType.isType(DType.STRUCT)) {
             for (e in thisType.expressionsArg.filterIsInstance<Expression>()) {
                 if (e.name == (expression.expressionArg as Expression).name) {
                     val kind = e.args["kind"]
-                    if (dialect.name == "clickhouse" && thisType.args["nullable"] == true && kind is DataType) {
+                    if (dialect.nullableTupleFields && thisType.args["nullable"] == true && kind is DataType) {
                         setType(expression, kind.copy().also { it.set("nullable", true) })
                     } else setType(expression, kind)
                     break
@@ -1751,7 +1709,7 @@ class TypeAnnotator(
     // sqlglot: TypeAnnotator._annotate_explode
     private fun annotateExplode(expression: Expression): Expression {
         val thisType = ((expression.thisArg as Expression).type as DataType)
-        if (dialect.name == "duckdb" && expression.expressionsArg.isNotEmpty()) {
+        if (dialect.unnestDepthOptions && expression.expressionsArg.isNotEmpty()) {
             // Scalar DuckDB UNNEST can remove several list levels. This is list-only
             // typing, not a model of recursive struct expansion into multiple columns.
             val option = expression.expressionsArg.singleOrNull() as? Expression

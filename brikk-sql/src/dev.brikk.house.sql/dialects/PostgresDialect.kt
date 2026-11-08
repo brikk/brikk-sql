@@ -29,6 +29,9 @@ open class PostgresDialect : Dialect() {
     // sqlglot: Postgres.TABLES_REFERENCEABLE_AS_COLUMNS
     override val tablesReferenceableAsColumns: Boolean get() = true
 
+    // brikk-native: see Dialect.jsonValueDefaultsToText.
+    override val jsonValueDefaultsToText: Boolean get() = true
+
     // sqlglot: Postgres.DEFAULT_FUNCTIONS_COLUMN_NAMES
     override val defaultFunctionsColumnNames:
         Map<kotlin.reflect.KClass<out dev.brikk.house.sql.ast.Expression>, List<String>>

@@ -177,7 +177,7 @@ class SqlFragment(val sql: String, val dialect: String = "") {
         desugarPipes: Boolean,
         forExecution: Boolean,
     ): TranspileResult {
-        val storageIssue=if(dialectObj.name=="duckdb")duckdbStorageDdlIssue(sql)else null
+        val storageIssue=if(dialectObj.nativeStorageContracts)duckdbStorageDdlIssue(sql)else null
         if(storageIssue!=null) {
             if(forExecution)throw dev.brikk.house.sql.generator.UnsupportedError(storageIssue)
             return TranspileResult(sql.trim(),listOf(storageIssue),rootKind,isRawPassthroughStatement=true)
@@ -186,7 +186,7 @@ class SqlFragment(val sql: String, val dialect: String = "") {
             .generator(pretty = pretty, sourceDialect = dialect.ifBlank { null })
         generator.forExecution = forExecution
         generator.duckdbNativeSemantics = true
-        if (dialectObj.name == "duckdb") generator.duckdbSessionDefaults = duckdbSessionDefaultCandidates(sql).isNotEmpty()
+        if (dialectObj.parametersDefaultToSessionVariables) generator.duckdbSessionDefaults = duckdbSessionDefaultCandidates(sql).isNotEmpty()
         // brikk-native: emit-span tracking (generator/SourceMap.kt) — off by default
         generator.trackSpans = trackSourceMap
         // Qualified call: the boolean param shadows the imported desugarPipes function.
@@ -302,7 +302,7 @@ class SqlFragment(val sql: String, val dialect: String = "") {
      * (DFS preorder = textual order), so positional `?` binds line up with named ones.
      */
     val scalarParams: List<ScalarParam> by lazy {
-        if (dialectObj.name == "duckdb") {
+        if (dialectObj.parametersFromSourceTokens) {
             return@lazy parseParameterOccurrences(sql, dialect).withIndex().groupBy { it.value.style to it.value.name }
                 .map { (key, values) -> ScalarParam(key.second, key.first, values.size, values.map { it.index }) }
         }
@@ -389,7 +389,7 @@ class SqlFragment(val sql: String, val dialect: String = "") {
      * use dialect normalization, including its quoted-name rules, as lineage does.
      */
     val sourceTables: List<String> by lazy {
-        if(dialectObj.name=="duckdb" && (duckdbStorageDdlIssue(sql)!=null || ast.hasDuckdbSnapshot()))throw ShapeError("Storage DDL/snapshot dependencies are not modeled")
+        if(dialectObj.nativeStorageContracts && (duckdbStorageDdlIssue(sql)!=null || ast.hasDuckdbSnapshot()))throw ShapeError("Storage DDL/snapshot dependencies are not modeled")
         if (ast.isDuckdbNameShow()) throw ShapeError("SHOW target dependencies depend on runtime name resolution")
         var tree = normalizeIdentifiers(desugarPipes(ast, dialectObj, copy = true), dialect = dialectObj)
         if (tree is dev.brikk.house.sql.ast.DuckdbExplain) {
@@ -430,10 +430,10 @@ class SqlFragment(val sql: String, val dialect: String = "") {
             // inventory behavior. Functions and unresolved placeholders are not tables.
             val parts = table.parts
             if (parts.isEmpty() || parts.any { it !is Identifier }) continue
-            if (dialectObj.name == "duckdb" && table.isTriggerName()) continue
+            if (dialectObj.triggerScopes && table.isTriggerName()) continue
             val target = (sideEffects || tree.isTriggerDdl()) && isPhysicalWriteTarget(table)
-            if (dialectObj.name == "duckdb" && !target && table.isTriggerTransitionReference()) continue
-            if (dialectObj.name == "duckdb" && table.isRecurringCteReference()) continue
+            if (dialectObj.triggerScopes && !target && table.isTriggerTransitionReference()) continue
+            if (dialectObj.statefulCtes && table.isRecurringCteReference()) continue
             if (!target && (resolved[table] == false || sideEffects && visibleCteReference(table))) continue
             out.add(catalogPath(parts.map { it.name }))
         }
@@ -514,11 +514,11 @@ class SqlFragment(val sql: String, val dialect: String = "") {
 
     private fun outputShapeOf(tree: Expression, inputs: ShapeCatalog): Shape {
         if(tree.hasDuckdbRegexSelector())throw ShapeError("Runtime regex column-selector result facts are not modeled")
-        if(dialectObj.name=="duckdb" && (duckdbStorageDdlIssue(sql)!=null || tree.hasDuckdbSnapshot()))throw ShapeError("Storage DDL/snapshot result facts are not modeled")
-        if(dialectObj.name=="duckdb" && (tree.hasDuckdbGeoJsonContract() || tree.walk().any { it.duckdbGeoJsonScalarType()!=null }))return declarativeCteShape(tree,inputs)
-        if(dialectObj.name=="duckdb" && tree.hasDuckdbParquetCall())return declarativeCteShape(tree,inputs)
-        if (dialectObj.name == "duckdb" && tree.walk().any { it.duckdbRegexName() != null }) return declarativeCteShape(tree, inputs)
-        if (dialectObj.name == "duckdb" && tree.walk().any { it.isDuckdbSetval() }) return declarativeCteShape(tree, inputs)
+        if(dialectObj.nativeStorageContracts && (duckdbStorageDdlIssue(sql)!=null || tree.hasDuckdbSnapshot()))throw ShapeError("Storage DDL/snapshot result facts are not modeled")
+        if(dialectObj.nativeFunctionContracts && (tree.hasDuckdbGeoJsonContract() || tree.walk().any { it.duckdbGeoJsonScalarType()!=null }))return declarativeCteShape(tree,inputs)
+        if(dialectObj.nativeFunctionContracts && tree.hasDuckdbParquetCall())return declarativeCteShape(tree,inputs)
+        if (dialectObj.nativeFunctionContracts && tree.walk().any { it.duckdbRegexName() != null }) return declarativeCteShape(tree, inputs)
+        if (dialectObj.nativeFunctionContracts && tree.walk().any { it.isDuckdbSetval() }) return declarativeCteShape(tree, inputs)
         if (tree.isDuckdbNameShow()) throw ShapeError("SHOW output depends on runtime show_behavior/catalog; it is not the target query shape")
         if (tree is dev.brikk.house.sql.ast.DuckdbExplain) {
             val output = tree.duckdbExplainResult() ?: throw ShapeError("EXPLAIN options or child context are invalid/unmodeled")
@@ -537,9 +537,9 @@ class SqlFragment(val sql: String, val dialect: String = "") {
         if (tree is dev.brikk.house.sql.ast.SessionConnect || tree is dev.brikk.house.sql.ast.SessionDisconnect) {
             throw ShapeError("Session routing has no query output shape")
         }
-        if (dialectObj.name == "duckdb" && (tree.hasSideEffectingCte() || tree.hasKeyedCte())) return declarativeCteShape(tree, inputs)
+        if (dialectObj.statefulCtes && (tree.hasSideEffectingCte() || tree.hasKeyedCte())) return declarativeCteShape(tree, inputs)
         val prepared = prepareTree(tree, inputs)
-        if (dialectObj.name in setOf("datafusion", "spice")) {
+        if (dialectObj.arrowTypes) {
             return dev.brikk.house.sql.scope.datafusionShape(prepared, inputs, dialectObj)
         }
         val schema = buildSchema(inputs, rejectNormalizedDuplicates = prepared.hasStarRename())
@@ -633,7 +633,7 @@ class SqlFragment(val sql: String, val dialect: String = "") {
         inputs: ShapeCatalog? = null,
         expandStars: Boolean = false,
     ): String {
-        if (expandStars && inputs != null && dialectObj.name == "duckdb" && (ast.hasSideEffectingCte() || ast.hasKeyedCte())) {
+        if (expandStars && inputs != null && dialectObj.statefulCtes && (ast.hasSideEffectingCte() || ast.hasKeyedCte())) {
             throw UnsupportedError("Cannot expand stars or qualify across side-effecting or USING KEY CTEs")
         }
         var tree = desugarPipes(ast, dialectObj, copy = true)
@@ -643,7 +643,7 @@ class SqlFragment(val sql: String, val dialect: String = "") {
             tree = expandStarModifiers(tree, buildSchema(inputs, rejectNormalizedDuplicates = hasRename), dialectObj)
         }
         val targetDialect = Dialects.forName(target)
-        if (hasRename && targetDialect.name == "doris") {
+        if (hasRename && targetDialect.columnSlotsIgnoreCase) {
             // A case-sensitive source can distinguish slots that Doris cannot, even
             // if the final renamed outputs are unique. Check intermediate CTEs too.
             for (select in tree.findAll<Select>()) {
@@ -821,7 +821,7 @@ class SqlFragment(val sql: String, val dialect: String = "") {
                 val quoted = column.quoted || !simpleName.matches(column.name)
                 val identifier = Identifier(args("this" to column.name, "quoted" to quoted))
                 val normalized = dialectObj.normalizeIdentifier(identifier.copy()).name
-                val name = if (dialectObj.name == "doris") normalized.lowercase() else normalized
+                val name = if (dialectObj.columnSlotsIgnoreCase) normalized.lowercase() else normalized
                 if (!names.add(name) && rejectNormalizedDuplicates) {
                     throw ShapeError("Duplicate schema column name '${column.name}' under ${dialect.ifBlank { "base" }} identifier normalization")
                 }
@@ -832,7 +832,7 @@ class SqlFragment(val sql: String, val dialect: String = "") {
         var depth = 1
         for ((tableName, shape) in inputs.tables) {
             val parts = catalogTableParts(tableName).map { if (it.quoted) dialectObj.generate(it) else it.name }
-            if (parts.size > 3 && dialectObj.name != "duckdb") {
+            if (parts.size > 3 && !dialectObj.nestedCatalogPaths) {
                 throw ShapeError("Nested schema paths are supported only for DuckDB shape catalogs")
             }
             depth = maxOf(depth, parts.size)

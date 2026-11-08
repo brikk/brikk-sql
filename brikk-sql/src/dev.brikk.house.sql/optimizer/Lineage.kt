@@ -211,10 +211,10 @@ private fun prepareLineage(
     val resolvedDialect = dialect ?: Dialects.BASE
     var expression = maybeParseSql(sql, resolvedDialect, copy)
     if(expression.hasDuckdbRegexSelector())throw SqlglotError("Runtime regex column-selector lineage is not modeled")
-    if(resolvedDialect.name=="duckdb" && expression.hasDuckdbSnapshot())throw SqlglotError("Snapshot/state lineage is not modeled")
-    if(resolvedDialect.name=="duckdb" && expression.hasDuckdbGeoJsonContract())throw SqlglotError("GeoJSON Feature/geometry/file lineage is not modeled")
-    if(resolvedDialect.name=="duckdb" && expression.hasDuckdbParquetContract())throw SqlglotError("Parquet file/field-ID/default lineage is not modeled")
-    if (resolvedDialect.name == "duckdb" && expression.walk().any { it.isDuckdbSetval() })
+    if(resolvedDialect.nativeStorageContracts && expression.hasDuckdbSnapshot())throw SqlglotError("Snapshot/state lineage is not modeled")
+    if(resolvedDialect.nativeFunctionContracts && expression.hasDuckdbGeoJsonContract())throw SqlglotError("GeoJSON Feature/geometry/file lineage is not modeled")
+    if(resolvedDialect.nativeFunctionContracts && expression.hasDuckdbParquetContract())throw SqlglotError("Parquet file/field-ID/default lineage is not modeled")
+    if (resolvedDialect.nativeFunctionContracts && expression.walk().any { it.isDuckdbSetval() })
         throw SqlglotError("SETVAL sequence-state lineage is not modeled")
     if (expression.isDuckdbNameShow()) throw SqlglotError("SHOW metadata/setting output is not target query-result lineage")
     if (expression is dev.brikk.house.sql.ast.DuckdbExplain) throw SqlglotError("EXPLAIN plan text has computed provenance, not child-result lineage")
@@ -667,7 +667,7 @@ fun toNode(
             // used in a query is not passed into the `sources` map.
             val sourceTable = colSource as? Table
             val spiceCall = sourceTable?.thisArg as? dev.brikk.house.sql.ast.Anonymous
-            if (dialect.name == "spice" && spiceCall != null && sourceTable.db.isEmpty() && sourceTable.catalog.isEmpty()) {
+            if (dialect.builtinTableFunctions && spiceCall != null && sourceTable.db.isEmpty() && sourceTable.catalog.isEmpty()) {
                 val native = SpiceCalls.lineage(spiceCall, c.name, scope, schema, dialect)
                 if (native != null) {
                     node.downstream.add(native)

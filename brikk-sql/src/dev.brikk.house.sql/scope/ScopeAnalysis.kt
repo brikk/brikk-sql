@@ -170,7 +170,7 @@ internal class ScopeAnalysis(
                 if (parsed.statements.size == 1) output = row.toFact()
             } else {
                 evaluator.statement(lowered, root)
-                if (parsed.statements.size == 1 && dialect.name == "duckdb") output = lowered.duckdbExtensionResult() ?: lowered.duckdbExternalResourceResult() ?: lowered.duckdbExplainResult()
+                if (parsed.statements.size == 1 && dialect.statementResultRows) output = lowered.duckdbExtensionResult() ?: lowered.duckdbExternalResourceResult() ?: lowered.duckdbExplainResult()
             }
             references += evaluator.references
             diagnostics += evaluator.diagnostics
@@ -333,7 +333,7 @@ internal class CaretCompletion(
         val tables = facts.tables.entries.distinctBy { catalogPathParts(it.key) }.mapNotNull { (key, fact) ->
             val parts = catalogPathParts(key)
             if (parts.size <= qualifier.size || parts.take(qualifier.size).zip(qualifier).any { (stored, written) ->
-                if (dialect.name in setOf("datafusion", "spice")) stored != dialect.normalizeIdentifier(written.copy()).name else !stored.equals(written.name, ignoreCase = true)
+                if (dialect.relationNamesFollowNormalization) stored != dialect.normalizeIdentifier(written.copy()).name else !stored.equals(written.name, ignoreCase = true)
             }) return@mapNotNull null
             val name = parts.drop(qualifier.size).joinToString(".")
             CompletionItem(name, CompletionKind.RELATION, parts.drop(qualifier.size).joinToString(".") { insertText(it, quoted, columns = false) },
@@ -341,7 +341,7 @@ internal class CaretCompletion(
         }
         if (qualifier.isNotEmpty()) return tables
         val visible = ctes.asReversed().distinctBy {
-            if (dialect.name in setOf("datafusion", "spice")) dialect.normalizeIdentifier(it.name.copy()).name else it.name.name.lowercase()
+            if (dialect.relationNamesFollowNormalization) dialect.normalizeIdentifier(it.name.copy()).name else it.name.name.lowercase()
         }.map { cte ->
             CompletionItem(cte.name.name, CompletionKind.RELATION, insertText(cte.name.name, quoted, columns = false), start, end, "CTE", null,
                 relation = ScopeRelation(cte.name.name, RelationKind.CTE, cte.row.knowledge, cte.name.name))

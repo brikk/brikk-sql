@@ -139,7 +139,7 @@ internal fun DuckdbGenerator.checkDuckdbTargetBoundaries(expr: Expression) {
 
 /** DuckDB feature contracts that hold in neither translation direction: into DuckDB or out of it. */
 private fun Generator.checkDuckdbFeatureContracts(expr: Expression, facts: DuckdbGuardFacts) {
-    val toDuckdb = dialect.name.isDuckdb()
+    val toDuckdb = dialect.name.equals(Dialects.DUCKDB.name, ignoreCase = true)
     if (expr.hasDuckdbParquetContract())
         unexecutable("DuckDB Parquet schema/virtual columns have no verified cross-target translation")
     if (expr.hasDuckdbParquetWriteContract())

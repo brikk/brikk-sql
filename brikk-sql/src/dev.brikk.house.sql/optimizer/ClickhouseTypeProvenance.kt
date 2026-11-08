@@ -4,6 +4,7 @@ import dev.brikk.house.sql.ast.DataType
 import dev.brikk.house.sql.ast.DType
 import dev.brikk.house.sql.ast.Expression
 import dev.brikk.house.sql.diagnostics.clickhouseScriptSemanticStatements
+import dev.brikk.house.sql.dialects.Dialects
 import dev.brikk.house.sql.dialects.sql
 
 /** Evidence for a type slot, never a parser/acceptance/execution verdict. */
@@ -83,7 +84,7 @@ fun annotateClickhouseScriptSemanticTypesWithProvenance(
 
 private fun requireClickhouseProvenanceInputs(engineVersion: String, schema: Schema?) {
     require(engineVersion == "26.10.2.103") { "Native semantic typing requires the researched ClickHouse pin 26.10.2.103" }
-    require(schema == null || schema.dialect?.name == "clickhouse") { "Expected a ClickHouse schema" }
+    require(schema == null || schema.dialect?.name == Dialects.CLICKHOUSE.name) { "Expected a ClickHouse schema" }
 }
 
 private fun annotateClickhouseTypesAndProvenance(

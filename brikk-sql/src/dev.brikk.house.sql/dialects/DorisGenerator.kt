@@ -52,7 +52,7 @@ open class DorisGenerator(
     // parser, turning CAST(JSON_PARSE(text) AS STRING) into CAST(text AS STRING).
     // Doris needs its actual parser for numeric rendering and invalid/JSON-null input.
     override val parseJsonName: String?
-        get() = if (dialect.name == "doris") "JSON_PARSE" else super.parseJsonName
+        get() = if (dialect.name == Dialects.DORIS.name) "JSON_PARSE" else super.parseJsonName
 
     // brikk extension #55: the Doris 4.1.4 grammar rejects these lowered forms.
     override val executesPipeCall: Boolean get() = false

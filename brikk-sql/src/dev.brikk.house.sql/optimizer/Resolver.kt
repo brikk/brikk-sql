@@ -198,7 +198,7 @@ class Resolver(
             var columns: List<String>
             if (source is Table) {
                 val function = source.thisArg as? dev.brikk.house.sql.ast.Anonymous
-                val native = if (dialect.name == "spice" && source.db.isEmpty() && source.catalog.isEmpty() && function != null)
+                val native = if (dialect.builtinTableFunctions && source.db.isEmpty() && source.catalog.isEmpty() && function != null)
                     SpiceCalls.columns(function) { table ->
                         val cte = if (table.db.isEmpty()) scope.cteSources[table.name] as? Scope else null
                         cte?.expression?.namedSelects ?: schema.columnNames(table, onlyVisible)
@@ -523,7 +523,7 @@ class Resolver(
                 val projectionType = projection?.type as? DataType
                 if (projectionType != null && !projectionType.isType(DType.UNKNOWN)) {
                     result = projectionType
-                } else if (dialect.name == "duckdb" &&
+                } else if (dialect.variantAccessYieldsVariant &&
                     ((projection as? Alias)?.thisArg as? Expression ?: projection)?.hasExplicitDuckdbVariantRoot() == true) {
                     result = DataType.build(DType.VARIANT)
                 } else {

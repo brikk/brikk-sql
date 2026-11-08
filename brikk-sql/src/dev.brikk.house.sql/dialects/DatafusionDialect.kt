@@ -45,6 +45,20 @@ open class DatafusionDialect : Dialect() {
     override val qualifiedStarUsing get() = QualifiedStarUsing.RAW
     override val supportsNullType: Boolean get() = true
 
+    // brikk-native: see the Dialect members of the same names.
+    override val arrowTypes: Boolean get() = true
+    override val relationNamesFollowNormalization: Boolean get() = true
+    override val aliasColumnsNeedKnownWidth: Boolean get() = true
+    override val typesValuesColumns: Boolean get() = true
+    override val nestedStructFields: Boolean get() = true
+    override val largeUtf8LengthIsBigint: Boolean get() = true
+
+    override fun parseNativeType(dtype: String): dev.brikk.house.sql.ast.DataType? =
+        dev.brikk.house.sql.optimizer.DatafusionTypes.parse(dtype)
+
+    override fun inferExpressionType(expression: dev.brikk.house.sql.ast.Expression): dev.brikk.house.sql.ast.Expression? =
+        dev.brikk.house.sql.optimizer.DatafusionTypes.infer(expression, this)
+
     // brikk: DataFusion folds unquoted identifiers to lowercase (== BASE default).
     override val normalizationStrategy get() = NormalizationStrategy.LOWERCASE
 

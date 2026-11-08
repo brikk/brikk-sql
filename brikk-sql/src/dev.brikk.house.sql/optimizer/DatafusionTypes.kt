@@ -107,7 +107,7 @@ internal object DatafusionTypes {
 
     /** Null means use the shared rule; UNKNOWN means no supported proof, never a foreign-engine guess. */
     fun infer(e: Expression, dialect: Dialect): DataType? {
-        if (dialect.name !in setOf("datafusion", "spice")) return null
+        if (!dialect.arrowTypes) return null
         fun type(v: Any?) = (v as? Expression)?.type as? DataType
         if (e is Literal) return logical(if (e.isString) DType.VARCHAR else if (e.isInt) DType.BIGINT else DType.DOUBLE)
         if (e is Null) return logical(DType.NULL)
@@ -132,7 +132,7 @@ internal object DatafusionTypes {
         }
         if (e is Pow) return logical(DType.DOUBLE)
         if (e is Length) return when {
-            type(e.thisArg)?.metaOrNull?.get(NATIVE) == "LargeUtf8" -> if (dialect.name == "datafusion") logical(DType.BIGINT) else unknown()
+            type(e.thisArg)?.metaOrNull?.get(NATIVE) == "LargeUtf8" -> if (dialect.largeUtf8LengthIsBigint) logical(DType.BIGINT) else unknown()
             type(e.thisArg)?.thisArg in setOf(DType.VARCHAR, DType.TEXT) -> logical(DType.INT)
             else -> unknown()
         }
@@ -143,8 +143,8 @@ internal object DatafusionTypes {
         }
         if (e is Lower || e is Upper || e is Substring || e is Concat || e is ConcatWs) return logical(DType.VARCHAR)
         if (e is RegexpLike) return logical(DType.BOOLEAN)
-        if (dialect.name == "spice" && e is JSONExtractScalar) return logical(DType.VARCHAR)
-        if (dialect.name == "spice" && e is JSONExtract) return jsonUnion()
+        if (dialect.bundledFunctionExtensions && e is JSONExtractScalar) return logical(DType.VARCHAR)
+        if (dialect.bundledFunctionExtensions && e is JSONExtract) return jsonUnion()
         if (e !is Anonymous && e !is AnonymousAggFunc) {
             // Unverified shared function typing often encodes another engine's widening/coercion rules.
             return if (e is Func && e !is ArrayAgg && e.metaOrNull?.get("datafusion_native_call") == true) unknown() else null
@@ -178,7 +178,7 @@ internal object DatafusionTypes {
                 return DataType(args("this" to DType.MAP, "expressions" to listOf(keys.first()!!.copy(), vals.first()!!.copy()), "nested" to true))
             }
         }
-        if (dialect.name == "spice") when (e.name.lowercase()) {
+        if (dialect.bundledFunctionExtensions) when (e.name.lowercase()) {
             "json_get" -> return jsonUnion()
             "json_get_int" -> return logical(DType.BIGINT)
             "json_get_float", "ai_probability", "ai_score" -> return logical(DType.DOUBLE)

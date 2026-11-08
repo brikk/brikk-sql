@@ -33,20 +33,10 @@ import dev.brikk.house.sql.ast.aliasColumnNames
 import dev.brikk.house.sql.ast.selects
 import dev.brikk.house.sql.ast.sqlName
 import dev.brikk.house.sql.dialects.Dialect
-import dev.brikk.house.sql.dialects.isDuckdbOverlayCall
-import dev.brikk.house.sql.dialects.duckdbOverlayArguments
-import dev.brikk.house.sql.dialects.duckdbPathFunctionName
-import dev.brikk.house.sql.dialects.duckdbPathArguments
-import dev.brikk.house.sql.dialects.isDuckdbSetval
 import dev.brikk.house.sql.dialects.hasDuckdbRegexSelector
 import dev.brikk.house.sql.dialects.duckdbKnownNonZeroDivisor
-import dev.brikk.house.sql.dialects.duckdbSetvalArguments
-import dev.brikk.house.sql.dialects.duckdbRegexName
-import dev.brikk.house.sql.dialects.duckdbRegexArguments
-import dev.brikk.house.sql.dialects.duckdbRegexReturnType
-import dev.brikk.house.sql.dialects.duckdbGeoJsonScalarArguments
 import dev.brikk.house.sql.dialects.Dialects
-import dev.brikk.house.sql.dialects.duckdbJsonCall
+import dev.brikk.house.sql.scope.Nullability
 import dev.brikk.house.sql.shape.ShapeCatalog
 import dev.brikk.house.sql.shape.catalogTableParts
 import dev.brikk.house.sql.metadata.FunctionKind
@@ -121,6 +111,15 @@ fun annotateNullability(
     return NullabilityResult(pass.map, pass.scopeOutputs)
 }
 
+/** What a dialect's [Dialect.functionNullability] may ask of the pass. */
+internal interface NullabilityRules {
+    /** The verdict already reached for [expression]: true nullable, false not null, null unknown. */
+    fun verdict(expression: Expression?): Boolean?
+
+    /** Nullable if any argument is, not null if all are not, otherwise unknown. */
+    fun operatorRule(args: List<Expression>): Boolean?
+}
+
 /**
  * The nullability of a standalone [expression] under this pass's rules, with each column's
  * verdict from [column] (true nullable, false not null, null unknown) instead of a scope.
@@ -135,7 +134,7 @@ private class NullabilityAnnotator(
     private val inputs: ShapeCatalog,
     private val dialect: Dialect,
     private val column: ((Column) -> Boolean?)? = null,
-) {
+) : NullabilityRules {
     val map = java.util.IdentityHashMap<Expression, Boolean>()
 
     // Ordered output verdicts retain unknowns and duplicate aliases for positional set operations.
@@ -147,6 +146,7 @@ private class NullabilityAnnotator(
     private var currentScope: Scope? = null
 
     private fun get(e: Expression?): Boolean? = e?.let { map[it] }
+    override fun verdict(expression: Expression?): Boolean? = get(expression)
     private fun put(e: Expression, v: Boolean?) {
         if (v != null) map[e] = v
     }
@@ -204,7 +204,7 @@ private class NullabilityAnnotator(
     }
 
     fun visit(node: Expression) {
-        if (dialect.name in setOf("datafusion", "spice")) {
+        if (dialect.arrowTypes) {
             if (node is dev.brikk.house.sql.ast.JSONExtract || node is dev.brikk.house.sql.ast.JSONExtractScalar ||
                 node is dev.brikk.house.sql.ast.Array) {
                 put(node, true)
@@ -218,7 +218,7 @@ private class NullabilityAnnotator(
                     name == "arrow_cast" -> get(node.expressionsArg.firstOrNull() as? Expression)
                     name == "arrow_typeof" -> false
                     node is AggFunc -> true
-                    dialect.name == "spice" && (name.startsWith("json_get") || name in setOf("ai_if", "ai_probability", "ai_classify", "ai_score", "ai_decide")) -> true
+                    dialect.bundledFunctionExtensions && (name.startsWith("json_get") || name in setOf("ai_if", "ai_probability", "ai_classify", "ai_score", "ai_decide")) -> true
                     else -> null
                 }
                 put(node, verdict)
@@ -238,7 +238,7 @@ private class NullabilityAnnotator(
             is Exists -> false
 
             is Column -> if (column != null) column(node) else columnNullability(node)
-            is Dot, is Bracket -> if (dialect.name == "duckdb" && (node.thisArg as? Expression)?.isType(DType.VARIANT) == true) true else null
+            is Dot, is Bracket -> if (dialect.variantAccessYieldsVariant && (node.thisArg as? Expression)?.isType(DType.VARIANT) == true) true else null
 
             // TryCast must precede Cast (TryCast is a subclass of Cast).
             is TryCast -> true // TRY_CAST yields NULL on conversion failure.
@@ -264,7 +264,7 @@ private class NullabilityAnnotator(
             }
             is dev.brikk.house.sql.ast.IntDiv, is dev.brikk.house.sql.ast.Mod -> {
                 val strict = operatorRule(operands(node))
-                if(dialect.name != "duckdb" || strict == true || (node as Binary).right.duckdbKnownNonZeroDivisor()) strict else null
+                if(!dialect.integerDivisionByZeroYieldsNull || strict == true || (node as Binary).right.duckdbKnownNonZeroDivisor()) strict else null
             }
             is Binary -> operatorRule(operands(node))
             is Unary -> operatorRule(operands(node))
@@ -282,7 +282,7 @@ private class NullabilityAnnotator(
      * Null-propagating operator rule: any operand nullable -> nullable; all operands
      * not-null -> not-null; otherwise unknown.
      */
-    private fun operatorRule(args: List<Expression>): Boolean? {
+    override fun operatorRule(args: List<Expression>): Boolean? {
         if (args.isEmpty()) return null
         val verdicts = args.map { get(it) }
         return when {
@@ -448,42 +448,11 @@ private class NullabilityAnnotator(
      *      UNKNOWN / none / no catalog -> unknown.
      */
     private fun functionNullability(node: Func): Boolean? {
-        if(dialect.name=="duckdb" && node is dev.brikk.house.sql.ast.Try)return true
-        if(dialect.name=="duckdb" && node is dev.brikk.house.sql.ast.Factorial)return operatorRule(operands(node))
-        if(dialect.name=="duckdb") (node as Expression).duckdbGeoJsonScalarArguments()?.let { return operatorRule(it) }
-        if (dialect.name == "duckdb" && (node as Expression).duckdbRegexName() != null) {
-            if(node.duckdbRegexReturnType()==null)return null
-            val arguments=node.duckdbRegexArguments() ?: return null
-            // Scalar extraction's NULL group yields '', not SQL NULL. Options bind
-            // as non-null constants or error; they do not add nullable successful rows.
-            val count=if(node.duckdbRegexName()=="REGEXP_EXTRACT" || node.duckdbRegexName()=="REGEXP_EXTRACT_ALL" &&
-                arguments.getOrNull(2) is dev.brikk.house.sql.ast.Array)2 else 3
-            return operatorRule(arguments.take(count))
-        }
-        if (dialect.name == "duckdb" && (node as Expression).isDuckdbSetval()) {
-            val arguments = node.duckdbSetvalArguments() ?: return null
-            val verdicts = arguments.map { if (it is dev.brikk.house.sql.ast.Boolean) false else get(it) }
-            return when { verdicts.any { it == true } -> true; verdicts.all { it == false } -> false; else -> null }
-        }
-        if (dialect.name == "duckdb") {
-            val path = (node as Expression).duckdbPathFunctionName()
-            if (path != null) {
-                val arguments = node.duckdbPathArguments() ?: return null
-                return if (path == "HIVE_PARTITION_COMPONENT") false else operatorRule(arguments)
-            }
-        }
-        if (dialect.name == "duckdb" && ((node as Expression).isDuckdbOverlayCall() || node is dev.brikk.house.sql.ast.Overlay))
-            return (node as Expression).duckdbOverlayArguments()?.let(::operatorRule)
-        val json = if (dialect.name == "duckdb") (node as Expression).duckdbJsonCall() else null
-        if (json != null) {
-            val arguments = json.boundArguments ?: return null
-            return when (json.name) {
-                // Removing the root yields SQL NULL even for a non-null document/path.
-                "JSON_REMOVE" -> true
-                // Each patch replaces a SQL NULL intermediate; only the final patch's
-                // SQL nullability determines whether a successful merge has a document.
-                "JSON_DEEP_MERGE", "JSON_MERGE_PATCH_DIFF" -> get(arguments.last())
-                else -> operatorRule(arguments)
+        dialect.functionNullability(node as Expression, this)?.let {
+            return when (it) {
+                Nullability.NULLABLE -> true
+                Nullability.NON_NULL -> false
+                Nullability.UNKNOWN -> null
             }
         }
         // Generic builtin calls retain their SQL name in Anonymous.name; sqlName()

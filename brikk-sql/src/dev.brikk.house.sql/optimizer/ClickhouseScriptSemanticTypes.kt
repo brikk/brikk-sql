@@ -3,6 +3,7 @@ package dev.brikk.house.sql.optimizer
 import dev.brikk.house.sql.ast.Expression
 import dev.brikk.house.sql.diagnostics.ClickhouseSemanticDiagnostics
 import dev.brikk.house.sql.diagnostics.clickhouseScriptSemanticStatements
+import dev.brikk.house.sql.dialects.Dialects
 
 /**
  * One explicit-script unit. [expression] is a fresh owned AST, or null when framing/parsing
@@ -38,7 +39,7 @@ fun annotateClickhouseScriptSemanticTypes(
     checkCanceled: () -> Unit = {},
 ): List<ClickhouseScriptTypeAnnotation> {
     require(engineVersion == "26.10.2.103") { "Native semantic typing requires the researched ClickHouse pin 26.10.2.103" }
-    require(schema == null || schema.dialect?.name == "clickhouse") { "Expected a ClickHouse schema" }
+    require(schema == null || schema.dialect?.name == Dialects.CLICKHOUSE.name) { "Expected a ClickHouse schema" }
     checkCanceled()
     return clickhouseScriptSemanticStatements(script, engineVersion, schema, checkCanceled) { expression, settings, report ->
         val typed = expression?.let {

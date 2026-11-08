@@ -557,7 +557,7 @@ object GeneratorTables {
             DuckdbAttachExternalResource::class, DuckdbConnectExternalResource::class)) reg(node) { e -> duckdbExternalResourceSql(e) }
         reg(DuckdbExplain::class) { e -> duckdbExplainSql(e as DuckdbExplain) }
         reg(DuckdbBinaryLiteral::class) { e ->
-            if (dialect.name != "duckdb") unexecutable("DuckDB BLOB/BIT literals have no verified cross-target value/type translation")
+            if (!dialect.executesBinaryLiterals) unexecutable("DuckDB BLOB/BIT literals have no verified cross-target value/type translation")
             val kind = e.text("kind")
             val value = e.text("this")
             require(kind == "X" && value.length % 2 == 0 && value.all { it in "0123456789abcdefABCDEF" } ||
@@ -565,7 +565,7 @@ object GeneratorTables {
             "$kind'$value'"
         }
         reg(DuckdbRegexOperator::class) { e ->
-            if (dialect.name != "duckdb") unexecutable("Session-dependent DuckDB regex operators have no verified cross-target translation")
+            if (!dialect.executesRegexOperators) unexecutable("Session-dependent DuckDB regex operators have no verified cross-target translation")
             val op = (if (e.args["negate"] == true) "!~" else "~") + (if (e.args["insensitive"] == true) "*" else "")
             fun operand(key: String): String {
                 val node = e.args[key]
@@ -799,7 +799,7 @@ object GeneratorTables {
         reg(SampleProperty::class) { e -> "SAMPLE BY ${sql(e, "this")}" }
         reg(SecureProperty::class) { _ -> "SECURE" }
         reg(DuckdbRecursiveViewProperty::class) { _ ->
-            if (dialect.name != "duckdb") unexecutable("${dialect.name} has no verified DuckDB recursive view translation")
+            if (!dialect.executesRecursiveViews) unexecutable("${dialect.name} has no verified DuckDB recursive view translation")
             "RECURSIVE"
         }
         reg(SecurityIntegrationProperty::class) { _ -> "SECURITY" }

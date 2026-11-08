@@ -74,13 +74,13 @@ open class DatafusionGenerator(
     override val dialect: Dialect get() = Dialects.DATAFUSION
 
     private fun resetSql(reset: DatafusionReset): String {
-        if (dialect.name != "datafusion" || reset.expressionsArg.isEmpty() || reset.expressionsArg.any { it !is Identifier })
+        if (dialect.name != Dialects.DATAFUSION.name || reset.expressionsArg.isEmpty() || reset.expressionsArg.any { it !is Identifier })
             throw UnsupportedError("Expected a DataFusion RESET configuration name")
         return "RESET " + reset.expressionsArg.joinToString(".") { sql(it as Expression) }
     }
 
     private fun utilitySql(e: Expression): String {
-        if (dialect.name != "datafusion") throw UnsupportedError("DataFusion utility statements require the DataFusion dialect")
+        if (dialect.name != Dialects.DATAFUSION.name) throw UnsupportedError("DataFusion utility statements require the DataFusion dialect")
         return when (e) {
             is DatafusionPrepare -> {
                 if (e.args["typed"] == true && e.expressionsArg.isEmpty()) throw UnsupportedError("PREPARE requires at least one declared parameter type")
