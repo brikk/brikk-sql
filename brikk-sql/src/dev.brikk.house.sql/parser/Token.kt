@@ -1,5 +1,6 @@
 package dev.brikk.house.sql.parser
 
+import dev.brikk.house.sql.BrikkSqlError
 import dev.brikk.house.sql.ast.Expression
 
 /**
@@ -75,4 +76,4 @@ class Token(
 data class StringFormat(val end: String, val tokenType: TokenType)
 
 /** sqlglot: errors.TokenError */
-class TokenError(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
+class TokenError(message: String, cause: Throwable? = null) : BrikkSqlError(message, cause)

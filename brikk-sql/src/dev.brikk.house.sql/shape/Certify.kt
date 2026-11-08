@@ -1,5 +1,6 @@
 package dev.brikk.house.sql.shape
 
+import dev.brikk.house.sql.BrikkSqlError
 import dev.brikk.house.sql.ast.Add
 import dev.brikk.house.sql.ast.Anonymous
 import dev.brikk.house.sql.ast.AnonymousAggFunc
@@ -106,7 +107,7 @@ data class Finding(
 )
 
 /** Thrown by [TranspileReport.orThrow] when the report carries REFUSAL findings. */
-class TranspileCertificationError(message: String) : RuntimeException(message)
+class TranspileCertificationError(message: String) : BrikkSqlError(message)
 
 /**
  * The certified transpilation: the best-effort [result] plus every [Finding] derived

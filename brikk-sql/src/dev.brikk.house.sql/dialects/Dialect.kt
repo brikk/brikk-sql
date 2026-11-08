@@ -358,6 +358,7 @@ private val KEYWORD_PHRASE = Regex("[A-Za-z][A-Za-z0-9_]*( [A-Za-z][A-Za-z0-9_]*
  * names — including non-ported sqlglot dialects such as `snowflake` and typos such as
  * `postgress` — are always rejected, never silently parsed with the base dialect.
  * Subclasses IllegalArgumentException for source compatibility with earlier releases.
+ * This is an argument error, not a SQL error, so it deliberately stays outside the BrikkSqlError family.
  */
 class UnknownDialectException(val dialectName: String) : IllegalArgumentException(
     "Unknown dialect: '$dialectName'. Registered dialects: ${Dialects.NAMES.joinToString(", ")}"
