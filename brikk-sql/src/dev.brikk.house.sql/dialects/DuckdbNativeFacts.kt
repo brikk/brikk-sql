@@ -17,4 +17,4 @@ private object NativeDuckdbFacts: DuckdbDialect() {
         (super.parser(errorLevel) as DuckdbParser).apply { nativeRegexOperators = true }
 }
 
-internal fun Dialect.withNativeDuckdbFacts(): Dialect = if (name == "duckdb") NativeDuckdbFacts else this
+internal fun Dialect.withNativeDuckdbFacts(): Dialect = if (name == Dialects.DUCKDB.name) NativeDuckdbFacts else this
