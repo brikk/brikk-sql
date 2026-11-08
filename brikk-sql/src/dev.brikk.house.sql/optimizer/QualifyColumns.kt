@@ -328,7 +328,7 @@ private fun expandUsing(scope: Scope, resolver: Resolver): UsingExpansion {
         it.method.isEmpty() && it.side.isEmpty() && it.kind.isEmpty() }
     // StarRocks 4.1.4 FULL USING has native star-slot behavior that cannot be
     // reproduced by the generic merged-key expansion. Keep that source syntax.
-    val nativeFullStarrocks = resolver.dialect.name == "starrocks" && joins.any { it.side == "FULL" }
+    val nativeFullStarrocks = resolver.dialect.preservesFullUsingStar && joins.any { it.side == "FULL" }
     if (unresolvedStar || commaGroups || nativeFullStarrocks) {
         val keys = joins.flatMap { (it.args["using"] as? List<*>)?.filterIsInstance<Expression>().orEmpty() }
             .map { it.name }.toSet()
@@ -454,8 +454,8 @@ private fun expandUsing(scope: Scope, resolver: Resolver): UsingExpansion {
             }
             mergedValues[identifier] = when {
                 isSemiOrAntiJoin -> lhs
-                resolver.dialect.name == "duckdb" && join.side == "RIGHT" -> right
-                resolver.dialect.name == "duckdb" && join.side != "FULL" -> lhs
+                resolver.dialect.usingColumnTakesJoinSide && join.side == "RIGHT" -> right
+                resolver.dialect.usingColumnTakesJoinSide && join.side != "FULL" -> lhs
                 join.side == "RIGHT" -> coalesce(listOf(right, lhs))
                 else -> coalesce(listOf(lhs, right))
             }
@@ -845,7 +845,7 @@ private fun selectByPos(expression: Expression, node: Literal): Alias {
 // DuckDB's lambda-name lookup can distinguish spelling before its ordinary
 // case-insensitive column lookup. Do not fold away that distinction (#41).
 internal fun preserveComprehensionIdentifierCase(expression: Expression, dialect: Dialect) {
-    if (dialect.name != "duckdb") return
+    if (!dialect.lambdaNamesKeepCase) return
     fun normalized(name: String): String = dialect.normalizeIdentifier(toIdentifier(name)!!).name
     for (comprehension in expression.findAll<Comprehension>()) {
         val names = listOf("expression", "position").mapNotNull { key ->
@@ -966,7 +966,7 @@ private fun convertColumnsToDots(scope: Scope, resolver: Resolver) {
                 converted = true
                 val newColumn = column(root, table = newColumnTable)
 
-                if (resolver.dialect.name == "duckdb" && resolver.sourceColumnType(
+                if (resolver.dialect.variantAccessYieldsVariant && resolver.sourceColumnType(
                         newColumnTable.name, newColumn as Column)?.isType(DType.VARIANT) == true) {
                     val originals = dotParts.drop(if (wasQualified) 2 else 1)
                     for ((part, original) in parts.zip(originals)) if (part is Identifier && original is String) {
@@ -1038,7 +1038,7 @@ private fun qualifyColumnsInScope(
 
             // With no column evidence, preserve DuckDB's whole-row spelling rather
             // than infer a nonexistent alias.alias column. Known columns still win.
-            if (resolver.dialect.name == "duckdb" && table?.name == columnName &&
+            if (resolver.dialect.preservesWholeRowReferences && table?.name == columnName &&
                 columnName in scope.selectedSources && columnName !in resolver.getSourceColumns(columnName)) {
                 scope.replace(column, TableColumn(args("this" to column.thisArg)))
                 continue
@@ -1282,7 +1282,7 @@ private fun expandStarsInScope(
         }
         // Doris Scope.findSlotIgnoreCase folds column names even when table names
         // retain case. Keep spelling/quotedness, but do not admit colliding outputs.
-        fun renameKey(name: String): String = if (dialect.name == "doris") name.lowercase() else name
+        fun renameKey(name: String): String = if (dialect.columnSlotsIgnoreCase) name.lowercase() else name
         val star = if (expression is Star) expression else expression.thisArg as? Star
         val renames = (star?.args?.get("rename") as? List<*>) ?: emptyList<Any?>()
         val renamedColumns = LinkedHashMap<String, Pair<Identifier, Identifier>>()
