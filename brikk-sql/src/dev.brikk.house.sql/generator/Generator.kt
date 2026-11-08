@@ -649,7 +649,7 @@ open class Generator(
             throw UnsupportedError("${expression::class.simpleName} requires a $nativeDialect-specific translation")
         }
 
-        if (dialect.name != "clickhouse" &&
+        if (!dialect.supportsTupleAggregateCombinators &&
             (expression is CombinedAggFunc || expression is CombinedParameterizedAgg) &&
             "Tuple" in expression.name) {
             throw UnsupportedError("ClickHouse -Tuple aggregate combinators require a dialect-specific translation")
@@ -1445,7 +1445,7 @@ open class Generator(
 
     // sqlglot: Generator.cte_sql
     open fun cteSql(expression: CTE): String {
-        if (sourceDialect.equals("duckdb", ignoreCase = true) && dialect.name != "duckdb" && expression.thisArg is DML) {
+        if (sourceDialect.equals("duckdb", ignoreCase = true) && !dialect.statefulCtes && expression.thisArg is DML) {
             unexecutable("$targetName has no verified DuckDB side-effecting CTE translation")
         }
         val alias = expression.args["alias"] as? Expression
@@ -2008,7 +2008,6 @@ open class Generator(
 
     // sqlglot: Generator.triggerproperties_sql
     open fun triggerpropertiesSql(expression: TriggerProperties): String {
-        if (dialect.name == "duckdb") checkDuckdbTriggerMode(expression)
         val timing = expression.args["timing"] as? String ?: ""
         val events = (expression.args["events"] as? List<*>).orEmpty()
             .joinToString(" OR ") { sql(it) }
@@ -2036,25 +2035,6 @@ open class Generator(
         parts.add(sql(expression, "execute"))
 
         return parts.joinToString(sep())
-    }
-
-    private fun checkDuckdbTriggerMode(properties: TriggerProperties) {
-        val timing = properties.text("timing").uppercase()
-        val row = properties.text("for_each").equals("ROW", ignoreCase = true)
-        val events = (properties.args["events"] as? List<*>).orEmpty().filterIsInstance<TriggerEvent>()
-        val event = events.singleOrNull()?.name
-        val referencing = properties.args["referencing"] as? TriggerReferencing
-        val body = properties.args["execute"]
-        val updateColumns = events.singleOrNull()?.args?.get("columns") as? List<*>
-        if (body !is Insert && body !is Update && body !is Delete && body !is Merge)
-            unexecutable("DuckDB triggers require one inline INSERT/UPDATE/DELETE/MERGE action")
-        if (event !in setOf("INSERT", "UPDATE", "DELETE") || timing == "INSTEAD OF")
-            unexecutable("DuckDB 2.0 does not support this trigger event/timing")
-        if (row && (timing != "AFTER" || event == "UPDATE" || body is Update || referencing != null))
-            unexecutable("DuckDB 2.0 does not support this FOR EACH ROW trigger form")
-        if (referencing != null && (timing != "AFTER" || event == "INSERT" && referencing.args["old"] != null ||
-                event == "DELETE" && referencing.args["new"] != null || !updateColumns.isNullOrEmpty()))
-            unexecutable("DuckDB 2.0 does not support these transition tables for this event")
     }
 
     // sqlglot: Generator.triggerreferencing_sql
@@ -2677,7 +2657,7 @@ open class Generator(
     open fun sessionconnectSql(expression: SessionConnect): String {
         if (!supportsSessionRouting) unexecutable("$targetName cannot execute CONNECT session routing")
         val authoredTarget = expression.thisArg
-        if (dialect.name == "duckdb" && (authoredTarget == null || authoredTarget is Var && authoredTarget.name.equals("LOCAL", ignoreCase = true))) {
+        if (dialect.requiresConnectTarget && (authoredTarget == null || authoredTarget is Var && authoredTarget.name.equals("LOCAL", ignoreCase = true))) {
             unexecutable("DuckDB 2.0 does not implement bare CONNECT or CONNECT LOCAL")
         }
         val target = sql(expression, "this").let { if (it.isEmpty()) "" else " $it" }
@@ -2691,7 +2671,7 @@ open class Generator(
     }
 
     internal fun duckdbSessionStatementSql(expression: Expression): String {
-        if (dialect.name != "duckdb") unexecutable("$targetName cannot execute DuckDB prepared/session statements")
+        if (!dialect.executesSessionStatements) unexecutable("$targetName cannot execute DuckDB prepared/session statements")
         val name = sql(expression, "this")
         return when (expression) {
             is DuckdbPrepare -> "PREPARE $name AS ${sql(expression, "expression")}"
@@ -4585,7 +4565,7 @@ open class Generator(
         if (thenExpression is Insert) {
             var this_ = sql(thenExpression, "this")
             if (thenExpression.args["by_name"] == true) {
-                if (dialect.name != "duckdb") unexecutable("MERGE INSERT BY NAME is supported only for DuckDB")
+                if (!dialect.supportsMergeInsertByName) unexecutable("MERGE INSERT BY NAME is supported only for DuckDB")
                 this_ = "BY NAME" + if (this_.isNotEmpty()) " $this_" else ""
             }
             this_ = if (this_.isNotEmpty()) "INSERT $this_" else "INSERT"
@@ -4763,7 +4743,7 @@ open class Generator(
     }
 
     internal fun duckdbExtensionSql(expression: Expression): String {
-        if (dialect.name != "duckdb") unexecutable("$targetName cannot execute DuckDB extension/repository management")
+        if (!dialect.executesExtensionManagement) unexecutable("$targetName cannot execute DuckDB extension/repository management")
         val target = sql(expression, "this")
         val from = sql(expression, "from_").let { if (it.isEmpty()) "" else " FROM $it" }
         return when (expression) {
@@ -4786,7 +4766,7 @@ open class Generator(
     }
 
     internal fun duckdbExternalResourceSql(expression: Expression): String {
-        if (dialect.name != "duckdb") unexecutable("$targetName cannot execute DuckDB external-resource statements")
+        if (!dialect.executesExternalResources) unexecutable("$targetName cannot execute DuckDB external-resource statements")
         fun options(node: Expression): String = expressions(node).let { if (it.isEmpty()) "" else " ($it)" }
         val target = sql(expression, "this")
         val alias = sql(expression, "alias").let { if (it.isEmpty()) "" else " AS $it" }
@@ -4815,7 +4795,7 @@ open class Generator(
     }
 
     internal fun duckdbExplainSql(expression: DuckdbExplain): String {
-        if (dialect.name != "duckdb") unexecutable("$targetName cannot execute DuckDB EXPLAIN options")
+        if (!dialect.executesExplainOptions) unexecutable("$targetName cannot execute DuckDB EXPLAIN options")
         expression.explainProblems().forEach(::unexecutable)
         val analyze = if (expression.args["analyze"] == true) " ANALYZE" else ""
         val options = expressions(expression).let { if (it.isEmpty()) "" else " ($it)" }
@@ -5120,11 +5100,6 @@ open class Generator(
 
     // sqlglot: Generator.div_sql (base: SAFE_DIVISION=false, TYPED_DIVISION=false)
     open fun divSql(expression: Div): String {
-        // Executable preflight proved the incoming typed operands integral and the
-        // divisor nonzero/NULL. Bare integer atoms need this too: parity does not
-        // annotate their type slots, and falling through would emit fractional /.
-        if(forExecution && dialect.name=="duckdb" && sourceDialect!=null && !sourceDialect.equals("duckdb",true) && expression.args["typed"]==true)
-            return sql(IntDiv(args("this" to expression.left.copy(),"expression" to expression.right.copy())))
         val l = expression.left
         if (!dialectSafeDivision && expression.args["safe"] == true) {
             val r = expression.right
