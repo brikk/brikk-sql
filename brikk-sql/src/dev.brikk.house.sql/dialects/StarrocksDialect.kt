@@ -39,6 +39,9 @@ class StarrocksDialect : Dialect() {
     // brikk-native: see Dialect.caseInsensitiveColumns.
     override val caseInsensitiveColumns: Boolean get() = true
 
+    // brikk-native: see Dialect.preservesFullUsingStar.
+    override val preservesFullUsingStar: Boolean get() = true
+
     // Version-pinned StarRocks builtin function registry (see brikk-sql-metadata).
     override val functionCatalog: FunctionCatalog get() = STARROCKS_FUNCTION_CATALOG
 

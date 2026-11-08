@@ -38,6 +38,11 @@ open class ClickhouseDialect : Dialect() {
     override val typedQueryParameters: Boolean get() = true
     override val questionMarkTernary: Boolean get() = true
 
+    // brikk-native: see the Dialect members of the same names.
+    override val supportsTupleAggregateCombinators: Boolean get() = true
+    override val contextualTypeInference: Boolean get() = true
+    override val nullableTupleFields: Boolean get() = true
+
     // sqlglot: ClickHouse.FORCE_EARLY_ALIAS_REF_EXPANSION
     override val forceEarlyAliasRefExpansion: Boolean get() = true
 

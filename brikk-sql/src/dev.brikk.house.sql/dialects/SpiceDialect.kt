@@ -11,6 +11,11 @@ class SpiceDialect : DatafusionDialect() {
     override val name: String get() = "spice"
     override val normalizationStrategy get() = NormalizationStrategy.CASE_SENSITIVE
     override val functionCatalog get() = SPICE_FUNCTION_CATALOG
+
+    // brikk-native: see the Dialect members of the same names.
+    override val largeUtf8LengthIsBigint: Boolean get() = false
+    override val bundledFunctionExtensions: Boolean get() = true
+    override val builtinTableFunctions: Boolean get() = true
     override val pipeRunnableStages: Set<String> get() = dev.brikk.house.sql.shape.SPICE_PIPE_STAGES
     override val tokenizerConfig get() = TOKENIZER_CONFIG
     override fun parser(errorLevel: ErrorLevel?): Parser = SpiceParser(errorLevel, tokenizerConfig)

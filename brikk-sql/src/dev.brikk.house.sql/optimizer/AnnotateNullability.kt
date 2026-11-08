@@ -121,6 +121,15 @@ fun annotateNullability(
     return NullabilityResult(pass.map, pass.scopeOutputs)
 }
 
+/** What a dialect's [Dialect.functionNullability] may ask of the pass. */
+internal interface NullabilityRules {
+    /** The verdict already reached for [expression]: true nullable, false not null, null unknown. */
+    fun verdict(expression: Expression?): Boolean?
+
+    /** Nullable if any argument is, not null if all are not, otherwise unknown. */
+    fun operatorRule(args: List<Expression>): Boolean?
+}
+
 /**
  * The nullability of a standalone [expression] under this pass's rules, with each column's
  * verdict from [column] (true nullable, false not null, null unknown) instead of a scope.

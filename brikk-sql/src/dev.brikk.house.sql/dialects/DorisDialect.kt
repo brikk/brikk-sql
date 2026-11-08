@@ -40,6 +40,10 @@ class DorisDialect : Dialect() {
     // brikk-native: see Dialect.caseInsensitiveColumns.
     override val caseInsensitiveColumns: Boolean get() = true
 
+    // brikk-native: see the Dialect members of the same names.
+    override val columnSlotsIgnoreCase: Boolean get() = true
+    override val parseToVariantFunctions: Boolean get() = true
+
     // Generated from Doris's runtime function registry (tools/generate_doris_functions.py).
     override val functionCatalog: FunctionCatalog get() = DORIS_FUNCTION_CATALOG
 
