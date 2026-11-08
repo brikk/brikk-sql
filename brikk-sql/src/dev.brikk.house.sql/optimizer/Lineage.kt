@@ -1,5 +1,6 @@
 package dev.brikk.house.sql.optimizer
 
+import dev.brikk.house.sql.BrikkSqlError
 import dev.brikk.house.sql.ast.Column
 import dev.brikk.house.sql.ast.hasSideEffectingCte
 import dev.brikk.house.sql.ast.hasKeyedCte
@@ -59,7 +60,7 @@ import dev.brikk.house.sql.parser.ParseError
 
 // sqlglot: errors.SqlglotError. In brikk only lineage raises it and no other error class extends it,
 // unlike sqlglot where it is the base of the error family.
-class SqlglotError(message: String) : RuntimeException(message)
+class SqlglotError(message: String) : BrikkSqlError(message)
 
 // sqlglot: lineage.Node
 class Node(

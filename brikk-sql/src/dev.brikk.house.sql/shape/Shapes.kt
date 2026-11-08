@@ -2,6 +2,7 @@ package dev.brikk.house.sql.shape
 
 // Explicit kotlin imports: this package sits next to `dev.brikk.house.sql.ast` whose
 // node classes shadow builtins when star-imported; we import only what we use.
+import dev.brikk.house.sql.BrikkSqlError
 import dev.brikk.house.sql.ast.DataType
 import dev.brikk.house.sql.ast.Identifier
 import dev.brikk.house.sql.ast.Table
@@ -24,7 +25,7 @@ import kotlinx.serialization.Serializable
  */
 
 /** Error type for the shape layer (multi-statement fragments, bad slot bindings, ...). */
-class ShapeError(message: String) : RuntimeException(message)
+class ShapeError(message: String) : BrikkSqlError(message)
 
 /**
  * One output/input column.

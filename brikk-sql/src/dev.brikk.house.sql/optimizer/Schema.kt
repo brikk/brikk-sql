@@ -1,5 +1,6 @@
 package dev.brikk.house.sql.optimizer
 
+import dev.brikk.house.sql.BrikkSqlError
 import dev.brikk.house.sql.ast.DType
 import dev.brikk.house.sql.ast.DataType
 import dev.brikk.house.sql.ast.Expression
@@ -21,7 +22,7 @@ import dev.brikk.house.sql.parser.ParseError
  */
 
 // sqlglot: errors.SchemaError
-class SchemaError(message: String) : RuntimeException(message)
+class SchemaError(message: String) : BrikkSqlError(message)
 
 // sqlglot: exp.TABLE_PARTS
 val TABLE_PARTS: List<String> = listOf("this", "db", "catalog")

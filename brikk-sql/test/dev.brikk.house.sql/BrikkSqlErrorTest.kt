@@ -13,8 +13,10 @@ import dev.brikk.house.sql.shape.TranspileCertificationError
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 class BrikkSqlErrorTest {
     private fun messageOnlyErrors(): List<RuntimeException> = listOf(
@@ -81,5 +83,45 @@ class BrikkSqlErrorTest {
         }
         assertFailsWith<IllegalStateException> { TokenError("message").initCause(cause) }
         assertFailsWith<IllegalStateException> { TokenError("message", cause).initCause(cause) }
+    }
+
+    @Test
+    fun sqlErrorsShareTheBaseTypeButArgumentErrorsDoNot() {
+        for (error in messageOnlyErrors() + TokenError("message")) {
+            assertTrue(error is BrikkSqlError, error::class.simpleName)
+        }
+        val unknown: RuntimeException = UnknownDialectException("not-a-dialect")
+        assertTrue(unknown is IllegalArgumentException)
+        assertFalse(BrikkSqlError::class.java.isInstance(unknown))
+    }
+
+    @Test
+    fun baseCatchHandlesParseErrors() {
+        val error = ParseError("message")
+        var caught: BrikkSqlError? = null
+        try {
+            throw error
+        } catch (e: BrikkSqlError) {
+            caught = e
+        }
+        assertSame(error, caught)
+    }
+
+    @Test
+    fun baseConstructorsPreserveNullMessagesAndCauseInitialization() {
+        val cause = IllegalStateException("cause")
+        val messageOnly = BrikkSqlError(null)
+        assertNull(messageOnly.message)
+        assertNull(messageOnly.cause)
+        assertSame(messageOnly, messageOnly.initCause(cause))
+        assertSame(cause, messageOnly.cause)
+        val withCause = BrikkSqlError(null, cause)
+        assertNull(withCause.message)
+        assertSame(cause, withCause.cause)
+        assertFailsWith<IllegalStateException> { withCause.initCause(cause) }
+        val nullCause = BrikkSqlError(null, null)
+        assertNull(nullCause.message)
+        assertNull(nullCause.cause)
+        assertFailsWith<IllegalStateException> { nullCause.initCause(cause) }
     }
 }

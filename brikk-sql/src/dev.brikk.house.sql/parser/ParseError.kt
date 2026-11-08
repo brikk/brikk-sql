@@ -1,5 +1,7 @@
 package dev.brikk.house.sql.parser
 
+import dev.brikk.house.sql.BrikkSqlError
+
 /**
  * Port of the parser-facing pieces of reference/sqlglot/sqlglot/errors.py.
  */
@@ -47,7 +49,7 @@ class ParseErrorInfo(
 class ParseError(
     message: String,
     val errors: List<ParseErrorInfo> = emptyList(),
-) : RuntimeException(message) {
+) : BrikkSqlError(message) {
 
     companion object {
         // sqlglot: ParseError.new

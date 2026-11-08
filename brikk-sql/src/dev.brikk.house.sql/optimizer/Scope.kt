@@ -1,5 +1,6 @@
 package dev.brikk.house.sql.optimizer
 
+import dev.brikk.house.sql.BrikkSqlError
 import dev.brikk.house.sql.ast.CTE
 import dev.brikk.house.sql.ast.Column
 import dev.brikk.house.sql.ast.Comprehension
@@ -46,7 +47,7 @@ import kotlin.reflect.KClass
  */
 
 // sqlglot: errors.OptimizeError
-class OptimizeError(message: String) : RuntimeException(message)
+class OptimizeError(message: String) : BrikkSqlError(message)
 
 // sqlglot: scope.ScopeType
 enum class ScopeType { ROOT, SUBQUERY, DERIVED_TABLE, CTE, SET_OPERATION, UDTF }
