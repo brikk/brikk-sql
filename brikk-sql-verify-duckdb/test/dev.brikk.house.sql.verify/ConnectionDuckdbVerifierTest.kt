@@ -79,9 +79,9 @@ internal class ConnectionDuckdbVerifierTest {
         assertIs<VerifyResult.Unavailable>(ConnectionDuckdbVerifier({ null }).verify("SELECT 1"))
         for (response in listOf(null, "", "not json", "{}", "[]", "{\"error\":false}", "{\"error\":\"false\",\"statements\":[]}", "{\"error\":true}")) {
             val helper = StubConnection { response }
-            val result = ConnectionDuckdbVerifier({ helper }).verify("SELECT 1")
-            assertIs<VerifyResult.Unavailable>(result, response)
-            assertTrue(helper.closed.get())
+            val result = verifyOnceWorkersAreFree(ConnectionDuckdbVerifier({ helper }))
+            assertContains(assertIs<VerifyResult.Unavailable>(result, response).reason, "invalid parser response", message = response)
+            assertTrue(helper.closed.get(), response)
         }
     }
 
@@ -150,6 +150,20 @@ internal class ConnectionDuckdbVerifierTest {
         assertContains(assertIs<VerifyResult.Unavailable>(deadline.verify("SELECT 1")).reason, "timed out")
         assertTrue(timedOut.await(5, TimeUnit.SECONDS))
         assertTrue(timedClosed.await(5, TimeUnit.SECONDS))
+    }
+
+    /**
+     * The verifier shares a bounded worker pool (2 threads, no queue). A sibling test's worker can still
+     * be winding down its helper when this test starts, and a capacity refusal never opens the helper,
+     * so retry briefly instead of asserting closure on a helper the verifier never saw.
+     */
+    private fun verifyOnceWorkersAreFree(verifier: ConnectionDuckdbVerifier): VerifyResult {
+        val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5)
+        while (true) {
+            val result = verifier.verify("SELECT 1")
+            if (result !is VerifyResult.Unavailable || "capacity" !in result.reason || System.nanoTime() > deadline) return result
+            Thread.sleep(20)
+        }
     }
 
     private class StubConnection(private val response: () -> String?): DuckdbQueryConnection {
