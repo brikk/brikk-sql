@@ -7,7 +7,7 @@ import kotlin.test.assertEquals
 
 /**
  * Hand assertions for the Hive dialect port (reference/sqlglot/sqlglot/dialects/hive.py).
- * Every expected value below is pinned to the Python oracle (parse_one(sql, read="hive")
+ * Initial expectations were captured from the Python oracle (parse_one(sql, read="hive")
  * .sql("hive")) at sqlglot v30.12.0-44-g93d16591.
  */
 class HiveDialectTest {

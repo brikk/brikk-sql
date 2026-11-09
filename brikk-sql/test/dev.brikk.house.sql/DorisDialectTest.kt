@@ -36,8 +36,8 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 /**
- * Hand assertions for the Doris dialect wiring, each verified against the Python
- * oracle (reference/sqlglot v30.12.0-44-g93d16591): reserved-keyword quoting,
+ * Hand assertions for the Doris dialect wiring, with initial expectations captured
+ * from the Python oracle at v30.12.0-44-g93d16591: reserved-keyword quoting,
  * type mapping, mysql->doris and doris->base transpilation through the registry.
  */
 class DorisDialectTest {

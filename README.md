@@ -25,6 +25,8 @@ All artifacts use the **`dev.brikk.house`** group:
 | [brikk-sql-verify](brikk-sql-verify/) | `brikk-sql-verify` | Aggregate of every self-contained verifier plus the `SqlVerifiers` registry (not ClickHouse, which needs the user's server). |
 | [brikk-sql-oracle](brikk-sql-oracle/) | `brikk-sql-oracle` | Heavyweight PostgreSQL and chDB ClickHouse engine checks. |
 | [brikk-sql-intellij-support](brikk-sql-intellij-support/README.md) | `brikk-sql-intellij-support` | Shared SQL editing, completion, validation and console integration for IntelliJ plugins. |
+| [brikk-sql-intellij-jdbc-support](brikk-sql-intellij-jdbc-support/README.md) | `brikk-sql-intellij-jdbc-support` | Optional generic JDBC introspector routing for IntelliJ database dialect plugins. |
+| [brikk-sql-intellij-test-support](brikk-sql-intellij-test-support/README.md) | `brikk-sql-intellij-test-support` | Shared IntelliJ plugin test fixtures and contracts; test scope only, never bundled in plugins. |
 
 Core, metadata, the verification API and the Doris verifier require **Java 17**.
 Other verifiers and IntelliJ support require Java 21; Trino, the aggregate verifier

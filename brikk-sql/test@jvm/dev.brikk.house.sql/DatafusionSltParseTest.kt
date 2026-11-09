@@ -18,14 +18,14 @@ import kotlinx.serialization.json.put
  * reference/datafusion — Apache-2.0, see ATTRIBUTIONS.md): SQL the real DataFusion
  * engine accepts. Each case must PARSE under "datafusion" without a ParseError.
  *
- * This is deliberately weaker than a round-trip gate — it only proves the BASE grammar
- * (which the thin datafusion dialect reuses unchanged) accepts DataFusion's SELECT
- * surface. Result equality / semantic round-trip is phase 2's engine verifier.
+ * This is deliberately weaker than a round-trip gate — it only proves the DataFusion
+ * parser, built on the BASE grammar with local lexical and function overrides, accepts
+ * the selected SQL. It does not prove result equality or semantic round-trip behavior.
  *
- * HONEST CAVEAT: some real-engine SQL uses constructs brikk's BASE parser does not yet
- * model (Arrow-native types, `~` regex operators, engine-specific grammar). Those are
- * recorded in datafusion-slt-parse-known-failures.json with a reason — they are honest
- * parser gaps, not silent passes. The full actual failure set is written to build/.
+ * The curated subset currently has no ledgered parser gaps. Future failures must match
+ * datafusion-slt-parse-known-failures.json with a reason, not pass silently. The full
+ * actual failure set is written to build/; acceptance of this subset does not cover all
+ * DataFusion grammar or Arrow-native types.
  */
 class DatafusionSltParseTest : LedgerGate() {
 

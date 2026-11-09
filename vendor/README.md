@@ -42,6 +42,46 @@ only matched finite registry constraints become strict overload entries. Source-
 Spice overrides identify scalar stubs without inventing signatures. Historical baseline
 observations stay intact; the first post-fix observations live under `data/datafusion-spice/round2/`.
 
+## SQLGlot 30.29 task evidence
+
+These folders retain the observations and limits of each round, not a claim that
+every upstream feature or cross-engine mapping is qualified. Each linked README
+records the sources, validation and reproduction details for its folder.
+
+- [Batch A](data/sqlglot-30.29-batch-a-README.md) and its
+  [baseline JSON](data/sqlglot-30.29-batch-a-baseline.json): historical DESCRIBE, JSONPath and BigQuery
+  escaping observations against published Brikk SQL 0.23.0, with parser/renderer regressions.
+- [`data/sqlglot-30.29-batch-b/`](data/sqlglot-30.29-batch-b/README.md): IS, set-operation and
+  MySQL-family operator precedence, with per-engine grouping controls and execution refusals.
+- [`data/sqlglot-sg29-008/`](data/sqlglot-sg29-008/README.md): population/sample aggregate mappings
+  and native MySQL/StarRocks value/type controls.
+- [`data/sqlglot-sg29-009/`](data/sqlglot-sg29-009/README.md): temporal arithmetic grouping and
+  TIMESTAMPADD, with native temporal controls.
+- [`data/sqlglot-sg29-010/`](data/sqlglot-sg29-010/README.md): JSON-valued ClickHouse extraction,
+  raw/scalar distinctions and cross-engine execution limits.
+- [`data/sqlglot-sg29-011/`](data/sqlglot-sg29-011/README.md): five PostgreSQL interval/date,
+  ISO-format, digest and regex mapping sub-rounds.
+- [`data/sqlglot-sg29-012/`](data/sqlglot-sg29-012/README.md): PIVOT after VALUES, native DuckDB
+  results and portable lowering controls.
+- [`data/sqlglot-sg29-013/`](data/sqlglot-sg29-013/README.md): Doris full-text operators, pinned source
+  contracts and FE-only grammar/binding evidence, not backend results.
+- [`data/sqlglot-sg29-014-wrong-results/`](data/sqlglot-sg29-014-wrong-results/README.md): StarRocks
+  LIKE argument order and map literals, with native values/types and explicit map refusals.
+- [`data/sqlglot-sg29-014-rest/`](data/sqlglot-sg29-014-rest/README.md): remaining StarRocks date,
+  hash, PIVOT, DDL, refresh, opaque administration and UNNEST controls.
+- [`data/sqlglot-sg29-015/`](data/sqlglot-sg29-015/README.md): Spark/Hive aggregation and ALTER,
+  separating SELECT execution from parser-only ALTER evidence.
+- [`data/sqlglot-sg29-016/`](data/sqlglot-sg29-016/README.md): BigQuery/Trino date, decimal, percentile
+  and array dispositions with bounded native controls and refusals.
+- [`data/sqlglot-sg29-017/`](data/sqlglot-sg29-017/README.md): shared typing/qualification audit,
+  retained inference policies and native DuckDB controls.
+- [`data/sqlglot-sg29-018/`](data/sqlglot-sg29-018/README.md): ArraySort compatibility decision, native
+  reverse-sort controls and reuse of the DuckDB audit/refusal matrix.
+- [`data/sqlglot-sg29-019/`](data/sqlglot-sg29-019/README.md): explicit owned dispositions for all 250
+  commits in the frozen SQLGlot target range.
+- [`data/sqlglot-sg29-020/`](data/sqlglot-sg29-020/README.md): coherent 30.29 regeneration,
+  compatibility checks and exact corpus/ledger/native integration review.
+
 ## `lib/doris-fe-sql-parser-4.1.5-g917b20be8387.jar`
 
 The standalone Doris SQL parser (`fe-sql-parser`) from Apache Doris — the authoritative ANTLR
@@ -205,11 +245,11 @@ Refresh: bring both engines up (`docker run … starrocks/allin1-ubuntu:4.1.4` a
 brikk-sql/testResources/semantics/doris-starrocks-hazards.json && python3
 tools/generate_semantic_coverage.py`.
 
-## `data/trino-functions-481.tsv`
+## `data/trino-functions-483.tsv`
 
-See the provenance section added with the Trino catalog (SHOW FUNCTIONS dump, Trino 481,
-Apache-2.0) — regenerable via the Method-B harness documented in
-tools/generate_trino_functions.py.
+Historical SHOW FUNCTIONS dump from Trino 483 (Apache-2.0), retained alongside
+the current 484 capture. See the `data/trino-functions-484.tsv` section below for
+the container capture method and refresh procedure. The old 481 dump was removed.
 
 ## Doris function registry (extracted data, not a binary)
 

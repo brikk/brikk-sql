@@ -1,6 +1,7 @@
 # Executed corpus coverage
 
-ASTRA-014, SQLGlot pin `v30.18.0-43-g3ca82489`.
+ASTRA-014 coverage record measured at `v30.18.0-43-g3ca82489`;
+current SQLGlot pin `v30.29.0`.
 
 `brikk-sql/testResources/corpus-policy.json` defines the SQLGlot-backed,
 native-only, and deliberately excluded dialects. Both semantic corpus generators

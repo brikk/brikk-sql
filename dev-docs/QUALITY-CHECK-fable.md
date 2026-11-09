@@ -451,11 +451,11 @@ Stale: the code below the comment builds the node.
 | 3438 | `exp.HistoricalData` not ported | the function builds `HistoricalData` |
 | 3932 | `exp.LimitOptions` not ported | the function builds `LimitOptions` |
 | 9809 | `exp.TryCast` not ported | line 9832 builds `TryCast` |
-| 2676 | `exp.Unnest` not ported | the class exists; the condition uses a token test in place of upstream's type test |
+| 2676 | `exp.Unnest` not ported | the class exists; upstream's Unnest type test is missing, and only its following CROSS/ARRAY token test is ported |
 | 6086 | `exp.MultitableInserts` not ported | built at line 2023; only this `INSERT FIRST/ALL` branch still raises |
 
-For line 2676, fix the comment only. Whether the token test should become the upstream
-type test is a parity question for the corpus, not for this pass.
+For line 2676, fix the comment only. Adding upstream's missing Unnest type test is a
+parity question for the corpus, not for this pass.
 
 Imprecise: the node class is generated and only the parser branch raises. Reword these to
 "parser branch not ported": lines 2998 (`AtIndex`), 3033 (`Stream`), 3430 (`Changes`),
@@ -557,14 +557,14 @@ Reported, same area: `private fun roundTrip(` is defined in 23 test files and
 
 ### FQ-23. Archive finished trackers and dated notes (Docs)
 
-- `dev-docs/TODO-sqlglot-30.29.md` (28 KB) has 29 closed items and none open, and
-  `dev-docs/README.md` calls it complete. Move it to `dev-docs/archive/`.
-- `dev-docs/main-integration-20261106.md` is a dated record. Archive it.
+- `dev-docs/TODO-sqlglot-30.29.md` stays in place: vendored dispositions and
+  `tools/sqlglot_target_dispositions.py` cite its path, and a source manifest records its hash.
+- The dated record `main-integration-20261106.md` is now in `dev-docs/archive/`.
 - `docs/` holds eight per-release records beside the user guides. A `docs/releases/`
   folder would separate them.
 - Paths under `/home/jayson/` or `/var/tmp/jayson/` appear in `docs/sql-1.0.0.md`,
   `docs/doris-pipe-handoff.md`, `docs/engine-candidate-verification.md`,
-  `dev-docs/main-integration-20261106.md`, `dev-docs/TODO-sqlglot-30.29.md` and seven
+  `dev-docs/archive/main-integration-20261106.md`, `dev-docs/TODO-sqlglot-30.29.md` and seven
   `docs/research/HANDOFF-*` files. Where a document says evidence is "retained" at such a
   path, say where it really is or that it is gone.
 

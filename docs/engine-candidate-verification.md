@@ -41,6 +41,8 @@ hashes and command results. `tools/test_verify_engine_candidate.py` checks the g
 From the SQL checkout, after building the exact candidate, set `CORE_JAR` and
 `METADATA_JAR` to the packaging-task outputs and `SCRATCH_DIR` to an existing
 private scratch parent. These generated outputs are not repository evidence.
+The `/home/jayson/...` paths below are local checkout and cache locations on the
+author's machine, not part of this repository. Substitute your own paths.
 
 ```sh
 ./kotlin build
@@ -85,7 +87,8 @@ StarRocks tests already executed in prior rounds. The cached Doris engine actual
 reports `doris-4.1.3-rc02-7126cf65d96`, not 4.1.4.1. See extension #50 for scope.
 Native assertions live in `brikk-sql-verify/test/dev.brikk.house.sql.verify/`.
 The four isolated Doris/PostgreSQL/MySQL/Trino containers created for this task
-were removed after verification; scratch candidate evidence remains retained.
+were removed after verification. The candidate evidence used a local scratch
+location on the author's machine and is not part of the repository.
 
 ## Safety assessment and coverage limits
 

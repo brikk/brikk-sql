@@ -127,4 +127,4 @@ token count or let END become part of a number.
 The original red-test record above remains historical. The combined build,
 2,633 JVM tests, all 841 IntelliJ tests and 247 tooling tests now pass. Existing
 optional JVM assumptions remain. Validation and logs are recorded in
-[the integration record](../../../dev-docs/main-integration-20261106.md).
+[the integration record](../../../dev-docs/archive/main-integration-20261106.md).

@@ -14,7 +14,7 @@
 #
 # NOTE (KMP): only JVM libraries publish fully-consumable artifacts today. For the
 # `kmp/lib` modules, consumers should depend on the per-platform JVM artifact, e.g.
-#   dev.brikk.house:brikk-sql-jvm:0.1.0-SNAPSHOT
+#   dev.brikk.house:brikk-sql-jvm:1.0.1-SNAPSHOT
 #
 # The publish-target `repositories` (centralSnapshots, mavenLocal) live in
 # publish-targets.module-template.yaml so non-published modules can share them; see the

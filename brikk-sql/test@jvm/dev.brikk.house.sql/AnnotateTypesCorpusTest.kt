@@ -21,7 +21,7 @@ import kotlinx.serialization.json.put
  * ported dialects' corpora, schema-less.
  *
  * Comparison strips comments ("o") and the parser POSITION meta keys
- * (line/col/start/end — our parser does not populate positions yet; see Serde.kt),
+ * (line/col/start/end), so this gate compares typing independently of source positions,
  * keeping every other meta key (e.g. the annotator's "nonnull") and, crucially, the
  * full "t" type payloads — those are the point of this gate.
  *
@@ -41,7 +41,7 @@ class AnnotateTypesCorpusTest : LedgerGate() {
         }
     }
 
-    /** Parser position meta keys — ours are not populated yet (see Serde.kt). */
+    /** Parser position meta keys excluded from this typing comparison. */
     private val positionKeys = setOf("line", "col", "start", "end")
 
     /** Strips "o" everywhere and position keys inside "m" (dropping empty "m"). */

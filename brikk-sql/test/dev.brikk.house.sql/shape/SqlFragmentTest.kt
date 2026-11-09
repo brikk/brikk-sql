@@ -9,8 +9,8 @@ import kotlin.test.assertTrue
 
 /**
  * Hand assertions for the BRIKK-NATIVE SqlFragment façade. No Python oracle exists for
- * this layer, but the type expectations marked "Python-verified" below were
- * cross-checked against sqlglot (reference/sqlglot @ v30.12.0-44-g93d16591):
+ * this layer, but the initial type expectations marked "Python-verified" below were
+ * captured against sqlglot at v30.12.0-44-g93d16591:
  * qualify(validate_qualify_columns=False) + annotate_types under the same schema.
  */
 class SqlFragmentTest {

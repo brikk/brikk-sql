@@ -20,7 +20,7 @@ dependencies:
   - dev.brikk.house:brikk-chdb:0.16.0
   # Embedded PostgreSQL for PostgresVerifier. Postgres has no parse-only wire API and no
   # mature JVM libpg_query binding, so verification is done by a REAL PG engine and
-  # SQLSTATE discrimination. Zonky ships PG as a NATIVE binary (PostgreSQL 14.22) launched
+  # SQLSTATE discrimination. Zonky ships PG as a NATIVE binary (PostgreSQL 18.4) launched
   # as a subprocess plus the standard org.postgresql JDBC driver 42.7.x — nothing in the
   # hot path is JVM-version-sensitive, so JDK 25 is fine (the library itself is Java-8
   # bytecode). Platform archives are resolved from classpath jars and extracted under the

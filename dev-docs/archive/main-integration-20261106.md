@@ -39,11 +39,12 @@ run against native DuckDB.
 
 ## Validation
 
-Final task-private output is the fresh `build/main-integration-final-build`.
-The earlier baseline/control output remains in `build/main-integration-build`.
-Baseline logs remain at
+Final task-private output was written to `build/main-integration-final-build`.
+The earlier baseline/control output was written to `build/main-integration-build`.
+Baseline logs were written to
 `/var/tmp/jayson/opencode/main-integration-core-baseline.log` and
-`main-integration-native-baseline.log`. Intermediate failed logs are also retained.
+`main-integration-native-baseline.log`. These outputs and intermediate failed logs
+were local scratch files on the author's machine, not part of the repository.
 
 - Full build succeeds.
 - Core passes all 1,863 tests. Other JVM modules pass 770 tests, for 2,633 total.
@@ -61,11 +62,12 @@ Baseline logs remain at
 - The complete existing parity and native-audit gates pass without changing a
   failure ledger, oracle pin, generated fixture or native baseline.
 
-Final logs under `/var/tmp/jayson/opencode/` are `main-integration-final-build.log`,
+Final logs were written to the local scratch location `/var/tmp/jayson/opencode/` on the
+author's machine, not part of the repository: `main-integration-final-build.log`,
 `main-integration-final-core.log`, `main-integration-final-other-jvm.log`,
 `main-integration-final-ide.log` and `main-integration-tooling.log`. The IDE's
-platform log is retained as `main-integration-final-ide-test.log`; ABI reports
-are `main-integration-final-core-abi.json` and `main-integration-final-metadata-abi.json`.
+platform log was written to `main-integration-final-ide-test.log`; ABI reports
+were written to `main-integration-final-core-abi.json` and `main-integration-final-metadata-abi.json`.
 
 No shared daemon or host/user database is modified. No publication or consumer
 adoption is part of this merge. Previously documented feature deferrals retain

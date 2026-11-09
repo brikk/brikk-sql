@@ -7,8 +7,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 /**
- * Hand assertions for the ClickHouse dialect wiring, each verified against the Python
- * oracle (reference/sqlglot v30.12.0-44-g93d16591): Nullable type wrapping, {name: Type}
+ * Hand assertions for the ClickHouse dialect wiring, with initial expectations captured
+ * from the Python oracle at v30.12.0-44-g93d16591: Nullable type wrapping, {name: Type}
  * query parameters, aggregate-function combinators with parameters, the
  * FINAL/PREWHERE/SETTINGS/FORMAT clauses, the `?:` ternary, TRY_CAST-to-Nullable
  * transpilation and ARRAY JOIN.

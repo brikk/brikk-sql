@@ -13,8 +13,8 @@ import kotlin.test.assertNull
 
 /**
  * Focused transpile assertions for the generator preprocess transforms ported into
- * generator/Transforms.kt (reference/sqlglot/sqlglot/transforms.py). Every expected
- * string follows Python sqlglot v30.12.0 unless marked as a brikk extension.
+ * generator/Transforms.kt (reference/sqlglot/sqlglot/transforms.py). Initial expectations
+ * were captured from Python sqlglot at v30.12.0 unless marked as a brikk extension.
  * These lock the transforms independently of the large corpus gates.
  */
 class TransformsTest {
