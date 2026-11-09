@@ -65,9 +65,12 @@ installed package or regenerate fixtures for a documentation change.
 SQL engine, metadata, verification and oracle artifacts share the publishing template.
 The three IntelliJ support modules use their own aligned version. Build tooling is not published.
 
+Releases are cut from `main` only; merge first, then release from the merged commit. The
+owner can grant a per-release exception explicitly; see [AGENTS.md](../AGENTS.md).
+
 - Push to `main`: CI builds/tests and checks Maven Local publication before publishing snapshots.
-- Push `release/<version>` or dispatch the release workflow: the same gates precede signed
-  Maven Central publication.
+- Push `release/<version>` (branched from the `main` commit being released) or dispatch the
+  release workflow on `main`: the same gates precede signed Maven Central publication.
 - Local publication gate: `./kotlin publish mavenLocal`, followed by the verifier, Java 17
   and IntelliJ publication audits in `tools/verify_*publication.py`.
 - Local snapshot: `./kotlin publish centralSnapshots`.

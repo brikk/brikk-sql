@@ -24,6 +24,22 @@ This matters for a **shared** Buzz agent that acts for several people. A person'
 own standalone agent that only ever commits as its owner can ignore it — that
 agent's global git identity is already correct.
 
+## Releases come from main
+
+Every release (Maven Central, IntelliJ support, snapshots other than the automatic `main`
+snapshot) is cut from `main`. Work on a branch is merged to `main` first, and the release is
+built from the merged `main` commit. Do not run `publish-release.sh`, the release workflow or
+the IntelliJ publish workflow from any other branch.
+
+The one exception is an explicit, per-release instruction from the repository owner
+(Jayson Minard) to release from a named branch. An agent never grants that exception itself,
+never infers it from a tracker, a plan or an earlier approval, and never carries it over to a
+later release. Without that instruction, a request to release from a branch means: merge to
+`main`, run the full gate there, then release.
+
+This rule exists because 1.0.0 was released from `sqlglot-30-29-batch-a` without merging, and
+`main` then carried a version line below the published release.
+
 ## Binary compatibility of public data classes
 
 Other artifacts (the plugins, the Brikk Kotlin helper) are compiled separately against published
