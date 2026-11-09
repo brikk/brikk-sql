@@ -87,6 +87,8 @@ if [ "$LOCAL" = true ]; then
   exit 0
 fi
 
+python3 tools/release_ancestry.py
+
 # Env-var name compatibility. The name the toolchain reads changed between versions:
 #   - 0.11 reads KOTLIN_TOOLCHAIN_MAVENCENTRAL_USERNAME/PASSWORD   (NO underscore)
 #   - newer reads KOTLIN_TOOLCHAIN_MAVEN_CENTRAL_USERNAME/PASSWORD (WITH underscore)

@@ -69,6 +69,19 @@ The three IntelliJ support modules use their own aligned version. Build tooling 
 Releases are cut from `main` only; merge first, then release from the merged commit. The
 owner can grant a per-release exception explicitly; see [AGENTS.md](../AGENTS.md).
 
+Both release workflows and both release launchers enforce this through
+`tools/release_ancestry.py`: before Central publication it fetches only `main` from `origin`
+(completing shallow history when needed) and requires `HEAD` to be an ancestor of
+`origin/main`. Missing/unfetchable `origin/main` fails closed, even with an exception;
+local releases (`--local` / Maven Local) do not run this check. `preverified` skips only
+the test gate, never this check.
+
+Only after the owner's explicit approval for this release from a named branch, set the
+manual workflow's boolean `owner_exception` input to `true`, or run either local launcher
+with `BRIKK_RELEASE_OWNER_EXCEPTION=true`. The override defaults off, is unavailable to
+push-triggered releases, and prints a loud warning with the commit and branch when a
+release proceeds from outside `main`; it is not permission an agent can grant itself.
+
 - Push to `main`: CI builds/tests and checks Maven Local publication before publishing snapshots.
 - Push `release/<version>` (branched from the `main` commit being released) or dispatch the
   release workflow on `main`: the same gates precede signed Maven Central publication.

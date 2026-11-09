@@ -27,6 +27,11 @@ on:
         type: boolean
         required: false
         default: false
+      owner_exception:
+        description: 'Owner explicitly approved this release from a named branch not on main (AGENTS.md)'
+        type: boolean
+        required: false
+        default: false
 
 concurrency:
   group: release-${{ github.ref }}
@@ -45,8 +50,14 @@ jobs:
     # A skipped gate counts only for a preverified manual run; a failed or cancelled one never does.
     if: ${{ !cancelled() && (needs.test.result == 'success' || (inputs.preverified && needs.test.result == 'skipped')) }}
     runs-on: ubuntu-latest
+    env:
+      BRIKK_RELEASE_OWNER_EXCEPTION: ${{ github.event_name == 'workflow_dispatch' && inputs.owner_exception && 'true' || 'false' }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      # The shared guard fetches only main and completes shallow history; preverified never skips it.
+      - name: Require the release commit on main (or the owner's explicit exception)
+        run: python3 tools/release_ancestry.py
 
       - name: Determine version
         id: ver

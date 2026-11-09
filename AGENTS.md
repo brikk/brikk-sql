@@ -40,6 +40,9 @@ later release. Without that instruction, a request to release from a branch mean
 This rule exists because 1.0.0 was released from `sqlglot-30-29-batch-a` without merging, and
 `main` then carried a version line below the published release.
 
+The release workflows and launchers enforce that the released commit is contained in `origin/main`.
+Their explicit owner-exception override is the repository owner's alone to grant, per release.
+
 ## Binary compatibility of public data classes
 
 Other artifacts (the plugins, the Brikk Kotlin helper) are compiled separately against published

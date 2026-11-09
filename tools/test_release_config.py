@@ -9,6 +9,8 @@ import tempfile
 import unittest
 
 from release_config import development_version, release_template, validate_version
+from release_ancestry import OWNER_EXCEPTION_ENV
+from test_release_ancestry import create_repository, git, git_test_env
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -110,10 +112,13 @@ class ReleaseLauncherTest(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix="brikk-release-", dir=TEMP_DIR)
         self.addCleanup(self.temp.cleanup)
-        self.root = Path(self.temp.name)
+        self.root = Path(self.temp.name) / "checkout"
+        create_repository(self.root)
+        git(self.root, "checkout", "-b", "release/test")
         (self.root / "tools").mkdir()
         shutil.copy2(ROOT / "publish-release.sh", self.root)
         shutil.copy2(ROOT / "tools/release_config.py", self.root / "tools")
+        shutil.copy2(ROOT / "tools/release_ancestry.py", self.root / "tools")
         self.original = (
             "# Deliberately different indentation/comments; preserve byte-for-byte.\n"
             "settings:\n publishing:\n  version: 1.0.0-SNAPSHOT\n"
@@ -131,7 +136,8 @@ class ReleaseLauncherTest(unittest.TestCase):
         )
         fake_kotlin.chmod(0o755)
         self.env = {
-            **os.environ,
+            **git_test_env(),
+            OWNER_EXCEPTION_ENV: "false",
             "KOTLIN_TOOLCHAIN_MAVENCENTRAL_USERNAME": "test-user",
             "KOTLIN_TOOLCHAIN_MAVENCENTRAL_PASSWORD": "test-password",
             "KOTLIN_TOOLCHAIN_SIGNING_KEY": "test-key",
@@ -145,7 +151,7 @@ class ReleaseLauncherTest(unittest.TestCase):
         )
 
     def test_local_release_installs_formal_selection_without_credentials_or_signing(self):
-        bare = {k: v for k, v in os.environ.items() if not k.startswith("KOTLIN_TOOLCHAIN_")}
+        bare = {k: v for k, v in git_test_env().items() if not k.startswith("KOTLIN_TOOLCHAIN_")}
         result = self.run_release("0.20.0", modules=("brikk-sql-verify", "brikk-sql-oracle"), local=True, env=bare)
         self.assertEqual(0, result.returncode, result.stderr)
         observed = (self.root / "observed.yaml").read_text()
@@ -163,6 +169,41 @@ class ReleaseLauncherTest(unittest.TestCase):
                 self.assertEqual(2, result.returncode, result.stderr)
                 self.assertFalse((self.root / "observed-args.txt").exists())
                 self.assert_restored()
+
+    def test_central_release_refuses_unmerged_commit_before_changing_template(self):
+        git(self.root, "commit", "--allow-empty", "-m", "not on main")
+        result = self.run_release()
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("not contained in origin/main", result.stderr)
+        self.assertFalse((self.root / "observed-args.txt").exists())
+        self.assert_restored()
+
+    def test_central_release_owner_exception_reaches_fake_toolchain(self):
+        git(self.root, "commit", "--allow-empty", "-m", "owner-approved release")
+        self.env[OWNER_EXCEPTION_ENV] = "true"
+        result = self.run_release()
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertIn("OWNER'S PER-RELEASE EXCEPTION", result.stdout)
+        self.assertTrue((self.root / "observed-args.txt").exists())
+        self.assert_restored()
+
+    def test_central_ancestry_refusal_precedes_missing_credentials(self):
+        git(self.root, "commit", "--allow-empty", "-m", "not on main")
+        self.env = {k: v for k, v in self.env.items() if not k.startswith("KOTLIN_TOOLCHAIN_")}
+        result = self.run_release()
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("not contained in origin/main", result.stderr)
+        self.assertNotIn("missing required environment variables", result.stderr)
+        self.assertFalse((self.root / "observed-args.txt").exists())
+        self.assert_restored()
+
+    def test_local_release_does_not_check_ancestry_or_fetch(self):
+        git(self.root, "commit", "--allow-empty", "-m", "not on main")
+        git(self.root, "remote", "remove", "origin")
+        result = self.run_release(local=True)
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertNotIn("Release ancestry", result.stdout)
+        self.assert_restored()
 
     def assert_restored(self):
         self.assertEqual(self.original, (self.root / "publish.module-template.yaml").read_text())
