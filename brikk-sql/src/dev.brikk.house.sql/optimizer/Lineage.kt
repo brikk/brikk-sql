@@ -62,6 +62,8 @@ import dev.brikk.house.sql.parser.ParseError
 // unlike sqlglot where it is the base of the error family.
 class SqlglotError(message: String) : BrikkSqlError(message)
 
+internal class LineageColumnNotFoundError(message: String) : IllegalArgumentException(message)
+
 // sqlglot: lineage.Node
 class Node(
     val name: String,
@@ -430,7 +432,8 @@ fun toNode(
         }
 
         if (index == -1) {
-            throw IllegalArgumentException("Could not find $column in ${scope.expression}")
+            // sqlglot: ValueError
+            throw LineageColumnNotFoundError("Could not find $column in ${scope.expression}")
         }
 
         for (s in scope.unionScopes) {

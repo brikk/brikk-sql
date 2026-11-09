@@ -73,6 +73,31 @@ repository-relative.
 | FQ-30 | Correctness | PostgreSQL oracle cleanup failures (KQ-08) | Behaviour |
 | FQ-31 | Correctness | Decide who owns `SqlFragment.ast` (KQ-05) | API decision |
 
+## Progress
+
+The work is being done on the branch `quality-check-fixes`, one round per group in the
+suggested order. Each round is implemented in one session, reviewed in another, gated by
+the manager and committed on its own.
+
+| Round | Items | State |
+| --- | --- | --- |
+| 1 | FQ-16, FQ-17, FQ-18, FQ-19, FQ-23, FQ-24, FQ-21 step 1 | Done |
+| 2 | FQ-01 | Done |
+| 3 | FQ-26, FQ-27, FQ-28 step 1 | Done |
+
+Left open by the rounds so far, for the owner:
+
+- FQ-19: `.github/workflows/test.yml` still ignores the branch
+  `publish/intellij-support-0.1.0`. It is configuration, so the comments round left it.
+- FQ-19: the Toolchain 0.11 and 0.12 comments were left as they are. Nothing in the
+  repository shows that their statements stopped holding on 0.13.0.
+- FQ-01: the guard checks `HEAD` only. A launcher run from a checkout with uncommitted
+  edits to tracked files would still publish them. CI checkouts are clean, so this
+  affects local releases only. A clean-tree check would be a separate change.
+- FQ-01: the workflow steps have only been exercised locally against throwaway
+  repositories, including a shallow clone like the one GitHub makes. The first real
+  release run is their first run on GitHub.
+
 ## Release
 
 ### FQ-01. Check that the released commit is on `main`
@@ -652,6 +677,21 @@ I suggest two steps where KQ-04 has one.
    in `unmappableFunctions`, and only the known lineage refusals give an empty map in
    `contract`. Whether callers need "unknown" as data, distinct from "none", is an API
    decision under the `AGENTS.md` compatibility rule.
+
+Step 1 is done. Doing it turned up facts that step 2 should start from:
+
+- One deliberate refusal was not a `BrikkSqlError`: lineage's "Could not find <column>"
+  for a set operation, a port of an upstream `ValueError`. It now has its own internal
+  type, `LineageColumnNotFoundError`, which still extends `IllegalArgumentException`,
+  and `contract` catches it.
+- An unexpandable star never gave empty dependencies, although the old KDoc and KQ-04
+  both use it as the example. `SELECT * FROM mystery` gives `{*=[mystery]}`.
+- `SELECT * FROM mystery GROUP BY 1` throws a plain `IllegalStateException` from
+  `optimizer/QualifyColumns.kt` (a port of upstream's `assert_is`), reachable from SQL
+  text. It comes from `outputShape`, which `contract` does not guard, so it propagated
+  before and still does.
+- `parser/Tokenizer.kt` wraps any unexpected exception in `TokenError`, so a tokenizer
+  bug still falls back under the `BrikkSqlError` catch.
 
 ### FQ-29. Reset the synthetic-alias counter per generation (KQ-06, Behaviour)
 

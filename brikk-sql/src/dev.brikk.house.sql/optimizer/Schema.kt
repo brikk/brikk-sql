@@ -219,9 +219,10 @@ class MappingSchema(
     // sqlglot: MappingSchema.dialect
     override val dialect: Dialect get() = schemaDialect
 
-    // sqlglot: MappingSchema._type_mapping_cache (the Python normalized-table/name/find
-    // caches are pure perf and are not ported)
-    private val typeMappingCache = HashMap<String, DataType>()
+    // sqlglot: MappingSchema._type_mapping_cache; brikk extension (docs/brikk-extensions.md #67):
+    // include the effective dialect instance, unlike Python's string-only key. The
+    // normalized-table/name/find caches are pure perf and are not ported.
+    private val typeMappingCache = HashMap<Pair<String, Dialect>, DataType>()
 
     // sqlglot: MappingSchema._normalized_name_cache. This is not just perf: the cache
     // hit skips normalize_name's `meta["is_table"]` side effect on the AST node, so
@@ -508,9 +509,9 @@ class MappingSchema(
     }
 
     // sqlglot: MappingSchema._to_data_type
-    private fun toDataType(schemaType: String, dialect: Dialect? = null): DataType =
-        typeMappingCache.getOrPut(schemaType) {
-            val d = dialect ?: this.dialect
+    private fun toDataType(schemaType: String, dialect: Dialect? = null): DataType {
+        val d = dialect ?: this.dialect
+        return typeMappingCache.getOrPut(schemaType to d) {
             val udt = d.parser().supportsUserDefinedTypes
 
             val expression = try {
@@ -521,6 +522,7 @@ class MappingSchema(
             expression.transform(copy = false) { d.normalizeIdentifier(it) }
             expression
         }
+    }
 }
 
 // sqlglot: exp.DataType.from_str

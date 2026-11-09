@@ -1,5 +1,15 @@
 package dev.brikk.house.sql.shape
 
+import dev.brikk.house.sql.ast.Anonymous
+import dev.brikk.house.sql.ast.DuckdbBinaryLiteral
+import dev.brikk.house.sql.ast.Expression
+import dev.brikk.house.sql.ast.Star
+import dev.brikk.house.sql.ast.args
+import dev.brikk.house.sql.dialects.Dialects
+import dev.brikk.house.sql.optimizer.LineageColumnNotFoundError
+import dev.brikk.house.sql.optimizer.SqlglotError
+import dev.brikk.house.sql.parser.ParseError
+import java.util.concurrent.CancellationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.encodeToString
 import kotlin.test.Test
@@ -474,6 +484,122 @@ class SqlFragmentTest {
             json.decodeFromString<FragmentDescription>(json.encodeToString(description)),
         )
     }
+
+    @Test
+    fun unexpandableStarContractKeepsSourceDependencies() {
+        val fragment = SqlFragment("SELECT * FROM mystery")
+        val contract = fragment.contract()
+        assertEquals(Shape.of("*" to "UNKNOWN"), contract.output)
+        assertEquals(mapOf("*" to setOf("mystery")), contract.dependencies)
+    }
+
+    @Test
+    fun deliberateLineageRefusalKeepsEmptyContractDependencies() {
+        val fragment = SqlFragment("SELECT setval('s', 42) AS result", "duckdb")
+        assertFailsWith<SqlglotError> { fragment.columnDependencies() }
+        val contract = fragment.contract()
+        assertEquals(listOf("result"), contract.output.names())
+        assertEquals(emptyMap(), contract.dependencies)
+    }
+
+    @Test
+    fun missingSetOperationColumnKeepsEmptyContractDependencies() {
+        val fragment = SqlFragment(
+            "SELECT q.b FROM (SELECT 1 AS a UNION ALL BY NAME SELECT 2 AS b) AS q",
+            "duckdb",
+        )
+        val refusal = assertFailsWith<LineageColumnNotFoundError> { fragment.columnDependencies() }
+        assertTrue(refusal.message!!.startsWith("Could not find b in "))
+        val contract = fragment.contract()
+        assertEquals(listOf("b"), contract.output.names())
+        assertEquals(emptyMap(), contract.dependencies)
+    }
+
+    @Test
+    fun targetReparseRefusalFallsBackToSourceFunctions() {
+        val fragment = SqlFragment("SELECT missing_fn(1)")
+        // Deliberately emit an unclosed function call to exercise reparsing, not generation refusal.
+        fragment.ast.find<Anonymous>()!!.set("this", "missing_fn(")
+        val output = fragment.transpileTo("trino").sql
+        assertFailsWith<ParseError> {
+            Dialects.TRINO.parseOne(output)
+        }
+        assertEquals(listOf("missing_fn("), fragment.unmappableFunctions("trino"))
+    }
+
+    @Test
+    fun unknownPipeStageFailurePropagatesFromUnmappableFunctions() {
+        val fragment = SqlFragment("FROM t |> SELECT missing_fn(1)")
+        fragment.ast.append("expressions", Star())
+        val failure = assertFailsWith<IllegalStateException> { fragment.unmappableFunctions("trino", desugarPipes = true) }
+        assertEquals("Unknown pipe stage node: Star", failure.message)
+    }
+
+    @Test
+    fun unregisteredAstClassFailurePropagatesFromUnmappableFunctions() {
+        val fragment = SqlFragment("SELECT missing_fn(1)")
+        fragment.ast.append("expressions", UnregisteredExpression())
+        val failure = assertFailsWith<IllegalStateException> { fragment.unmappableFunctions("trino") }
+        assertEquals("Unregistered expression class: UnregisteredExpression", failure.message)
+    }
+
+    private class UnregisteredExpression : Expression()
+
+    @Test
+    fun invalidBinaryLiteralFailurePropagatesFromUnmappableFunctions() {
+        val fragment = SqlFragment("SELECT missing_fn(1)")
+        fragment.ast.append("expressions", DuckdbBinaryLiteral(
+            args("kind" to "X", "this" to "not hex"),
+        ))
+        val failure = assertFailsWith<IllegalArgumentException> { fragment.unmappableFunctions("trino") }
+        assertEquals("Invalid DuckDB binary literal AST", failure.message)
+    }
+
+    @Test
+    fun invalidBinaryLiteralDiagnosticFailurePropagatesFromContract() {
+        val fragment = SqlFragment("SELECT 1 AS a, 2 AS b UNION ALL BY NAME SELECT X'00' AS a", "duckdb")
+        fragment.ast.find<DuckdbBinaryLiteral>()!!.set("this", "not hex")
+        val failure = assertFailsWith<IllegalArgumentException> { fragment.contract() }
+        assertEquals("Invalid DuckDB binary literal AST", failure.message)
+        assertTrue(failure.stackTrace.any { it.methodName == "columnDependencies" })
+    }
+
+    @Test
+    fun unmappableFunctionsPropagatesCancellationFromTranspiling() {
+        val failure = CancellationException("cancelled")
+        val fragment = SqlFragment("SELECT missing_fn(1)")
+        fragment.ast.comments = cancellingCopyComments(failure)
+        val thrown = assertFailsWith<CancellationException> { fragment.unmappableFunctions("trino") }
+        assertTrue(thrown === failure)
+        assertTrue(thrown.stackTrace.any { it.methodName == "transpileTo" })
+        assertTrue(thrown.stackTrace.any { it.methodName == "unmappableFunctions" })
+    }
+
+    @Test
+    fun contractPropagatesCancellationFromColumnDependencies() {
+        val failure = CancellationException("cancelled")
+        val fragment = SqlFragment("SELECT a FROM t")
+        // Warm inventories; the first original-tree copy is outputShape, the second is lineage.
+        assertEquals(listOf("t"), fragment.sourceTables)
+        assertEquals(emptyList(), fragment.tableSlots)
+        fragment.ast.comments = cancellingCopyComments(failure, successfulReads = 1)
+        val thrown = assertFailsWith<CancellationException> { fragment.contract() }
+        assertTrue(thrown === failure)
+        assertTrue(thrown.stackTrace.any { it.methodName == "columnDependencies" })
+    }
+
+    private fun cancellingCopyComments(failure: CancellationException, successfulReads: Int = 0): MutableList<String> =
+        object : AbstractMutableList<String>() {
+            private var reads = 0
+            override val size: Int get() = 1
+            override fun get(index: Int): String {
+                if (reads++ >= successfulReads) throw failure.fillInStackTrace()
+                return "copy control"
+            }
+            override fun add(index: Int, element: String): Unit = error("Unused")
+            override fun removeAt(index: Int): String = error("Unused")
+            override fun set(index: Int, element: String): String = error("Unused")
+        }
 
     @Test
     fun contractRollsUpInputsShapeAndDependencies() {

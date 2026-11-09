@@ -2220,6 +2220,20 @@ JSON-alias, INSERT and pivot/CTE correctness gaps are owned deferrals, not prote
 semantic divergences. Do not turn a feature deferral into a permanent "intentional"
 exception or treat a compatibility refusal as permission to emit lossy executable SQL.
 
+## 67. Schema type cache separates effective dialect instances
+
+- **What:** `MappingSchema` keys its per-schema type cache by both type text and the
+  effective dialect instance (override or schema default). The pinned SQLGlot
+  `schema.py::_to_data_type` caches by text alone, so the first dialect to parse a
+  type decides later lookups under other dialects. Parsing, identifier normalization
+  and error behavior are otherwise unchanged; there is no global cache.
+- **Where:** `optimizer/Schema.kt` `typeMappingCache` / `toDataType`.
+- **Tests:** `SchemaTest.columnTypeCacheSeparatesEffectiveDialectsInEitherOrder`
+  compares `TIMESTAMP` under PostgreSQL (`TIMESTAMP`) and BigQuery (`TIMESTAMPTZ`)
+  with independent `dataTypeFromStr` results in both lookup orders.
+- **Conflict risk:** LOW — retain dialect-aware keys on upstream sync unless upstream
+  also separates dialects. Existing schema defaults and unknown-column behavior stay intact.
+
 ## Upstream sync protocol
 
 1. Re-pin `reference/sqlglot`, regenerate all generated tables/corpora (`tools/*.py`),

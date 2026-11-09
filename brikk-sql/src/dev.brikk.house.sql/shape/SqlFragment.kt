@@ -1,5 +1,6 @@
 package dev.brikk.house.sql.shape
 
+import dev.brikk.house.sql.BrikkSqlError
 import dev.brikk.house.sql.ast.Alias
 import dev.brikk.house.sql.ast.Anonymous
 import dev.brikk.house.sql.ast.Func
@@ -52,6 +53,7 @@ import dev.brikk.house.sql.ast.intoExpr
 import dev.brikk.house.sql.dialects.Dialect
 import dev.brikk.house.sql.dialects.Dialects
 import dev.brikk.house.sql.generator.UnsupportedError
+import dev.brikk.house.sql.optimizer.LineageColumnNotFoundError
 import dev.brikk.house.sql.optimizer.MappingSchema
 import dev.brikk.house.sql.optimizer.Node
 import dev.brikk.house.sql.optimizer.TypeAnnotator
@@ -256,8 +258,9 @@ class SqlFragment(val sql: String, val dialect: String = "") {
      * never reported.
      *
      * Requires the target dialect to ship a function catalog (doris/trino/duckdb today);
-     * throws [ShapeError] otherwise. If the emitted SQL cannot be re-parsed under the
-     * target dialect, falls back to scanning this fragment's own AST (conservative).
+     * throws [ShapeError] otherwise. A [BrikkSqlError] from transpiling or target
+     * reparsing falls back to scanning this fragment's own tree. Every other failure
+     * propagates.
      *
      * [desugarPipes] mirrors [transpileTo]'s flag so the checked output is the one a
      * caller would actually ship to the engine.
@@ -271,7 +274,7 @@ class SqlFragment(val sql: String, val dialect: String = "") {
         val generator = targetDialect.generator()
         val root = try {
             targetDialect.parseOne(transpileTo(target, desugarPipes = desugarPipes).sql)
-        } catch (_: Exception) {
+        } catch (_: BrikkSqlError) {
             ast
         }
         val out = LinkedHashSet<String>()
@@ -679,8 +682,9 @@ class SqlFragment(val sql: String, val dialect: String = "") {
 
     /**
      * The fragment's full contract under [inputs]: inputs used (source tables then
-     * slots), resolved output shape, and column dependencies (empty when lineage
-     * cannot run, e.g. unexpandable star projections).
+     * slots), resolved output shape, and column dependencies. Dependencies are empty
+     * when lineage refuses ([BrikkSqlError], or a set-operation column it cannot find).
+     * Other failures propagate.
      */
     fun contract(inputs: ShapeCatalog = ShapeCatalog.EMPTY): FragmentContract =
         FragmentContract(
@@ -688,7 +692,9 @@ class SqlFragment(val sql: String, val dialect: String = "") {
             output = outputShape(inputs),
             dependencies = try {
                 columnDependencies(inputs = inputs)
-            } catch (e: Exception) {
+            } catch (_: BrikkSqlError) {
+                emptyMap()
+            } catch (_: LineageColumnNotFoundError) {
                 emptyMap()
             },
         )

@@ -65,7 +65,7 @@ private fun isCollectible(node: Expression): Boolean =
 /** Identity-keyed wrapper (Python uses `id(obj)`; Expression equality is structural). */
 class IdentityKey(val value: Any) {
     override fun equals(other: Any?): Boolean = other is IdentityKey && other.value === value
-    override fun hashCode(): Int = value.hashCode()
+    override fun hashCode(): Int = System.identityHashCode(value)
 }
 
 // sqlglot: scope.Scope
