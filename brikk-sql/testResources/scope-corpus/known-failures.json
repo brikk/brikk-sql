@@ -1,4 +1,113 @@
 {
-    "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
-    "cases": []
+    "sqlglot_version": "v30.29.0",
+    "cases": [
+        {
+            "id": "assertion:v1:sha256:7994e5276f3babd5b9b06afee59205769dd6112d12716d732cc121032b9595fc:1",
+            "sql": "WITH c AS (SELECT 1 AS x) SELECT * FROM c AS a PIVOT (SUM(x) FOR y IN ('z'))",
+            "signature": "scope-mismatch:v1:sha256:03f72bef96aafd2b22e8b5d7bce2261423da852df7eeefedd95158ae99c811de",
+            "reason": "SG29-020: The new pivoted-CTE reference-alias source entry is not registered in the existing scope model. Keep this exact graph difference visible; no broad cache/scope refactor is imported. Deferred owner: Jayson Minard, separately bounded feature/qualification work; no equivalence claimed.",
+            "expected": {
+                "sql": "WITH c AS (SELECT 1 AS x) SELECT * FROM c AS a PIVOT (SUM(x) FOR y IN ('z'))",
+                "scopes": [
+                    {
+                        "expression_class": "Select",
+                        "scope_type": "CTE",
+                        "sources": [],
+                        "selected_source_names": [],
+                        "column_names": [],
+                        "external_column_names": [],
+                        "unqualified_column_count": 0,
+                        "subquery_count": 0,
+                        "cte_count": 0,
+                        "derived_count": 0,
+                        "udtf_count": 0,
+                        "is_correlated_subquery": false
+                    },
+                    {
+                        "expression_class": "Select",
+                        "scope_type": "ROOT",
+                        "sources": [
+                            [
+                                "c",
+                                "scope"
+                            ],
+                            [
+                                "a",
+                                "scope"
+                            ],
+                            [
+                                "",
+                                "table"
+                            ]
+                        ],
+                        "selected_source_names": [
+                            "a"
+                        ],
+                        "column_names": [
+                            "x",
+                            "y"
+                        ],
+                        "external_column_names": [
+                            "x",
+                            "y"
+                        ],
+                        "unqualified_column_count": 2,
+                        "subquery_count": 0,
+                        "cte_count": 1,
+                        "derived_count": 0,
+                        "udtf_count": 0,
+                        "is_correlated_subquery": false
+                    }
+                ]
+            },
+            "actual": {
+                "sql": "WITH c AS (SELECT 1 AS x) SELECT * FROM c AS a PIVOT (SUM(x) FOR y IN ('z'))",
+                "scopes": [
+                    {
+                        "expression_class": "Select",
+                        "scope_type": "CTE",
+                        "sources": [],
+                        "selected_source_names": [],
+                        "column_names": [],
+                        "external_column_names": [],
+                        "unqualified_column_count": 0,
+                        "subquery_count": 0,
+                        "cte_count": 0,
+                        "derived_count": 0,
+                        "udtf_count": 0,
+                        "is_correlated_subquery": false
+                    },
+                    {
+                        "expression_class": "Select",
+                        "scope_type": "ROOT",
+                        "sources": [
+                            [
+                                "c",
+                                "scope"
+                            ],
+                            [
+                                "",
+                                "table"
+                            ]
+                        ],
+                        "selected_source_names": [],
+                        "column_names": [
+                            "x",
+                            "y"
+                        ],
+                        "external_column_names": [
+                            "x",
+                            "y"
+                        ],
+                        "unqualified_column_count": 2,
+                        "subquery_count": 0,
+                        "cte_count": 1,
+                        "derived_count": 0,
+                        "udtf_count": 0,
+                        "is_correlated_subquery": false
+                    }
+                ]
+            }
+        }
+    ]
 }

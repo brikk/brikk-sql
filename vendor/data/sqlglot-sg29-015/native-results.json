@@ -1,0 +1,1009 @@
+{
+  "spark_version": "4.0.1",
+  "scope": "Synthetic SELECT execution only. ALTER parser plans are not catalog/analyzer/storage qualification. Hive uses its shipped parser only, no backend execution.",
+  "java_version": "17.0.21",
+  "catalog_unchanged": true,
+  "probe_sha256": "2abb7533e715a84b448cd3bcd703c519a5b3ff99415ff1e2794cae3ecc188f59",
+  "records": [
+    {
+      "dialect": "spark",
+      "kind": "result",
+      "sql": "SELECT LISTAGG(x) AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=GroupConcat(this=Column(this=Identifier(this=x,quoted=false))),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Values(expressions=[Tuple(expressions=[Literal(this=b,is_string=true)]),Tuple(expressions=[Literal(this=a,is_string=true)]),Tuple(expressions=[Literal(this=a,is_string=true)]),Tuple(expressions=[TryCast(this=Null(),to=DataType(this=TEXT,expressions=null,nested=false),format=null,safe=null,action=null,default=null,requires_string=null)])],alias=TableAlias(this=Identifier(this=t,quoted=false),columns=[Identifier(this=x,quoted=false)]))))",
+      "preview": "SELECT LISTAGG(x, '') AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "generated": "SELECT LISTAGG(x, '') AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "original_values": [
+        [
+          "baa"
+        ]
+      ],
+      "generated_values": [
+        [
+          "baa"
+        ]
+      ],
+      "original_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      },
+      "generated_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      }
+    },
+    {
+      "dialect": "spark",
+      "kind": "result",
+      "sql": "SELECT LISTAGG(x) WITHIN GROUP (ORDER BY x DESC) AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=GroupConcat(this=Order(this=Column(this=Identifier(this=x,quoted=false)),expressions=[Ordered(this=Column(this=Identifier(this=x,quoted=false)),desc=true,nulls_first=false,with_fill=null)],siblings=null),separator=null,on_overflow=null),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Values(expressions=[Tuple(expressions=[Literal(this=b,is_string=true)]),Tuple(expressions=[Literal(this=a,is_string=true)]),Tuple(expressions=[Literal(this=a,is_string=true)]),Tuple(expressions=[TryCast(this=Null(),to=DataType(this=TEXT,expressions=null,nested=false),format=null,safe=null,action=null,default=null,requires_string=null)])],alias=TableAlias(this=Identifier(this=t,quoted=false),columns=[Identifier(this=x,quoted=false)]))))",
+      "preview": "SELECT LISTAGG(x, '') WITHIN GROUP (ORDER BY x DESC) AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "generated": "SELECT LISTAGG(x, '') WITHIN GROUP (ORDER BY x DESC) AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "original_values": [
+        [
+          "baa"
+        ]
+      ],
+      "generated_values": [
+        [
+          "baa"
+        ]
+      ],
+      "original_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      },
+      "generated_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      }
+    },
+    {
+      "dialect": "spark",
+      "kind": "result",
+      "sql": "SELECT LISTAGG(x, '-') AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=GroupConcat(this=Column(this=Identifier(this=x,quoted=false)),separator=Literal(this=-,is_string=true)),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Values(expressions=[Tuple(expressions=[Literal(this=b,is_string=true)]),Tuple(expressions=[Literal(this=a,is_string=true)]),Tuple(expressions=[Literal(this=a,is_string=true)]),Tuple(expressions=[TryCast(this=Null(),to=DataType(this=TEXT,expressions=null,nested=false),format=null,safe=null,action=null,default=null,requires_string=null)])],alias=TableAlias(this=Identifier(this=t,quoted=false),columns=[Identifier(this=x,quoted=false)]))))",
+      "preview": "SELECT LISTAGG(x, '-') AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "generated": "SELECT LISTAGG(x, '-') AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "original_values": [
+        [
+          "b-a-a"
+        ]
+      ],
+      "generated_values": [
+        [
+          "b-a-a"
+        ]
+      ],
+      "original_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      },
+      "generated_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      }
+    },
+    {
+      "dialect": "spark",
+      "kind": "result",
+      "sql": "SELECT LISTAGG(x, '-') WITHIN GROUP (ORDER BY x DESC) AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=GroupConcat(this=Order(this=Column(this=Identifier(this=x,quoted=false)),expressions=[Ordered(this=Column(this=Identifier(this=x,quoted=false)),desc=true,nulls_first=false,with_fill=null)],siblings=null),separator=Literal(this=-,is_string=true),on_overflow=null),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Values(expressions=[Tuple(expressions=[Literal(this=b,is_string=true)]),Tuple(expressions=[Literal(this=a,is_string=true)]),Tuple(expressions=[Literal(this=a,is_string=true)]),Tuple(expressions=[TryCast(this=Null(),to=DataType(this=TEXT,expressions=null,nested=false),format=null,safe=null,action=null,default=null,requires_string=null)])],alias=TableAlias(this=Identifier(this=t,quoted=false),columns=[Identifier(this=x,quoted=false)]))))",
+      "preview": "SELECT LISTAGG(x, '-') WITHIN GROUP (ORDER BY x DESC) AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "generated": "SELECT LISTAGG(x, '-') WITHIN GROUP (ORDER BY x DESC) AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "original_values": [
+        [
+          "b-a-a"
+        ]
+      ],
+      "generated_values": [
+        [
+          "b-a-a"
+        ]
+      ],
+      "original_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      },
+      "generated_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      }
+    },
+    {
+      "dialect": "spark",
+      "kind": "result",
+      "sql": "SELECT LISTAGG(x, '') AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=GroupConcat(this=Column(this=Identifier(this=x,quoted=false)),separator=Literal(this=,is_string=true)),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Values(expressions=[Tuple(expressions=[Literal(this=b,is_string=true)]),Tuple(expressions=[Literal(this=a,is_string=true)]),Tuple(expressions=[Literal(this=a,is_string=true)]),Tuple(expressions=[TryCast(this=Null(),to=DataType(this=TEXT,expressions=null,nested=false),format=null,safe=null,action=null,default=null,requires_string=null)])],alias=TableAlias(this=Identifier(this=t,quoted=false),columns=[Identifier(this=x,quoted=false)]))))",
+      "preview": "SELECT LISTAGG(x, '') AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "generated": "SELECT LISTAGG(x, '') AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "original_values": [
+        [
+          "baa"
+        ]
+      ],
+      "generated_values": [
+        [
+          "baa"
+        ]
+      ],
+      "original_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      },
+      "generated_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      }
+    },
+    {
+      "dialect": "spark",
+      "kind": "result",
+      "sql": "SELECT LISTAGG(x, '') WITHIN GROUP (ORDER BY x DESC) AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=GroupConcat(this=Order(this=Column(this=Identifier(this=x,quoted=false)),expressions=[Ordered(this=Column(this=Identifier(this=x,quoted=false)),desc=true,nulls_first=false,with_fill=null)],siblings=null),separator=Literal(this=,is_string=true),on_overflow=null),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Values(expressions=[Tuple(expressions=[Literal(this=b,is_string=true)]),Tuple(expressions=[Literal(this=a,is_string=true)]),Tuple(expressions=[Literal(this=a,is_string=true)]),Tuple(expressions=[TryCast(this=Null(),to=DataType(this=TEXT,expressions=null,nested=false),format=null,safe=null,action=null,default=null,requires_string=null)])],alias=TableAlias(this=Identifier(this=t,quoted=false),columns=[Identifier(this=x,quoted=false)]))))",
+      "preview": "SELECT LISTAGG(x, '') WITHIN GROUP (ORDER BY x DESC) AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "generated": "SELECT LISTAGG(x, '') WITHIN GROUP (ORDER BY x DESC) AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "original_values": [
+        [
+          "baa"
+        ]
+      ],
+      "generated_values": [
+        [
+          "baa"
+        ]
+      ],
+      "original_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      },
+      "generated_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      }
+    },
+    {
+      "dialect": "spark",
+      "kind": "result",
+      "sql": "SELECT LISTAGG(ALL x) AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=GroupConcat(this=Column(this=Identifier(this=x,quoted=false))),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Values(expressions=[Tuple(expressions=[Literal(this=b,is_string=true)]),Tuple(expressions=[Literal(this=a,is_string=true)]),Tuple(expressions=[Literal(this=a,is_string=true)]),Tuple(expressions=[TryCast(this=Null(),to=DataType(this=TEXT,expressions=null,nested=false),format=null,safe=null,action=null,default=null,requires_string=null)])],alias=TableAlias(this=Identifier(this=t,quoted=false),columns=[Identifier(this=x,quoted=false)]))))",
+      "preview": "SELECT LISTAGG(x, '') AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "generated": "SELECT LISTAGG(x, '') AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "original_values": [
+        [
+          "baa"
+        ]
+      ],
+      "generated_values": [
+        [
+          "baa"
+        ]
+      ],
+      "original_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      },
+      "generated_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      }
+    },
+    {
+      "dialect": "spark",
+      "kind": "result",
+      "sql": "SELECT LISTAGG(ALL x) WITHIN GROUP (ORDER BY x DESC) AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=GroupConcat(this=Order(this=Column(this=Identifier(this=x,quoted=false)),expressions=[Ordered(this=Column(this=Identifier(this=x,quoted=false)),desc=true,nulls_first=false,with_fill=null)],siblings=null),separator=null,on_overflow=null),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Values(expressions=[Tuple(expressions=[Literal(this=b,is_string=true)]),Tuple(expressions=[Literal(this=a,is_string=true)]),Tuple(expressions=[Literal(this=a,is_string=true)]),Tuple(expressions=[TryCast(this=Null(),to=DataType(this=TEXT,expressions=null,nested=false),format=null,safe=null,action=null,default=null,requires_string=null)])],alias=TableAlias(this=Identifier(this=t,quoted=false),columns=[Identifier(this=x,quoted=false)]))))",
+      "preview": "SELECT LISTAGG(x, '') WITHIN GROUP (ORDER BY x DESC) AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "generated": "SELECT LISTAGG(x, '') WITHIN GROUP (ORDER BY x DESC) AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "original_values": [
+        [
+          "baa"
+        ]
+      ],
+      "generated_values": [
+        [
+          "baa"
+        ]
+      ],
+      "original_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      },
+      "generated_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      }
+    },
+    {
+      "dialect": "spark",
+      "kind": "result",
+      "sql": "SELECT LISTAGG(ALL x, '-') AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=GroupConcat(this=Column(this=Identifier(this=x,quoted=false)),separator=Literal(this=-,is_string=true)),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Values(expressions=[Tuple(expressions=[Literal(this=b,is_string=true)]),Tuple(expressions=[Literal(this=a,is_string=true)]),Tuple(expressions=[Literal(this=a,is_string=true)]),Tuple(expressions=[TryCast(this=Null(),to=DataType(this=TEXT,expressions=null,nested=false),format=null,safe=null,action=null,default=null,requires_string=null)])],alias=TableAlias(this=Identifier(this=t,quoted=false),columns=[Identifier(this=x,quoted=false)]))))",
+      "preview": "SELECT LISTAGG(x, '-') AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "generated": "SELECT LISTAGG(x, '-') AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "original_values": [
+        [
+          "b-a-a"
+        ]
+      ],
+      "generated_values": [
+        [
+          "b-a-a"
+        ]
+      ],
+      "original_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      },
+      "generated_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      }
+    },
+    {
+      "dialect": "spark",
+      "kind": "result",
+      "sql": "SELECT LISTAGG(ALL x, '-') WITHIN GROUP (ORDER BY x DESC) AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=GroupConcat(this=Order(this=Column(this=Identifier(this=x,quoted=false)),expressions=[Ordered(this=Column(this=Identifier(this=x,quoted=false)),desc=true,nulls_first=false,with_fill=null)],siblings=null),separator=Literal(this=-,is_string=true),on_overflow=null),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Values(expressions=[Tuple(expressions=[Literal(this=b,is_string=true)]),Tuple(expressions=[Literal(this=a,is_string=true)]),Tuple(expressions=[Literal(this=a,is_string=true)]),Tuple(expressions=[TryCast(this=Null(),to=DataType(this=TEXT,expressions=null,nested=false),format=null,safe=null,action=null,default=null,requires_string=null)])],alias=TableAlias(this=Identifier(this=t,quoted=false),columns=[Identifier(this=x,quoted=false)]))))",
+      "preview": "SELECT LISTAGG(x, '-') WITHIN GROUP (ORDER BY x DESC) AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "generated": "SELECT LISTAGG(x, '-') WITHIN GROUP (ORDER BY x DESC) AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "original_values": [
+        [
+          "b-a-a"
+        ]
+      ],
+      "generated_values": [
+        [
+          "b-a-a"
+        ]
+      ],
+      "original_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      },
+      "generated_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      }
+    },
+    {
+      "dialect": "spark",
+      "kind": "result",
+      "sql": "SELECT LISTAGG(ALL x, '') AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=GroupConcat(this=Column(this=Identifier(this=x,quoted=false)),separator=Literal(this=,is_string=true)),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Values(expressions=[Tuple(expressions=[Literal(this=b,is_string=true)]),Tuple(expressions=[Literal(this=a,is_string=true)]),Tuple(expressions=[Literal(this=a,is_string=true)]),Tuple(expressions=[TryCast(this=Null(),to=DataType(this=TEXT,expressions=null,nested=false),format=null,safe=null,action=null,default=null,requires_string=null)])],alias=TableAlias(this=Identifier(this=t,quoted=false),columns=[Identifier(this=x,quoted=false)]))))",
+      "preview": "SELECT LISTAGG(x, '') AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "generated": "SELECT LISTAGG(x, '') AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "original_values": [
+        [
+          "baa"
+        ]
+      ],
+      "generated_values": [
+        [
+          "baa"
+        ]
+      ],
+      "original_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      },
+      "generated_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      }
+    },
+    {
+      "dialect": "spark",
+      "kind": "result",
+      "sql": "SELECT LISTAGG(ALL x, '') WITHIN GROUP (ORDER BY x DESC) AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=GroupConcat(this=Order(this=Column(this=Identifier(this=x,quoted=false)),expressions=[Ordered(this=Column(this=Identifier(this=x,quoted=false)),desc=true,nulls_first=false,with_fill=null)],siblings=null),separator=Literal(this=,is_string=true),on_overflow=null),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Values(expressions=[Tuple(expressions=[Literal(this=b,is_string=true)]),Tuple(expressions=[Literal(this=a,is_string=true)]),Tuple(expressions=[Literal(this=a,is_string=true)]),Tuple(expressions=[TryCast(this=Null(),to=DataType(this=TEXT,expressions=null,nested=false),format=null,safe=null,action=null,default=null,requires_string=null)])],alias=TableAlias(this=Identifier(this=t,quoted=false),columns=[Identifier(this=x,quoted=false)]))))",
+      "preview": "SELECT LISTAGG(x, '') WITHIN GROUP (ORDER BY x DESC) AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "generated": "SELECT LISTAGG(x, '') WITHIN GROUP (ORDER BY x DESC) AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "original_values": [
+        [
+          "baa"
+        ]
+      ],
+      "generated_values": [
+        [
+          "baa"
+        ]
+      ],
+      "original_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      },
+      "generated_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      }
+    },
+    {
+      "dialect": "spark",
+      "kind": "result",
+      "sql": "SELECT LISTAGG(DISTINCT x) AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=GroupConcat(this=Distinct(expressions=[Column(this=Identifier(this=x,quoted=false))])),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Values(expressions=[Tuple(expressions=[Literal(this=b,is_string=true)]),Tuple(expressions=[Literal(this=a,is_string=true)]),Tuple(expressions=[Literal(this=a,is_string=true)]),Tuple(expressions=[TryCast(this=Null(),to=DataType(this=TEXT,expressions=null,nested=false),format=null,safe=null,action=null,default=null,requires_string=null)])],alias=TableAlias(this=Identifier(this=t,quoted=false),columns=[Identifier(this=x,quoted=false)]))))",
+      "preview": "SELECT LISTAGG(DISTINCT x, '') AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "generated": "SELECT LISTAGG(DISTINCT x, '') AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "original_values": [
+        [
+          "ba"
+        ]
+      ],
+      "generated_values": [
+        [
+          "ba"
+        ]
+      ],
+      "original_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      },
+      "generated_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      }
+    },
+    {
+      "dialect": "spark",
+      "kind": "result",
+      "sql": "SELECT LISTAGG(DISTINCT x) WITHIN GROUP (ORDER BY x DESC) AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=GroupConcat(this=Order(this=Distinct(expressions=[Column(this=Identifier(this=x,quoted=false))]),expressions=[Ordered(this=Column(this=Identifier(this=x,quoted=false)),desc=true,nulls_first=false,with_fill=null)],siblings=null),separator=null,on_overflow=null),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Values(expressions=[Tuple(expressions=[Literal(this=b,is_string=true)]),Tuple(expressions=[Literal(this=a,is_string=true)]),Tuple(expressions=[Literal(this=a,is_string=true)]),Tuple(expressions=[TryCast(this=Null(),to=DataType(this=TEXT,expressions=null,nested=false),format=null,safe=null,action=null,default=null,requires_string=null)])],alias=TableAlias(this=Identifier(this=t,quoted=false),columns=[Identifier(this=x,quoted=false)]))))",
+      "preview": "SELECT LISTAGG(DISTINCT x, '') WITHIN GROUP (ORDER BY x DESC) AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "generated": "SELECT LISTAGG(DISTINCT x, '') WITHIN GROUP (ORDER BY x DESC) AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "original_values": [
+        [
+          "ba"
+        ]
+      ],
+      "generated_values": [
+        [
+          "ba"
+        ]
+      ],
+      "original_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      },
+      "generated_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      }
+    },
+    {
+      "dialect": "spark",
+      "kind": "result",
+      "sql": "SELECT LISTAGG(DISTINCT x, '-') AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=GroupConcat(this=Distinct(expressions=[Column(this=Identifier(this=x,quoted=false))]),separator=Literal(this=-,is_string=true)),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Values(expressions=[Tuple(expressions=[Literal(this=b,is_string=true)]),Tuple(expressions=[Literal(this=a,is_string=true)]),Tuple(expressions=[Literal(this=a,is_string=true)]),Tuple(expressions=[TryCast(this=Null(),to=DataType(this=TEXT,expressions=null,nested=false),format=null,safe=null,action=null,default=null,requires_string=null)])],alias=TableAlias(this=Identifier(this=t,quoted=false),columns=[Identifier(this=x,quoted=false)]))))",
+      "preview": "SELECT LISTAGG(DISTINCT x, '-') AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "generated": "SELECT LISTAGG(DISTINCT x, '-') AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "original_values": [
+        [
+          "b-a"
+        ]
+      ],
+      "generated_values": [
+        [
+          "b-a"
+        ]
+      ],
+      "original_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      },
+      "generated_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      }
+    },
+    {
+      "dialect": "spark",
+      "kind": "result",
+      "sql": "SELECT LISTAGG(DISTINCT x, '-') WITHIN GROUP (ORDER BY x DESC) AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=GroupConcat(this=Order(this=Distinct(expressions=[Column(this=Identifier(this=x,quoted=false))]),expressions=[Ordered(this=Column(this=Identifier(this=x,quoted=false)),desc=true,nulls_first=false,with_fill=null)],siblings=null),separator=Literal(this=-,is_string=true),on_overflow=null),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Values(expressions=[Tuple(expressions=[Literal(this=b,is_string=true)]),Tuple(expressions=[Literal(this=a,is_string=true)]),Tuple(expressions=[Literal(this=a,is_string=true)]),Tuple(expressions=[TryCast(this=Null(),to=DataType(this=TEXT,expressions=null,nested=false),format=null,safe=null,action=null,default=null,requires_string=null)])],alias=TableAlias(this=Identifier(this=t,quoted=false),columns=[Identifier(this=x,quoted=false)]))))",
+      "preview": "SELECT LISTAGG(DISTINCT x, '-') WITHIN GROUP (ORDER BY x DESC) AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "generated": "SELECT LISTAGG(DISTINCT x, '-') WITHIN GROUP (ORDER BY x DESC) AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "original_values": [
+        [
+          "b-a"
+        ]
+      ],
+      "generated_values": [
+        [
+          "b-a"
+        ]
+      ],
+      "original_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      },
+      "generated_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      }
+    },
+    {
+      "dialect": "spark",
+      "kind": "result",
+      "sql": "SELECT LISTAGG(DISTINCT x, '') AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=GroupConcat(this=Distinct(expressions=[Column(this=Identifier(this=x,quoted=false))]),separator=Literal(this=,is_string=true)),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Values(expressions=[Tuple(expressions=[Literal(this=b,is_string=true)]),Tuple(expressions=[Literal(this=a,is_string=true)]),Tuple(expressions=[Literal(this=a,is_string=true)]),Tuple(expressions=[TryCast(this=Null(),to=DataType(this=TEXT,expressions=null,nested=false),format=null,safe=null,action=null,default=null,requires_string=null)])],alias=TableAlias(this=Identifier(this=t,quoted=false),columns=[Identifier(this=x,quoted=false)]))))",
+      "preview": "SELECT LISTAGG(DISTINCT x, '') AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "generated": "SELECT LISTAGG(DISTINCT x, '') AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "original_values": [
+        [
+          "ba"
+        ]
+      ],
+      "generated_values": [
+        [
+          "ba"
+        ]
+      ],
+      "original_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      },
+      "generated_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      }
+    },
+    {
+      "dialect": "spark",
+      "kind": "result",
+      "sql": "SELECT LISTAGG(DISTINCT x, '') WITHIN GROUP (ORDER BY x DESC) AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=GroupConcat(this=Order(this=Distinct(expressions=[Column(this=Identifier(this=x,quoted=false))]),expressions=[Ordered(this=Column(this=Identifier(this=x,quoted=false)),desc=true,nulls_first=false,with_fill=null)],siblings=null),separator=Literal(this=,is_string=true),on_overflow=null),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Values(expressions=[Tuple(expressions=[Literal(this=b,is_string=true)]),Tuple(expressions=[Literal(this=a,is_string=true)]),Tuple(expressions=[Literal(this=a,is_string=true)]),Tuple(expressions=[TryCast(this=Null(),to=DataType(this=TEXT,expressions=null,nested=false),format=null,safe=null,action=null,default=null,requires_string=null)])],alias=TableAlias(this=Identifier(this=t,quoted=false),columns=[Identifier(this=x,quoted=false)]))))",
+      "preview": "SELECT LISTAGG(DISTINCT x, '') WITHIN GROUP (ORDER BY x DESC) AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "generated": "SELECT LISTAGG(DISTINCT x, '') WITHIN GROUP (ORDER BY x DESC) AS v FROM VALUES ('b'), ('a'), ('a'), (CAST(NULL AS STRING)) AS t(x)",
+      "original_values": [
+        [
+          "ba"
+        ]
+      ],
+      "generated_values": [
+        [
+          "ba"
+        ]
+      ],
+      "original_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      },
+      "generated_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      }
+    },
+    {
+      "dialect": "spark",
+      "kind": "result",
+      "sql": "SELECT LISTAGG(x, '-') AS v FROM VALUES (CAST(NULL AS STRING)) AS t(x)",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=GroupConcat(this=Column(this=Identifier(this=x,quoted=false)),separator=Literal(this=-,is_string=true)),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Values(expressions=[Tuple(expressions=[TryCast(this=Null(),to=DataType(this=TEXT,expressions=null,nested=false),format=null,safe=null,action=null,default=null,requires_string=null)])],alias=TableAlias(this=Identifier(this=t,quoted=false),columns=[Identifier(this=x,quoted=false)]))))",
+      "preview": "SELECT LISTAGG(x, '-') AS v FROM VALUES (CAST(NULL AS STRING)) AS t(x)",
+      "generated": "SELECT LISTAGG(x, '-') AS v FROM VALUES (CAST(NULL AS STRING)) AS t(x)",
+      "original_values": [
+        [
+          null
+        ]
+      ],
+      "generated_values": [
+        [
+          null
+        ]
+      ],
+      "original_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      },
+      "generated_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      }
+    },
+    {
+      "dialect": "spark",
+      "kind": "result",
+      "sql": "SELECT LISTAGG(x, '-') AS v FROM (SELECT CAST(NULL AS STRING) x WHERE FALSE) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=GroupConcat(this=Column(this=Identifier(this=x,quoted=false)),separator=Literal(this=-,is_string=true)),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=TryCast(this=Null(),to=DataType(this=TEXT,expressions=null,nested=false),format=null,safe=null,action=null,default=null,requires_string=null),alias=Identifier(this=x,quoted=false))],limit=null,exclude=null,operation_modifiers=null,where=Where(this=Boolean(this=false))),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT LISTAGG(x, '-') AS v FROM (SELECT CAST(NULL AS STRING) AS x WHERE FALSE) AS t",
+      "generated": "SELECT LISTAGG(x, '-') AS v FROM (SELECT CAST(NULL AS STRING) AS x WHERE FALSE) AS t",
+      "original_values": [
+        [
+          null
+        ]
+      ],
+      "generated_values": [
+        [
+          null
+        ]
+      ],
+      "original_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      },
+      "generated_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      }
+    },
+    {
+      "dialect": "spark",
+      "kind": "result",
+      "sql": "SELECT LISTAGG(x, '-') WITHIN GROUP (ORDER BY x ASC) AS v FROM VALUES ('b'), ('a'), ('') AS t(x)",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=GroupConcat(this=Order(this=Column(this=Identifier(this=x,quoted=false)),expressions=[Ordered(this=Column(this=Identifier(this=x,quoted=false)),desc=false,nulls_first=true,with_fill=null)],siblings=null),separator=Literal(this=-,is_string=true),on_overflow=null),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Values(expressions=[Tuple(expressions=[Literal(this=b,is_string=true)]),Tuple(expressions=[Literal(this=a,is_string=true)]),Tuple(expressions=[Literal(this=,is_string=true)])],alias=TableAlias(this=Identifier(this=t,quoted=false),columns=[Identifier(this=x,quoted=false)]))))",
+      "preview": "SELECT LISTAGG(x, '-') WITHIN GROUP (ORDER BY x ASC) AS v FROM VALUES ('b'), ('a'), ('') AS t(x)",
+      "generated": "SELECT LISTAGG(x, '-') WITHIN GROUP (ORDER BY x ASC) AS v FROM VALUES ('b'), ('a'), ('') AS t(x)",
+      "original_values": [
+        [
+          "-a-b"
+        ]
+      ],
+      "generated_values": [
+        [
+          "-a-b"
+        ]
+      ],
+      "original_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      },
+      "generated_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      }
+    },
+    {
+      "dialect": "spark",
+      "kind": "result",
+      "sql": "SELECT LISTAGG(x, NULL) AS v FROM VALUES ('a'), ('b') AS t(x)",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=GroupConcat(this=Column(this=Identifier(this=x,quoted=false)),separator=Null()),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Values(expressions=[Tuple(expressions=[Literal(this=a,is_string=true)]),Tuple(expressions=[Literal(this=b,is_string=true)])],alias=TableAlias(this=Identifier(this=t,quoted=false),columns=[Identifier(this=x,quoted=false)]))))",
+      "preview": "SELECT LISTAGG(x, NULL) AS v FROM VALUES ('a'), ('b') AS t(x)",
+      "generated": "SELECT LISTAGG(x, NULL) AS v FROM VALUES ('a'), ('b') AS t(x)",
+      "original_values": [
+        [
+          "ab"
+        ]
+      ],
+      "generated_values": [
+        [
+          "ab"
+        ]
+      ],
+      "original_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      },
+      "generated_schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      }
+    },
+    {
+      "dialect": "spark",
+      "kind": "parse-only",
+      "sql": "ALTER TABLE t DROP COLUMN a",
+      "ast": "Alter(this=Table(this=Identifier(this=t,quoted=false),db=null,catalog=null),kind=TABLE,exists=false,actions=[Drop(exists=false,tables=[Column(this=Identifier(this=a,quoted=false))],expressions=null,kind=COLUMN,temporary=false,materialized=false,cascade=false,restrict=false,constraints=false,purge=false,cluster=null,concurrently=false,sync=false,iceberg=false,force=false)],only=false,options=[],cluster=null,not_valid=false,check=false,cascade=false,iceberg=false)",
+      "preview": "ALTER TABLE t DROP COLUMN a",
+      "generated": "ALTER TABLE t DROP COLUMN a",
+      "original_plan": "'DropColumns [unresolvedfieldname(a)], false\n+- 'UnresolvedTable [t], ALTER TABLE ... DROP COLUMNS, false\n",
+      "generated_plan": "'DropColumns [unresolvedfieldname(a)], false\n+- 'UnresolvedTable [t], ALTER TABLE ... DROP COLUMNS, false\n"
+    },
+    {
+      "dialect": "spark",
+      "kind": "parse-only",
+      "sql": "ALTER TABLE t DROP COLUMN IF EXISTS a.b",
+      "ast": "Alter(this=Table(this=Identifier(this=t,quoted=false),db=null,catalog=null),kind=TABLE,exists=false,actions=[Drop(exists=true,tables=[Column(this=Identifier(this=b,quoted=false),table=Identifier(this=a,quoted=false))],expressions=null,kind=COLUMN,temporary=false,materialized=false,cascade=false,restrict=false,constraints=false,purge=false,cluster=null,concurrently=false,sync=false,iceberg=false,force=false)],only=false,options=[],cluster=null,not_valid=false,check=false,cascade=false,iceberg=false)",
+      "preview": "ALTER TABLE t DROP COLUMN IF EXISTS a.b",
+      "generated": "ALTER TABLE t DROP COLUMN IF EXISTS a.b",
+      "original_plan": "'DropColumns [unresolvedfieldname(a, b)], true\n+- 'UnresolvedTable [t], ALTER TABLE ... DROP COLUMNS, false\n",
+      "generated_plan": "'DropColumns [unresolvedfieldname(a, b)], true\n+- 'UnresolvedTable [t], ALTER TABLE ... DROP COLUMNS, false\n"
+    },
+    {
+      "dialect": "spark",
+      "kind": "parse-only",
+      "sql": "ALTER TABLE t DROP COLUMNS (a, b.c)",
+      "ast": "Alter(this=Table(this=Identifier(this=t,quoted=false),db=null,catalog=null),kind=TABLE,exists=false,actions=[Drop(tables=[Schema(expressions=[Identifier(this=a,quoted=false),Dot(this=Identifier(this=b,quoted=false),expression=Identifier(this=c,quoted=false))])],kind=COLUMNS,exists=false)],only=false,options=[],cluster=null,not_valid=false,check=false,cascade=false,iceberg=false)",
+      "preview": "ALTER TABLE t DROP COLUMNS (a, b.c)",
+      "generated": "ALTER TABLE t DROP COLUMNS (a, b.c)",
+      "original_plan": "'DropColumns [unresolvedfieldname(a), unresolvedfieldname(b, c)], false\n+- 'UnresolvedTable [t], ALTER TABLE ... DROP COLUMNS, false\n",
+      "generated_plan": "'DropColumns [unresolvedfieldname(a), unresolvedfieldname(b, c)], false\n+- 'UnresolvedTable [t], ALTER TABLE ... DROP COLUMNS, false\n"
+    },
+    {
+      "dialect": "spark",
+      "kind": "parse-only",
+      "sql": "ALTER TABLE t DROP COLUMNS (from)",
+      "ast": "Alter(this=Table(this=Identifier(this=t,quoted=false),db=null,catalog=null),kind=TABLE,exists=false,actions=[Drop(tables=[Schema(expressions=[Identifier(this=from,quoted=false)])],kind=COLUMNS,exists=false)],only=false,options=[],cluster=null,not_valid=false,check=false,cascade=false,iceberg=false)",
+      "preview": "ALTER TABLE t DROP COLUMNS (from)",
+      "generated": "ALTER TABLE t DROP COLUMNS (from)",
+      "original_plan": "'DropColumns [unresolvedfieldname(from)], false\n+- 'UnresolvedTable [t], ALTER TABLE ... DROP COLUMNS, false\n",
+      "generated_plan": "'DropColumns [unresolvedfieldname(from)], false\n+- 'UnresolvedTable [t], ALTER TABLE ... DROP COLUMNS, false\n"
+    },
+    {
+      "dialect": "spark",
+      "kind": "parse-only",
+      "sql": "ALTER TABLE t DROP COLUMNS IF EXISTS (a, b.c)",
+      "ast": "Alter(this=Table(this=Identifier(this=t,quoted=false),db=null,catalog=null),kind=TABLE,exists=false,actions=[Drop(tables=[Schema(expressions=[Identifier(this=a,quoted=false),Dot(this=Identifier(this=b,quoted=false),expression=Identifier(this=c,quoted=false))])],kind=COLUMNS,exists=true)],only=false,options=[],cluster=null,not_valid=false,check=false,cascade=false,iceberg=false)",
+      "preview": "ALTER TABLE t DROP COLUMNS IF EXISTS (a, b.c)",
+      "generated": "ALTER TABLE t DROP COLUMNS IF EXISTS (a, b.c)",
+      "original_plan": "'DropColumns [unresolvedfieldname(a), unresolvedfieldname(b, c)], true\n+- 'UnresolvedTable [t], ALTER TABLE ... DROP COLUMNS, false\n",
+      "generated_plan": "'DropColumns [unresolvedfieldname(a), unresolvedfieldname(b, c)], true\n+- 'UnresolvedTable [t], ALTER TABLE ... DROP COLUMNS, false\n"
+    },
+    {
+      "dialect": "spark",
+      "kind": "parse-only",
+      "sql": "ALTER TABLE t DROP COLUMNS a, b",
+      "ast": "Alter(this=Table(this=Identifier(this=t,quoted=false),db=null,catalog=null),kind=TABLE,exists=false,actions=[Drop(tables=[Schema(expressions=[Identifier(this=a,quoted=false),Identifier(this=b,quoted=false)])],kind=COLUMNS,exists=false)],only=false,options=[],cluster=null,not_valid=false,check=false,cascade=false,iceberg=false)",
+      "preview": "ALTER TABLE t DROP COLUMNS (a, b)",
+      "generated": "ALTER TABLE t DROP COLUMNS (a, b)",
+      "original_plan": "'DropColumns [unresolvedfieldname(a), unresolvedfieldname(b)], false\n+- 'UnresolvedTable [t], ALTER TABLE ... DROP COLUMNS, false\n",
+      "generated_plan": "'DropColumns [unresolvedfieldname(a), unresolvedfieldname(b)], false\n+- 'UnresolvedTable [t], ALTER TABLE ... DROP COLUMNS, false\n"
+    },
+    {
+      "dialect": "spark",
+      "kind": "parse-only",
+      "sql": "ALTER TABLE t REPLACE COLUMNS (a INT COMMENT 'c', b STRING)",
+      "ast": "Alter(this=Table(this=Identifier(this=t,quoted=false),db=null,catalog=null),kind=TABLE,exists=false,actions=[ReplaceColumns(expressions=[ColumnDef(this=Identifier(this=a,quoted=false),kind=DataType(this=INT,expressions=null,nested=false),constraints=[ColumnConstraint(this=null,kind=CommentColumnConstraint(this=Literal(this=c,is_string=true)))],position=null),ColumnDef(this=Identifier(this=b,quoted=false),kind=DataType(this=TEXT,expressions=null,nested=false),constraints=[],position=null)])],only=false,options=[],cluster=null,not_valid=false,check=false,cascade=false,iceberg=false)",
+      "preview": "ALTER TABLE t REPLACE COLUMNS (a INT COMMENT 'c', b STRING)",
+      "generated": "ALTER TABLE t REPLACE COLUMNS (a INT COMMENT 'c', b STRING)",
+      "original_plan": "'ReplaceColumns [QualifiedColType(None,a,IntegerType,true,Some(c),None,None), QualifiedColType(None,b,StringType,true,None,None,None)]\n+- 'UnresolvedTable [t], ALTER TABLE ... REPLACE COLUMNS, false\n",
+      "generated_plan": "'ReplaceColumns [QualifiedColType(None,a,IntegerType,true,Some(c),None,None), QualifiedColType(None,b,StringType,true,None,None,None)]\n+- 'UnresolvedTable [t], ALTER TABLE ... REPLACE COLUMNS, false\n"
+    },
+    {
+      "dialect": "spark",
+      "kind": "parse-only",
+      "sql": "ALTER TABLE t REPLACE COLUMNS (from INT)",
+      "ast": "Alter(this=Table(this=Identifier(this=t,quoted=false),db=null,catalog=null),kind=TABLE,exists=false,actions=[ReplaceColumns(expressions=[ColumnDef(this=Identifier(this=from,quoted=false),kind=DataType(this=INT,expressions=null,nested=false),constraints=[],position=null)])],only=false,options=[],cluster=null,not_valid=false,check=false,cascade=false,iceberg=false)",
+      "preview": "ALTER TABLE t REPLACE COLUMNS (from INT)",
+      "generated": "ALTER TABLE t REPLACE COLUMNS (from INT)",
+      "original_plan": "'ReplaceColumns [QualifiedColType(None,from,IntegerType,true,None,None,None)]\n+- 'UnresolvedTable [t], ALTER TABLE ... REPLACE COLUMNS, false\n",
+      "generated_plan": "'ReplaceColumns [QualifiedColType(None,from,IntegerType,true,None,None,None)]\n+- 'UnresolvedTable [t], ALTER TABLE ... REPLACE COLUMNS, false\n"
+    },
+    {
+      "dialect": "spark",
+      "kind": "normalization-only-native-source-rejected",
+      "sql": "ALTER TABLE t REPLACE COLUMNS a INT, b STRING",
+      "ast": "Alter(this=Table(this=Identifier(this=t,quoted=false),db=null,catalog=null),kind=TABLE,exists=false,actions=[ReplaceColumns(expressions=[ColumnDef(this=Identifier(this=a,quoted=false),kind=DataType(this=INT,expressions=null,nested=false),constraints=[],position=null),ColumnDef(this=Identifier(this=b,quoted=false),kind=DataType(this=TEXT,expressions=null,nested=false),constraints=[],position=null)])],only=false,options=[],cluster=null,not_valid=false,check=false,cascade=false,iceberg=false)",
+      "preview": "ALTER TABLE t REPLACE COLUMNS (a INT, b STRING)",
+      "generated": "ALTER TABLE t REPLACE COLUMNS (a INT, b STRING)",
+      "native_source_rejection": "\n[INVALID_STATEMENT_OR_CLAUSE] The statement or clause: ALTER TABLE REPLACE COLUMNS is not valid. SQLSTATE: 42601\n== SQL (line 1, position 1) ==\nALTER TABLE t REPLACE COLUMNS a INT, b STRING\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n",
+      "generated_plan": "'ReplaceColumns [QualifiedColType(None,a,IntegerType,true,None,None,None), QualifiedColType(None,b,StringType,true,None,None,None)]\n+- 'UnresolvedTable [t], ALTER TABLE ... REPLACE COLUMNS, false\n",
+      "classification": "SQLGlot-compatible normalization only, not original/generated native equivalence"
+    },
+    {
+      "dialect": "hive",
+      "kind": "hive-parser-only",
+      "sql": "ALTER TABLE t REPLACE COLUMNS (a INT COMMENT 'c', b STRING)",
+      "ast": "Alter(this=Table(this=Identifier(this=t,quoted=false),db=null,catalog=null),kind=TABLE,exists=false,actions=[ReplaceColumns(expressions=[ColumnDef(this=Identifier(this=a,quoted=false),kind=DataType(this=INT,expressions=null,nested=false),constraints=[ColumnConstraint(this=null,kind=CommentColumnConstraint(this=Literal(this=c,is_string=true)))],position=null),ColumnDef(this=Identifier(this=b,quoted=false),kind=DataType(this=TEXT,expressions=null,nested=false),constraints=[],position=null)])],only=false,options=[],cluster=null,not_valid=false,check=false,cascade=false,iceberg=false)",
+      "preview": "ALTER TABLE t REPLACE COLUMNS (a INT COMMENT 'c', b STRING)",
+      "generated": "ALTER TABLE t REPLACE COLUMNS (a INT COMMENT 'c', b STRING)",
+      "original_plan": "(tok_altertable (tok_tabname t) (tok_altertable_replacecols (tok_tabcollist (tok_tabcol a tok_int 'c') (tok_tabcol b tok_string)))) <eof>",
+      "generated_plan": "(tok_altertable (tok_tabname t) (tok_altertable_replacecols (tok_tabcollist (tok_tabcol a tok_int 'c') (tok_tabcol b tok_string)))) <eof>",
+      "hive_parser_version": "2.3.10"
+    },
+    {
+      "dialect": "hive",
+      "kind": "hive-parser-only",
+      "sql": "ALTER TABLE t REPLACE COLUMNS (a INT COMMENT 'c', b STRING) CASCADE",
+      "ast": "Alter(this=Table(this=Identifier(this=t,quoted=false),db=null,catalog=null),kind=TABLE,exists=false,actions=[ReplaceColumns(expressions=[ColumnDef(this=Identifier(this=a,quoted=false),kind=DataType(this=INT,expressions=null,nested=false),constraints=[ColumnConstraint(this=null,kind=CommentColumnConstraint(this=Literal(this=c,is_string=true)))],position=null),ColumnDef(this=Identifier(this=b,quoted=false),kind=DataType(this=TEXT,expressions=null,nested=false),constraints=[],position=null)])],only=false,options=[],cluster=null,not_valid=false,check=false,cascade=true,iceberg=false)",
+      "preview": "ALTER TABLE t REPLACE COLUMNS (a INT COMMENT 'c', b STRING) CASCADE",
+      "generated": "ALTER TABLE t REPLACE COLUMNS (a INT COMMENT 'c', b STRING) CASCADE",
+      "original_plan": "(tok_altertable (tok_tabname t) (tok_altertable_replacecols (tok_tabcollist (tok_tabcol a tok_int 'c') (tok_tabcol b tok_string)) tok_cascade)) <eof>",
+      "generated_plan": "(tok_altertable (tok_tabname t) (tok_altertable_replacecols (tok_tabcollist (tok_tabcol a tok_int 'c') (tok_tabcol b tok_string)) tok_cascade)) <eof>",
+      "hive_parser_version": "2.3.10"
+    }
+  ],
+  "native_jar_sha256": {
+    "hive-common-2.3.10.jar": "b6a26be6eaf7ead173edfb2a654f72bdbf5fd1d5bb5ab99144a21a2205593831",
+    "hive-exec-2.3.10-core.jar": "1699ff817dd73db685ff112f109ec7ae380e0a6fa1a204166e55f66268fcd801",
+    "spark-catalyst_2.13-4.0.1.jar": "474485aa270cb59ca7f59f776dca8d30b667eb4b7a28e4c6fec7f66ff5d823a5",
+    "spark-sql-api_2.13-4.0.1.jar": "254e6ada6e29b1bbd1ddac5fba8e7e0bdb61590e091e479389e7bfa5255f276b",
+    "spark-sql_2.13-4.0.1.jar": "d2f82d16d9afbc04c849e2c4a6c9b7da40c1417a94dc43de74e2544ebe042e74"
+  }
+}

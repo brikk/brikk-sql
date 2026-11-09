@@ -1,4 +1,15 @@
 {
     "engine": "duckdb",
-    "cases": []
+    "cases": [
+        {
+            "sql": "SELECT a.id, __mark_join_marker FROM a JOIN BY (TYPE MARK) b ON a.id = b.id",
+            "generated": "",
+            "error": "brikk parse/generate failed: ParseError: Expecting ). Line 1, Col: 57.\n  SELECT a.id, __mark_join_marker FROM a JOIN BY (TYPE \u001b[4mMARK\u001b[0m) b ON a.id = b.id"
+        },
+        {
+            "sql": "SELECT * FROM a JOIN BY (TYPE inner) b ON a.id = b.id JOIN c ON b.id = c.id",
+            "generated": "",
+            "error": "brikk parse/generate failed: ParseError: Expecting ). Line 1, Col: 35.\n  SELECT * FROM a JOIN BY (TYPE \u001b[4minner\u001b[0m) b ON a.id = b.id JOIN c ON b.id = c.id"
+        }
+    ]
 }

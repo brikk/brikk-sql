@@ -2,7 +2,7 @@
 
 > This file owns every current SQLGlot parity case whose source or target is
 > BigQuery. The oracle is the pinned SQLGlot reference at
-> `v30.22.0-5-ga00dc2e5c` in `reference/sqlglot/`.
+> `v30.29.0` in `reference/sqlglot/`.
 >
 > The authoritative cases remain in
 > `brikk-sql/testResources/dialect-corpus/*-transpile-known-failures.json`.
@@ -14,7 +14,13 @@
 
 ---
 
-**0 actionable failing transpile assertions.**
+The counts below describe the pre-SG29 workstream checkpoint. The coherent
+30.29 refresh's additional exact preview/qualification differences and owners
+are recorded in [the integration review](../vendor/data/sqlglot-sg29-020/README.md),
+not silently added to the completed BQ batches. BQ-36 through BQ-38 and the
+absence of native BigQuery backend proof remain unchanged.
+
+**0 actionable failing transpile assertions at that earlier checkpoint.**
 Twelve additional signed assertions are protected correctness divergences, documented
 in `docs/brikk-extensions.md` sections 28, 30, and 32. They are not open BQ issues.
 BQ-36 through BQ-38 are execution limitations with no current parity-ledger entries.

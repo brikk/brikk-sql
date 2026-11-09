@@ -1,7 +1,12 @@
 {
-  "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
+  "sqlglot_version": "v30.29.0",
   "dialect": "hive",
   "identity": [
+    {
+      "sql": "CREATE TABLE t (a INT) TBLPROPERTIES ('a\\') ; SELECT 1; --'='1')",
+      "expected": null,
+      "pretty": false
+    },
     {
       "sql": "ALTER TABLE x PARTITION(y = z) ADD COLUMN a VARCHAR(10)",
       "expected": null,
@@ -19,6 +24,11 @@
     },
     {
       "sql": "ALTER TABLE X ADD COLUMNS (y INT, z STRING) CASCADE",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE X REPLACE COLUMNS (y INT COMMENT 'c', z STRING) CASCADE",
       "expected": null,
       "pretty": false
     },
@@ -373,9 +383,44 @@
       "sql": "FROM x INSERT OVERWRITE TABLE a SELECT k INSERT INTO b SELECT v WHERE k > 0",
       "expected": null,
       "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t REPLACE COLUMNS (a INT COMMENT 'it''s')",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
+      "sql": "ALTER TABLE t REPLACE COLUMNS (a UNIONTYPE<INT, STRING>)",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
+      "sql": "ALTER TABLE t REPLACE COLUMNS (a TIMESTAMPLOCALTZ)",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
     }
   ],
   "transpile": [
+    {
+      "sql": "SELECT FALSE IS DISTINCT FROM NULL = NULL",
+      "read": {},
+      "write": {
+        "hive": "SELECT (FALSE IS DISTINCT FROM NULL) = NULL",
+        "spark": "SELECT (FALSE IS DISTINCT FROM NULL) = NULL",
+        "postgres": "SELECT (FALSE IS DISTINCT FROM NULL) = NULL"
+      }
+    },
+    {
+      "sql": "SELECT FALSE IS DISTINCT FROM NULL < NULL",
+      "read": {},
+      "write": {
+        "hive": "SELECT FALSE IS DISTINCT FROM (NULL < NULL)",
+        "spark": "SELECT FALSE IS DISTINCT FROM (NULL < NULL)"
+      }
+    },
     {
       "sql": "x & 1",
       "read": {
@@ -1056,19 +1101,6 @@
       }
     },
     {
-      "sql": "SELECT SORT_ARRAY(x, FALSE)",
-      "read": {
-        "duckdb": "SELECT ARRAY_REVERSE_SORT(x)",
-        "spark": "SELECT SORT_ARRAY(x, FALSE)"
-      },
-      "write": {
-        "duckdb": "SELECT ARRAY_REVERSE_SORT(x)",
-        "presto": "SELECT ARRAY_SORT(x, (a, b) -> CASE WHEN a < b THEN 1 WHEN a > b THEN -1 ELSE 0 END)",
-        "hive": "SELECT SORT_ARRAY(x, FALSE)",
-        "spark": "SELECT SORT_ARRAY(x, FALSE)"
-      }
-    },
-    {
       "sql": "GET_JSON_OBJECT(x, '$.name')",
       "read": {},
       "write": {
@@ -1406,8 +1438,8 @@
     }
   ],
   "stats": {
-    "identity_count": 74,
-    "transpile_count": 97,
-    "skipped_dynamic": 2
+    "identity_count": 79,
+    "transpile_count": 98,
+    "skipped_dynamic": 4
   }
 }

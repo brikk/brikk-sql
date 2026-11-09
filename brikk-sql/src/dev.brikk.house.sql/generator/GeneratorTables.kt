@@ -361,7 +361,7 @@ object GeneratorTables {
         reg(Like::class) { e -> likeSql(e as Like) }
         reg(ILike::class) { e -> ilikeSql(e as ILike) }
         reg(Glob::class) { e -> binary(e as Binary, "GLOB") }
-        reg(Match::class) { e -> binary(e as Binary, "MATCH") }
+        reg(Match::class) { e -> matchSql(e as Match) }
         reg(SimilarTo::class) { e -> binary(e as Binary, "SIMILAR TO") }
         reg(Escape::class) { e -> escapeSql(e as Escape) }
         reg(Overlaps::class) { e -> overlapsSql(e as Overlaps) }
@@ -534,6 +534,7 @@ object GeneratorTables {
 
         // --- ALTER family ---
         reg(Alter::class) { e -> alterSql(e as Alter) }
+        reg(ReplaceColumns::class) { e -> replaceColumnsSql(e as ReplaceColumns) }
         reg(AlterColumn::class) { e -> altercolumnSql(e as AlterColumn) }
         reg(AlterRename::class) { e -> alterrenameSql(e as AlterRename) }
         reg(RenameColumn::class) { e -> renamecolumnSql(e as RenameColumn) }

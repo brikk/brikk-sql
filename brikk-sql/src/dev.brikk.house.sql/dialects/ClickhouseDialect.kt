@@ -1,6 +1,9 @@
 package dev.brikk.house.sql.dialects
 
 import dev.brikk.house.sql.ast.GeneratedTypingMetadata
+import dev.brikk.house.sql.ast.DType
+import dev.brikk.house.sql.ast.JSONExtract
+import dev.brikk.house.sql.ast.TypingSpec
 import dev.brikk.house.sql.generator.Generator
 import dev.brikk.house.sql.metadata.CLICKHOUSE_FUNCTION_CATALOG
 import dev.brikk.house.sql.metadata.FunctionCatalog
@@ -81,7 +84,7 @@ open class ClickhouseDialect : Dialect() {
         get() = NormalizationStrategy.CASE_SENSITIVE
 
     // sqlglot: ClickHouse.EXPRESSION_METADATA (sqlglot/typing/clickhouse.py)
-    override val expressionMetadata get() = GeneratedTypingMetadata.CLICKHOUSE
+    override val expressionMetadata get() = JSON_EXTRACTION_METADATA
 
     // Latest pinned stable snapshot. Historical engines select CLICKHOUSE_METADATA.forServerVersion.
     override val functionCatalog: FunctionCatalog get() = CLICKHOUSE_FUNCTION_CATALOG
@@ -95,6 +98,11 @@ open class ClickhouseDialect : Dialect() {
         ClickhouseGenerator(pretty = pretty, tokenizerConfig = tokenizerConfig, sourceDialect = sourceDialect)
 
     companion object {
+        // SG29-010: JSONExtractRaw returns String/Nullable(String), not a JSON
+        // storage value. The existing nullability sidecar remains conservative.
+        private val JSON_EXTRACTION_METADATA = GeneratedTypingMetadata.CLICKHOUSE + mapOf(
+            JSONExtract::class to TypingSpec.Returns(DType.VARCHAR),
+        )
         /** Native numeric boundaries plus the editor-only inline INSERT data rule. */
         internal val TOKENIZER_CONFIG: TokenizerConfig = StringEscapeProfiles.CLICKHOUSE
             .withScientificNumberBoundaries().withInlineInsertData()

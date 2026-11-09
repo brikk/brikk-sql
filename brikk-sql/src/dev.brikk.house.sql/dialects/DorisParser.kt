@@ -85,6 +85,9 @@ import dev.brikk.house.sql.parser.Tokenizer
 import dev.brikk.house.sql.parser.TokenizerConfig
 import dev.brikk.house.sql.parser.seqGet
 
+private val DORIS_MATCH_OPERATORS = setOf("MATCH", "MATCH_ANY", "MATCH_ALL", "MATCH_PHRASE",
+    "MATCH_PHRASE_PREFIX", "MATCH_PHRASE_EDGE", "MATCH_REGEXP")
+
 // sqlglot: parsers.doris._build_date_trunc — accepts both
 // DATE_TRUNC(datetime, unit) and DATE_TRUNC(unit, datetime)
 private fun buildDorisDateTrunc(argsList: List<Expression?>): Expression {
@@ -115,6 +118,36 @@ open class DorisParser(
 
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.DORIS
+
+    // brikk-native: Doris 4.1.5 booleanExpression's LOGICALNOT consumes a complete
+    // valueExpression. Unlike MySQL/StarRocks, !1 + 1 therefore means !(1 + 1).
+    override val exclamationBindsTightly: Boolean get() = false
+
+    // #8585/#8607: text matching keeps these unreserved names usable as aliases.
+    override fun parseRange(this_: Expression?): Expression? {
+        var current = this_ ?: parseBitwise()
+        val start = index
+        val negate = match(TokenType.NOT)
+        if (currToken.tokenType == TokenType.VAR && matchTexts(DORIS_MATCH_OPERATORS)) {
+            val kind = prevToken.text.uppercase().substringAfter("MATCH", "").removePrefix("_").ifEmpty { null }
+            val operand = parseBitwise()
+            if (operand == null) {
+                retreat(start)
+                return super.parseRange(current)
+            }
+            val analyzer = if (matchTextSeq("USING", "ANALYZER")) {
+                (parseString() ?: parseIdVar(anyToken = false)).also {
+                    if (it == null) raiseError("Expected an analyzer name after USING ANALYZER")
+                }
+            } else null
+            current = expression(dev.brikk.house.sql.ast.Match(args("this" to current,
+                "expression" to operand, "kind" to kind, "analyzer" to analyzer))).also {
+                it.meta["doris_full_text"] = true
+            }
+            if (negate) current = expression(dev.brikk.house.sql.ast.Not(args("this" to current)))
+        } else if (negate) retreat(start)
+        return super.parseRange(current)
+    }
 
     // brikk-native: SELECT ... INTO OUTFILE ends a query (see parseDorisOutfile).
     override val queryModifierParsers: Map<TokenType, (Parser) -> Pair<String, kotlin.Any?>>

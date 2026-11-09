@@ -1,0 +1,79 @@
+{
+  "scope": "Final Java 17 public-facade replay, not additional backend executions.",
+  "native_generated_statements_reproduced_exactly": 36,
+  "distinct_refusals": [
+    {
+      "source": "postgres",
+      "target": "mysql",
+      "sql": "SELECT STDDEV(DISTINCT x) FROM t",
+      "status": "unsupported: mysql statistical aggregates do not support DISTINCT"
+    },
+    {
+      "source": "postgres",
+      "target": "mysql",
+      "sql": "SELECT STDDEV_SAMP(DISTINCT x) FROM t",
+      "status": "unsupported: mysql statistical aggregates do not support DISTINCT"
+    },
+    {
+      "source": "postgres",
+      "target": "mysql",
+      "sql": "SELECT STDDEV_POP(DISTINCT x) FROM t",
+      "status": "unsupported: mysql statistical aggregates do not support DISTINCT"
+    },
+    {
+      "source": "postgres",
+      "target": "mysql",
+      "sql": "SELECT VARIANCE(DISTINCT x) FROM t",
+      "status": "unsupported: mysql statistical aggregates do not support DISTINCT"
+    },
+    {
+      "source": "postgres",
+      "target": "mysql",
+      "sql": "SELECT VAR_POP(DISTINCT x) FROM t",
+      "status": "unsupported: mysql statistical aggregates do not support DISTINCT"
+    },
+    {
+      "source": "postgres",
+      "target": "mysql",
+      "sql": "SELECT VAR_SAMP(DISTINCT x) FROM t",
+      "status": "unsupported: mysql statistical aggregates do not support DISTINCT"
+    },
+    {
+      "source": "postgres",
+      "target": "starrocks",
+      "sql": "SELECT STDDEV(DISTINCT x) FROM t",
+      "status": "unsupported: starrocks statistical aggregates do not support DISTINCT"
+    },
+    {
+      "source": "postgres",
+      "target": "starrocks",
+      "sql": "SELECT STDDEV_SAMP(DISTINCT x) FROM t",
+      "status": "unsupported: starrocks statistical aggregates do not support DISTINCT"
+    },
+    {
+      "source": "postgres",
+      "target": "starrocks",
+      "sql": "SELECT STDDEV_POP(DISTINCT x) FROM t",
+      "status": "unsupported: starrocks statistical aggregates do not support DISTINCT"
+    },
+    {
+      "source": "postgres",
+      "target": "starrocks",
+      "sql": "SELECT VARIANCE(DISTINCT x) FROM t",
+      "status": "unsupported: starrocks statistical aggregates do not support DISTINCT"
+    },
+    {
+      "source": "postgres",
+      "target": "starrocks",
+      "sql": "SELECT VAR_POP(DISTINCT x) FROM t",
+      "status": "unsupported: starrocks statistical aggregates do not support DISTINCT"
+    },
+    {
+      "source": "postgres",
+      "target": "starrocks",
+      "sql": "SELECT VAR_SAMP(DISTINCT x) FROM t",
+      "status": "unsupported: starrocks statistical aggregates do not support DISTINCT"
+    }
+  ],
+  "mysql_generator_class_sha256": "6a72110d32dc993f9034fdad6a42bc7eba3b9139633e4d2c4b0f28a675dbf60f"
+}

@@ -1,0 +1,47 @@
+{
+  "scope": "Exactly three new frozen-pin rows: two metadata-only opaque origins and one native DAY rendering. Existing rows/reasons/signatures unchanged.",
+  "files": [
+    {
+      "file": "parser-corpus/starrocks-parser-known-failures.json",
+      "old_sha256": "ee7b1b364cef8a5f8c49bf931ccea0cad812219e389247fc21888e571686160b",
+      "new_sha256": "8db0d1f5c2c955b90b75c17666ff06aa13bfd0abf2664b82426ae9f76513f3fc",
+      "old_rows_unchanged": true,
+      "added": [
+        {
+          "id": "assertion:v1:sha256:2684eaff7d559ae5658515aa30b68394f0cc010cc35a34e0c2518312a2465d4f:1",
+          "sql": "ALTER TABLE t ADD COLUMN c INT TO r1, ADD COLUMN d INT",
+          "signature": "ast-mismatch:v1:sha256:15e9a917da0b4ca4f5dfabf946b4ef13b6054183988c5268f7e6ea90ca7e3de8",
+          "reason": "SG29-014 remainder: only serialized starrocks_opaque_command provenance is added to this existing Command. Payload and opaque classification are unchanged; no structured ALTER support is claimed. The marker preserves strict cross-target refusal after serde. Exact frozen-pin row, reconcile with SG29-020."
+        }
+      ]
+    },
+    {
+      "file": "annotate-corpus/known-failures-starrocks-annotated-serde.json",
+      "old_sha256": "cf03e5f09cd72b0477c8d27c9b82605c4e7bc4b2b4574f585ff53cce09b4073b",
+      "new_sha256": "5c2cd394a0d5059c09e66c7e21ffd7dfedc7ed486fc278bc9958f36d791dc76d",
+      "old_rows_unchanged": true,
+      "added": [
+        {
+          "id": "assertion:v1:sha256:2b65aaf79fa31be733abcbf824b4e186fa1963d6368d2b863d19b8cd531e9d5d:1",
+          "sql": "ALTER TABLE t ADD COLUMN c INT TO r1, ADD COLUMN d INT",
+          "signature": "type-mismatch:v1:sha256:f36c6749b1fd4ab08d2b9e235c617fb6e1385da9d54df6af12e38213f40fa0eb",
+          "reason": "SG29-014 remainder: despite this gate's type-mismatch label, the type stays UNKNOWN. Only starrocks_opaque_command provenance is added; native text and Command kind are identical. Not structured semantic support or new type inference. Exact frozen-pin row, reconcile with SG29-020."
+        }
+      ]
+    },
+    {
+      "file": "dialect-corpus/bigquery-transpile-known-failures.json",
+      "old_sha256": "cb4f1616f87e3599edf2f45bc5f2ed9f10d7268d07adc41f93025f420c03e24e",
+      "new_sha256": "5e21c134db66fc610ffea28b6cc008d46202160d7ae80dec3735a5b6ef601020",
+      "old_rows_unchanged": true,
+      "added": [
+        {
+          "id": "assertion:v1:sha256:c4011a57b71bd62aec15d7e6ee6b75cc129f5ec751d4589c77fb968819edf93c:1",
+          "case": "write|starrocks|DATE_DIFF(DATE '2010-07-07', DATE '2008-12-25', DAY)",
+          "signature": "sql-mismatch:v1:sha256:04a39b0c57d5d31e955c05591bd394183a41db6d581d0175e51d821604055911",
+          "reason": "SG29-014/#8636/55277446: DAY boundary-counting maps to native DATEDIFF, not elapsed DATE_DIFF('DAY',...). Date-only operands agree in this flat fixture; native overnight timestamp controls distinguish the contracts. Non-DAY boundary conversions refuse strict execution. Exact frozen-pin output row, reconcile with SG29-020."
+        }
+      ]
+    }
+  ]
+}

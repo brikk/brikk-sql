@@ -1,0 +1,16 @@
+{
+  "scope": "Final Java 17 facade replay, not additional engine executions.",
+  "paired_native_statements_reproduced": 19,
+  "map_execution_refusals_reproduced": 6,
+  "java_17_class_counts": {
+    "brikk-sqljvm": 2857,
+    "brikk-sql-metadatajvm": 143
+  },
+  "class_sha256": {
+    "dev/brikk/house/sql/dialects/StarrocksParser.class": "2cc8d33461914f5653c63386f16b8b49d81bc18916084c042ad46cc9736b5491",
+    "dev/brikk/house/sql/dialects/StarrocksGenerator.class": "ad4e79cbfbd01df33ed26dfa9924799eb8e205b5df7d38ba343dc424193a7ce4",
+    "dev/brikk/house/sql/parser/Parser.class": "6edbb2cbd720ca86fbd28ae67417d23878f2d53351982f3433348698cccefee3",
+    "dev/brikk/house/sql/optimizer/TypeAnnotator.class": "43698cb9c68d9ccf21ca0eb9d8d175381cb4cc53ec1ad63b709e3d087f77768a",
+    "dev/brikk/house/sql/generator/Generator.class": "33e1f5b76450e358d61bcb810c92b76c24190583946215bfece8b95ef16eead1"
+  }
+}

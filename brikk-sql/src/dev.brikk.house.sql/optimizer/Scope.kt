@@ -653,12 +653,15 @@ private fun traverseUnion(scope: Scope, acc: MutableList<Scope>) {
             scopeType = ScopeType.SET_OPERATION,
         )
 
-        if (expression is SetOperation) {
+        // sqlglot #8704: unwrap left grouping iteratively. A right set operand is a
+        // separate branch, not another frame in the pending left-operand chain.
+        val inner = newScope.expression
+        if (prevScope == null && inner is SetOperation) {
             traverseCtes(newScope, acc)
 
             unionScopeStack.add(newScope)
-            expressionStack.add(expression.right)
-            expressionStack.add(expression.left)
+            expressionStack.add(inner.right)
+            expressionStack.add(inner.left)
             continue
         }
 
@@ -733,6 +736,7 @@ private fun isDerivedTableNode(expression: Expression): Boolean =
     expression is dev.brikk.house.sql.ast.TrinoNearest || expression is Subquery &&
         (
             expression.alias.isNotEmpty() ||
+                !(expression.args["pivots"] as? List<*>).isNullOrEmpty() ||
                 expression.thisArg is Select || expression.thisArg is SetOperation
             )
 

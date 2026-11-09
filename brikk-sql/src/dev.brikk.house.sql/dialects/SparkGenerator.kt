@@ -126,7 +126,7 @@ open class SparkGenerator(
             "this" to (expression.args["expression"] as? Expression)?.copy(),
             "unit" to unit?.let { if (it is Literal || it is Var) Var(args("this" to it.name)) else it.copy() },
         ))
-        return "${sql(expression, "this")} $operator ${sql(interval)}"
+        return dateDeltaToBinarySql(expression, expression.thisArg as? Expression, interval, subtract = operator == "-")
     }
 
     // sqlglot: SparkGenerator.readparquet_sql
@@ -145,8 +145,18 @@ open class SparkGenerator(
     }
 
     // sqlglot: SparkGenerator TRANSFORMS[exp.GroupConcat] (_groupconcat_sql, latest version)
-    internal fun groupConcatSpark(expression: GroupConcat): String =
-        func("LISTAGG", expression.thisArg, expression.args["separator"] ?: Literal.string(""))
+    internal fun groupConcatSpark(expression: GroupConcat): String {
+        // Do not detach children: generation with copy=false must preserve the AST.
+        val value = expression.thisArg as? Expression
+        if (expression.args["on_overflow"] != null || value is Limit) {
+            unexecutable("Spark LISTAGG does not support overflow or aggregate LIMIT")
+        }
+        val order = value as? Order
+        val input = order?.thisArg ?: value
+        val aggregate = func("LISTAGG", input, expression.args["separator"] ?: Literal.string(""))
+        val ordering = order?.copy()?.also { it.set("this", null) }
+        return aggregate + (ordering?.let { " WITHIN GROUP (${sql(it).trim()})" } ?: "")
+    }
 
     // sqlglot: dialect.timestampdiff_sql
     internal fun timestampdiffSpark(expression: TimestampDiff): String =

@@ -18,6 +18,7 @@ import dev.brikk.house.sql.parser.TokenizerConfig
 open class Spark2Dialect : HiveDialect() {
 
     override val name: String get() = "spark2"
+    override val intersectBindsTighterThanUnionAndExcept: Boolean get() = true
 
     // brikk-native: see Dialect.groupByProjectionAliases.
     override val groupByProjectionAliases: Boolean get() = true

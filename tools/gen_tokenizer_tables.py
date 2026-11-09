@@ -41,6 +41,9 @@ DIALECTS = ["", "mysql", "doris", "starrocks", "presto", "trino", "duckdb", "pos
 # Doris keyword wiring lives in DorisDialect.TOKENIZER_CONFIG, not in the generated
 # DorisTokenizerTables (which stays oracle-parity for the token differential test).
 BRIKK_NATIVE_TOKEN_TYPES = ["BITMAP", "HLL", "QUANTILE_STATE", "AGG_STATE"]
+# Existing public tokens used by Brikk's prepared-statement and INSERT payload
+# handling. They are not datatype tokens and have no corresponding DType.
+BRIKK_PROTOCOL_TOKEN_TYPES = ["PREPARE", "INSERT_DATA"]
 
 
 def sqlglot_version() -> str:
@@ -115,6 +118,9 @@ def gen_token_type(version: str) -> str:
     lines.append("    // brikk-native (no sqlglot counterpart): Doris storage types, see DorisDialect.kt.")
     for name in BRIKK_NATIVE_TOKEN_TYPES:
         assert not hasattr(TokenType, name), f"{name} now exists upstream; drop it from BRIKK_NATIVE_TOKEN_TYPES"
+        lines.append(f"    {name},")
+    for name in BRIKK_PROTOCOL_TOKEN_TYPES:
+        assert not hasattr(TokenType, name), f"{name} now exists upstream; reconcile its native protocol policy"
         lines.append(f"    {name},")
     lines.append("}")
     return "\n".join(lines) + "\n"

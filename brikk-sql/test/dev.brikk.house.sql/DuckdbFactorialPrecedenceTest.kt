@@ -39,7 +39,8 @@ class DuckdbFactorialPrecedenceTest {
     @Test fun crossTargetExecutionRefusesUnprovedWidthsAndErrorsWithoutChangingOtherDialects() {
         for (target in listOf("trino", "postgres", "doris", "clickhouse", "bigquery", "mysql"))
             assertFailsWith<UnsupportedError> { SqlFragment("SELECT 3!", "duckdb").toExecutable(target) }
-        assertEquals("SELECT NOT TRUE", Dialects.MYSQL.parseOne("SELECT !TRUE").sql("mysql"))
+        // MySQL ! binds tighter than NOT, so the NOT spelling keeps its parentheses.
+        assertEquals("SELECT (NOT TRUE)", Dialects.MYSQL.parseOne("SELECT !TRUE").sql("mysql"))
         assertEquals("SELECT NOT REGEXP_FULL_MATCH(a, b)", Dialects.DUCKDB.parseOne("SELECT a !~ b").sql("duckdb"))
         assertTrue("!~" in SqlFragment("SELECT a !~ b", "duckdb").toExecutable("duckdb").sql)
     }

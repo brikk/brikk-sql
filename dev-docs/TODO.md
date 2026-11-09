@@ -39,6 +39,10 @@ packaging in [brikk-chdb](https://github.com/brikk/brikk-chdb/blob/main/TODO.md)
   See [the tracker](TODO-clickhouse-semantic.md) and its
   [deferred backlog](TODO-clickhouse-semantic.md#deferred-improvement-backlog).
   CHSEM-034 still needs consumer qualification; P2 expansion remains unscheduled.
+- [x] SQL-09. SQLGlot 30.29 catch-up, SG29-001 to SG29-020, released as SQL 1.0.0 and
+  IntelliJ support 1.0.0 from branch `sqlglot-30-29-batch-a`. Owned feature and correctness
+  deferrals are listed in [the integration evidence](../vendor/data/sqlglot-sg29-020/README.md).
+  See [the tracker](TODO-sqlglot-30.29.md).
 
 ## Maintenance
 

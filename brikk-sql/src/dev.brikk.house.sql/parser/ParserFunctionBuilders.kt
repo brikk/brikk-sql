@@ -366,7 +366,7 @@ internal fun customFunctionBuilders(): kotlin.collections.Map<kotlin.String, (Li
     }
     m["UNNEST"] = { fnArgs ->
         dev.brikk.house.sql.ast.Unnest(
-            args("expressions" to listOfNotNull(seqGet(fnArgs, 0)))
+            args("expressions" to fnArgs.filterNotNull())
         )
     }
     m["UPPER"] = ::buildUpper

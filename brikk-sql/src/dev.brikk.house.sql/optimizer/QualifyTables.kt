@@ -252,6 +252,13 @@ fun <E : Expression> qualifyTables(
             } else if (source is Scope && source.isUdtf) {
                 val udtf = source.expression
                 setAlias(udtf, canonicalAliases)
+                if (udtf is Values) {
+                    // SG29-012: the result of a VALUES pivot needs the same output
+                    // alias treatment as a pivoted subquery, distinct from input t(x).
+                    ((udtf.args["pivots"] as? List<*>)?.lastOrNull() as? Expression)?.let {
+                        setAlias(it, canonicalAliases)
+                    }
+                }
 
                 val tableAlias = udtf.args["alias"] as TableAlias
 

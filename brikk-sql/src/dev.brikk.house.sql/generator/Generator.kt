@@ -645,6 +645,34 @@ open class Generator(
         }
 
         val nativeDialect = expression.metaOrNull?.get("native_only_dialect") as? String
+        if (expression is ArraySort && (expression.args["asc"] != null || expression.args["nulls_first"] != null)) {
+            unexecutable("Post-30.29 ArraySort direction/NULL fields require a separately qualified schema migration")
+        }
+        if ((expression is StrToDate || expression is StrToTime) && expression.args["nlsparam"] != null) {
+            unexecutable("Oracle NLS date/time parameters have no qualified executable mapping")
+        }
+        if (expression is TemporaryProperty && expression.args["scoped"] == true) {
+            unexecutable("SCOPED temporary objects have no qualified executable mapping")
+        }
+        val indexOptions = expression.args["include"]
+        val hasIndexOptions = if (indexOptions is Expression) indexOptions.args.values.any(::isTruthyArg) else isTruthyArg(indexOptions)
+        if ((expression is PrimaryKeyColumnConstraint || expression is UniqueColumnConstraint) && hasIndexOptions) {
+            unexecutable("Post-30.29 constraint index parameters require separate native DDL qualification")
+        }
+        if (expression is GroupConcat && dialect.name in setOf("hive", "spark2")) {
+            unexecutable("Ordered string aggregation has no qualified native LISTAGG mapping for $targetName")
+        }
+        if (forExecution && dialect.name != "starrocks" &&
+            (expression.metaOrNull?.get("starrocks_native_ddl") == true || expression.metaOrNull?.get("starrocks_to_days") == true ||
+                expression.metaOrNull?.get("starrocks_native_pivot") == true)) {
+            throw UnsupportedError("Native StarRocks DDL/TO_DAYS/PIVOT semantics are not qualified for another engine")
+        }
+        if (forExecution && dialect.name != "starrocks" && expression.metaOrNull?.get("starrocks_map_literal") == true) {
+            throw UnsupportedError("StarRocks map literal null/duplicate-key and type contracts have no qualified cross-engine execution mapping")
+        }
+        if (forExecution && dialect.name != "clickhouse" && expression.metaOrNull?.get("clickhouse_json_extract_raw") == true) {
+            throw UnsupportedError("ClickHouse JSONExtractRaw String results and missing-value semantics have no qualified cross-engine execution mapping")
+        }
         if (nativeDialect != null && nativeDialect != dialect.name) {
             throw UnsupportedError("${expression::class.simpleName} requires a $nativeDialect-specific translation")
         }
@@ -929,21 +957,43 @@ open class Generator(
         val stack = ArrayDeque<kotlin.Any?>()
         stack.addLast(expression)
         val binaryClass: KClass<out Expression> = expression::class
+        val isIs = expression is Is && op in setOf("IS", "IS NOT")
+        val negate = expression.args["negate"]
 
         while (stack.isNotEmpty()) {
             val node = stack.removeLast()
-            if (node != null && node is Expression && node::class == binaryClass) {
+            if (node is Expression && node::class == binaryClass && (node === expression ||
+                    isIs && node.expressionArg !is BooleanNode || node.args["negate"] == negate)) {
                 val opFunc = node.args["operator"]
                 if (opFunc != null) opText = "OPERATOR(${sql(opFunc)})"
-                stack.addLast(node.args["expression"])
+                else if (isIs) opText = if (node.args["negate"] == true) "IS NOT" else "IS"
+                val right = node.args["expression"]
+                val left = node.args["this"]
+                stack.addLast(if (needsBitwiseGrouping(node as Binary, right, rightSide = true)) "(${sql(right)})" else right)
                 stack.addLast(" ${maybeComment(opText, comments = node.comments)} ")
-                stack.addLast(node.args["this"])
+                stack.addLast(if (needsBitwiseGrouping(node, left, rightSide = false)) "(${sql(left)})" else left)
             } else {
                 sqls.add(sql(node))
             }
         }
 
         return sqls.joinToString("")
+    }
+
+    // SG29-007: bitwise/arithmetic binding differs between engines (^ in particular).
+    // Preserve the AST's grouping rather than assume the destination has the source's
+    // binding powers. Do not alter explicit groups or ordinary arithmetic rendering.
+    private fun needsBitwiseGrouping(parent: Binary, child: kotlin.Any?, rightSide: Boolean): Boolean {
+        if (child !is Binary) return false
+        fun bitwise(node: Expression) = node is BitwiseAnd || node is BitwiseOr || node is BitwiseXor ||
+            node is BitwiseLeftShift || node is BitwiseRightShift
+        fun arithmetic(node: Expression) = node is Add || node is Sub || node is Mul || node is Div ||
+            node is IntDiv || node is Mod || node is Pow
+        if (!(bitwise(parent) && (bitwise(child) || arithmetic(child)) || bitwise(child) && arithmetic(parent))) return false
+        // The generic parser deliberately gives these operators one left-associative
+        // tier. Its left operand therefore already has the AST's grouping without parens.
+        if (dialect.name.isEmpty() && !rightSide && bitwise(parent) && bitwise(child)) return false
+        return parent::class != child::class || rightSide && (parent is BitwiseLeftShift || parent is BitwiseRightShift)
     }
 
     // sqlglot: Generator.connector_sql
@@ -970,7 +1020,13 @@ open class Generator(
 
         while (workStack.isNotEmpty()) {
             val node = workStack.removeLast()
-            if (node is Connector) {
+            // Dialect XOR renderers may be functions or an AND/OR lowering. Flattening
+            // them as the base infix XOR both bypasses dispatch and loses grouping.
+            if (node is Xor && node !== expression && dispatch[Xor::class] !== GeneratorTables.DISPATCH[Xor::class]) {
+                val rendered = "(${sql(node)})"
+                if (sqls.isNotEmpty() && sqls.last() in ops) sqls[sqls.size - 1] = sqls.last() + " $rendered"
+                else sqls.add(rendered)
+            } else if (node is Connector) {
                 ops.add(connectorOpSql(node, workStack))
             } else {
                 val nodeSql = sql(node)
@@ -1027,14 +1083,7 @@ open class Generator(
         val lower = text.lowercase()
         val quoted = expression.quoted
         if (normalize && !quoted) text = lower
-        // sqlglot #8533: escape the escape character before doubling quote delimiters.
-        for ((escaped, plain) in tokenizerConfig.unescapedSequences) {
-            if (escaped.firstOrNull() in tokenizerConfig.identifierEscapes &&
-                plain.singleOrNull() in tokenizerConfig.identifierEscapes) {
-                text = text.replace(plain, escaped)
-            }
-        }
-        text = text.replace(identifierEnd, escapedIdentifierEnd)
+        text = escapeIdentifier(text)
         if (
             quoted ||
             canQuote(expression, identify) ||
@@ -1044,6 +1093,19 @@ open class Generator(
             text = "$identifierStart${replaceLineBreaks(text)}$identifierEnd"
         }
         return text
+    }
+
+    /** Identifier escapes are independent of string-literal escapes and quote decisions. */
+    protected open fun escapeIdentifier(text: String): String {
+        var escapedText = text
+        // sqlglot #8533: escape the escape character before doubling quote delimiters.
+        for ((escaped, plain) in tokenizerConfig.unescapedSequences) {
+            if (escaped.firstOrNull() in tokenizerConfig.identifierEscapes &&
+                plain.singleOrNull() in tokenizerConfig.identifierEscapes) {
+                escapedText = escapedText.replace(plain, escaped)
+            }
+        }
+        return escapedText.replace(identifierEnd, escapedIdentifierEnd)
     }
 
     // sqlglot: Generator.national_sql
@@ -1533,6 +1595,9 @@ open class Generator(
 
     // sqlglot: Generator.datatype_sql (base: TYPE_PARAM_SETTINGS/UNSUPPORTED_TYPES/TYPE_MAPPING empty)
     open fun datatypeSql(expression: DataType): String {
+        if (forExecution && expression.thisArg == DType.REF) {
+            unexecutable("REF named-reference types have no qualified executable mapping")
+        }
         var nested = ""
         var values = ""
 
@@ -1615,6 +1680,14 @@ open class Generator(
 
     // sqlglot: Generator.drop_sql
     open fun dropSql(expression: Drop): String {
+        if (expression.text("kind") == "COLUMNS" && dialect.name !in setOf("spark", "spark2")) {
+            unexecutable("Spark DROP COLUMNS has no qualified execution mapping for $targetName")
+        }
+        if (sourceDialect?.lowercase() in setOf("spark", "spark2") &&
+            expression.text("kind") == "COLUMN" && dialect.name !in setOf("spark", "spark2") &&
+            (expression.args["tables"] as? List<*>)?.filterIsInstance<Column>()?.any { it.parts.size > 1 } == true) {
+            unexecutable("Nested DROP COLUMN paths have no qualified execution mapping for $targetName")
+        }
         val tables = expressions(expression, key = "tables", flat = true)
         var exprs = expressions(expression, flat = true)
         if (exprs.isNotEmpty()) exprs = " ($exprs)"
@@ -1684,15 +1757,44 @@ open class Generator(
         }
         val sqls = mutableListOf<String>()
         val stack = mutableListOf<kotlin.Any?>(expression)
+        var depth = 0
+        var openParens = ""
+
+        fun noModifiers(node: Expression) = (QUERY_MODIFIERS.keys + "with_").all { node.args[it] == null }
 
         while (stack.isNotEmpty()) {
             val node = stack.removeLast()
+            if (node is Int) {
+                depth = node
+                sqls[sqls.lastIndex] += sep("") + indent(")", level = depth, pad = 0)
+                continue
+            }
             // A nested set's own pagination belongs to that set, not the outer chain.
             if (node is SetOperation && (node === expression ||
                     listOf("limit", "offset", "order", "with_").all { node.args[it] == null })) {
                 stack.add(node.args["expression"])
                 stack.add(maybeComment(setOperation(node), comments = node.comments, separated = true))
-                stack.add(node.args["this"])
+                var left = node.thisArg as? Expression
+                if (!setOpParenthesizedOperands && !dialect.intersectBindsTighterThanUnionAndExcept) {
+                    val wrappers = mutableListOf<Subquery>()
+                    var inner = left
+                    while (inner is Subquery && inner.isWrapper) {
+                        wrappers.add(inner)
+                        inner = inner.thisArg as? Expression
+                    }
+                    if (inner is SetOperation && noModifiers(inner)) {
+                        for (wrapper in wrappers) inner.addComments(wrapper.popComments())
+                        left = inner
+                    }
+                } else if (setOpParenthesizedOperands && left is Subquery && left.isWrapper &&
+                    left.comments.isNullOrEmpty() && left.thisArg is SetOperation && noModifiers(left.thisArg as Expression)) {
+                    // sqlglot #8704: do not recurse once per left-associated INTERSECT.
+                    openParens += indent("(", level = depth, pad = 0) + sep("")
+                    stack.add(depth)
+                    depth++
+                    left = left.thisArg as Expression
+                }
+                stack.add(left)
             } else {
                 val paginatedSelect = node is Select && !setOpLimits &&
                     listOf("limit", "offset", "order").any { node.args[it] != null }
@@ -1701,8 +1803,11 @@ open class Generator(
                     val subquery = Subquery(args("this" to node))
                     if (setOpParenthesizedOperands) subquery else
                         Select(args("expressions" to listOf(Star()), "from_" to From(args("this" to subquery))))
+                } else if (!setOpParenthesizedOperands && node is Subquery && node.unnest() is SetOperation) {
+                    Select(args("expressions" to listOf(Star()), "from_" to From(args("this" to node))))
                 } else node
-                sqls.add(sql(operand))
+                sqls.add(openParens + indent(sql(operand), level = depth, pad = 0))
+                openParens = ""
             }
         }
 
@@ -2457,15 +2562,15 @@ open class Generator(
             val argsSql = expressions(expression)
             val alias = sql(expression, "alias")
             var values = "VALUES${seg("")}$argsSql"
+            // VALUES-local pagination belongs inside the derived relation, before
+            // its alias and PIVOT. It must not become outer SELECT pagination.
+            values = queryModifiers(expression, values)
             values = if (
                 wrapDerivedValues &&
                 (alias.isNotEmpty() || expression.parent is From || expression.parent is Table)
             ) "($values)" else values
-            // brikk: the alias goes before the modifiers, as subquerySql does, so a nested join
-            // parked on this node (`a LEFT JOIN b JOIN c ON .. ON ..`) follows `AS t(b)` rather
-            // than splitting it from the VALUES. sqlglot appends the alias last.
-            val aliasSql = if (alias.isNotEmpty()) " AS $alias" else ""
-            return queryModifiers(expression, values, aliasSql)
+            val pivots = expressions(expression, key = "pivots", sep = "", flat = true)
+            return (if (alias.isNotEmpty()) "$values AS $alias" else values) + pivots + valuesRelationsSql(expression)
         }
 
         // Converts `VALUES...` expression into a series of select unions.
@@ -2474,10 +2579,13 @@ open class Generator(
 
         val selects = mutableListOf<Expression>()
         for ((i, tup) in expression.expressionsArg.withIndex()) {
-            var row = (tup as Tuple).expressionsArg
+            var row = (tup as Tuple).expressionsArg.map { (it as Expression).copy() }
             if (i == 0 && columnNames.isNotEmpty()) {
-                row = row.zip(columnNames) { value, columnName ->
-                    Alias(args("this" to value, "alias" to columnName))
+                if (row.size != columnNames.size) {
+                    unexecutable("VALUES-to-SELECT lowering requires a complete matching alias column list")
+                }
+                row = row.mapIndexed { index, value ->
+                    columnNames.getOrNull(index)?.let { Alias(args("this" to value, "alias" to (it as Expression).copy())) } ?: value
                 }
             }
             selects.add(Select(args("expressions" to row)))
@@ -2485,8 +2593,15 @@ open class Generator(
 
         val alias = if (aliasNode != null) " AS ${sql(aliasNode, "this")}" else ""
         val unions = selects.joinToString(" UNION ALL ") { sql(it) }
-        return "($unions)$alias"
+        val pivots = expressions(expression, key = "pivots", sep = "", flat = true)
+        return "(${queryModifiers(expression, unions)})$alias$pivots${valuesRelationsSql(expression)}"
     }
+
+    // A join's conditions must see the VALUES alias, not an alias on the whole join.
+    private fun valuesRelationsSql(expression: Values): String =
+        listOf("joins", "laterals").joinToString("") { key ->
+            (expression.args[key] as? List<*>).orEmpty().joinToString("") { sql(it) }
+        }
 
     // sqlglot: Generator.var_sql
     open fun varSql(expression: Var): String = sql(expression, "this")
@@ -3061,6 +3176,9 @@ open class Generator(
 
     // sqlglot: Generator.refresh_sql
     open fun refreshSql(expression: Refresh): String {
+        if (listOf("partition_start","partition_end","force","mode").any { expression.args[it] != null && expression.args[it] != false }) {
+            unexecutable("Native REFRESH partition/FORCE/mode options are not supported in $targetName")
+        }
         val thisSql = sql(expression, "this")
         val kind = if (expression.thisArg is Literal) "" else "${expression.text("kind")} "
         return "REFRESH $kind$thisSql"
@@ -3102,9 +3220,10 @@ open class Generator(
 
         val parts = mutableListOf<String>()
         parts.addAll(sqls)
-        for (join in (expression.args["joins"] as? List<*>).orEmpty()) parts.add(sql(join))
+        // VALUES relations are rendered after their alias by valuesSql.
+        if (expression !is Values) for (join in (expression.args["joins"] as? List<*>).orEmpty()) parts.add(sql(join))
         parts.add(sql(expression, "match"))
-        for (lateral in (expression.args["laterals"] as? List<*>).orEmpty()) parts.add(sql(lateral))
+        if (expression !is Values) for (lateral in (expression.args["laterals"] as? List<*>).orEmpty()) parts.add(sql(lateral))
         parts.add(sql(expression, "prewhere"))
         parts.add(sql(expression, "where"))
         parts.add(sql(expression, "connect"))
@@ -3675,6 +3794,10 @@ open class Generator(
 
     // sqlglot: Generator.foreignkey_sql
     open fun foreignkeySql(expression: ForeignKey): String {
+        val name = sql(expression, "this").let { if (it.isEmpty()) "" else " $it" }
+        if (name.isNotEmpty() && dialect.name !in setOf("mysql", "doris", "starrocks")) {
+            unexecutable("Named FOREIGN KEY indexes have no qualified mapping to $targetName")
+        }
         var exprs = expressions(expression, flat = true)
         if (exprs.isNotEmpty()) exprs = " ($exprs)"
         var reference = sql(expression, "reference")
@@ -3685,7 +3808,7 @@ open class Generator(
         if (update.isNotEmpty()) update = " ON UPDATE $update"
         var options = expressions(expression, key = "options", flat = true, sep = " ")
         if (options.isNotEmpty()) options = " $options"
-        return "FOREIGN KEY$exprs$reference$delete$update$options"
+        return "FOREIGN KEY$name$exprs$reference$delete$update$options"
     }
 
     // sqlglot: Generator.primarykey_sql
@@ -3880,8 +4003,8 @@ open class Generator(
             val thisName = (expression.args["this"] as? Expression)?.name ?: ""
             if (thisName.isNotEmpty()) {
                 intervalKeyword = if (intervalKeyword.isNotEmpty()) "$intervalKeyword " else ""
-                if (unitExpression is IntervalSpan) return "$intervalKeyword'$thisName'$unit"
-                return "$intervalKeyword'$thisName$unit'"
+                if (unitExpression is IntervalSpan) return "$intervalKeyword${sql(Literal.string(thisName))}$unit"
+                return "$intervalKeyword${sql(Literal.string(thisName + unit))}"
             }
             return "$intervalKeyword$unit"
         }
@@ -3944,6 +4067,14 @@ open class Generator(
 
     // sqlglot: Generator.not_sql
     open fun notSql(expression: Not): String = "NOT ${sql(expression, "this")}"
+
+    open fun matchSql(expression: Match): String {
+        if (expression.args["kind"] != null || expression.args["analyzer"] != null ||
+            expression.metaOrNull?.get("doris_full_text") == true) {
+            unexecutable("Doris full-text MATCH variants/analyzers have no qualified execution mapping in $targetName")
+        }
+        return binary(expression, "MATCH")
+    }
 
     // sqlglot: Generator.alias_sql
     open fun aliasSql(expression: Alias): String {
@@ -4054,8 +4185,12 @@ open class Generator(
     }
 
     // sqlglot: Generator.command_sql
-    open fun commandSql(expression: Command): String =
-        "${sql(expression, "this")} ${expression.text("expression").trim()}"
+    open fun commandSql(expression: Command): String {
+        if (expression.metaOrNull?.get("starrocks_opaque_command") == true && dialect.name != "starrocks") {
+            unexecutable("Opaque StarRocks administrative commands have no cross-engine execution mapping")
+        }
+        return "${sql(expression, "this")} ${expression.text("expression").trim()}"
+    }
 
     // sqlglot: Generator.comment_sql
     open fun commentSql(expression: Comment): String {
@@ -4215,6 +4350,16 @@ open class Generator(
         if (thisSql.isNotEmpty()) thisSql = " $thisSql"
 
         return "ALTER $iceberg$kind$exists$only$thisSql$onCluster$check${sep()}$actionsSql$notValid$options$partitions$cascade"
+    }
+
+    open fun replaceColumnsSql(expression: ReplaceColumns): String {
+        if (dialect.name !in setOf("hive", "spark", "spark2")) {
+            unexecutable("REPLACE COLUMNS catalog semantics are not qualified for $targetName")
+        }
+        if ((expression.parent as? Alter)?.args?.get("cascade") == true && dialect.name != "hive") {
+            unexecutable("Hive REPLACE COLUMNS CASCADE partition-metadata effects are not qualified for $targetName")
+        }
+        return "REPLACE COLUMNS (${expressions(expression, flat = true)})"
     }
 
     open val alterPartitionOptions: Set<KClass<out Expression>> get() = emptySet()
@@ -5181,6 +5326,16 @@ open class Generator(
     open fun isSql(expression: Is): String {
         val negate = expression.args["negate"] == true
         if (!isBoolAllowed && expression.expressionArg is BooleanNode) {
+            // The legacy identity/NOT fallback is equivalent only for a proven non-null
+            // Boolean. Preserve preview compatibility, not an unsafe NULL-sensitive
+            // execution claim for StarRocks/Presto/Trino when those facts are absent.
+            var operand = expression.thisArg as? Expression
+            while (operand is Paren || operand is Not) operand = operand.thisArg as? Expression
+            val proven = operand is BooleanNode || operand is Is || operand is NullSafeEQ || operand is NullSafeNEQ ||
+                operand?.isType(DType.BOOLEAN) == true && operand.metaOrNull?.get("nonnull") == true
+            if (forExecution && !proven) {
+                throw UnsupportedError("IS Boolean lowering requires a proven non-null Boolean operand; NULL-sensitive translation is not qualified")
+            }
             val rhs = expression.expressionArg as BooleanNode
             val positive = (rhs.thisArg == true) != negate
             return if (positive) sql(expression, "this")
@@ -5632,7 +5787,7 @@ open class Generator(
     // sqlglot: Generator.property_name
     open fun propertyName(expression: Property, stringKey: Boolean = false): String {
         if (expression.thisArg is Dot) return sql(expression, "this")
-        return if (stringKey) "'${expression.name}'" else expression.name
+        return if (stringKey) sql(Literal.string(expression.name)) else expression.name
     }
 
     // sqlglot: Generator.property_sql
@@ -5643,6 +5798,7 @@ open class Generator(
         val propertyName = GeneratorTables.PROPERTY_TO_NAME[expression::class]
         if (propertyName == null) {
             unsupported("Unsupported property ${expression.key}")
+            return ""
         }
         return "$propertyName=${sql(expression, "this")}"
     }

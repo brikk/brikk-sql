@@ -40,7 +40,7 @@ open class BigqueryGenerator(
     pretty: Boolean = false,
     identify: kotlin.Any = false,
     comments: Boolean = true,
-    tokenizerConfig: TokenizerConfig = BigqueryTokenizerTables.CONFIG,
+    tokenizerConfig: TokenizerConfig = BigqueryDialect.TOKENIZER_CONFIG,
     overrides: Map<KClass<out Expression>, GenMethod> = emptyMap(),
     sourceDialect: String? = null,
 ) : Generator(
@@ -56,6 +56,17 @@ open class BigqueryGenerator(
     override val dialectUnnestColumnOnly: Boolean get() = true
 
     override val dialect: Dialect get() = Dialects.BIGQUERY
+
+    // sqlglot #8863 and 093f2ec7: escape existing backslashes and control characters,
+    // then introduce delimiter escapes. A single pass cannot re-escape its own output.
+    override fun escapeIdentifier(text: String): String = buildString {
+        for (ch in text) {
+            when (ch.toString()) {
+                identifierEnd -> append('\\').append(identifierEnd)
+                else -> append(escapedSequences[ch.toString()] ?: ch.toString())
+            }
+        }
+    }
 
     override fun bytestringSql(expression: ByteString): String {
         if (expression.args["is_bytes"] != true) return super.bytestringSql(expression)
@@ -187,6 +198,10 @@ open class BigqueryGenerator(
 
     // sqlglot: generators.bigquery._derived_table_values_to_unnest
     override fun valuesSql(expression: Values, valuesAsTableParam: Boolean): String {
+        if ((expression.args["pivots"] as? List<*>)?.isNotEmpty() == true) {
+            unexecutable("BigQuery VALUES-to-UNNEST with PIVOT is not qualified; pivot must not disappear")
+            return super.valuesSql(expression, valuesAsTableParam)
+        }
         if (expression.findAncestor(From::class, Join::class) == null) {
             return super.valuesSql(expression, valuesAsTableParam)
         }
@@ -259,25 +274,67 @@ open class BigqueryGenerator(
 
     // sqlglot: BigQueryGenerator.cast_sql — inline ARRAY<T>[..] literals round-trip.
     override fun castSql(expression: Cast, safePrefix: String?): String {
+        val local = expression.copy() as Cast
         // sqlglot: transforms.remove_precision_parameterized_types — drop DataTypeParam
         // args from the target type (e.g. NUMERIC(10, 2) -> NUMERIC, STRING(10) -> STRING).
-        val to = expression.args["to"] as? DataType
+        val to = local.args["to"] as? DataType
         if (to != null) {
+            if (to.thisArg == DType.DECIMAL) {
+                val parameters = to.expressionsArg.filterIsInstance<DataTypeParam>()
+                val precision = (parameters.getOrNull(0)?.thisArg as? Expression)?.name?.toIntOrNull()
+                val scale = if (parameters.size < 2) 0 else (parameters[1].thisArg as? Expression)?.name?.toIntOrNull()
+                if (precision != null && scale != null && (precision.toLong() - scale > 29 || scale > 9)) to.set("this", DType.BIGDECIMAL)
+            }
             val kept = to.expressionsArg.filterIsInstance<Expression>()
                 .filter { it !is DataTypeParam }
             if (kept.size != to.expressionsArg.size) {
                 to.set("expressions", if (kept.isEmpty()) null else kept)
             }
         }
-        val this0 = expression.args["this"]
+        val this0 = local.args["this"]
         if (this0 is ArrayNode) {
             val elem = this0.expressionsArg.filterIsInstance<Expression>().firstOrNull()
             val hasQuery = elem != null && elem.walk().any { it is dev.brikk.house.sql.ast.Query }
             if (!hasQuery) {
-                return "${sql(expression, "to")}${sql(this0)}"
+                return "${sql(local, "to")}${sql(this0)}"
             }
         }
-        return super.castSql(expression, safePrefix)
+        return super.castSql(local, safePrefix)
+    }
+
+    internal fun fromBaseBigquery(expression: FromBase): String {
+        if ((expression.args["expression"] as? Literal)?.let { !it.isString && it.name == "16" } != true) {
+            unexecutable("BigQuery FROM_BASE only has a base-16 preview")
+            return functionFallbackSql(expression)
+        }
+        unexecutable("BigQuery FROM_BASE signed hex cast requires native range/error qualification")
+        return "CAST(${func("REGEXP_REPLACE", expression.thisArg, Literal.string("^([+-]?)"), Literal.string("\\10x"))} AS INT64)"
+    }
+
+    internal fun approxQuantileBigquery(expression: ApproxQuantile): String {
+        // Bound the textual input and scale before any power or integral conversion.
+        fun number(e: Expression?): java.math.BigDecimal? = if (e?.isNumber == true && e.name.length <= 128)
+            e.name.toBigDecimalOrNull()?.stripTrailingZeros() else null
+        val q = number(expression.args["quantile"] as? Expression)
+        val weight = expression.args["weight"] as? Expression
+        var ancestor: Expression = expression
+        while (ancestor.parent != null && ancestor.parent !is Window && ancestor.parent !is AggFunc && ancestor.parent !is Select) ancestor = ancestor.parent!!
+        val windowed = ancestor.parent is Window && ancestor.argKey == "this"
+        if (q == null || q < java.math.BigDecimal.ZERO || q > java.math.BigDecimal.ONE || q.scale() > 5 ||
+            weight != null && number(weight)?.compareTo(java.math.BigDecimal.ONE) != 0 || windowed) {
+            unexecutable("BigQuery APPROX_QUANTILES preview needs a bounded literal quantile, unit weight and non-window aggregate")
+            return functionFallbackSql(expression)
+        }
+        unexecutable("BigQuery and Trino percentile algorithms/accuracy are not execution-equivalent")
+        val denominator = java.math.BigInteger.TEN.pow(q.scale().coerceAtLeast(0))
+        val numerator = q.multiply(java.math.BigDecimal(denominator)).toBigIntegerExact()
+        val divisor = numerator.gcd(denominator)
+        return "${func("APPROX_QUANTILES", expression.thisArg, (denominator / divisor).toString())}[OFFSET(${numerator / divisor})]"
+    }
+
+    internal fun arrayOperationBigquery(expression: Expression): String {
+        unexecutable("BigQuery array sort/distinct aggregate folds require NULL, empty-input and ordering qualification; retained as preview only")
+        return functionFallbackSql(expression as Func)
     }
 
     // sqlglot: BigQueryGenerator.bracket_sql — OFFSET/ORDINAL/SAFE_ forms.
@@ -741,6 +798,17 @@ open class BigqueryGenerator(
                 inlineArrayUnlessQuerySql(e)
             }
             reg(ArrayContains::class) { e -> bg().arrayContainsSql(e as ArrayContains) }
+            reg(ArraySort::class) { e -> bg().arrayOperationBigquery(e) }
+            reg(SortArray::class) { e -> bg().arrayOperationBigquery(e) }
+            reg(ArrayDistinct::class) { e -> bg().arrayOperationBigquery(e) }
+            reg(FromBase::class) { e -> bg().fromBaseBigquery(e as FromBase) }
+            reg(ApproxQuantile::class) { e -> bg().approxQuantileBigquery(e as ApproxQuantile) }
+            for ((cls, part) in mapOf(Day::class to "DAY", DayOfMonth::class to "DAY", DayOfWeek::class to "DAYOFWEEK",
+                DayOfYear::class to "DAYOFYEAR", WeekOfYear::class to "ISOWEEK", Year::class to "YEAR", Month::class to "MONTH",
+                Quarter::class to "QUARTER", Hour::class to "HOUR")) {
+                reg(cls) { e -> "EXTRACT($part FROM ${sql(e, "this")})" }
+            }
+            reg(DayOfWeekIso::class) { e -> "(MOD(EXTRACT(DAYOFWEEK FROM ${sql(e, "this")}) + 5, 7) + 1)" }
             reg(AIEmbed::class) { e -> bg().renameFuncSql("EMBED", e) }
             reg(AIGenerate::class) { e -> bg().renameFuncSql("GENERATE", e) }
             reg(AISimilarity::class) { e -> bg().renameFuncSql("SIMILARITY", e) }

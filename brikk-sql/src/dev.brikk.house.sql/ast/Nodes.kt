@@ -198,6 +198,7 @@ class Parameter(initArgs: Args = emptyMap()) : Expression(initArgs), Condition {
 // sqlglot: core.Placeholder(Expression, Condition)
 class Placeholder(initArgs: Args = emptyMap()) : Expression(initArgs), Condition {
     override val argTypes get() = ARG_TYPES
+    override val hashRawArgs get() = true
     override val name: String get() = text("this").ifEmpty { "?" }
 
     companion object {
@@ -588,8 +589,8 @@ class Join(initArgs: Args = emptyMap()) : Expression(initArgs) {
         private val ARG_TYPES = argTypesOf(
             "this" to true, "on" to false, "side" to false, "kind" to false,
             "using" to false, "method" to false, "global_" to false, "hint" to false,
-            "match_condition" to false, "directed" to false, "expressions" to false,
-            "pivots" to false, "nearest" to false,
+            "match_condition" to false, "nearest" to false, "directed" to false,
+            "expressions" to false, "pivots" to false,
         )
     }
 }
@@ -886,6 +887,7 @@ class RowNumber(initArgs: Args = emptyMap()) : Expression(initArgs), Func {
 // sqlglot: ddl.Command(Expression) — the parser's fallback node
 class Command(initArgs: Args = emptyMap()) : Expression(initArgs) {
     override val argTypes get() = ARG_TYPES
+    override val hashRawArgs get() = true
 
     companion object {
         private val ARG_TYPES = argTypesOf("this" to true, "expression" to false)

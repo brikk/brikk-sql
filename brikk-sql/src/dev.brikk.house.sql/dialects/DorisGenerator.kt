@@ -48,6 +48,16 @@ open class DorisGenerator(
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.DORIS
 
+    override fun matchSql(expression: Match): String {
+        if (expression.metaOrNull?.get("doris_full_text") != true && sourceDialect?.equals("doris", true) != true) {
+            unexecutable("Foreign MATCH semantics are not qualified as Doris full-text search")
+        }
+        val kind = expression.text("kind")
+        val predicate = binary(expression, if (kind.isEmpty()) "MATCH" else "MATCH_$kind")
+        val analyzer = sql(expression, "analyzer")
+        return if (analyzer.isEmpty()) predicate else "$predicate USING ANALYZER $analyzer"
+    }
+
     // Paired 484/4.1.5 probes: MySQL's null parseJsonName silently removed the
     // parser, turning CAST(JSON_PARSE(text) AS STRING) into CAST(text AS STRING).
     // Doris needs its actual parser for numeric rendering and invalid/JSON-null input.
@@ -980,6 +990,16 @@ open class DorisGenerator(
         val TRANSFORMS: Map<KClass<out Expression>, GenMethod> = buildMap {
             fun reg(cls: KClass<out Expression>, method: GenMethod) { put(cls, method) }
             fun Generator.dg(): DorisGenerator = this as DorisGenerator
+            // SG29-007: Doris 4.1.5 has no symbolic << / >> expression grammar.
+            // A width/signedness-qualified functional lowering is a separate feature.
+            reg(BitwiseLeftShift::class) { e ->
+                unexecutable("Doris 4.1.5 symbolic bitwise shift translation is not qualified")
+                binary(e as Binary, "<<")
+            }
+            reg(BitwiseRightShift::class) { e ->
+                unexecutable("Doris 4.1.5 symbolic bitwise shift translation is not qualified")
+                binary(e as Binary, ">>")
+            }
 
             reg(AddMonths::class) { e -> dg().renameFuncSql("MONTHS_ADD", e) }
             // BUGS-doris-generator-mappings row 1 (P1): duckdb list_has_any(a,b) parses to

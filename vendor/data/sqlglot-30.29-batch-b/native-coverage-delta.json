@@ -1,0 +1,965 @@
+{
+  "scope": "Exact native-syntax audit delta only. No parity/type/result-equivalence inference, input exclusions or count allowances.",
+  "legacy_replay": {
+    "core": "dev.brikk.house:brikk-sql-jvm:0.23.0",
+    "core_sha256": "4d272ed1c0a6e84ba9086b5a3e21c62a1c2e094f2d886de3fcbce6d86e9e0d38",
+    "metadata_sha256": "be6cda26ed8e7de2a89b3bfc15724c466d4d0ec95bf52fb2d4cedfdfe4c158c1",
+    "same_module_cwd_engine_jdbc_and_complete_settings": true,
+    "historical_native_and_local_fingerprints_reproduced": true,
+    "current_resource_inventory_used": true
+  },
+  "engine": {
+    "engine": [
+      "v2.0.0",
+      "d54cbbe3df",
+      "1.0"
+    ],
+    "jdbc_sha256": "5170daa90a43296705127ef3c80834ba1cd275ec9d765a9f7eee346ab0087186",
+    "settings": [
+      {
+        "name": "Calendar",
+        "value": "gregorian"
+      },
+      {
+        "name": "TimeZone",
+        "value": "America/Costa_Rica"
+      },
+      {
+        "name": "access_mode",
+        "value": "automatic"
+      },
+      {
+        "name": "active_grammar_extensions",
+        "value": "[]"
+      },
+      {
+        "name": "allocator_background_threads",
+        "value": "false"
+      },
+      {
+        "name": "allocator_bulk_deallocation_flush_threshold",
+        "value": "512.0 MiB"
+      },
+      {
+        "name": "allocator_flush_threshold",
+        "value": "134217728B"
+      },
+      {
+        "name": "allow_community_extensions",
+        "value": "true"
+      },
+      {
+        "name": "allow_extension_repositories",
+        "value": "undecided"
+      },
+      {
+        "name": "allow_extensions_metadata_mismatch",
+        "value": "false"
+      },
+      {
+        "name": "allow_parser_override_extension",
+        "value": "DEFAULT"
+      },
+      {
+        "name": "allow_persistent_secrets",
+        "value": "true"
+      },
+      {
+        "name": "allow_unredacted_secrets",
+        "value": "false"
+      },
+      {
+        "name": "allow_unsigned_extensions",
+        "value": "false"
+      },
+      {
+        "name": "allowed_configs",
+        "value": "[]"
+      },
+      {
+        "name": "allowed_directories",
+        "value": "[/home/jayson/.local/share/opencode/worktree/0c598f4f0b605b49185f81be928655d57840e56b/sqlglot-30-29-batch-a/brikk-sql-verify-duckdb/.tmp/]"
+      },
+      {
+        "name": "allowed_paths",
+        "value": "['/home/jayson/.local/share/opencode/worktree/0c598f4f0b605b49185f81be928655d57840e56b/sqlglot-30-29-batch-a/brikk-sql-verify-duckdb/:memory:.wal.recovery', '/home/jayson/.local/share/opencode/worktree/0c598f4f0b605b49185f81be928655d57840e56b/sqlglot-30-29-batch-a/brikk-sql-verify-duckdb/:memory:.wal', '/home/jayson/.local/share/opencode/worktree/0c598f4f0b605b49185f81be928655d57840e56b/sqlglot-30-29-batch-a/brikk-sql-verify-duckdb/:memory:.wal.checkpoint', '/home/jayson/.local/share/opencode/worktree/0c598f4f0b605b49185f81be928655d57840e56b/sqlglot-30-29-batch-a/brikk-sql-verify-duckdb/:memory:']"
+      },
+      {
+        "name": "approximate_join_order_threshold",
+        "value": "12"
+      },
+      {
+        "name": "arrow_large_buffer_size",
+        "value": "false"
+      },
+      {
+        "name": "arrow_lossless_conversion",
+        "value": "false"
+      },
+      {
+        "name": "arrow_output_list_view",
+        "value": "false"
+      },
+      {
+        "name": "arrow_output_version",
+        "value": "1.0"
+      },
+      {
+        "name": "asof_loop_join_threshold",
+        "value": "64"
+      },
+      {
+        "name": "async_threads",
+        "value": "128"
+      },
+      {
+        "name": "auto_checkpoint_skip_wal_threshold",
+        "value": "100000"
+      },
+      {
+        "name": "autoinstall_extension_repository",
+        "value": ""
+      },
+      {
+        "name": "autoinstall_known_extensions",
+        "value": "false"
+      },
+      {
+        "name": "autoload_known_extensions",
+        "value": "false"
+      },
+      {
+        "name": "binary_as_string",
+        "value": "false"
+      },
+      {
+        "name": "block_allocator_memory",
+        "value": "0 bytes"
+      },
+      {
+        "name": "cache_local_files",
+        "value": "false"
+      },
+      {
+        "name": "catalog_error_max_schemas",
+        "value": "100"
+      },
+      {
+        "name": "checkpoint_on_detach",
+        "value": "DEFAULT"
+      },
+      {
+        "name": "checkpoint_threshold",
+        "value": "16.0 MiB"
+      },
+      {
+        "name": "current_dialect",
+        "value": null
+      },
+      {
+        "name": "current_transaction_invalidation_policy",
+        "value": "STANDARD_POLICY"
+      },
+      {
+        "name": "custom_extension_repository",
+        "value": ""
+      },
+      {
+        "name": "custom_user_agent",
+        "value": ""
+      },
+      {
+        "name": "debug_checkpoint_scan_sleep_ms",
+        "value": "0"
+      },
+      {
+        "name": "default_block_size",
+        "value": "262144"
+      },
+      {
+        "name": "default_collation",
+        "value": ""
+      },
+      {
+        "name": "default_null_order",
+        "value": "NULLS_LAST"
+      },
+      {
+        "name": "default_order",
+        "value": "ASCENDING"
+      },
+      {
+        "name": "default_secret_storage",
+        "value": "local_file"
+      },
+      {
+        "name": "default_transaction_invalidation_policy",
+        "value": "ALL_ERRORS_INVALIDATE_TRANSACTION"
+      },
+      {
+        "name": "delim_join_as_cte",
+        "value": "true"
+      },
+      {
+        "name": "dialect_compatibility_mode",
+        "value": "NONE"
+      },
+      {
+        "name": "disable_database_invalidation",
+        "value": "false"
+      },
+      {
+        "name": "disable_parquet_prefetching",
+        "value": "false"
+      },
+      {
+        "name": "disable_timestamptz_casts",
+        "value": "false"
+      },
+      {
+        "name": "disabled_compression_methods",
+        "value": ""
+      },
+      {
+        "name": "disabled_filesystems",
+        "value": ""
+      },
+      {
+        "name": "disabled_log_types",
+        "value": ""
+      },
+      {
+        "name": "disabled_optimizers",
+        "value": ""
+      },
+      {
+        "name": "duckdb_api",
+        "value": "jdbc"
+      },
+      {
+        "name": "dynamic_or_filter_threshold",
+        "value": "50"
+      },
+      {
+        "name": "enable_external_access",
+        "value": "false"
+      },
+      {
+        "name": "enable_external_file_cache",
+        "value": "true"
+      },
+      {
+        "name": "enable_fsst_vectors",
+        "value": "false"
+      },
+      {
+        "name": "enable_geoparquet_conversion",
+        "value": "true"
+      },
+      {
+        "name": "enable_http_metadata_cache",
+        "value": "false"
+      },
+      {
+        "name": "enable_logging",
+        "value": "0"
+      },
+      {
+        "name": "enable_macro_dependencies",
+        "value": "false"
+      },
+      {
+        "name": "enable_optimistic_write",
+        "value": "true"
+      },
+      {
+        "name": "enable_optimizer",
+        "value": "true"
+      },
+      {
+        "name": "enable_profiling",
+        "value": null
+      },
+      {
+        "name": "enable_progress_bar",
+        "value": "false"
+      },
+      {
+        "name": "enable_progress_bar_print",
+        "value": "true"
+      },
+      {
+        "name": "enable_view_dependencies",
+        "value": "false"
+      },
+      {
+        "name": "enabled_log_types",
+        "value": ""
+      },
+      {
+        "name": "error_on_division_by_zero",
+        "value": "true"
+      },
+      {
+        "name": "errors_as_json",
+        "value": "false"
+      },
+      {
+        "name": "experimental_metadata_reuse",
+        "value": "true"
+      },
+      {
+        "name": "explain_output",
+        "value": "PHYSICAL_ONLY"
+      },
+      {
+        "name": "extension_directories",
+        "value": "[]"
+      },
+      {
+        "name": "extension_repository_directory",
+        "value": ""
+      },
+      {
+        "name": "external_file_cache_local_max_block_size",
+        "value": "16384"
+      },
+      {
+        "name": "external_file_cache_remote_max_block_size",
+        "value": "2097152"
+      },
+      {
+        "name": "external_file_cache_remote_min_block_size",
+        "value": "4096"
+      },
+      {
+        "name": "external_file_cache_request_sizing",
+        "value": "AUTO"
+      },
+      {
+        "name": "external_file_cache_spill",
+        "value": "false"
+      },
+      {
+        "name": "external_threads",
+        "value": "1"
+      },
+      {
+        "name": "file_search_path",
+        "value": ""
+      },
+      {
+        "name": "force_column_metadata_reuse",
+        "value": "false"
+      },
+      {
+        "name": "force_compression",
+        "value": "auto"
+      },
+      {
+        "name": "fsync_mode",
+        "value": "STANDARD"
+      },
+      {
+        "name": "geometry_minimum_shredding_size",
+        "value": "30000"
+      },
+      {
+        "name": "home_directory",
+        "value": ""
+      },
+      {
+        "name": "http_client_pool_capacity",
+        "value": "128"
+      },
+      {
+        "name": "http_proxy",
+        "value": ""
+      },
+      {
+        "name": "http_proxy_password",
+        "value": ""
+      },
+      {
+        "name": "http_proxy_username",
+        "value": ""
+      },
+      {
+        "name": "ieee_floating_point_ops",
+        "value": "true"
+      },
+      {
+        "name": "ignore_unknown_crs",
+        "value": "false"
+      },
+      {
+        "name": "immediate_transaction_mode",
+        "value": "false"
+      },
+      {
+        "name": "index_scan_max_count",
+        "value": "2048"
+      },
+      {
+        "name": "index_scan_percentage",
+        "value": "0.001"
+      },
+      {
+        "name": "initial_column_segment_size",
+        "value": "2048"
+      },
+      {
+        "name": "integer_division",
+        "value": "false"
+      },
+      {
+        "name": "jdbc_stream_results",
+        "value": null
+      },
+      {
+        "name": "json_geometry_format",
+        "value": "wkt"
+      },
+      {
+        "name": "late_materialization_max_rows",
+        "value": "50"
+      },
+      {
+        "name": "legacy_disable_null_type",
+        "value": "false"
+      },
+      {
+        "name": "lock_configuration",
+        "value": "true"
+      },
+      {
+        "name": "log_query_path",
+        "value": ""
+      },
+      {
+        "name": "logging_level",
+        "value": "INFO"
+      },
+      {
+        "name": "logging_mode",
+        "value": "LEVEL_ONLY"
+      },
+      {
+        "name": "logging_storage",
+        "value": "memory"
+      },
+      {
+        "name": "max_execution_time",
+        "value": "0"
+      },
+      {
+        "name": "max_expression_depth",
+        "value": "1000"
+      },
+      {
+        "name": "max_memory",
+        "value": "244.1 MiB"
+      },
+      {
+        "name": "max_streaming_buffer_size",
+        "value": "10.0 MiB"
+      },
+      {
+        "name": "max_temp_directory_size",
+        "value": "90% of available disk space"
+      },
+      {
+        "name": "max_vacuum_tasks",
+        "value": "100"
+      },
+      {
+        "name": "memory_limit",
+        "value": "244.1 MiB"
+      },
+      {
+        "name": "merge_join_threshold",
+        "value": "1000"
+      },
+      {
+        "name": "nested_loop_join_threshold",
+        "value": "5"
+      },
+      {
+        "name": "null_order",
+        "value": "NULLS_LAST"
+      },
+      {
+        "name": "operator_memory_limit",
+        "value": null
+      },
+      {
+        "name": "order_by_non_integer_literal",
+        "value": "false"
+      },
+      {
+        "name": "ordered_aggregate_threshold",
+        "value": "262144"
+      },
+      {
+        "name": "parquet_metadata_cache",
+        "value": "false"
+      },
+      {
+        "name": "parquet_prefetch_column_gap",
+        "value": null
+      },
+      {
+        "name": "partitioned_write_flush_threshold",
+        "value": "524288"
+      },
+      {
+        "name": "partitioned_write_max_open_files",
+        "value": "100"
+      },
+      {
+        "name": "password",
+        "value": ""
+      },
+      {
+        "name": "perfect_ht_threshold",
+        "value": "12"
+      },
+      {
+        "name": "pin_threads",
+        "value": "auto"
+      },
+      {
+        "name": "pivot_filter_threshold",
+        "value": "20"
+      },
+      {
+        "name": "pivot_limit",
+        "value": "100000"
+      },
+      {
+        "name": "prefer_range_joins",
+        "value": "false"
+      },
+      {
+        "name": "prefetch_all_parquet_files",
+        "value": "false"
+      },
+      {
+        "name": "preserve_identifier_case",
+        "value": "preserve_case"
+      },
+      {
+        "name": "preserve_insertion_order",
+        "value": "true"
+      },
+      {
+        "name": "profile_output",
+        "value": ""
+      },
+      {
+        "name": "profiling_coverage",
+        "value": "SELECT"
+      },
+      {
+        "name": "profiling_output",
+        "value": ""
+      },
+      {
+        "name": "profiling_renderer_settings",
+        "value": "{}"
+      },
+      {
+        "name": "progress_bar_time",
+        "value": "2000"
+      },
+      {
+        "name": "read_ahead_depth",
+        "value": "-1"
+      },
+      {
+        "name": "redact_http_logs",
+        "value": "true"
+      },
+      {
+        "name": "regex_match_operator_semantics",
+        "value": "partial"
+      },
+      {
+        "name": "scalar_subquery_error_on_multiple_rows",
+        "value": "true"
+      },
+      {
+        "name": "scheduler_process_partial",
+        "value": "false"
+      },
+      {
+        "name": "schema",
+        "value": "main"
+      },
+      {
+        "name": "search_path",
+        "value": ""
+      },
+      {
+        "name": "secret_directory",
+        "value": "/home/jayson/.duckdb/stored_secrets"
+      },
+      {
+        "name": "show_behavior",
+        "value": "AUTO"
+      },
+      {
+        "name": "standard_vector_size",
+        "value": "2048"
+      },
+      {
+        "name": "storage_block_prefetch",
+        "value": "REMOTE_ONLY"
+      },
+      {
+        "name": "storage_compatibility_version",
+        "value": "latest"
+      },
+      {
+        "name": "streaming_buffer_size",
+        "value": "10.0 MiB"
+      },
+      {
+        "name": "table_function_identifier_conversion",
+        "value": "DEFAULT"
+      },
+      {
+        "name": "temp_directory",
+        "value": ".tmp"
+      },
+      {
+        "name": "temp_file_encryption",
+        "value": "false"
+      },
+      {
+        "name": "threads",
+        "value": "1"
+      },
+      {
+        "name": "tracked_metrics",
+        "value": "[*]"
+      },
+      {
+        "name": "user",
+        "value": ""
+      },
+      {
+        "name": "username",
+        "value": ""
+      },
+      {
+        "name": "validate_external_file_cache",
+        "value": "VALIDATE_ALL"
+      },
+      {
+        "name": "variant_minimum_shredding_size",
+        "value": "30000"
+      },
+      {
+        "name": "wal_autocheckpoint",
+        "value": "16.0 MiB"
+      },
+      {
+        "name": "wal_autocheckpoint_entries",
+        "value": "0"
+      },
+      {
+        "name": "warnings_as_errors",
+        "value": "false"
+      },
+      {
+        "name": "worker_threads",
+        "value": "1"
+      },
+      {
+        "name": "write_buffer_row_group_count",
+        "value": "5"
+      },
+      {
+        "name": "write_buffer_row_group_memory_limit",
+        "value": "24.4 MiB"
+      },
+      {
+        "name": "zstd_min_string_length",
+        "value": "4096"
+      }
+    ]
+  },
+  "historical_baseline": {
+    "files": 181,
+    "inputs": 24606,
+    "unique_sql": 5419,
+    "native_counts": {
+      "accepted": 13603,
+      "rejected": 7754,
+      "unverified": 3249
+    },
+    "native_fingerprint": "9e5fae1f61d9e747f28dca82df626c4b7beec4b76443ce1f62e949aa99db65af",
+    "local_counts": {
+      "excluded-or-non-sql-expectation": 65,
+      "expected-unsupported": 9,
+      "foreign-analysis-input": 121,
+      "opaque-command": 398,
+      "unsupported": 235,
+      "unsupported-warning": 1563
+    },
+    "local_fingerprint": "0337333b39b0e3c9aefa3e6e2b1c040c5b7f1f89871103c3667f7d010109c410",
+    "inventory_fingerprint": "224e97c48b3db6a24c56245cc456fa28fdbf09522877482a59f299d2e49766b6"
+  },
+  "before": {
+    "files": 181,
+    "inputs": 24606,
+    "unique_sql": 5419,
+    "native_counts": {
+      "accepted": 13603,
+      "rejected": 7754,
+      "unverified": 3249
+    },
+    "native_fingerprint": "9e5fae1f61d9e747f28dca82df626c4b7beec4b76443ce1f62e949aa99db65af",
+    "local_counts": {
+      "excluded-or-non-sql-expectation": 65,
+      "expected-unsupported": 9,
+      "foreign-analysis-input": 121,
+      "opaque-command": 398,
+      "unsupported": 235,
+      "unsupported-warning": 1563
+    },
+    "local_fingerprint": "0337333b39b0e3c9aefa3e6e2b1c040c5b7f1f89871103c3667f7d010109c410",
+    "inventory_fingerprint": "256041586fc75868d8efb902dfbe1ad67f0c8e92daa770bef8c3d263e2bda66e"
+  },
+  "after": {
+    "files": 181,
+    "inputs": 24606,
+    "unique_sql": 5419,
+    "native_counts": {
+      "accepted": 13608,
+      "rejected": 7749,
+      "unverified": 3249
+    },
+    "native_fingerprint": "a09d532cbc09c1d80d2d08be1060d1632fea815fe070e273704c4b26664368ce",
+    "local_counts": {
+      "excluded-or-non-sql-expectation": 65,
+      "expected-unsupported": 9,
+      "foreign-analysis-input": 121,
+      "opaque-command": 398,
+      "unsupported": 235,
+      "unsupported-warning": 1563
+    },
+    "local_fingerprint": "0337333b39b0e3c9aefa3e6e2b1c040c5b7f1f89871103c3667f7d010109c410",
+    "inventory_fingerprint": "256041586fc75868d8efb902dfbe1ad67f0c8e92daa770bef8c3d263e2bda66e"
+  },
+  "inventory_review": {
+    "changed_file": "scope-corpus/known-failures.json",
+    "reason": "Only the exact SG29-006 scope correction was added. Restoring its HEAD hash reproduces the full historical inventory fingerprint.",
+    "historical_inventory_fingerprint_reconstructed": "224e97c48b3db6a24c56245cc456fa28fdbf09522877482a59f299d2e49766b6"
+  },
+  "changed_origins": 11,
+  "unique_sql_transitions": 4,
+  "unchanged_origins": 24595,
+  "status_changes": 5,
+  "changes": [
+    {
+      "origin": "ast-corpus/clickhouse-annotated-serde.json/136/loaded-dump/raw",
+      "review": "SG29-007: nested logical XOR now uses the DuckDB renderer and retains grouped operands; unsupported infix XOR disappears. Frozen source SELECT xor(0,1,1,0).",
+      "before": {
+        "origin": "ast-corpus/clickhouse-annotated-serde.json/136/loaded-dump/raw",
+        "sql": "SELECT (0 XOR 1 XOR 1 AND (NOT 0)) OR ((NOT (0 XOR 1 AND (NOT 1)) OR ((NOT (0 AND (NOT 1)) OR ((NOT 0) AND 1)) AND 1)) AND 0)",
+        "status": "rejected",
+        "type": "parser",
+        "message": "syntax error at or near \"XOR\""
+      },
+      "after": {
+        "origin": "ast-corpus/clickhouse-annotated-serde.json/136/loaded-dump/raw",
+        "sql": "SELECT (((((0 AND (NOT 1)) OR ((NOT 0) AND 1)) AND (NOT 1)) OR ((NOT ((0 AND (NOT 1)) OR ((NOT 0) AND 1))) AND 1)) AND (NOT 0)) OR ((NOT ((((0 AND (NOT 1)) OR ((NOT 0) AND 1)) AND (NOT 1)) OR ((NOT ((0 AND (NOT 1)) OR ((NOT 0) AND 1))) AND 1))) AND 0)",
+        "status": "accepted",
+        "type": "",
+        "message": ""
+      }
+    },
+    {
+      "origin": "ast-corpus/clickhouse-annotated-serde.json/136/current-parser/raw",
+      "review": "SG29-007: nested logical XOR now uses the DuckDB renderer and retains grouped operands; unsupported infix XOR disappears. Frozen source SELECT xor(0,1,1,0).",
+      "before": {
+        "origin": "ast-corpus/clickhouse-annotated-serde.json/136/current-parser/raw",
+        "sql": "SELECT (0 XOR 1 XOR 1 AND (NOT 0)) OR ((NOT (0 XOR 1 AND (NOT 1)) OR ((NOT (0 AND (NOT 1)) OR ((NOT 0) AND 1)) AND 1)) AND 0)",
+        "status": "rejected",
+        "type": "parser",
+        "message": "syntax error at or near \"XOR\""
+      },
+      "after": {
+        "origin": "ast-corpus/clickhouse-annotated-serde.json/136/current-parser/raw",
+        "sql": "SELECT (((((0 AND (NOT 1)) OR ((NOT 0) AND 1)) AND (NOT 1)) OR ((NOT ((0 AND (NOT 1)) OR ((NOT 0) AND 1))) AND 1)) AND (NOT 0)) OR ((NOT ((((0 AND (NOT 1)) OR ((NOT 0) AND 1)) AND (NOT 1)) OR ((NOT ((0 AND (NOT 1)) OR ((NOT 0) AND 1))) AND 1))) AND 0)",
+        "status": "accepted",
+        "type": "",
+        "message": ""
+      }
+    },
+    {
+      "origin": "ast-corpus/clickhouse-serde.json/136/loaded-dump/raw",
+      "review": "SG29-007: nested logical XOR now uses the DuckDB renderer and retains grouped operands; unsupported infix XOR disappears. Frozen source SELECT xor(0,1,1,0).",
+      "before": {
+        "origin": "ast-corpus/clickhouse-serde.json/136/loaded-dump/raw",
+        "sql": "SELECT (0 XOR 1 XOR 1 AND (NOT 0)) OR ((NOT (0 XOR 1 AND (NOT 1)) OR ((NOT (0 AND (NOT 1)) OR ((NOT 0) AND 1)) AND 1)) AND 0)",
+        "status": "rejected",
+        "type": "parser",
+        "message": "syntax error at or near \"XOR\""
+      },
+      "after": {
+        "origin": "ast-corpus/clickhouse-serde.json/136/loaded-dump/raw",
+        "sql": "SELECT (((((0 AND (NOT 1)) OR ((NOT 0) AND 1)) AND (NOT 1)) OR ((NOT ((0 AND (NOT 1)) OR ((NOT 0) AND 1))) AND 1)) AND (NOT 0)) OR ((NOT ((((0 AND (NOT 1)) OR ((NOT 0) AND 1)) AND (NOT 1)) OR ((NOT ((0 AND (NOT 1)) OR ((NOT 0) AND 1))) AND 1))) AND 0)",
+        "status": "accepted",
+        "type": "",
+        "message": ""
+      }
+    },
+    {
+      "origin": "ast-corpus/clickhouse-serde.json/136/current-parser/raw",
+      "review": "SG29-007: nested logical XOR now uses the DuckDB renderer and retains grouped operands; unsupported infix XOR disappears. Frozen source SELECT xor(0,1,1,0).",
+      "before": {
+        "origin": "ast-corpus/clickhouse-serde.json/136/current-parser/raw",
+        "sql": "SELECT (0 XOR 1 XOR 1 AND (NOT 0)) OR ((NOT (0 XOR 1 AND (NOT 1)) OR ((NOT (0 AND (NOT 1)) OR ((NOT 0) AND 1)) AND 1)) AND 0)",
+        "status": "rejected",
+        "type": "parser",
+        "message": "syntax error at or near \"XOR\""
+      },
+      "after": {
+        "origin": "ast-corpus/clickhouse-serde.json/136/current-parser/raw",
+        "sql": "SELECT (((((0 AND (NOT 1)) OR ((NOT 0) AND 1)) AND (NOT 1)) OR ((NOT ((0 AND (NOT 1)) OR ((NOT 0) AND 1))) AND 1)) AND (NOT 0)) OR ((NOT ((((0 AND (NOT 1)) OR ((NOT 0) AND 1)) AND (NOT 1)) OR ((NOT ((0 AND (NOT 1)) OR ((NOT 0) AND 1))) AND 1))) AND 0)",
+        "status": "accepted",
+        "type": "",
+        "message": ""
+      }
+    },
+    {
+      "origin": "ast-corpus/handbuilt.json/8/loaded-dump/expression",
+      "review": "SG29-007: handbuilt logical XOR retains compound AND/OR operands, including under NOT. Exact frozen-AST nullable native controls added.",
+      "before": {
+        "origin": "ast-corpus/handbuilt.json/8/loaded-dump/expression",
+        "sql": "SELECT (a <> 1 AND b >= 2 AND (NOT c <= 3 OR d IS NOT DISTINCT FROM NULL)) OR ((NOT a <> 1 AND b >= 2) AND c <= 3 OR d IS NOT DISTINCT FROM NULL)",
+        "status": "accepted",
+        "type": "",
+        "message": ""
+      },
+      "after": {
+        "origin": "ast-corpus/handbuilt.json/8/loaded-dump/expression",
+        "sql": "SELECT ((a <> 1 AND b >= 2) AND (NOT (c <= 3 OR d IS NOT DISTINCT FROM NULL))) OR ((NOT (a <> 1 AND b >= 2)) AND (c <= 3 OR d IS NOT DISTINCT FROM NULL))",
+        "status": "accepted",
+        "type": "",
+        "message": ""
+      }
+    },
+    {
+      "origin": "ast-corpus/identity-annotated-serde.json/51/loaded-dump/expression",
+      "review": "SG29-007: explicit grouping preserves the frozen generic left-associated bitwise AST when targeting DuckDB; native acceptance is unchanged.",
+      "before": {
+        "origin": "ast-corpus/identity-annotated-serde.json/51/loaded-dump/expression",
+        "sql": "SELECT XOR(x >> 1 | 1 & 1, 1)",
+        "status": "accepted",
+        "type": "",
+        "message": ""
+      },
+      "after": {
+        "origin": "ast-corpus/identity-annotated-serde.json/51/loaded-dump/expression",
+        "sql": "SELECT XOR(((x >> 1) | 1) & 1, 1)",
+        "status": "accepted",
+        "type": "",
+        "message": ""
+      }
+    },
+    {
+      "origin": "ast-corpus/identity-annotated-serde.json/51/current-parser/expression",
+      "review": "SG29-007: explicit grouping preserves the frozen generic left-associated bitwise AST when targeting DuckDB; native acceptance is unchanged.",
+      "before": {
+        "origin": "ast-corpus/identity-annotated-serde.json/51/current-parser/expression",
+        "sql": "SELECT XOR(x >> 1 | 1 & 1, 1)",
+        "status": "accepted",
+        "type": "",
+        "message": ""
+      },
+      "after": {
+        "origin": "ast-corpus/identity-annotated-serde.json/51/current-parser/expression",
+        "sql": "SELECT XOR(((x >> 1) | 1) & 1, 1)",
+        "status": "accepted",
+        "type": "",
+        "message": ""
+      }
+    },
+    {
+      "origin": "ast-corpus/identity-serde.json/51/loaded-dump/expression",
+      "review": "SG29-007: explicit grouping preserves the frozen generic left-associated bitwise AST when targeting DuckDB; native acceptance is unchanged.",
+      "before": {
+        "origin": "ast-corpus/identity-serde.json/51/loaded-dump/expression",
+        "sql": "SELECT XOR(x >> 1 | 1 & 1, 1)",
+        "status": "accepted",
+        "type": "",
+        "message": ""
+      },
+      "after": {
+        "origin": "ast-corpus/identity-serde.json/51/loaded-dump/expression",
+        "sql": "SELECT XOR(((x >> 1) | 1) & 1, 1)",
+        "status": "accepted",
+        "type": "",
+        "message": ""
+      }
+    },
+    {
+      "origin": "ast-corpus/identity-serde.json/51/current-parser/expression",
+      "review": "SG29-007: explicit grouping preserves the frozen generic left-associated bitwise AST when targeting DuckDB; native acceptance is unchanged.",
+      "before": {
+        "origin": "ast-corpus/identity-serde.json/51/current-parser/expression",
+        "sql": "SELECT XOR(x >> 1 | 1 & 1, 1)",
+        "status": "accepted",
+        "type": "",
+        "message": ""
+      },
+      "after": {
+        "origin": "ast-corpus/identity-serde.json/51/current-parser/expression",
+        "sql": "SELECT XOR(((x >> 1) | 1) & 1, 1)",
+        "status": "accepted",
+        "type": "",
+        "message": ""
+      }
+    },
+    {
+      "origin": "ast-corpus/spark-annotated-serde.json/76/loaded-dump/expression",
+      "review": "SG29-007: BIT_GET shift/AND lowering makes grouping explicit; value 1 and native acceptance are unchanged.",
+      "before": {
+        "origin": "ast-corpus/spark-annotated-serde.json/76/loaded-dump/expression",
+        "sql": "SELECT 11 >> 0 & 1",
+        "status": "accepted",
+        "type": "",
+        "message": ""
+      },
+      "after": {
+        "origin": "ast-corpus/spark-annotated-serde.json/76/loaded-dump/expression",
+        "sql": "SELECT (11 >> 0) & 1",
+        "status": "accepted",
+        "type": "",
+        "message": ""
+      }
+    },
+    {
+      "origin": "dialect-corpus/clickhouse.json/identity/138/current/raw",
+      "review": "SG29-007: nested logical XOR now uses the DuckDB renderer and retains grouped operands; unsupported infix XOR disappears. Frozen source SELECT xor(0,1,1,0).",
+      "before": {
+        "origin": "dialect-corpus/clickhouse.json/identity/138/current/raw",
+        "sql": "SELECT (0 XOR 1 XOR 1 AND (NOT 0)) OR ((NOT (0 XOR 1 AND (NOT 1)) OR ((NOT (0 AND (NOT 1)) OR ((NOT 0) AND 1)) AND 1)) AND 0)",
+        "status": "rejected",
+        "type": "parser",
+        "message": "syntax error at or near \"XOR\""
+      },
+      "after": {
+        "origin": "dialect-corpus/clickhouse.json/identity/138/current/raw",
+        "sql": "SELECT (((((0 AND (NOT 1)) OR ((NOT 0) AND 1)) AND (NOT 1)) OR ((NOT ((0 AND (NOT 1)) OR ((NOT 0) AND 1))) AND 1)) AND (NOT 0)) OR ((NOT ((((0 AND (NOT 1)) OR ((NOT 0) AND 1)) AND (NOT 1)) OR ((NOT ((0 AND (NOT 1)) OR ((NOT 0) AND 1))) AND 1))) AND 0)",
+        "status": "accepted",
+        "type": "",
+        "message": ""
+      }
+    }
+  ]
+}

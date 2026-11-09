@@ -1,0 +1,30 @@
+{
+  "scope": "Exact historical DDB20-054 --check passed on an independent reference checkout; no historical review rewrite.",
+  "source_summary": {
+    "pinned": {
+      "commit": "a00dc2e5c489214bea53bacbbeba8713f21ebce1",
+      "files": {
+        "sqlglot/dialects/duckdb.py": "4f543970980ce22c8a639c5f5c25a4f5a15812dcfaca7c62f157dc18aaad60e0",
+        "sqlglot/parsers/duckdb.py": "6129765e2cd04208ef37b08826d3fc9631dacfc3e76141aee5d2fa7baa5fe922",
+        "sqlglot/generators/duckdb.py": "2780b010288b2ab662963c1b064d643005e6a09040b6cc4c454a26f38d25c218",
+        "tests/dialects/test_duckdb.py": "851500cfba4ff3c4d603f2c8c4d0bae06e5dd87fee1f9bb2c9a5682eb0a13431"
+      },
+      "outcome_sha256": "c35263e1bc744d6d2072db834f4baa94884d990f4e3680c2e8c74e2f76905c81"
+    },
+    "upstream": {
+      "commit": "6de2df31b0ae8b21155828f575a14dc8903c1b9b",
+      "files": {
+        "sqlglot/dialects/duckdb.py": "e5285b4ce241af63d7038d2cb2470b2b397686ec904a9ca83f02b6fe1a1d7ce8",
+        "sqlglot/parsers/duckdb.py": "7f64ce45cd9e8201f8adce7ecb37be6ee29c80b83c344df699814401fc162780",
+        "sqlglot/generators/duckdb.py": "8eed9a85b1c94e84405f563f12504b4930ddbcd2d9f870aff9ce1fee553e8b5f",
+        "tests/dialects/test_duckdb.py": "42662e23caf53ee1297fd93716b4db71cbbdb4a7c9ba274d325fb7f682e7614e"
+      },
+      "outcome_sha256": "6cfad77e206157ad809468f2c430e548b414454e80bfb4a42407b0f915a5e494"
+    },
+    "history_sha256": "8df5e594fa5907973dccab1484ab0d08834e0fa676b47b3e27c8b2527d46a874"
+  },
+  "commit_dispositions": 37,
+  "probes_per_reference": 18,
+  "historical_review_sha256": "0c686fcf7d7884f25e9f7d2bfa97bbd41adf634611e5a3ed51eb32670966ef2d",
+  "raw_replay": "build/sg29-018/ddb054-replay.json"
+}

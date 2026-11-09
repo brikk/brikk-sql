@@ -73,6 +73,7 @@ open class Spark2Parser(
 
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.SPARK2
+    override val isPredicatePrecedence get() = dev.brikk.house.sql.parser.IsPredicatePrecedence.LOW
     override val normalizeDecimalLiterals: Boolean get() = false
     override val decimalLiteralsAllowNegativeScale: Boolean get() = true
 
@@ -98,7 +99,11 @@ open class Spark2Parser(
         if (matchTextSeq("DROP", "COLUMNS", advance = false)) {
             match(TokenType.DROP)
             matchTextSeq("COLUMNS")
-            return expression(Drop(args("tables" to listOf(parseSchema()), "kind" to "COLUMNS")))
+            val exists = parseExists()
+            val columns = parseWrappedCsv({ parseColumnOps(parseField(anyToken = true)) }, optional = true)
+            if (columns.isEmpty()) return null
+            return expression(Drop(args("tables" to listOf(dev.brikk.house.sql.ast.Schema(args("expressions" to columns))),
+                "kind" to "COLUMNS", "exists" to exists)))
         }
         return super.parseAlterDropAction()
     }

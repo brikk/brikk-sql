@@ -8,11 +8,12 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * The sqlglot commit every oracle-derived fixture under `testResources/` must have been
  * generated from. Bump this together with the fixtures when re-pinning (see
- * dev-docs/archive/TODO-sqlglot-catchup.md); the generators in `tools/` stamp `sqlglot_version` from
+ * dev-docs/TODO-sqlglot-30.29.md, SG29-020); the generators in `tools/` stamp `sqlglot_version` from
  * `git describe --tags` of `reference/sqlglot`.
  */
 /**
@@ -29,6 +30,14 @@ import kotlinx.serialization.json.jsonObject
  *    stamped" rule, but if they do carry a stamp it must still match.
  */
 class FixturePinSyncTest {
+
+    @Test
+    fun frozenReleasePinIsTheCoherentlyReviewedTarget() {
+        kotlin.test.assertEquals("v30.29.0", BrikkSql.SQLGLOT_PIN)
+        val review = Json.parseToJsonElement(java.io.File(testResourcesRoot().parentFile.parentFile,
+            "vendor/data/sqlglot-sg29-019/dispositions.json").readText()).jsonObject
+        kotlin.test.assertEquals("2fe25297af5b0f44f5c9e5d03e1b296424b7acbe", review.getValue("target").jsonPrimitive.content)
+    }
 
     private val json = Json { ignoreUnknownKeys = true }
 

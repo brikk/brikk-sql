@@ -1,0 +1,72 @@
+{
+  "target": {
+    "tag": "v30.29.0",
+    "commit": "2fe25297af5b0f44f5c9e5d03e1b296424b7acbe"
+  },
+  "build": "passed",
+  "core_tests": 1843,
+  "other_jvm_tests": 765,
+  "jvm_total": 2608,
+  "existing_optional_jvm_assumptions": 72,
+  "intellij": {
+    "build": "261.25134.95",
+    "tests": 829,
+    "exclusions": []
+  },
+  "tooling": {
+    "tests": 241,
+    "release_model_enabled": true,
+    "skipped": 0
+  },
+  "invalid_qualification": {
+    "compared": 37,
+    "passed": 37,
+    "excluded": 0,
+    "oracle_failed": 0,
+    "percentage_gate": 90
+  },
+  "regeneration": {
+    "commands": 35,
+    "files": 400,
+    "changed": []
+  },
+  "native_replay": {
+    "old_unique": 5419,
+    "current_unique": 5664,
+    "union": 5678,
+    "changed_shared": [],
+    "qualification": "parse-only, no input execution"
+  },
+  "abi": {
+    "core_prior_non_local_classes": 2671,
+    "metadata_prior_non_local_classes": 138,
+    "max_jvm_major": 61,
+    "incompatible_signatures": 0
+  },
+  "log_sha256": {
+    "build": {
+      "file": "sg29-020-build-all-verified.log",
+      "sha256": "1ca53412032acafeb5e466439d82c0503c86fec02c796a233ce3b61b1597ef95"
+    },
+    "core": {
+      "file": "sg29-020-core-qualified-final.log",
+      "sha256": "593280694d95ebe0efc492309374b026fe1503c7f9c347febaf5f604cdaf52c9"
+    },
+    "other_jvm": {
+      "file": "sg29-020-other-all-verified.log",
+      "sha256": "9ffc92dc8bff4157b0b79171ccdab37f8a56841916bdc0b39f48675fa0b5d41a"
+    },
+    "intellij": {
+      "file": "sg29-020-ide-source-final.log",
+      "sha256": "41af41ceccd19bfeee1b03f94cfae75819c8f6797f893c508098909c5db3bfeb"
+    },
+    "tooling": {
+      "file": "sg29-020-tooling-qualified-final.log",
+      "sha256": "fc481c442fa46d1de3175ad4df81a691d1f696159e8cd147a5ce1df71eb155d7"
+    }
+  },
+  "publication": false,
+  "peer_candidate_qualification": false,
+  "consumer_adoption": false,
+  "limits": "Owned feature/correctness deferrals, exact native rejects and parse-only Unverified forms remain explicit; no native/value equivalence inferred by counts."
+}

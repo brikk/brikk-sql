@@ -1,5 +1,5 @@
 {
- "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
+ "sqlglot_version": "v30.29.0",
  "fixture": "qualify_tables",
  "cases": [
   {
@@ -421,6 +421,41 @@
    "expected": "SELECT g FROM TABLE(GENERATE_SERIES(0, 10)) AS t(g)",
    "title": "Qualify TABLE(GENERATE_SERIES()) with alias on table and columns",
    "dialect": "starrocks"
+  },
+  {
+   "sql": "SELECT value FROM TABLE(SPLIT_TO_TABLE('a.b', '.'))",
+   "expected": "SELECT value FROM TABLE(SPLIT_TO_TABLE('a.b', '.')) AS _0(SEQ, INDEX, VALUE)",
+   "title": "Qualify TABLE(SPLIT_TO_TABLE()) with its default columns",
+   "dialect": "snowflake",
+   "dialect_supported": false
+  },
+  {
+   "sql": "SELECT s.value FROM t, TABLE(SPLIT_TO_TABLE(t.a, '.')) AS s",
+   "expected": "SELECT s.value FROM C.DB.t AS T, TABLE(SPLIT_TO_TABLE(t.a, '.')) AS s(SEQ, INDEX, VALUE)",
+   "title": "Qualify correlated TABLE(SPLIT_TO_TABLE()) with a table alias",
+   "dialect": "snowflake",
+   "dialect_supported": false
+  },
+  {
+   "sql": "SELECT value FROM t, LATERAL SPLIT_TO_TABLE(t.a, '.')",
+   "expected": "SELECT value FROM C.DB.t AS T, LATERAL SPLIT_TO_TABLE(t.a, '.') AS _0(SEQ, INDEX, VALUE)",
+   "title": "Qualify LATERAL SPLIT_TO_TABLE() with its default columns",
+   "dialect": "snowflake",
+   "dialect_supported": false
+  },
+  {
+   "sql": "SELECT s.value FROM t, LATERAL SPLIT_TO_TABLE(t.a, '.') AS s",
+   "expected": "SELECT s.value FROM C.DB.t AS T, LATERAL SPLIT_TO_TABLE(t.a, '.') AS s(SEQ, INDEX, VALUE)",
+   "title": "Qualify LATERAL SPLIT_TO_TABLE() with a table alias",
+   "dialect": "snowflake",
+   "dialect_supported": false
+  },
+  {
+   "sql": "SELECT v FROM t, LATERAL SPLIT_TO_TABLE(t.a, '.') AS s(x, y, v)",
+   "expected": "SELECT v FROM C.DB.t AS T, LATERAL SPLIT_TO_TABLE(t.a, '.') AS s(x, y, v)",
+   "title": "Qualify LATERAL SPLIT_TO_TABLE() with alias on table and columns",
+   "dialect": "snowflake",
+   "dialect_supported": false
   },
   {
    "sql": "SELECT jsonvalue.id FROM deal, JSONB_TO_RECORDSET(CAST(deal.type AS JSONB)) AS jsonvalue(id INT, key VARCHAR, text VARCHAR)",

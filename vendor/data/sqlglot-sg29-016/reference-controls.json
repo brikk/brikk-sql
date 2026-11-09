@@ -1,0 +1,644 @@
+{
+  "commit": "2fe25297af5b0f44f5c9e5d03e1b296424b7acbe",
+  "scope": "Frozen target preview only, not native execution evidence; refusals and non-ports documented separately.",
+  "records": [
+    {
+      "dialect": "trino",
+      "sql": "DAY_OF_WEEK(x) * 2",
+      "ast": [
+        {
+          "c": "sqlglot.expressions.core.Mul"
+        },
+        {
+          "i": 0,
+          "k": "this",
+          "c": "sqlglot.expressions.temporal.DayOfWeekIso",
+          "m": {
+            "line": 1,
+            "col": 11,
+            "start": 0,
+            "end": 10
+          }
+        },
+        {
+          "i": 1,
+          "k": "this",
+          "c": "sqlglot.expressions.core.Column"
+        },
+        {
+          "i": 2,
+          "k": "this",
+          "c": "sqlglot.expressions.core.Identifier",
+          "m": {
+            "line": 1,
+            "col": 13,
+            "start": 12,
+            "end": 12
+          }
+        },
+        {
+          "i": 3,
+          "k": "this",
+          "v": "x"
+        },
+        {
+          "i": 3,
+          "k": "quoted",
+          "v": false
+        },
+        {
+          "i": 0,
+          "k": "expression",
+          "c": "sqlglot.expressions.core.Literal",
+          "m": {
+            "line": 1,
+            "col": 18,
+            "start": 17,
+            "end": 17
+          }
+        },
+        {
+          "i": 6,
+          "k": "this",
+          "v": "2"
+        },
+        {
+          "i": 6,
+          "k": "is_string",
+          "v": false
+        }
+      ],
+      "output": "(MOD(EXTRACT(DAYOFWEEK FROM x) + 5, 7) + 1) * 2"
+    },
+    {
+      "dialect": "mysql",
+      "sql": "DAYOFWEEK(x)",
+      "ast": [
+        {
+          "c": "sqlglot.expressions.temporal.DayOfWeek",
+          "m": {
+            "line": 1,
+            "col": 9,
+            "start": 0,
+            "end": 8
+          }
+        },
+        {
+          "i": 0,
+          "k": "this",
+          "c": "sqlglot.expressions.temporal.TsOrDsToDate"
+        },
+        {
+          "i": 1,
+          "k": "this",
+          "c": "sqlglot.expressions.core.Column"
+        },
+        {
+          "i": 2,
+          "k": "this",
+          "c": "sqlglot.expressions.core.Identifier",
+          "m": {
+            "line": 1,
+            "col": 11,
+            "start": 10,
+            "end": 10
+          }
+        },
+        {
+          "i": 3,
+          "k": "this",
+          "v": "x"
+        },
+        {
+          "i": 3,
+          "k": "quoted",
+          "v": false
+        }
+      ],
+      "output": "EXTRACT(DAYOFWEEK FROM CAST(x AS DATE))"
+    },
+    {
+      "dialect": "trino",
+      "sql": "APPROX_PERCENTILE(x, 1, 0.95)",
+      "ast": [
+        {
+          "c": "sqlglot.expressions.aggregate.ApproxQuantile",
+          "m": {
+            "line": 1,
+            "col": 17,
+            "start": 0,
+            "end": 16
+          }
+        },
+        {
+          "i": 0,
+          "k": "this",
+          "c": "sqlglot.expressions.core.Column"
+        },
+        {
+          "i": 1,
+          "k": "this",
+          "c": "sqlglot.expressions.core.Identifier",
+          "m": {
+            "line": 1,
+            "col": 19,
+            "start": 18,
+            "end": 18
+          }
+        },
+        {
+          "i": 2,
+          "k": "this",
+          "v": "x"
+        },
+        {
+          "i": 2,
+          "k": "quoted",
+          "v": false
+        },
+        {
+          "i": 0,
+          "k": "weight",
+          "c": "sqlglot.expressions.core.Literal",
+          "m": {
+            "line": 1,
+            "col": 22,
+            "start": 21,
+            "end": 21
+          }
+        },
+        {
+          "i": 5,
+          "k": "this",
+          "v": "1"
+        },
+        {
+          "i": 5,
+          "k": "is_string",
+          "v": false
+        },
+        {
+          "i": 0,
+          "k": "quantile",
+          "c": "sqlglot.expressions.core.Literal",
+          "m": {
+            "line": 1,
+            "col": 28,
+            "start": 24,
+            "end": 27
+          }
+        },
+        {
+          "i": 8,
+          "k": "this",
+          "v": "0.95"
+        },
+        {
+          "i": 8,
+          "k": "is_string",
+          "v": false
+        }
+      ],
+      "output": "APPROX_QUANTILES(x, 20)[19]"
+    },
+    {
+      "dialect": "presto",
+      "sql": "APPROX_PERCENTILE(x, 0.5, 0.01)",
+      "ast": [
+        {
+          "c": "sqlglot.expressions.aggregate.ApproxQuantile",
+          "m": {
+            "line": 1,
+            "col": 17,
+            "start": 0,
+            "end": 16
+          }
+        },
+        {
+          "i": 0,
+          "k": "this",
+          "c": "sqlglot.expressions.core.Column"
+        },
+        {
+          "i": 1,
+          "k": "this",
+          "c": "sqlglot.expressions.core.Identifier",
+          "m": {
+            "line": 1,
+            "col": 19,
+            "start": 18,
+            "end": 18
+          }
+        },
+        {
+          "i": 2,
+          "k": "this",
+          "v": "x"
+        },
+        {
+          "i": 2,
+          "k": "quoted",
+          "v": false
+        },
+        {
+          "i": 0,
+          "k": "quantile",
+          "c": "sqlglot.expressions.core.Literal",
+          "m": {
+            "line": 1,
+            "col": 24,
+            "start": 21,
+            "end": 23
+          }
+        },
+        {
+          "i": 5,
+          "k": "this",
+          "v": "0.5"
+        },
+        {
+          "i": 5,
+          "k": "is_string",
+          "v": false
+        },
+        {
+          "i": 0,
+          "k": "accuracy",
+          "c": "sqlglot.expressions.core.Literal",
+          "m": {
+            "line": 1,
+            "col": 30,
+            "start": 26,
+            "end": 29
+          }
+        },
+        {
+          "i": 8,
+          "k": "this",
+          "v": "0.01"
+        },
+        {
+          "i": 8,
+          "k": "is_string",
+          "v": false
+        }
+      ],
+      "output": "APPROX_QUANTILES(x, 2)[1]"
+    },
+    {
+      "dialect": "trino",
+      "sql": "FROM_BASE('-ff',16)",
+      "ast": [
+        {
+          "c": "sqlglot.expressions.string.FromBase",
+          "m": {
+            "line": 1,
+            "col": 9,
+            "start": 0,
+            "end": 8
+          }
+        },
+        {
+          "i": 0,
+          "k": "this",
+          "c": "sqlglot.expressions.core.Literal",
+          "m": {
+            "line": 1,
+            "col": 15,
+            "start": 10,
+            "end": 14
+          }
+        },
+        {
+          "i": 1,
+          "k": "this",
+          "v": "-ff"
+        },
+        {
+          "i": 1,
+          "k": "is_string",
+          "v": true
+        },
+        {
+          "i": 0,
+          "k": "expression",
+          "c": "sqlglot.expressions.core.Literal",
+          "m": {
+            "line": 1,
+            "col": 18,
+            "start": 16,
+            "end": 17
+          }
+        },
+        {
+          "i": 4,
+          "k": "this",
+          "v": "16"
+        },
+        {
+          "i": 4,
+          "k": "is_string",
+          "v": false
+        }
+      ],
+      "output": "CAST(REGEXP_REPLACE('-ff', '^([+-]?)', '\\\\10x') AS INT64)"
+    },
+    {
+      "dialect": "trino",
+      "sql": "CAST(x AS DECIMAL(38,0))",
+      "ast": [
+        {
+          "c": "sqlglot.expressions.functions.Cast",
+          "t": [
+            {
+              "c": "sqlglot.expressions.datatypes.DataType"
+            },
+            {
+              "i": 0,
+              "k": "this",
+              "c": "DataType.Type",
+              "v": "DECIMAL"
+            },
+            {
+              "i": 0,
+              "k": "expressions",
+              "a": true,
+              "c": "sqlglot.expressions.datatypes.DataTypeParam"
+            },
+            {
+              "i": 2,
+              "k": "this",
+              "c": "sqlglot.expressions.core.Literal",
+              "m": {
+                "line": 1,
+                "col": 20,
+                "start": 18,
+                "end": 19
+              }
+            },
+            {
+              "i": 3,
+              "k": "this",
+              "v": "38"
+            },
+            {
+              "i": 3,
+              "k": "is_string",
+              "v": false
+            },
+            {
+              "i": 0,
+              "k": "expressions",
+              "a": true,
+              "c": "sqlglot.expressions.datatypes.DataTypeParam"
+            },
+            {
+              "i": 6,
+              "k": "this",
+              "c": "sqlglot.expressions.core.Literal",
+              "m": {
+                "line": 1,
+                "col": 22,
+                "start": 21,
+                "end": 21
+              }
+            },
+            {
+              "i": 7,
+              "k": "this",
+              "v": "0"
+            },
+            {
+              "i": 7,
+              "k": "is_string",
+              "v": false
+            },
+            {
+              "i": 0,
+              "k": "nested",
+              "v": false
+            }
+          ]
+        },
+        {
+          "i": 0,
+          "k": "this",
+          "c": "sqlglot.expressions.core.Column"
+        },
+        {
+          "i": 1,
+          "k": "this",
+          "c": "sqlglot.expressions.core.Identifier",
+          "m": {
+            "line": 1,
+            "col": 6,
+            "start": 5,
+            "end": 5
+          }
+        },
+        {
+          "i": 2,
+          "k": "this",
+          "v": "x"
+        },
+        {
+          "i": 2,
+          "k": "quoted",
+          "v": false
+        },
+        {
+          "i": 0,
+          "k": "to",
+          "c": "sqlglot.expressions.datatypes.DataType"
+        },
+        {
+          "i": 5,
+          "k": "this",
+          "c": "DataType.Type",
+          "v": "DECIMAL"
+        },
+        {
+          "i": 5,
+          "k": "expressions",
+          "a": true,
+          "c": "sqlglot.expressions.datatypes.DataTypeParam"
+        },
+        {
+          "i": 7,
+          "k": "this",
+          "c": "sqlglot.expressions.core.Literal",
+          "m": {
+            "line": 1,
+            "col": 20,
+            "start": 18,
+            "end": 19
+          }
+        },
+        {
+          "i": 8,
+          "k": "this",
+          "v": "38"
+        },
+        {
+          "i": 8,
+          "k": "is_string",
+          "v": false
+        },
+        {
+          "i": 5,
+          "k": "expressions",
+          "a": true,
+          "c": "sqlglot.expressions.datatypes.DataTypeParam"
+        },
+        {
+          "i": 11,
+          "k": "this",
+          "c": "sqlglot.expressions.core.Literal",
+          "m": {
+            "line": 1,
+            "col": 22,
+            "start": 21,
+            "end": 21
+          }
+        },
+        {
+          "i": 12,
+          "k": "this",
+          "v": "0"
+        },
+        {
+          "i": 12,
+          "k": "is_string",
+          "v": false
+        },
+        {
+          "i": 5,
+          "k": "nested",
+          "v": false
+        }
+      ],
+      "output": "CAST(x AS BIGNUMERIC)"
+    },
+    {
+      "dialect": "trino",
+      "sql": "ARRAY_SORT(ARRAY_AGG(x))",
+      "ast": [
+        {
+          "c": "sqlglot.expressions.array.ArraySort",
+          "m": {
+            "line": 1,
+            "col": 10,
+            "start": 0,
+            "end": 9
+          }
+        },
+        {
+          "i": 0,
+          "k": "this",
+          "c": "sqlglot.expressions.aggregate.ArrayAgg",
+          "m": {
+            "line": 1,
+            "col": 20,
+            "start": 11,
+            "end": 19
+          }
+        },
+        {
+          "i": 1,
+          "k": "this",
+          "c": "sqlglot.expressions.core.Column"
+        },
+        {
+          "i": 2,
+          "k": "this",
+          "c": "sqlglot.expressions.core.Identifier",
+          "m": {
+            "line": 1,
+            "col": 22,
+            "start": 21,
+            "end": 21
+          }
+        },
+        {
+          "i": 3,
+          "k": "this",
+          "v": "x"
+        },
+        {
+          "i": 3,
+          "k": "quoted",
+          "v": false
+        },
+        {
+          "i": 0,
+          "k": "nulls_first",
+          "c": "sqlglot.expressions.core.Boolean"
+        },
+        {
+          "i": 6,
+          "k": "this",
+          "v": false
+        }
+      ],
+      "output": "ARRAY_AGG(x ORDER BY x IS NULL, x)"
+    },
+    {
+      "dialect": "duckdb",
+      "sql": "LIST_DISTINCT(LIST(x))",
+      "ast": [
+        {
+          "c": "sqlglot.expressions.array.ArrayDistinct",
+          "m": {
+            "line": 1,
+            "col": 13,
+            "start": 0,
+            "end": 12
+          }
+        },
+        {
+          "i": 0,
+          "k": "this",
+          "c": "sqlglot.expressions.aggregate.ArrayAgg",
+          "m": {
+            "line": 1,
+            "col": 18,
+            "start": 14,
+            "end": 17
+          }
+        },
+        {
+          "i": 1,
+          "k": "this",
+          "c": "sqlglot.expressions.core.Column"
+        },
+        {
+          "i": 2,
+          "k": "this",
+          "c": "sqlglot.expressions.core.Identifier",
+          "m": {
+            "line": 1,
+            "col": 20,
+            "start": 19,
+            "end": 19
+          }
+        },
+        {
+          "i": 3,
+          "k": "this",
+          "v": "x"
+        },
+        {
+          "i": 3,
+          "k": "quoted",
+          "v": false
+        },
+        {
+          "i": 0,
+          "k": "check_null",
+          "v": false
+        }
+      ],
+      "output": "IF(COUNT(*) = 0, NULL, COALESCE(ARRAY_AGG(DISTINCT x IGNORE NULLS), []))"
+    }
+  ]
+}

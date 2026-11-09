@@ -1,0 +1,31 @@
+{
+  "scope": "Four frozen upstream generation controls, not native execution or a global oracle refresh. The port explicitly casts new PostgreSQL timestamp/datetime literal deltas instead of retaining upstream unknown strings.",
+  "target": "v30.29.0",
+  "commit": "2fe25297af5b0f44f5c9e5d03e1b296424b7acbe",
+  "controls": [
+    {
+      "source": "mysql",
+      "target": "postgres",
+      "sql": "SELECT t - DATE_ADD(x, INTERVAL 1 DAY)",
+      "upstream_output": "SELECT t - (x + INTERVAL '1 DAY')"
+    },
+    {
+      "source": "mysql",
+      "target": "postgres",
+      "sql": "SELECT DATE_ADD(x, INTERVAL n + 1 DAY)",
+      "upstream_output": "SELECT x + (INTERVAL '1 DAY' * (n + 1))"
+    },
+    {
+      "source": "mysql",
+      "target": "duckdb",
+      "sql": "SELECT TIMESTAMPADD(SQL_TSI_SECOND, 30, '2024-01-01 12:00:00')",
+      "upstream_output": "SELECT CAST('2024-01-01 12:00:00' AS TIMESTAMP) + INTERVAL 30 SECOND"
+    },
+    {
+      "source": "mysql",
+      "target": "postgres",
+      "sql": "SELECT TIMESTAMPADD(SQL_TSI_MONTH, 1, '2024-01-31 12:00:00')",
+      "upstream_output": "SELECT '2024-01-31 12:00:00' + INTERVAL '1 MONTH'"
+    }
+  ]
+}

@@ -898,6 +898,10 @@ object TrinoParserTables {
     // sqlglot: TrinoParser.FUNCTIONS
     val FUNCTIONS: Map<String, (List<Expression?>) -> Expression> = buildMap {
         putAll(PrestoParserTables.FUNCTIONS)
+        put("APPROX_PERCENTILE") { a ->
+            if (a.size == 3) dev.brikk.house.sql.ast.ApproxQuantile(args("this" to a[0], "weight" to a[1], "quantile" to a[2]))
+            else PrestoParserTables.FUNCTIONS.getValue("APPROX_PERCENTILE")(a)
+        }
         put("ROW") { values ->
             Struct(args("expressions" to values, "trino_row_syntax" to true))
         }

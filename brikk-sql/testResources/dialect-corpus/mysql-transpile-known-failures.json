@@ -1,3 +1,20 @@
 {
-    "cases": []
+    "cases": [
+        {
+            "id": "assertion:v1:sha256:0e0ff50691f8b5ada5fb3c95636e003e3a7d5493db5ee1ec794fc6e05b59ccaf:1",
+            "case": "write|postgres|SELECT TIMESTAMPADD(MONTH, 1, '2024-01-31')",
+            "signature": "sql-mismatch:v1:sha256:ee00bd4aef4d4c72ada07f8af97c3fcc14772e6f04dc2425837331060ae8a12d",
+            "reason": "SG29-020: Keep the explicit TIMESTAMP cast required by the independently tested source-aware lowering rather than rely on an untyped PostgreSQL literal's operator binding.",
+            "expected": "SELECT '2024-01-31' + INTERVAL '1 MONTH'",
+            "actual": "SELECT CAST('2024-01-31' AS TIMESTAMP) + INTERVAL '1 MONTH'"
+        },
+        {
+            "id": "assertion:v1:sha256:4ec4b308cfd3eb65fb606c350a99961150b59e1e513b72446d257ceccaedf6f2:1",
+            "case": "write|postgres|SELECT TIMESTAMPADD(SECOND, 30, '2024-01-01 12:00:00')",
+            "signature": "sql-mismatch:v1:sha256:4f00e393d9af09de73ae471dcdc377e1da2bb4e43863e9ec49ac49626a3ea4e8",
+            "reason": "SG29-020: Keep the explicit TIMESTAMP cast required by the independently tested source-aware lowering rather than rely on an untyped PostgreSQL literal's operator binding.",
+            "expected": "SELECT '2024-01-01 12:00:00' + INTERVAL '30 SECOND'",
+            "actual": "SELECT CAST('2024-01-01 12:00:00' AS TIMESTAMP) + INTERVAL '30 SECOND'"
+        }
+    ]
 }

@@ -8,6 +8,9 @@ import kotlin.test.assertFailsWith
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -52,7 +55,7 @@ class VerifyCorpusGateTest {
     private val ledgerJson = Json { prettyPrint = true }
 
     @Serializable
-    private data class TranspileCase(val sql: String, val write: Map<String, String> = emptyMap())
+    private data class TranspileCase(val sql: String, val write: Map<String, JsonElement> = emptyMap())
 
     @Serializable
     private data class DialectCorpus(val transpile: List<TranspileCase>)
@@ -73,7 +76,23 @@ class VerifyCorpusGateTest {
             DialectCorpus.serializer(),
             corpusResource("dialect-corpus/doris.json"),
         )
-        val sqls = corpus.transpile.mapNotNull { case -> case.sql.takeIf { case.write.containsKey(engine) } }
+        var unsupportedExpectations = 0
+        val sqls = corpus.transpile.mapNotNull { case ->
+            when (val expectation = case.write[engine]) {
+                null -> null
+                is JsonPrimitive -> {
+                    check(expectation.isString) { "Invalid $engine SQL expectation" }
+                    case.sql
+                }
+                is JsonObject -> {
+                    check(expectation.keys == setOf("error") && expectation["error"]?.jsonPrimitive?.content == "UnsupportedError")
+                    unsupportedExpectations++
+                    null // No emitted SQL; the core transpile gate checks the generation refusal.
+                }
+                else -> error("Invalid $engine expectation")
+            }
+        }
+        println("VerifyCorpusGateTest[doris-transpile]: $unsupportedExpectations non-SQL generation-refusal expectations handled by the transpile gate")
         check(sqls.isNotEmpty()) { "no doris transpile outputs in dialect corpus" }
         val ledger = json.decodeFromString(
             Ledger.serializer(),
@@ -112,6 +131,20 @@ class VerifyCorpusGateTest {
             runGateWith("duckdb", "stale-control", forms, empty, verifier(VerifyResult.Accepted))
         }
         assertContains(stale.message.orEmpty(), "STALE unverified classifications")
+    }
+
+    @Test
+    fun anExistingRejectKeyCannotWaiveAChangedOutputOrError() {
+        val verifier = object : SqlVerifier {
+            override val engine = "duckdb"
+            override fun verify(sql: String): VerifyResult = if (sql == "SELECT 1") VerifyResult.Accepted else VerifyResult.Rejected(VerifyError("synthetic reject"))
+            override fun verifyExpression(sql: String): VerifyResult = VerifyResult.Rejected(VerifyError("synthetic reject"))
+        }
+        val changed = assertFailsWith<AssertionError> {
+            runGateWith("duckdb", "changed-control", listOf("SELECT 42"),
+                Ledger("duckdb", listOf(LedgerCase("SELECT 42", "SELECT 0", "old reject"))), verifier)
+        }
+        assertContains(changed.message.orEmpty(), "CHANGED reject signatures")
     }
 
     /**
@@ -250,6 +283,11 @@ class VerifyCorpusGateTest {
 
         val unledgered = failures.keys - ledgered.keys
         val stale = ledgered.keys - failures.keys
+        val changed = (ledgered.keys intersect failures.keys).filter { sql ->
+            val expected = ledgered.getValue(sql)
+            val actual = failures.getValue(sql)
+            expected.generated != actual.first || expected.error != actual.second
+        }
         val staleUnverified = expectedUnverified.keys - unverified.keys
 
         println("VerifyCorpusGateTest[$label]: $accepted accepted / ${failures.size} ledgered / ${unverified.size} explicitly unverified (of ${sqls.size})")
@@ -270,6 +308,7 @@ class VerifyCorpusGateTest {
                     stale.take(20).joinToString("\n") { "  $it" }
             )
         }
+        if (changed.isNotEmpty()) problems.add("CHANGED reject signatures: ${changed.joinToString()}")
         if (problems.isNotEmpty()) {
             fail(
                 problems.joinToString("\n\n") +

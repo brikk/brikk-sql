@@ -28,7 +28,7 @@ open class StarrocksGenerator(
     pretty: Boolean = false,
     identify: kotlin.Any = false,
     comments: Boolean = true,
-    tokenizerConfig: TokenizerConfig = StarrocksTokenizerTables.CONFIG,
+    tokenizerConfig: TokenizerConfig = StarrocksDialect.TOKENIZER_CONFIG,
     sourceDialect: String? = null,
 ) : MysqlGenerator(
     pretty = pretty,
@@ -41,6 +41,24 @@ open class StarrocksGenerator(
 
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.STARROCKS
+
+    override fun pivotSql(expression: Pivot): String {
+        if (expression.args["unpivot"] == true || expression.thisArg != null) return unsupportedPivotSql()
+        if (expression.metaOrNull?.get("starrocks_native_pivot") != true && sourceDialect?.equals("starrocks",true) != true) {
+            unexecutable("StarRocks PIVOT result names/types are not qualified for a foreign source")
+        }
+        return super.pivotSql(expression)
+    }
+
+    override fun refreshSql(expression: Refresh): String {
+        val target = sql(expression,"this")
+        val kind = if (expression.thisArg is Literal) "" else "${expression.text("kind")} "
+        val start = sql(expression,"partition_start"); val end = sql(expression,"partition_end")
+        val partition = if (start.isEmpty()) "" else " PARTITION START ($start) END ($end)"
+        val force = if (expression.args["force"] == true) " FORCE" else ""
+        val mode = sql(expression,"mode").let { if(it.isEmpty()) "" else " WITH $it MODE" }
+        return "REFRESH $kind$target$partition$force$mode"
+    }
     override val alterPartitionOptions: Set<KClass<out Expression>>
         get() = super.alterPartitionOptions + setOf(DistributedByProperty::class, PartitionedByProperty::class)
     override val castToIntRounds: Boolean get() = false
@@ -177,6 +195,23 @@ open class StarrocksGenerator(
         }
         return func("MAP", *argsList.toTypedArray())
     }
+
+    // #8682: map literals are not structs or MySQL's generic map conversion.
+    open fun starrocksToMapSql(expression: ToMap): String {
+        if (expression.metaOrNull?.get("starrocks_map_literal") != true && sourceDialect?.equals("starrocks", true) != true) {
+            unexecutable("Map literal key/null/duplicate/coercion contracts are not qualified across StarRocks engines")
+        }
+        val struct = expression.thisArg as? Expression
+        if (struct !is Struct) return "MAP ${sql(struct)}"
+        return "MAP{" + struct.expressionsArg.filterIsInstance<Expression>().joinToString(", ") {
+            "${sql(it, "this")}:${sql(it, "expression")}"
+        } + "}"
+    }
+
+    override fun bracketOffsetExpressions(expression: Bracket, indexOffset: Int?): List<kotlin.Any?> =
+        // Offset preparation may annotate the receiver. Keep copy=false generation
+        // from adding types/parents to the caller's new map-literal subtree.
+        super.bracketOffsetExpressions(expression.copy() as Bracket, indexOffset)
 
     // sqlglot: dialect.inline_array_sql
     open fun inlineArraySql(expression: Expression): String =
@@ -358,6 +393,7 @@ open class StarrocksGenerator(
 
         // sqlglot: StarRocksGenerator.TYPE_MAPPING
         val TYPE_MAPPING: Map<DType, String> = MysqlGenerator.TYPE_MAPPING + mapOf(
+            DType.HLLSKETCH to "HLL",
             DType.INT128 to "LARGEINT",
             DType.TEXT to "STRING",
             DType.TIMESTAMP to "DATETIME",
@@ -367,6 +403,7 @@ open class StarrocksGenerator(
         // sqlglot: StarRocksGenerator.PROPERTIES_LOCATION
         val PROPERTIES_LOCATION: Map<KClass<out Expression>, GeneratorTables.PropLocation> =
             MysqlGenerator.PROPERTIES_LOCATION + mapOf(
+                AggregateKeyProperty::class to GeneratorTables.PropLocation.POST_SCHEMA,
                 PrimaryKey::class to GeneratorTables.PropLocation.POST_SCHEMA,
                 UniqueKeyProperty::class to GeneratorTables.PropLocation.POST_SCHEMA,
                 RollupProperty::class to GeneratorTables.PropLocation.POST_SCHEMA,
@@ -380,6 +417,21 @@ open class StarrocksGenerator(
         val TRANSFORMS: Map<KClass<out Expression>, GenMethod> = buildMap {
             fun reg(cls: KClass<out Expression>, method: GenMethod) { put(cls, method) }
             fun Generator.sg(): StarrocksGenerator = this as StarrocksGenerator
+            // SG29-007: StarRocks 4.1.4 has no infix logical XOR rule. Keep generic
+            // preview compatibility, but never claim this is executable native SQL.
+            reg(Xor::class) { e ->
+                val message = "StarRocks 4.1.4 logical XOR translation is not qualified"
+                unexecutable(message)
+                binary(e as Binary, "XOR")
+            }
+            reg(BitwiseLeftShift::class) { e ->
+                unexecutable("StarRocks 4.1.4 symbolic bitwise shift translation is not qualified")
+                binary(e as Binary, "<<")
+            }
+            reg(BitwiseRightShift::class) { e ->
+                unexecutable("StarRocks 4.1.4 symbolic bitwise shift translation is not qualified")
+                binary(e as Binary, ">>")
+            }
             reg(TimeSlice::class) { e -> sg().timeSliceSql(e as TimeSlice) }
 
             reg(ArgMax::class) { e -> sg().renameFuncSql("MAX_BY", e) }
@@ -396,14 +448,23 @@ open class StarrocksGenerator(
             reg(ApproxDistinct::class) { e -> sg().approxCountDistinctSql(e as ApproxDistinct) }
             reg(CurrentVersion::class) { _ -> "CURRENT_VERSION()" }
             reg(DateDiff::class) { e ->
-                func("DATE_DIFF", sg().weekstartUnitToStr(e), e.thisArg, e.args["expression"])
+                val unit = (e.args["unit"] as? Expression)?.name?.uppercase()
+                if(e.args["date_part_boundary"] == true && (unit == null || unit == "DAY")) func("DATEDIFF",e.thisArg,e.args["expression"])
+                else {
+                    if (e.args["date_part_boundary"] == true) unexecutable("StarRocks elapsed DATE_DIFF cannot qualify non-DAY boundary-counting semantics")
+                    func("DATE_DIFF", sg().weekstartUnitToStr(e), e.thisArg, e.args["expression"])
+                }
             }
+            reg(Pivot::class) { e -> sg().pivotSql(e as Pivot) }
+            reg(AggregateKeyProperty::class) { e -> "AGGREGATE KEY (${expressions(e,flat=true)})" }
+            reg(AggregateTypeColumnConstraint::class) { e -> sql(e,"this") }
             reg(Delete::class) { e -> sg().deleteSql(e as Delete) }
             reg(Flatten::class) { e -> sg().renameFuncSql("ARRAY_FLATTEN", e) }
             reg(JSONExtractScalar::class) { e -> sg().starrocksArrowJsonExtractSql(e as Binary) }
             reg(JSONExtract::class) { e -> sg().starrocksArrowJsonExtractSql(e as Binary) }
             // Both MAP forms generate StarRocks' variadic MAP(k1, v1, k2, v2, ...)
             reg(MapNode::class) { e -> sg().starrocksVarMapSql(e) }
+            reg(ToMap::class) { e -> sg().starrocksToMapSql(e as ToMap) }
             reg(Property::class) { e ->
                 "${propertyName(e as Property, stringKey = true)}=${sql(e, "value")}"
             }

@@ -110,3 +110,21 @@ python3 tools/test_expansion_sources.py
 `--fetch` on the source tool re-downloads and verifies locked bytes. `--record`
 re-records hashes and is reserved for a reviewed source refresh. Adapted assertions
 are strict; new failures must be investigated, not silently accepted or skipped.
+
+## Main integration follow-up
+
+The SG29 branch merged these tests with the v30.29.0 integration. The follow-up
+fixes numeric END boundaries, MySQL primary-key ordering/prefixes and the placement
+of aliases on nested VALUES joins. Native rows, malformed-join controls and all
+vendored bytes remain unchanged.
+
+The adjacent-END assertion also needed the documented leading-dot adaptation:
+Brikk emits DOT + NUMBER for `.5`, rather than Polyglot's single NUMBER. The test
+now checks those exact types/texts and the END offset. Compact CASE numeric
+meaning and copy/serde checks are unchanged. It does not approve an arbitrary
+token count or let END become part of a number.
+
+The original red-test record above remains historical. The combined build,
+2,633 JVM tests, all 841 IntelliJ tests and 247 tooling tests now pass. Existing
+optional JVM assumptions remain. Validation and logs are recorded in
+[the integration record](../../../dev-docs/main-integration-20261106.md).

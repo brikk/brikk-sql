@@ -1,0 +1,531 @@
+{
+  "scope": "Finite MySQL TIMESTAMPADD/DATE_ADD value/type controls, not cross-engine date-vs-timestamp, arbitrary interval coercion or timezone equivalence.",
+  "image": "mysql@sha256:85b9bf2e29cf836ecb8c2a15a935d4ba0c606631dff1dd79531a11983c638f2a",
+  "version": {
+    "stdout": "8.4.11\tONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION\tSYSTEM\n",
+    "stderr": "",
+    "returncode": 0
+  },
+  "observations": [
+    {
+      "sql": "SELECT TIMESTAMPADD(SQL_TSI_SECOND, 1, '2024-01-31 12:00:00') AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=TimestampAdd(this=Literal(this=2024-01-31 12:00:00,is_string=true),expression=Literal(this=1,is_string=false),unit=Var(this=SECOND)),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT DATE_ADD('2024-01-31 12:00:00', INTERVAL 1 SECOND) AS v",
+      "executable": "SELECT DATE_ADD('2024-01-31 12:00:00', INTERVAL 1 SECOND) AS v",
+      "original": {
+        "stdout": "2024-01-31 12:00:01\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "2024-01-31 12:00:01\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT TIMESTAMPADD(SQL_TSI_SECOND, 1, '2024-01-31 12:00:00') AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  latin1_swedish_ci (8)\nLength:     29\nMax_length: 19\nDecimals:   31\nFlags:      \n\n\n+---------------------+\n| v                   |\n+---------------------+\n| 2024-01-31 12:00:01 |\n+---------------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT DATE_ADD('2024-01-31 12:00:00', INTERVAL 1 SECOND) AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  latin1_swedish_ci (8)\nLength:     29\nMax_length: 19\nDecimals:   31\nFlags:      \n\n\n+---------------------+\n| v                   |\n+---------------------+\n| 2024-01-31 12:00:01 |\n+---------------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "sql": "SELECT TIMESTAMPADD(SQL_TSI_MINUTE, 1, '2024-01-31 12:00:00') AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=TimestampAdd(this=Literal(this=2024-01-31 12:00:00,is_string=true),expression=Literal(this=1,is_string=false),unit=Var(this=MINUTE)),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT DATE_ADD('2024-01-31 12:00:00', INTERVAL 1 MINUTE) AS v",
+      "executable": "SELECT DATE_ADD('2024-01-31 12:00:00', INTERVAL 1 MINUTE) AS v",
+      "original": {
+        "stdout": "2024-01-31 12:01:00\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "2024-01-31 12:01:00\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT TIMESTAMPADD(SQL_TSI_MINUTE, 1, '2024-01-31 12:00:00') AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  latin1_swedish_ci (8)\nLength:     29\nMax_length: 19\nDecimals:   31\nFlags:      \n\n\n+---------------------+\n| v                   |\n+---------------------+\n| 2024-01-31 12:01:00 |\n+---------------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT DATE_ADD('2024-01-31 12:00:00', INTERVAL 1 MINUTE) AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  latin1_swedish_ci (8)\nLength:     29\nMax_length: 19\nDecimals:   31\nFlags:      \n\n\n+---------------------+\n| v                   |\n+---------------------+\n| 2024-01-31 12:01:00 |\n+---------------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "sql": "SELECT TIMESTAMPADD(SQL_TSI_HOUR, 1, '2024-01-31 12:00:00') AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=TimestampAdd(this=Literal(this=2024-01-31 12:00:00,is_string=true),expression=Literal(this=1,is_string=false),unit=Var(this=HOUR)),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT DATE_ADD('2024-01-31 12:00:00', INTERVAL 1 HOUR) AS v",
+      "executable": "SELECT DATE_ADD('2024-01-31 12:00:00', INTERVAL 1 HOUR) AS v",
+      "original": {
+        "stdout": "2024-01-31 13:00:00\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "2024-01-31 13:00:00\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT TIMESTAMPADD(SQL_TSI_HOUR, 1, '2024-01-31 12:00:00') AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  latin1_swedish_ci (8)\nLength:     29\nMax_length: 19\nDecimals:   31\nFlags:      \n\n\n+---------------------+\n| v                   |\n+---------------------+\n| 2024-01-31 13:00:00 |\n+---------------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT DATE_ADD('2024-01-31 12:00:00', INTERVAL 1 HOUR) AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  latin1_swedish_ci (8)\nLength:     29\nMax_length: 19\nDecimals:   31\nFlags:      \n\n\n+---------------------+\n| v                   |\n+---------------------+\n| 2024-01-31 13:00:00 |\n+---------------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "sql": "SELECT TIMESTAMPADD(SQL_TSI_DAY, 1, '2024-01-31 12:00:00') AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=TimestampAdd(this=Literal(this=2024-01-31 12:00:00,is_string=true),expression=Literal(this=1,is_string=false),unit=Var(this=DAY)),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT DATE_ADD('2024-01-31 12:00:00', INTERVAL 1 DAY) AS v",
+      "executable": "SELECT DATE_ADD('2024-01-31 12:00:00', INTERVAL 1 DAY) AS v",
+      "original": {
+        "stdout": "2024-02-01 12:00:00\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "2024-02-01 12:00:00\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT TIMESTAMPADD(SQL_TSI_DAY, 1, '2024-01-31 12:00:00') AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  latin1_swedish_ci (8)\nLength:     29\nMax_length: 19\nDecimals:   31\nFlags:      \n\n\n+---------------------+\n| v                   |\n+---------------------+\n| 2024-02-01 12:00:00 |\n+---------------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT DATE_ADD('2024-01-31 12:00:00', INTERVAL 1 DAY) AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  latin1_swedish_ci (8)\nLength:     29\nMax_length: 19\nDecimals:   31\nFlags:      \n\n\n+---------------------+\n| v                   |\n+---------------------+\n| 2024-02-01 12:00:00 |\n+---------------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "sql": "SELECT TIMESTAMPADD(SQL_TSI_WEEK, 1, '2024-01-31 12:00:00') AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=TimestampAdd(this=Literal(this=2024-01-31 12:00:00,is_string=true),expression=Literal(this=1,is_string=false),unit=Var(this=WEEK)),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT DATE_ADD('2024-01-31 12:00:00', INTERVAL 1 WEEK) AS v",
+      "executable": "SELECT DATE_ADD('2024-01-31 12:00:00', INTERVAL 1 WEEK) AS v",
+      "original": {
+        "stdout": "2024-02-07 12:00:00\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "2024-02-07 12:00:00\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT TIMESTAMPADD(SQL_TSI_WEEK, 1, '2024-01-31 12:00:00') AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  latin1_swedish_ci (8)\nLength:     29\nMax_length: 19\nDecimals:   31\nFlags:      \n\n\n+---------------------+\n| v                   |\n+---------------------+\n| 2024-02-07 12:00:00 |\n+---------------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT DATE_ADD('2024-01-31 12:00:00', INTERVAL 1 WEEK) AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  latin1_swedish_ci (8)\nLength:     29\nMax_length: 19\nDecimals:   31\nFlags:      \n\n\n+---------------------+\n| v                   |\n+---------------------+\n| 2024-02-07 12:00:00 |\n+---------------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "sql": "SELECT TIMESTAMPADD(SQL_TSI_MONTH, 1, '2024-01-31 12:00:00') AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=TimestampAdd(this=Literal(this=2024-01-31 12:00:00,is_string=true),expression=Literal(this=1,is_string=false),unit=Var(this=MONTH)),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT DATE_ADD('2024-01-31 12:00:00', INTERVAL 1 MONTH) AS v",
+      "executable": "SELECT DATE_ADD('2024-01-31 12:00:00', INTERVAL 1 MONTH) AS v",
+      "original": {
+        "stdout": "2024-02-29 12:00:00\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "2024-02-29 12:00:00\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT TIMESTAMPADD(SQL_TSI_MONTH, 1, '2024-01-31 12:00:00') AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  latin1_swedish_ci (8)\nLength:     29\nMax_length: 19\nDecimals:   31\nFlags:      \n\n\n+---------------------+\n| v                   |\n+---------------------+\n| 2024-02-29 12:00:00 |\n+---------------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT DATE_ADD('2024-01-31 12:00:00', INTERVAL 1 MONTH) AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  latin1_swedish_ci (8)\nLength:     29\nMax_length: 19\nDecimals:   31\nFlags:      \n\n\n+---------------------+\n| v                   |\n+---------------------+\n| 2024-02-29 12:00:00 |\n+---------------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "sql": "SELECT TIMESTAMPADD(SQL_TSI_QUARTER, 1, '2024-01-31 12:00:00') AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=TimestampAdd(this=Literal(this=2024-01-31 12:00:00,is_string=true),expression=Literal(this=1,is_string=false),unit=Var(this=QUARTER)),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT DATE_ADD('2024-01-31 12:00:00', INTERVAL 1 QUARTER) AS v",
+      "executable": "SELECT DATE_ADD('2024-01-31 12:00:00', INTERVAL 1 QUARTER) AS v",
+      "original": {
+        "stdout": "2024-04-30 12:00:00\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "2024-04-30 12:00:00\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT TIMESTAMPADD(SQL_TSI_QUARTER, 1, '2024-01-31 12:00:00') AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  latin1_swedish_ci (8)\nLength:     29\nMax_length: 19\nDecimals:   31\nFlags:      \n\n\n+---------------------+\n| v                   |\n+---------------------+\n| 2024-04-30 12:00:00 |\n+---------------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT DATE_ADD('2024-01-31 12:00:00', INTERVAL 1 QUARTER) AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  latin1_swedish_ci (8)\nLength:     29\nMax_length: 19\nDecimals:   31\nFlags:      \n\n\n+---------------------+\n| v                   |\n+---------------------+\n| 2024-04-30 12:00:00 |\n+---------------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "sql": "SELECT TIMESTAMPADD(SQL_TSI_YEAR, 1, '2024-01-31 12:00:00') AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=TimestampAdd(this=Literal(this=2024-01-31 12:00:00,is_string=true),expression=Literal(this=1,is_string=false),unit=Var(this=YEAR)),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT DATE_ADD('2024-01-31 12:00:00', INTERVAL 1 YEAR) AS v",
+      "executable": "SELECT DATE_ADD('2024-01-31 12:00:00', INTERVAL 1 YEAR) AS v",
+      "original": {
+        "stdout": "2025-01-31 12:00:00\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "2025-01-31 12:00:00\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT TIMESTAMPADD(SQL_TSI_YEAR, 1, '2024-01-31 12:00:00') AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  latin1_swedish_ci (8)\nLength:     29\nMax_length: 19\nDecimals:   31\nFlags:      \n\n\n+---------------------+\n| v                   |\n+---------------------+\n| 2025-01-31 12:00:00 |\n+---------------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT DATE_ADD('2024-01-31 12:00:00', INTERVAL 1 YEAR) AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  latin1_swedish_ci (8)\nLength:     29\nMax_length: 19\nDecimals:   31\nFlags:      \n\n\n+---------------------+\n| v                   |\n+---------------------+\n| 2025-01-31 12:00:00 |\n+---------------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "sql": "SELECT TIMESTAMPADD(SECOND, '1.000001', '2024-01-01 12:00:00') AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=TimestampAdd(this=Literal(this=2024-01-01 12:00:00,is_string=true),expression=Literal(this=1.000001,is_string=true),unit=Var(this=SECOND)),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT DATE_ADD('2024-01-01 12:00:00', INTERVAL '1.000001' SECOND) AS v",
+      "executable": "SELECT DATE_ADD('2024-01-01 12:00:00', INTERVAL '1.000001' SECOND) AS v",
+      "original": {
+        "stdout": "2024-01-01 12:00:01.000001\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "2024-01-01 12:00:01.000001\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT TIMESTAMPADD(SECOND, '1.000001', '2024-01-01 12:00:00') AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  latin1_swedish_ci (8)\nLength:     29\nMax_length: 26\nDecimals:   31\nFlags:      \n\n\n+----------------------------+\n| v                          |\n+----------------------------+\n| 2024-01-01 12:00:01.000001 |\n+----------------------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT DATE_ADD('2024-01-01 12:00:00', INTERVAL '1.000001' SECOND) AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  latin1_swedish_ci (8)\nLength:     29\nMax_length: 26\nDecimals:   31\nFlags:      \n\n\n+----------------------------+\n| v                          |\n+----------------------------+\n| 2024-01-01 12:00:01.000001 |\n+----------------------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "sql": "SELECT TIMESTAMPADD(SECOND, '-1.000001', '2024-01-01 12:00:00') AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=TimestampAdd(this=Literal(this=2024-01-01 12:00:00,is_string=true),expression=Literal(this=-1.000001,is_string=true),unit=Var(this=SECOND)),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT DATE_ADD('2024-01-01 12:00:00', INTERVAL '-1.000001' SECOND) AS v",
+      "executable": "SELECT DATE_ADD('2024-01-01 12:00:00', INTERVAL '-1.000001' SECOND) AS v",
+      "original": {
+        "stdout": "2024-01-01 11:59:58.999999\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "2024-01-01 11:59:58.999999\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT TIMESTAMPADD(SECOND, '-1.000001', '2024-01-01 12:00:00') AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  latin1_swedish_ci (8)\nLength:     29\nMax_length: 26\nDecimals:   31\nFlags:      \n\n\n+----------------------------+\n| v                          |\n+----------------------------+\n| 2024-01-01 11:59:58.999999 |\n+----------------------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT DATE_ADD('2024-01-01 12:00:00', INTERVAL '-1.000001' SECOND) AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  latin1_swedish_ci (8)\nLength:     29\nMax_length: 26\nDecimals:   31\nFlags:      \n\n\n+----------------------------+\n| v                          |\n+----------------------------+\n| 2024-01-01 11:59:58.999999 |\n+----------------------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "sql": "SELECT TIMESTAMPADD(SECOND, '0.000249', '2024-01-01 12:00:00') AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=TimestampAdd(this=Literal(this=2024-01-01 12:00:00,is_string=true),expression=Literal(this=0.000249,is_string=true),unit=Var(this=SECOND)),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT DATE_ADD('2024-01-01 12:00:00', INTERVAL '0.000249' SECOND) AS v",
+      "executable": "SELECT DATE_ADD('2024-01-01 12:00:00', INTERVAL '0.000249' SECOND) AS v",
+      "original": {
+        "stdout": "2024-01-01 12:00:00.000249\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "2024-01-01 12:00:00.000249\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT TIMESTAMPADD(SECOND, '0.000249', '2024-01-01 12:00:00') AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  latin1_swedish_ci (8)\nLength:     29\nMax_length: 26\nDecimals:   31\nFlags:      \n\n\n+----------------------------+\n| v                          |\n+----------------------------+\n| 2024-01-01 12:00:00.000249 |\n+----------------------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT DATE_ADD('2024-01-01 12:00:00', INTERVAL '0.000249' SECOND) AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  latin1_swedish_ci (8)\nLength:     29\nMax_length: 26\nDecimals:   31\nFlags:      \n\n\n+----------------------------+\n| v                          |\n+----------------------------+\n| 2024-01-01 12:00:00.000249 |\n+----------------------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "sql": "SELECT TIMESTAMPADD(SECOND, 1.000001, '2024-01-01 12:00:00') AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=TimestampAdd(this=Literal(this=2024-01-01 12:00:00,is_string=true),expression=Literal(this=1.000001,is_string=false),unit=Var(this=SECOND)),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT DATE_ADD('2024-01-01 12:00:00', INTERVAL 1.000001 SECOND) AS v",
+      "executable": "SELECT DATE_ADD('2024-01-01 12:00:00', INTERVAL 1.000001 SECOND) AS v",
+      "original": {
+        "stdout": "2024-01-01 12:00:01.000001\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "2024-01-01 12:00:01.000001\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT TIMESTAMPADD(SECOND, 1.000001, '2024-01-01 12:00:00') AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  latin1_swedish_ci (8)\nLength:     29\nMax_length: 26\nDecimals:   31\nFlags:      \n\n\n+----------------------------+\n| v                          |\n+----------------------------+\n| 2024-01-01 12:00:01.000001 |\n+----------------------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT DATE_ADD('2024-01-01 12:00:00', INTERVAL 1.000001 SECOND) AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  latin1_swedish_ci (8)\nLength:     29\nMax_length: 26\nDecimals:   31\nFlags:      \n\n\n+----------------------------+\n| v                          |\n+----------------------------+\n| 2024-01-01 12:00:01.000001 |\n+----------------------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "sql": "SELECT TIMESTAMPADD(SECOND, -1.000001, '2024-01-01 12:00:00') AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=TimestampAdd(this=Literal(this=2024-01-01 12:00:00,is_string=true),expression=Neg(this=Literal(this=1.000001,is_string=false)),unit=Var(this=SECOND)),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT DATE_ADD('2024-01-01 12:00:00', INTERVAL -1.000001 SECOND) AS v",
+      "executable": "SELECT DATE_ADD('2024-01-01 12:00:00', INTERVAL -1.000001 SECOND) AS v",
+      "original": {
+        "stdout": "2024-01-01 11:59:58.999999\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "2024-01-01 11:59:58.999999\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT TIMESTAMPADD(SECOND, -1.000001, '2024-01-01 12:00:00') AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  latin1_swedish_ci (8)\nLength:     29\nMax_length: 26\nDecimals:   31\nFlags:      \n\n\n+----------------------------+\n| v                          |\n+----------------------------+\n| 2024-01-01 11:59:58.999999 |\n+----------------------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT DATE_ADD('2024-01-01 12:00:00', INTERVAL -1.000001 SECOND) AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  latin1_swedish_ci (8)\nLength:     29\nMax_length: 26\nDecimals:   31\nFlags:      \n\n\n+----------------------------+\n| v                          |\n+----------------------------+\n| 2024-01-01 11:59:58.999999 |\n+----------------------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "sql": "SELECT TIMESTAMPADD(SECOND, NULL, '2024-01-01 12:00:00') AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=TimestampAdd(this=Literal(this=2024-01-01 12:00:00,is_string=true),expression=Null(),unit=Var(this=SECOND)),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT DATE_ADD('2024-01-01 12:00:00', INTERVAL (NULL) SECOND) AS v",
+      "executable": "SELECT DATE_ADD('2024-01-01 12:00:00', INTERVAL (NULL) SECOND) AS v",
+      "original": {
+        "stdout": "NULL\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "NULL\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT TIMESTAMPADD(SECOND, NULL, '2024-01-01 12:00:00') AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  latin1_swedish_ci (8)\nLength:     29\nMax_length: 0\nDecimals:   31\nFlags:      \n\n\n+------+\n| v    |\n+------+\n| NULL |\n+------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT DATE_ADD('2024-01-01 12:00:00', INTERVAL (NULL) SECOND) AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  latin1_swedish_ci (8)\nLength:     29\nMax_length: 0\nDecimals:   31\nFlags:      \n\n\n+------+\n| v    |\n+------+\n| NULL |\n+------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "sql": "SELECT TIMESTAMPADD(SQL_TSI_DAY, n + 1, CAST('2024-01-01 12:00:00' AS DATETIME)) AS v FROM (SELECT 1 n UNION ALL SELECT NULL) t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=TimestampAdd(this=Cast(this=Literal(this=2024-01-01 12:00:00,is_string=true),to=DataType(this=DATETIME,expressions=null,nested=false),format=null,safe=null,action=null,default=null),expression=Add(this=Column(this=Identifier(this=n,quoted=false)),expression=Literal(this=1,is_string=false)),unit=Var(this=DAY)),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Union(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Literal(this=1,is_string=false),alias=Identifier(this=n,quoted=false))],limit=null,exclude=null,operation_modifiers=null),distinct=false,by_name=null,expression=Select(kind=null,hint=null,distinct=null,expressions=[Null()],limit=null,exclude=null,operation_modifiers=null),side=null,kind=null,on=null),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),sample=null)))",
+      "preview": "SELECT DATE_ADD(CAST('2024-01-01 12:00:00' AS DATETIME), INTERVAL (n + 1) DAY) AS v FROM (SELECT 1 AS n UNION ALL SELECT NULL) AS t",
+      "executable": "SELECT DATE_ADD(CAST('2024-01-01 12:00:00' AS DATETIME), INTERVAL (n + 1) DAY) AS v FROM (SELECT 1 AS n UNION ALL SELECT NULL) AS t",
+      "original": {
+        "stdout": "2024-01-03 12:00:00\nNULL\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "2024-01-03 12:00:00\nNULL\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT TIMESTAMPADD(SQL_TSI_DAY, n + 1, CAST('2024-01-01 12:00:00' AS DATETIME)) AS v FROM (SELECT 1 n UNION ALL SELECT NULL) t\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       DATETIME\nCollation:  binary (63)\nLength:     19\nMax_length: 19\nDecimals:   0\nFlags:      BINARY \n\n\n+---------------------+\n| v                   |\n+---------------------+\n| 2024-01-03 12:00:00 |\n| NULL                |\n+---------------------+\n2 rows in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT DATE_ADD(CAST('2024-01-01 12:00:00' AS DATETIME), INTERVAL (n + 1) DAY) AS v FROM (SELECT 1 AS n UNION ALL SELECT NULL) AS t\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       DATETIME\nCollation:  binary (63)\nLength:     19\nMax_length: 19\nDecimals:   0\nFlags:      BINARY \n\n\n+---------------------+\n| v                   |\n+---------------------+\n| 2024-01-03 12:00:00 |\n| NULL                |\n+---------------------+\n2 rows in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "sql": "SELECT TIMESTAMPADD(DAY, 1, CAST('2024-01-31' AS DATE)) AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=TimestampAdd(this=Cast(this=Literal(this=2024-01-31,is_string=true),to=DataType(this=DATE,expressions=null,nested=false),format=null,safe=null,action=null,default=null),expression=Literal(this=1,is_string=false),unit=Var(this=DAY)),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT DATE_ADD(CAST('2024-01-31' AS DATE), INTERVAL 1 DAY) AS v",
+      "executable": "SELECT DATE_ADD(CAST('2024-01-31' AS DATE), INTERVAL 1 DAY) AS v",
+      "original": {
+        "stdout": "2024-02-01\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "2024-02-01\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT TIMESTAMPADD(DAY, 1, CAST('2024-01-31' AS DATE)) AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       DATE\nCollation:  binary (63)\nLength:     10\nMax_length: 10\nDecimals:   0\nFlags:      BINARY \n\n\n+------------+\n| v          |\n+------------+\n| 2024-02-01 |\n+------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT DATE_ADD(CAST('2024-01-31' AS DATE), INTERVAL 1 DAY) AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       DATE\nCollation:  binary (63)\nLength:     10\nMax_length: 10\nDecimals:   0\nFlags:      BINARY \n\n\n+------------+\n| v          |\n+------------+\n| 2024-02-01 |\n+------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "sql": "SELECT TIMESTAMPADD(MONTH, 1, CAST('2024-01-31' AS DATE)) AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=TimestampAdd(this=Cast(this=Literal(this=2024-01-31,is_string=true),to=DataType(this=DATE,expressions=null,nested=false),format=null,safe=null,action=null,default=null),expression=Literal(this=1,is_string=false),unit=Var(this=MONTH)),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT DATE_ADD(CAST('2024-01-31' AS DATE), INTERVAL 1 MONTH) AS v",
+      "executable": "SELECT DATE_ADD(CAST('2024-01-31' AS DATE), INTERVAL 1 MONTH) AS v",
+      "original": {
+        "stdout": "2024-02-29\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "2024-02-29\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT TIMESTAMPADD(MONTH, 1, CAST('2024-01-31' AS DATE)) AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       DATE\nCollation:  binary (63)\nLength:     10\nMax_length: 10\nDecimals:   0\nFlags:      BINARY \n\n\n+------------+\n| v          |\n+------------+\n| 2024-02-29 |\n+------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT DATE_ADD(CAST('2024-01-31' AS DATE), INTERVAL 1 MONTH) AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       DATE\nCollation:  binary (63)\nLength:     10\nMax_length: 10\nDecimals:   0\nFlags:      BINARY \n\n\n+------------+\n| v          |\n+------------+\n| 2024-02-29 |\n+------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "sql": "SELECT TIMESTAMPADD(HOUR, 1, CAST('2024-01-31' AS DATE)) AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=TimestampAdd(this=Cast(this=Literal(this=2024-01-31,is_string=true),to=DataType(this=DATE,expressions=null,nested=false),format=null,safe=null,action=null,default=null),expression=Literal(this=1,is_string=false),unit=Var(this=HOUR)),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT DATE_ADD(CAST('2024-01-31' AS DATE), INTERVAL 1 HOUR) AS v",
+      "executable": "SELECT DATE_ADD(CAST('2024-01-31' AS DATE), INTERVAL 1 HOUR) AS v",
+      "original": {
+        "stdout": "2024-01-31 01:00:00\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "2024-01-31 01:00:00\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT TIMESTAMPADD(HOUR, 1, CAST('2024-01-31' AS DATE)) AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       DATETIME\nCollation:  binary (63)\nLength:     19\nMax_length: 19\nDecimals:   0\nFlags:      BINARY \n\n\n+---------------------+\n| v                   |\n+---------------------+\n| 2024-01-31 01:00:00 |\n+---------------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT DATE_ADD(CAST('2024-01-31' AS DATE), INTERVAL 1 HOUR) AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       DATETIME\nCollation:  binary (63)\nLength:     19\nMax_length: 19\nDecimals:   0\nFlags:      BINARY \n\n\n+---------------------+\n| v                   |\n+---------------------+\n| 2024-01-31 01:00:00 |\n+---------------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "sql": "SELECT TIMESTAMPADD(DAY, 1, CAST(NULL AS DATETIME)) AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=TimestampAdd(this=Cast(this=Null(),to=DataType(this=DATETIME,expressions=null,nested=false),format=null,safe=null,action=null,default=null),expression=Literal(this=1,is_string=false),unit=Var(this=DAY)),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT DATE_ADD(CAST(NULL AS DATETIME), INTERVAL 1 DAY) AS v",
+      "executable": "SELECT DATE_ADD(CAST(NULL AS DATETIME), INTERVAL 1 DAY) AS v",
+      "original": {
+        "stdout": "NULL\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "NULL\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nSELECT TIMESTAMPADD(DAY, 1, CAST(NULL AS DATETIME)) AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       DATETIME\nCollation:  binary (63)\nLength:     19\nMax_length: 0\nDecimals:   0\nFlags:      BINARY \n\n\n+------+\n| v    |\n+------+\n| NULL |\n+------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nSELECT DATE_ADD(CAST(NULL AS DATETIME), INTERVAL 1 DAY) AS v\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       DATETIME\nCollation:  binary (63)\nLength:     19\nMax_length: 0\nDecimals:   0\nFlags:      BINARY \n\n\n+------+\n| v    |\n+------+\n| NULL |\n+------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    },
+    {
+      "sql": "WITH t AS (SELECT '1.000001' n) SELECT TIMESTAMPADD(SECOND, n, '2024-01-01 12:00:00') AS v FROM t",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=TimestampAdd(this=Literal(this=2024-01-01 12:00:00,is_string=true),expression=Column(this=Identifier(this=n,quoted=false)),unit=Var(this=SECOND)),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Table(this=Identifier(this=t,quoted=false))),with_=With(expressions=[CTE(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Literal(this=1.000001,is_string=true),alias=Identifier(this=n,quoted=false))],limit=null,exclude=null,operation_modifiers=null),alias=TableAlias(this=Identifier(this=t,quoted=false),columns=null),materialized=null,key_expressions=null)],recursive=null,search=null,cycle=null,udfs=null))",
+      "preview": "WITH t AS (SELECT '1.000001' AS n) SELECT DATE_ADD('2024-01-01 12:00:00', INTERVAL n SECOND) AS v FROM t",
+      "executable": "WITH t AS (SELECT '1.000001' AS n) SELECT DATE_ADD('2024-01-01 12:00:00', INTERVAL n SECOND) AS v FROM t",
+      "original": {
+        "stdout": "2024-01-01 12:00:01.000001\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated": {
+        "stdout": "2024-01-01 12:00:01.000001\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "original_metadata": {
+        "stdout": "--------------\nWITH t AS (SELECT '1.000001' n) SELECT TIMESTAMPADD(SECOND, n, '2024-01-01 12:00:00') AS v FROM t\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  latin1_swedish_ci (8)\nLength:     29\nMax_length: 26\nDecimals:   31\nFlags:      \n\n\n+----------------------------+\n| v                          |\n+----------------------------+\n| 2024-01-01 12:00:01.000001 |\n+----------------------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      },
+      "generated_metadata": {
+        "stdout": "--------------\nWITH t AS (SELECT '1.000001' AS n) SELECT DATE_ADD('2024-01-01 12:00:00', INTERVAL n SECOND) AS v FROM t\n--------------\n\nField   1:  `v`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  latin1_swedish_ci (8)\nLength:     29\nMax_length: 26\nDecimals:   31\nFlags:      \n\n\n+----------------------------+\n| v                          |\n+----------------------------+\n| 2024-01-01 12:00:01.000001 |\n+----------------------------+\n1 row in set (0.00 sec)\n\nBye\n",
+        "stderr": "",
+        "returncode": 0
+      }
+    }
+  ]
+}

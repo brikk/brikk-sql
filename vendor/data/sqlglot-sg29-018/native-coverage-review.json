@@ -1,0 +1,95 @@
+{
+  "scope": "Exactly two new comparator warnings on pre-existing write origins; all native tuples, corpus hashes, engine/settings, and old local dispositions unchanged. No parity ledger changes.",
+  "before": {
+    "files": 181,
+    "inputs": 24606,
+    "unique_sql": 5419,
+    "native_counts": {
+      "accepted": 13608,
+      "rejected": 7749,
+      "unverified": 3249
+    },
+    "native_fingerprint": "79437a00fab07678b159a47dc2f37c62749d21958eff156c8257e7b72296b12b",
+    "local_counts": {
+      "excluded-or-non-sql-expectation": 65,
+      "expected-unsupported": 9,
+      "foreign-analysis-input": 121,
+      "opaque-command": 398,
+      "unsupported": 235,
+      "unsupported-warning": 1571
+    },
+    "local_fingerprint": "e37c2a7874457cb2ec6ffc2fecbd96974488464240056474773397f0fa429925",
+    "inventory_fingerprint": "85426a6d4292a9636681bcf357c7fee6fab6b2a1616d7f7836a088828f778ceb"
+  },
+  "after": {
+    "files": 181,
+    "inputs": 24606,
+    "unique_sql": 5419,
+    "native_counts": {
+      "accepted": 13608,
+      "rejected": 7749,
+      "unverified": 3249
+    },
+    "native_fingerprint": "79437a00fab07678b159a47dc2f37c62749d21958eff156c8257e7b72296b12b",
+    "local_counts": {
+      "excluded-or-non-sql-expectation": 65,
+      "expected-unsupported": 9,
+      "foreign-analysis-input": 121,
+      "opaque-command": 398,
+      "unsupported": 235,
+      "unsupported-warning": 1573
+    },
+    "local_fingerprint": "86e94b049de08597b759afa5febc625770440169e5e21262018faeedef210b50",
+    "inventory_fingerprint": "81d95c9d4d2b96701f9fbd5b5f79b0926a5e9d0c543494b8e683f85448c966db"
+  },
+  "native_outcomes_unchanged": true,
+  "engine_settings_unchanged": true,
+  "corpus_hashes_unchanged": true,
+  "old_local_dispositions_unchanged": true,
+  "added_warnings": [
+    {
+      "detail": "DuckDB LIST_SORT does not support an ArraySort comparator",
+      "origin": "dialect-corpus/presto.json/write/102/current",
+      "status": "unsupported-warning"
+    },
+    {
+      "detail": "DuckDB LIST_SORT does not support an ArraySort comparator",
+      "origin": "dialect-corpus/spark.json/write/83/current",
+      "status": "unsupported-warning"
+    }
+  ],
+  "inventory_changes": [
+    {
+      "before": {
+        "file": "dialect-corpus/presto.json",
+        "sha256": "61e688685e81dbb1e7d014a406484059543fca06d07c67a1f027af049323433e",
+        "classification": "registered-source identities emitted to DuckDB, plus every DuckDB-target transpile direction and SQL expectation",
+        "native_inputs": 161,
+        "local_classifications": 16
+      },
+      "after": {
+        "file": "dialect-corpus/presto.json",
+        "sha256": "61e688685e81dbb1e7d014a406484059543fca06d07c67a1f027af049323433e",
+        "classification": "registered-source identities emitted to DuckDB, plus every DuckDB-target transpile direction and SQL expectation",
+        "native_inputs": 161,
+        "local_classifications": 17
+      }
+    },
+    {
+      "before": {
+        "file": "dialect-corpus/spark.json",
+        "sha256": "bb199b1a88a1d8c91f3253f97c631de166adf21efa72e5add25c0ceed2776d0c",
+        "classification": "registered-source identities emitted to DuckDB, plus every DuckDB-target transpile direction and SQL expectation",
+        "native_inputs": 233,
+        "local_classifications": 13
+      },
+      "after": {
+        "file": "dialect-corpus/spark.json",
+        "sha256": "bb199b1a88a1d8c91f3253f97c631de166adf21efa72e5add25c0ceed2776d0c",
+        "classification": "registered-source identities emitted to DuckDB, plus every DuckDB-target transpile direction and SQL expectation",
+        "native_inputs": 233,
+        "local_classifications": 14
+      }
+    }
+  ]
+}

@@ -1,3 +1,12 @@
 {
-    "cases": []
+    "cases": [
+        {
+            "id": "assertion:v1:sha256:547f5f030aa5a8b5ea3453e9abae8dda05aaa6279d8d06f8682d5280f4ffe582:1",
+            "case": "write|bigquery|APPROX_PERCENTILE(x, 0.5, 0.01)",
+            "signature": "sql-mismatch:v1:sha256:56a8f612fb636928011b8c9673c05b43bf639038c3ef121382e247b2a95886ea",
+            "reason": "SG29-020: Retain explicit BigQuery OFFSET syntax and the existing approximate/weighted-percentile execution refusal. A generic bracket rendering difference is not a newly qualified approximation.",
+            "expected": "APPROX_QUANTILES(x, 2)[1]",
+            "actual": "APPROX_QUANTILES(x, 2)[OFFSET(1)]"
+        }
+    ]
 }

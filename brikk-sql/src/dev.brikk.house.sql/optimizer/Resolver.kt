@@ -50,6 +50,9 @@ class Resolver(
     private val columnTypeFromScopeCache = HashMap<Pair<Long, String>, DataType?>()
     private var outerResolversCache: List<Resolver>? = null
 
+    internal val hasUnknownSources: Boolean
+        get() = getAllSourceColumns().values.any { it.isEmpty() || "*" in it }
+
     /** Correlatable outer scopes, innermost first; reuse their column/type caches. */
     fun outerResolvers(): List<Resolver> {
         return outerResolversCache ?: buildList {

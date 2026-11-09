@@ -1,5 +1,10 @@
 package dev.brikk.house.sql.dialects
 
+import dev.brikk.house.sql.ast.MakeInterval
+import dev.brikk.house.sql.ast.Kwarg
+import dev.brikk.house.sql.ast.Anonymous
+import dev.brikk.house.sql.ast.SHA2Digest
+
 import dev.brikk.house.sql.ast.ArrayOverlaps
 import dev.brikk.house.sql.ast.ArrayPrepend
 import dev.brikk.house.sql.ast.BitwiseAndAgg
@@ -218,6 +223,7 @@ open class PostgresParser(
 
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.POSTGRES
+    override val isPredicatePrecedence get() = dev.brikk.house.sql.parser.IsPredicatePrecedence.LOW
     override val alterTableMixedActions: Boolean get() = true
     override val alterDropRequiresColumn: Boolean get() = false
     override val alterColumnTypeRequiresKeyword: Boolean get() = true
@@ -529,6 +535,25 @@ object PostgresParserTables {
             ) { TimestampFromParts(it) },
         )
         put("NOW", fromArgList(listOf("this", "sysdate"), false) { CurrentTimestamp(it) })
+        // #8800/#8801: named values own their units, not their argument positions.
+        // Retain invalid/unknown calls intact rather than dropping arguments or
+        // turning a native duplicate/ordering error into a different successful call.
+        put("MAKE_INTERVAL") { a ->
+            val units = listOf("year", "month", "week", "day", "hour", "minute", "second")
+            val names = mapOf("years" to "year", "months" to "month", "weeks" to "week", "days" to "day",
+                "hours" to "hour", "mins" to "minute", "secs" to "second")
+            val values = linkedMapOf<String, kotlin.Any?>()
+            var valid = a.size <= units.size
+            var named = false
+            for ((i, value) in a.withIndex()) {
+                val unit = if (value is Kwarg) {
+                    named = true
+                    names[(value.thisArg as? Expression)?.name?.lowercase()]
+                } else if (named) null else units.getOrNull(i)
+                if (unit == null || unit in values) valid = false else values[unit] = value
+            }
+            if (valid) MakeInterval(values) else Anonymous(args("this" to "MAKE_INTERVAL", "expressions" to a.filterNotNull()))
+        }
         put("REGEXP_REPLACE", ::buildRegexpReplace)
         // sqlglot: build_formatted_time(exp.TimeToStr) / (exp.StrToDate)
         put("TO_CHAR") { a ->
@@ -540,13 +565,13 @@ object PostgresParserTables {
         put("TO_TIMESTAMP", ::buildToTimestamp)
         put("UNNEST", fromArgList(listOf("this", "expressions"), true) { Explode(it) })
         put("SHA256") { a ->
-            SHA2(args("this" to seqGet(a, 0), "length" to Literal.number("256")))
+            SHA2Digest(args("this" to seqGet(a, 0), "length" to Literal.number("256")))
         }
         put("SHA384") { a ->
-            SHA2(args("this" to seqGet(a, 0), "length" to Literal.number("384")))
+            SHA2Digest(args("this" to seqGet(a, 0), "length" to Literal.number("384")))
         }
         put("SHA512") { a ->
-            SHA2(args("this" to seqGet(a, 0), "length" to Literal.number("512")))
+            SHA2Digest(args("this" to seqGet(a, 0), "length" to Literal.number("512")))
         }
         put("LEVENSHTEIN_LESS_EQUAL", ::buildLevenshteinLessEqual)
         put("JSON_OBJECT_AGG") { a -> JSONObjectAgg(args("expressions" to a)) }

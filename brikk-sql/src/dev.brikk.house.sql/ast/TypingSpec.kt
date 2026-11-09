@@ -37,6 +37,7 @@ sealed class AnnotatorRef {
     object FloorCeilHive : AnnotatorRef()
     object AtTimeZoneDuckdb : AnnotatorRef()
     object DateTruncDuckdb : AnnotatorRef()
+    object AddSubDuckdb : AnnotatorRef()
     /** self._annotate_binary(e) */
     object BinaryAnn : AnnotatorRef()
 

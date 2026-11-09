@@ -1,5 +1,5 @@
 {
-  "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
+  "sqlglot_version": "v30.29.0",
   "dialect": "teradata",
   "identity": [
     {
@@ -383,6 +383,16 @@
       "pretty": false
     },
     {
+      "sql": "SELECT SUM(x) OVER (ORDER BY d ROWS UNBOUNDED PRECEDING) FROM t",
+      "expected": "SELECT SUM(x) OVER (ORDER BY d ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) FROM t",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT AVG(x) OVER (ORDER BY d ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) FROM t",
+      "expected": "SELECT AVG(x) OVER (ORDER BY d) FROM t",
+      "pretty": false
+    },
+    {
       "sql": "RENAME TABLE emp TO employee",
       "expected": null,
       "pretty": false,
@@ -399,6 +409,32 @@
       }
     },
     {
+      "sql": "SELECT * FROM t SAMPLE 100",
+      "read": {},
+      "write": {
+        "teradata": "SELECT * FROM t SAMPLE 100",
+        "snowflake": "SELECT * FROM t TABLESAMPLE (100 ROWS)"
+      }
+    },
+    {
+      "sql": "SELECT * FROM t SAMPLE 0.25",
+      "read": {
+        "snowflake": "SELECT * FROM t TABLESAMPLE (25)"
+      },
+      "write": {
+        "teradata": "SELECT * FROM t SAMPLE 0.25",
+        "snowflake": "SELECT * FROM t TABLESAMPLE (25)"
+      }
+    },
+    {
+      "sql": "SELECT * FROM t SAMPLE 0.6, 0.25",
+      "read": {},
+      "write": {
+        "teradata": "SELECT * FROM t SAMPLE 0.6, 0.25",
+        "snowflake": "SELECT * FROM t"
+      }
+    },
+    {
       "sql": "DATABASE tduser",
       "read": {
         "databricks": "USE tduser"
@@ -406,6 +442,15 @@
       "write": {
         "databricks": "USE tduser",
         "teradata": "DATABASE tduser"
+      }
+    },
+    {
+      "sql": "LOCKING ROW FOR ACCESS SELECT * FROM t",
+      "read": {},
+      "write": {
+        "teradata": "LOCKING ROW FOR ACCESS SELECT * FROM t",
+        "duckdb": "SELECT * FROM t",
+        "snowflake": "SELECT * FROM t"
       }
     },
     {
@@ -607,11 +652,43 @@
         "teradata": "CAST(TO_CHAR(x, 'Q') AS INT)"
       },
       "write": {}
+    },
+    {
+      "sql": "SELECT SUM(x) OVER (PARTITION BY p ORDER BY d) FROM t",
+      "read": {},
+      "write": {
+        "teradata": "SELECT SUM(x) OVER (PARTITION BY p ORDER BY d) FROM t",
+        "snowflake": "SELECT SUM(x) OVER (PARTITION BY p ORDER BY d NULLS FIRST ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) FROM t",
+        "duckdb": "SELECT SUM(x) OVER (PARTITION BY p ORDER BY d NULLS FIRST ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) FROM t"
+      }
+    },
+    {
+      "sql": "SELECT COUNT(*) OVER (ORDER BY d) FROM t",
+      "read": {},
+      "write": {
+        "teradata": "SELECT COUNT(*) OVER (ORDER BY d) FROM t",
+        "snowflake": "SELECT COUNT(*) OVER (ORDER BY d NULLS FIRST ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) FROM t"
+      }
+    },
+    {
+      "sql": "SELECT SUM(x) OVER (PARTITION BY p) FROM t",
+      "read": {},
+      "write": {
+        "teradata": "SELECT SUM(x) OVER (PARTITION BY p) FROM t",
+        "snowflake": "SELECT SUM(x) OVER (PARTITION BY p) FROM t"
+      }
+    },
+    {
+      "sql": "SELECT RANK() OVER (ORDER BY d), ROW_NUMBER() OVER (ORDER BY d), LAG(x) OVER (ORDER BY d), FIRST_VALUE(x) OVER (ORDER BY d) FROM t",
+      "read": {},
+      "write": {
+        "snowflake": "SELECT RANK() OVER (ORDER BY d NULLS FIRST), ROW_NUMBER() OVER (ORDER BY d NULLS FIRST), LAG(x) OVER (ORDER BY d NULLS FIRST), FIRST_VALUE(x) OVER (ORDER BY d NULLS FIRST) FROM t"
+      }
     }
   ],
   "stats": {
-    "identity_count": 76,
-    "transpile_count": 24,
+    "identity_count": 78,
+    "transpile_count": 32,
     "skipped_dynamic": 0
   }
 }

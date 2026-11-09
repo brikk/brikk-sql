@@ -1,5 +1,5 @@
 {
-  "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
+  "sqlglot_version": "v30.29.0",
   "dialect": "fabric",
   "identity": [
     {
@@ -203,6 +203,16 @@
       "pretty": false
     },
     {
+      "sql": "CAST(CAST(x AS DATETIMEOFFSET(6)) AT TIME ZONE 'Pacific Standard Time' AS DATETIME2(6))",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CAST(CAST(x AS DATETIMEOFFSET(3)) AT TIME ZONE 'Pacific Standard Time' AS DATETIME2(3))",
+      "expected": null,
+      "pretty": false
+    },
+    {
       "sql": "UNIX_TO_TIME(column)",
       "expected": "DATEADD(MICROSECONDS, CAST(ROUND(column * 1e6, 0) AS BIGINT), CAST('1970-01-01' AS DATETIME2(6)))",
       "pretty": false
@@ -254,7 +264,7 @@
     }
   ],
   "stats": {
-    "identity_count": 45,
+    "identity_count": 47,
     "transpile_count": 3,
     "skipped_dynamic": 0
   }

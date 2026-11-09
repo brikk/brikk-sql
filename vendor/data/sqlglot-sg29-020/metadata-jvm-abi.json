@@ -1,0 +1,17 @@
+{
+  "before_classes": 143,
+  "after_classes": 143,
+  "added_classes": [],
+  "local_implementation_classes": [
+    "dev/brikk/house/sql/metadata/DialectMetadata$special$$inlined$sortedBy$1.class",
+    "dev/brikk/house/sql/metadata/DuckdbDumpKt$functionDefs$$inlined$compareBy$1.class",
+    "dev/brikk/house/sql/metadata/DuckdbDumpKt$functionDefs$$inlined$thenBy$1.class",
+    "dev/brikk/house/sql/metadata/DuckdbDumpKt$special$$inlined$thenBy$1.class",
+    "dev/brikk/house/sql/metadata/DuckdbDumpKt$special$$inlined$thenBy$2.class"
+  ],
+  "max_major": 61,
+  "incompatible": {},
+  "newer_bytecode": [],
+  "before_sha256": "780ae8e9a43fc4064c89984fe736be5661559b7fb56c691be70463c4e17f3131",
+  "after_sha256": "780ae8e9a43fc4064c89984fe736be5661559b7fb56c691be70463c4e17f3131"
+}

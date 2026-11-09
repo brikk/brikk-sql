@@ -80,6 +80,10 @@ open class DatafusionParser(
     tokenizerConfig: TokenizerConfig = DatafusionDialect.TOKENIZER_CONFIG,
 ) : Parser(errorLevel = errorLevel, tokenizerConfig = tokenizerConfig) {
 
+    // brikk-native: sqlparser 0.62.0 Generic/PostgreSQL dialects bind IS below comparisons.
+    // Spice inherits this policy; neither profile has a SQLGlot dialect to inherit it from.
+    override val isPredicatePrecedence get() = dev.brikk.house.sql.parser.IsPredicatePrecedence.LOW
+
     override val nullOrdering: String get() = "nulls_are_large"
     override val indexOffset: Int get() = 1
     override val tableSubqueryConsumesPipe: Boolean get() = false

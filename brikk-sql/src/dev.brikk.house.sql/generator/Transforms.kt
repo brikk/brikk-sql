@@ -80,6 +80,7 @@ import dev.brikk.house.sql.ast.outputName
 import dev.brikk.house.sql.ast.subquery
 import dev.brikk.house.sql.ast.toIdentifier
 import dev.brikk.house.sql.optimizer.findAllInScope
+import dev.brikk.house.sql.optimizer.findInScope
 import dev.brikk.house.sql.optimizer.findNewName
 import dev.brikk.house.sql.optimizer.Scope
 import dev.brikk.house.sql.optimizer.traverseScope
@@ -839,12 +840,12 @@ fun explodeProjectionToUnnest(
     if (expression !is Select) return expression
 
     val takenSelectNames = expression.namedSelects.toMutableSet()
-    if (expression.selects.filterIsInstance<Expression>().any { sel -> sel.findAll<Explode>().any { it is ExplodeOuter } }) {
+    if (expression.selects.filterIsInstance<Expression>().any { sel -> findAllInScope(sel, Explode::class).any { it is ExplodeOuter } }) {
         takenSelectNames.addAll(expression.findAll<Column>().map { it.name }.toList())
     }
     val takenSourceNames = Scope(expression).references.map { it.first }.toMutableSet()
     val zip = expression.selects.filterIsInstance<Expression>()
-        .mapNotNull { it.find<Explode>() }.count { !(it.thisArg as Expression).isType(DType.MAP) } > 1
+        .mapNotNull { findInScope(it, Explode::class) as? Explode }.count { !(it.thisArg as Expression).isType(DType.MAP) } > 1
     val safeZip = zip && preserveEmptyZip
     fun newName(names: MutableSet<String>, base: String): String =
         findNewName(names, base).also { names.add(it) }
@@ -862,7 +863,7 @@ fun explodeProjectionToUnnest(
 
     val selections = mutableListOf<Expression>()
     for (selection in expression.selects.filterIsInstance<Expression>()) {
-        var explode = selection.find(Explode::class) as? Explode
+        var explode = findInScope(selection, Explode::class) as? Explode
         if (explode == null) {
             selections.add(selection)
             continue
@@ -952,7 +953,7 @@ fun explodeProjectionToUnnest(
             }
             else -> Alias(args("this" to selection))
         }
-        explode = alias.find(Explode::class) as Explode
+        explode = findInScope(alias, Explode::class) as Explode
         val isPosexplode = explode is Posexplode
         val emptyOuter = if (explode is ExplodeOuter) EQ(args(
             "this" to ArraySize(args("this" to Coalesce(args("this" to explodeArg.copy(), "expressions" to listOf(ArrayNode()))))),

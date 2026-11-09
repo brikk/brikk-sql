@@ -102,11 +102,12 @@ class QualifyCorpusTest : LedgerGate() {
                 put("visible", root["visible"] ?: JsonNull)
                 put("case", JsonObject(case.filterKeys { it != "title" }))
                 put("options", buildJsonObject {
-                    put("dialect", if (raises) "" else dialectName)
+                    put("dialect", dialectName)
                     when {
                         raises -> {
                             put("operation", "qualifyColumns+validateQualifyColumns")
                             put("expected_error", "OptimizeError/SchemaError")
+                            put("infer_schema", false)
                         }
                         name == "qualify_tables" -> {
                             put("operation", "qualifyTables")
@@ -132,9 +133,9 @@ class QualifyCorpusTest : LedgerGate() {
                 // (OptimizeError, SchemaError)
                 var phase = "parse"
                 try {
-                    val expr = parseOne(sql)
+                    val expr = dialect.parseOne(sql)
                     phase = "qualifyColumns"
-                    val qualified = qualifyColumns(expr, schemaMap)
+                    val qualified = qualifyColumns(expr, caseSchemaMap, inferSchema = false, dialect = dialect)
                     phase = "validateQualifyColumns"
                     validateQualifyColumns(qualified)
                     failures[assertionId] = CorpusFailure.missingError(key, "OptimizeError/SchemaError")

@@ -1,6 +1,7 @@
 package dev.brikk.house.sql.optimizer
 
 import dev.brikk.house.sql.ast.Alias
+import dev.brikk.house.sql.ast.Add
 import dev.brikk.house.sql.ast.AnnotatorRef
 import dev.brikk.house.sql.ast.Anonymous
 import dev.brikk.house.sql.ast.CTE
@@ -30,6 +31,8 @@ import dev.brikk.house.sql.ast.PercentileDisc
 import dev.brikk.house.sql.ast.Pivot
 import dev.brikk.house.sql.ast.PivotAlias
 import dev.brikk.house.sql.ast.Predicate
+import dev.brikk.house.sql.ast.Struct
+import dev.brikk.house.sql.ast.PropertyEQ
 import dev.brikk.house.sql.ast.Query
 import dev.brikk.house.sql.ast.Select
 import dev.brikk.house.sql.ast.SAFE_IDENTIFIER_RE
@@ -487,6 +490,23 @@ class TypeAnnotator(
                             }
                         }
                         result = map
+                    } else if (expression is dev.brikk.house.sql.ast.Values) {
+                        val rows = expression.expressionsArg.filterIsInstance<Expression>().map { it.expressionsArg.filterIsInstance<Expression>() }
+                        val width = values.size
+                        result = aliasColumnNames.take(width).mapIndexed { index, alias ->
+                            var type: Any = DType.NULL
+                            for (row in rows) {
+                                val next = row.getOrNull(index)?.type ?: DType.UNKNOWN
+                                // Preserve exact homogeneous native/parameterized types. Coercion
+                                // tables cannot reconstruct an extension's UDT precision metadata.
+                                type = when {
+                                    type == DType.NULL || type is DataType && type.isType(DType.NULL) -> next
+                                    type == next -> type
+                                    else -> maybeCoerce(type, next)
+                                }
+                            }
+                            alias to type
+                        }.toMap()
                     } else {
                         val map = LinkedHashMap<String, Any>()
                         for ((alias, column) in aliasColumnNames.zip(values)) {
@@ -568,6 +588,10 @@ class TypeAnnotator(
                     val tableSchema = mappingSchema.find(
                         source, raiseOnMissing = false, ensureDataTypes = true
                     ) as? Map<*, *> ?: continue
+                    if (tableSchema.isEmpty() || tableSchema.values.any { it == null || it == DType.UNKNOWN || it is DataType && it.isType(DType.UNKNOWN) }) {
+                        setType(tableColumn, DType.UNKNOWN)
+                        continue
+                    }
 
                     val structType = DataType(
                         args(
@@ -590,26 +614,46 @@ class TypeAnnotator(
                             tableColumn,
                             source.expression.meta["query_type"] as Expression
                         )
+                    } else {
+                        val columns = getScopeSourceSelects(scope, tableColumn.name)
+                        if (columns.isEmpty() || columns.values.any { it == DType.UNKNOWN || it is DataType && it.isType(DType.UNKNOWN) }) {
+                            setType(tableColumn, DType.UNKNOWN)
+                        } else {
+                            setType(tableColumn, DataType(args("this" to DType.STRUCT, "nested" to true,
+                                "expressions" to columns.map { (name, kind) -> ColumnDef(args("this" to toIdentifier(name),
+                                    "kind" to when (kind) { is DataType -> kind.copy(); is DType -> kind.intoExpr(); else -> null })) })))
+                        }
                     }
                 }
             }
         }
 
         // Iterate through all the expressions of the current scope in post-order, and annotate
+        if (scope.expression is dev.brikk.house.sql.ast.Values &&
+            !(scope.expression.args["pivots"] as? List<*>).isNullOrEmpty()) {
+            // SG29-012: pivot operands may resolve through this VALUES scope. Infer
+            // row cells before a pivot lookup caches their source-column types.
+            for (row in scope.expression.expressionsArg.filterIsInstance<Expression>()) {
+                annotateExpression(row, scope)
+            }
+        }
         annotateExpression(scope.expression, scope)
         fixupOrderByAliases(scope)
         // Cache reconciled types before NULL placeholders become dialect defaults.
         (scope.expression as? SetOperation)?.let { getSetopColumns(it) }
 
         if (dialect.queryResultsAreStructs && scope.expression is Query) {
+            scope.expression.meta.remove("query_type")
+            val columns = if (scope.expression is SetOperation) getSetopColumns(scope.expression as SetOperation)
+                else scope.expression.selects.map { it.outputName to (it.type ?: DType.UNKNOWN) }
             val structType = DataType(
                 args(
                     "this" to DType.STRUCT,
-                    "expressions" to scope.expression.selects.map { select ->
+                    "expressions" to columns.map { (name, kind) ->
                         ColumnDef(
                             args(
-                                "this" to toIdentifier(select.outputName),
-                                "kind" to (select.type as? DataType)?.copy(),
+                                "this" to toIdentifier(name),
+                                "kind" to when (kind) { is DataType -> kind.copy(); is DType -> kind.intoExpr(); else -> null },
                             )
                         )
                     },
@@ -618,9 +662,9 @@ class TypeAnnotator(
             )
 
             val anyUnknown = structType.expressionsArg.any { cd ->
-                cd is ColumnDef && (cd.args["kind"] as? DataType)?.isType(DType.UNKNOWN) == true
+                cd is ColumnDef && ((cd.args["kind"] as? DataType)?.isType(DType.UNKNOWN) != false)
             }
-            if (!anyUnknown) {
+            if (columns.isNotEmpty() && !anyUnknown) {
                 // We don't use `_set_type` on purpose here (see the Python comment):
                 // annotating the query directly could make e.g. ARRAY(<query>)
                 // interpret it as a STRUCT value.
@@ -893,6 +937,21 @@ class TypeAnnotator(
                 setType(e, if (operand.isType(DType.DATE, DType.TIMESTAMP_S, DType.TIMESTAMP_MS, DType.TIMESTAMP_NS))
                     DType.TIMESTAMP else operand.type)
             }
+            is AnnotatorRef.AddSubDuckdb -> {
+                annotateBinary(e)
+                val binary = e as Binary
+                var left = binary.left
+                var right = binary.right
+                if (e is Add && left.isType(DType.INTERVAL)) {
+                    left = binary.right
+                    right = binary.left
+                }
+                if (right.isType(DType.INTERVAL)) {
+                    if (left.isType(DType.DATE, DType.DATETIME, DType.TIMESTAMP, DType.TIMESTAMPNTZ,
+                            DType.TIMESTAMP_S, DType.TIMESTAMP_MS, DType.TIMESTAMP_NS)) setType(e, DType.TIMESTAMP)
+                    else if (left.isType(DType.TIME, DType.TIMETZ, DType.TIMESTAMPTZ)) setType(e, left.type)
+                }
+            }
             is AnnotatorRef.BinaryAnn -> annotateBinary(e)
             is AnnotatorRef.UnaryAnn -> annotateUnary(e)
             is AnnotatorRef.ByArgs ->
@@ -1130,6 +1189,10 @@ class TypeAnnotator(
     // sqlglot: bigquery.py _annotate_by_args_approx_top — ARRAY<STRUCT<this.type, INT64>>.
     private fun annotateApproxTopKBq(expression: Expression) {
         val thisType = (expression.args["this"] as? Expression)?.type ?: DType.UNKNOWN.intoExpr()
+        if ((thisType as? DataType)?.isType(DType.UNKNOWN) != false) {
+            setType(expression, DType.UNKNOWN)
+            return
+        }
         val structType = DataType(
             args(
                 "this" to DType.STRUCT,
@@ -1363,6 +1426,13 @@ class TypeAnnotator(
 
     // sqlglot: TypeAnnotator._get_pivot_column_types
     private fun getPivotColumnTypes(pivot: Pivot, srcTypes: Map<String, Any>): Map<String, Any> {
+        if ((pivot.args["columns"] as? List<*>)?.isEmpty() == true) {
+            val excluded = pivot.findAll<Column>().map { it.name }.toSet()
+            val aliases = pivot.aliasColumnNames
+            return srcTypes.filterKeys { it !in excluded }.entries.mapIndexed { i, e ->
+                (aliases.getOrNull(i) ?: e.key) to e.value
+            }.toMap()
+        }
         val firstField = seqGet(pivot.fields, 0)
         if (firstField !is In) {
             throw OptimizeError(
@@ -1537,7 +1607,7 @@ class TypeAnnotator(
                 }
             }
         } else {
-            resultType = literalType ?: nonLiteralType ?: DType.UNKNOWN
+            resultType = literalType ?: nonLiteralType ?: if (array) DType.NULL else DType.UNKNOWN
         }
 
         setType(expression, resultType ?: maybeCoerce(nonLiteralType, literalType))
@@ -1760,6 +1830,10 @@ class TypeAnnotator(
         val query = expression.unnest()
 
         if (query is Query) {
+            if (query.args["kind"] == "STRUCT") {
+                setType(expression, query.metaOrNull?.get("query_type") as? DataType ?: DType.UNKNOWN.intoExpr())
+                return expression
+            }
             val selects = query.selects
             if (selects.size == 1) {
                 setType(expression, selects[0].type)
@@ -1837,7 +1911,11 @@ class TypeAnnotator(
                 (values.type as DataType).expressionsArg.filterIsInstance<Expression>(), 0
             ) ?: DType.UNKNOWN
 
-            if (keyType != DType.UNKNOWN && valueType != DType.UNKNOWN) {
+            if (keyType == DType.UNKNOWN || valueType == DType.UNKNOWN ||
+                keyType is DataType && keyType.isType(DType.UNKNOWN) || valueType is DataType && valueType.isType(DType.UNKNOWN)) {
+                setType(expression, DType.UNKNOWN)
+                return expression
+            } else {
                 mapType.set("expressions", listOf(keyType, valueType))
                 mapType.set("nested", true)
             }
@@ -1851,6 +1929,26 @@ class TypeAnnotator(
     private fun annotateToMap(expression: Expression): Expression {
         val mapType = DataType(args("this" to DType.MAP))
         val arg = expression.thisArg as Expression
+        if (expression.metaOrNull?.get("starrocks_map_literal") == true && arg is Struct) {
+            // A native MAP{expr:value} key is not a VARCHAR struct-field name.
+            // Bind only homogeneous known types, leaving mixed/unknown domains
+            // conservative instead of claiming a general coercion policy.
+            val entries = arg.expressionsArg.filterIsInstance<PropertyEQ>()
+            fun homogeneous(values: List<Expression?>): DataType? {
+                if (values.isEmpty()) return null
+                val types = values.map { it?.type as? DataType }
+                if (types.any { it == null || it.isType(DType.UNKNOWN) }) return null
+                val concrete = types.filterNotNull().filterNot { it.isType(DType.NULL) }
+                return concrete.firstOrNull()?.takeIf { first -> concrete.all { it == first } }?.copy() as? DataType
+            }
+            val keys = homogeneous(entries.map { it.thisArg as? Expression })
+            val values = homogeneous(entries.map { it.expressionArg as? Expression })
+            if (entries.size == arg.expressionsArg.size && keys != null && values != null) {
+                mapType.set("expressions", listOf(keys, values)); mapType.set("nested", true)
+            }
+            setType(expression, mapType)
+            return expression
+        }
         if (arg.isType(DType.STRUCT)) {
             for (coldef in (arg.type as DataType).expressionsArg.filterIsInstance<Expression>()) {
                 val kind = coldef.args["kind"]

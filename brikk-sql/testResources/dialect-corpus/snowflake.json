@@ -1,5 +1,5 @@
 {
-  "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
+  "sqlglot_version": "v30.29.0",
   "dialect": "snowflake",
   "identity": [
     {
@@ -699,6 +699,11 @@
     },
     {
       "sql": "INTERVAL '4 years, 5 months, 3 hours'",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT INTERVAL '1\\' SECOND; SELECT 1; --'",
       "expected": null,
       "pretty": false
     },
@@ -2231,7 +2236,7 @@
     },
     {
       "sql": "LOCALTIMESTAMP",
-      "expected": "CURRENT_TIMESTAMP",
+      "expected": "CURRENT_TIMESTAMP()",
       "pretty": false
     },
     {
@@ -2585,6 +2590,16 @@
       "pretty": false
     },
     {
+      "sql": "CREATE OR REPLACE TABLE foo (a INT) COPY TAGS",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CREATE OR REPLACE TABLE foo (a INT) COPY GRANTS COPY TAGS",
+      "expected": null,
+      "pretty": false
+    },
+    {
       "sql": "USE SECONDARY ROLES ALL",
       "expected": null,
       "pretty": false
@@ -2690,6 +2705,22 @@
       "pretty": false
     },
     {
+      "sql": "CREATE OR REPLACE INTERACTIVE TABLE t CLUSTER BY (a, b) TARGET_LAG='5 minutes' WAREHOUSE=wh AS SELECT a, b FROM s",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CREATE INTERACTIVE TABLE IF NOT EXISTS db.s.t (a INT, b VARCHAR) CLUSTER BY (a) TARGET_LAG='1 hour' WAREHOUSE=wh INITIALIZATION_WAREHOUSE=init_wh AS SELECT a, b FROM s",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CREATE INTERACTIVE WAREHOUSE wh TABLES (t1, t2) WAREHOUSE_SIZE='SMALL'",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
       "sql": "ALTER TABLE db_name.schmaName.tblName ADD COLUMN_1 VARCHAR NOT NULL TAG (key1='value_1')",
       "expected": null,
       "pretty": false
@@ -2701,7 +2732,7 @@
     },
     {
       "sql": "CREATE TABLE orders_clone_restore CLONE orders AT (TIMESTAMP => TO_TIMESTAMP_TZ('04/05/2013 01:02:03', 'mm/dd/yyyy hh24:mi:ss'))",
-      "expected": null,
+      "expected": "CREATE TABLE orders_clone_restore CLONE orders AT (TIMESTAMP => TO_TIMESTAMP_TZ('04/05/2013 01:02:03', 'mm/DD/yyyy hh24:mi:ss'))",
       "pretty": false
     },
     {
@@ -2762,6 +2793,21 @@
     {
       "sql": "create external table et2(\n  col1 date as (parse_json(metadata$external_table_partition):COL1::date),\n  col2 varchar as (parse_json(metadata$external_table_partition):COL2::varchar),\n  col3 number as (parse_json(metadata$external_table_partition):COL3::number))\n  partition by (col1,col2,col3)\n  location=@s2/logs/\n  partition_type = user_specified\n  file_format = (type = parquet compression = gzip binary_as_text = false)",
       "expected": "CREATE EXTERNAL TABLE et2 (col1 DATE AS (CAST(GET_PATH(PARSE_JSON(metadata$external_table_partition), 'COL1') AS DATE)), col2 VARCHAR AS (CAST(GET_PATH(PARSE_JSON(metadata$external_table_partition), 'COL2') AS VARCHAR)), col3 DECIMAL(38, 0) AS (CAST(GET_PATH(PARSE_JSON(metadata$external_table_partition), 'COL3') AS DECIMAL(38, 0)))) PARTITION BY (col1, col2, col3) LOCATION=@s2/logs/ partition_type=user_specified FILE_FORMAT=(type=parquet compression=gzip binary_as_text=FALSE)",
+      "pretty": false
+    },
+    {
+      "sql": "CREATE SCOPED TEMPORARY TABLE t (a INT)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CREATE OR REPLACE SCOPED TEMPORARY VIEW v AS SELECT 1 AS c",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CREATE SCOPED TEMP TABLE t (a INT)",
+      "expected": "CREATE SCOPED TEMPORARY TABLE t (a INT)",
       "pretty": false
     },
     {
@@ -2872,6 +2918,16 @@
     },
     {
       "sql": "SELECT value FROM TABLE(FLATTEN(input => SELECT PARSE_JSON('[1, 2]')))",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT (SELECT 1 WHERE 1 IN (SELECT value FROM TABLE(FLATTEN(INPUT => PARSE_JSON('[1]'))))) AS nested_value",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT (SELECT MAX(value) FROM TABLE(FLATTEN(INPUT => PARSE_JSON('[1, 2]')))) AS max_value",
       "expected": null,
       "pretty": false
     },
@@ -3943,6 +3999,21 @@
       "pretty": false
     },
     {
+      "sql": "MERGE INTO t USING s ON t.id = s.id WHEN MATCHED AND s.value > 0 THEN UPDATE ALL BY NAME WHEN MATCHED THEN DELETE WHEN NOT MATCHED AND s.value > 0 THEN INSERT ALL BY NAME",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "MERGE INTO t USING s ON t.id = s.id WHEN MATCHED THEN UPDATE ALL BY NAME WHEN NOT MATCHED THEN INSERT (id, value) VALUES (s.id, s.value)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "MERGE INTO t USING s ON t.id = s.id WHEN MATCHED THEN UPDATE SET value = s.value WHEN NOT MATCHED THEN INSERT ALL BY NAME",
+      "expected": null,
+      "pretty": false
+    },
+    {
       "sql": "UPDATE test SET t = 1 FROM t1",
       "expected": null,
       "pretty": false
@@ -4133,6 +4204,11 @@
       "pretty": false
     },
     {
+      "sql": "CREATE INTERACTIVE TABLE t CLUSTER BY (a) AS SELECT a FROM s",
+      "expected": null,
+      "pretty": false
+    },
+    {
       "sql": "CREATE OR REPLACE FUNCTION ibis_udfs.public.object_values(\"obj\" OBJECT) RETURNS ARRAY LANGUAGE JAVASCRIPT RETURNS NULL ON NULL INPUT AS ' return Object.values(obj) '",
       "expected": null,
       "pretty": false
@@ -4189,6 +4265,11 @@
     },
     {
       "sql": "CREATE TEMPORARY FILE FORMAT fileformat1 TYPE=PARQUET COMPRESSION=auto",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CREATE INTERACTIVE WAREHOUSE wh WAREHOUSE_SIZE='SMALL'",
       "expected": null,
       "pretty": false
     },
@@ -4305,6 +4386,50 @@
   ],
   "transpile": [
     {
+      "sql": "SELECT BASE64_ENCODE(TO_BINARY('FBFF', 'HEX'), 0, '/+=')",
+      "read": {},
+      "write": {
+        "duckdb": "SELECT TRANSLATE(TO_BASE64(UNHEX('FBFF')), '+/', '/+')"
+      }
+    },
+    {
+      "sql": "SELECT BASE64_DECODE_BINARY('-_8+', '-_+')",
+      "read": {},
+      "write": {
+        "duckdb": "SELECT FROM_BASE64(TRANSLATE('-_8+', '-_+', '+/='))"
+      }
+    },
+    {
+      "sql": "SELECT BASE64_DECODE_STRING('4KC/', '/+=')",
+      "read": {},
+      "write": {
+        "duckdb": "SELECT DECODE(FROM_BASE64(TRANSLATE('4KC/', '/+', '+/')))"
+      }
+    },
+    {
+      "sql": "SELECT TO_TIMESTAMP('2024-5-9', 'yyyy-mm-DD')",
+      "read": {
+        "duckdb": "SELECT STRPTIME('2024-5-9', '%Y-%m-%-d')"
+      },
+      "write": {}
+    },
+    {
+      "sql": "TO_CHAR(TIMESTAMP '2024-05-09 13:02:03.123', 'YyYy-Mm-dD\"T\"Hh24:mI:sS.fF3')",
+      "read": {},
+      "write": {
+        "duckdb": "STRFTIME(CAST('2024-05-09 13:02:03.123' AS TIMESTAMP), '%Y-%m-%dT%H:%M:%S.%g')",
+        "snowflake": "TO_CHAR(CAST('2024-05-09 13:02:03.123' AS TIMESTAMP), 'yyyy-mm-DDThh24:mi:ss.ff3')"
+      }
+    },
+    {
+      "sql": "TO_TIMESTAMP('2024-05-09 01:02:03 PM', 'YyYy-Mm-dD Hh12:mI:sS pM')",
+      "read": {},
+      "write": {
+        "duckdb": "STRPTIME('2024-05-09 01:02:03 PM', '%Y-%m-%d %I:%M:%S %p')",
+        "snowflake": "TO_TIMESTAMP('2024-05-09 01:02:03 PM', 'yyyy-mm-DD hh12:mi:ss pm')"
+      }
+    },
+    {
       "sql": "SELECT MODE(x) FROM t",
       "read": {
         "postgres": "SELECT MODE() WITHIN GROUP (ORDER BY x) FROM t"
@@ -4324,7 +4449,7 @@
       "read": {},
       "write": {
         "snowflake": "SELECT BITMAP_CONSTRUCT_AGG(v) FROM t",
-        "duckdb": "SELECT (SELECT CASE WHEN l IS NULL OR LENGTH(l) = 0 THEN NULL WHEN LENGTH(l) <> LENGTH(LIST_FILTER(l, __v -> __v BETWEEN 0 AND 32767)) THEN NULL WHEN LENGTH(l) < 5 THEN UNHEX(PRINTF('%04X', LENGTH(l)) || h || REPEAT('00', GREATEST(0, 4 - LENGTH(l)) * 2)) ELSE UNHEX('08000000000000000000' || h) END FROM (SELECT l, COALESCE(LIST_REDUCE(LIST_TRANSFORM(l, __x -> PRINTF('%02X%02X', CAST(__x AS INT) & 255, (CAST(__x AS INT) >> 8) & 255)), (__a, __b) -> __a || __b, ''), '') AS h FROM (SELECT LIST_SORT(LIST_DISTINCT(LIST(v) FILTER(WHERE NOT v IS NULL))) AS l))) FROM t"
+        "duckdb": "SELECT (SELECT CASE WHEN l IS NULL OR LENGTH(l) = 0 THEN NULL WHEN LENGTH(l) <> LENGTH(LIST_FILTER(l, LAMBDA __v : __v BETWEEN 0 AND 32767)) THEN NULL WHEN LENGTH(l) < 5 THEN UNHEX(PRINTF('%04X', LENGTH(l)) || h || REPEAT('00', GREATEST(0, 4 - LENGTH(l)) * 2)) ELSE UNHEX('08000000000000000000' || h) END FROM (SELECT l, COALESCE(LIST_REDUCE(LIST_TRANSFORM(l, LAMBDA __x : PRINTF('%02X%02X', CAST(__x AS INT) & 255, (CAST(__x AS INT) >> 8) & 255)), LAMBDA __a, __b : __a || __b, ''), '') AS h FROM (SELECT LIST_SORT(LIST_DISTINCT(LIST(v) FILTER(WHERE NOT v IS NULL))) AS l))) FROM t"
       }
     },
     {
@@ -4583,7 +4708,7 @@
       "sql": "SELECT MAP_CAT(CAST(m1 AS MAP(VARCHAR, INT)), CAST(m2 AS MAP(VARCHAR, INT)))",
       "read": {},
       "write": {
-        "duckdb": "SELECT CASE WHEN CAST(m1 AS MAP(TEXT, INT)) IS NULL OR CAST(m2 AS MAP(TEXT, INT)) IS NULL THEN NULL ELSE MAP_FROM_ENTRIES(LIST_FILTER(LIST_TRANSFORM(LIST_DISTINCT(LIST_CONCAT(MAP_KEYS(CAST(m1 AS MAP(TEXT, INT))), MAP_KEYS(CAST(m2 AS MAP(TEXT, INT))))), __k -> STRUCT_PACK(key := __k, value := COALESCE(CAST(m2 AS MAP(TEXT, INT))[__k], CAST(m1 AS MAP(TEXT, INT))[__k]))), __x -> NOT __x.value IS NULL)) END",
+        "duckdb": "SELECT CASE WHEN CAST(m1 AS MAP(TEXT, INT)) IS NULL OR CAST(m2 AS MAP(TEXT, INT)) IS NULL THEN NULL ELSE MAP_FROM_ENTRIES(LIST_FILTER(LIST_TRANSFORM(LIST_DISTINCT(LIST_CONCAT(MAP_KEYS(CAST(m1 AS MAP(TEXT, INT))), MAP_KEYS(CAST(m2 AS MAP(TEXT, INT))))), LAMBDA __k : STRUCT_PACK(key := __k, value := COALESCE(CAST(m2 AS MAP(TEXT, INT))[__k], CAST(m1 AS MAP(TEXT, INT))[__k]))), LAMBDA __x : NOT __x.value IS NULL)) END",
         "snowflake": "SELECT MAP_CAT(CAST(m1 AS MAP(VARCHAR, INT)), CAST(m2 AS MAP(VARCHAR, INT)))"
       }
     },
@@ -4591,7 +4716,7 @@
       "sql": "SELECT MAP_CAT(CAST(OBJECT_CONSTRUCT() AS MAP(VARCHAR, INT)), CAST(OBJECT_CONSTRUCT('a', 1) AS MAP(VARCHAR, INT)))",
       "read": {},
       "write": {
-        "duckdb": "SELECT CASE WHEN CAST(MAP() AS MAP(TEXT, INT)) IS NULL OR CAST({'a': 1} AS MAP(TEXT, INT)) IS NULL THEN NULL ELSE MAP_FROM_ENTRIES(LIST_FILTER(LIST_TRANSFORM(LIST_DISTINCT(LIST_CONCAT(MAP_KEYS(CAST(MAP() AS MAP(TEXT, INT))), MAP_KEYS(CAST({'a': 1} AS MAP(TEXT, INT))))), __k -> STRUCT_PACK(key := __k, value := COALESCE(CAST({'a': 1} AS MAP(TEXT, INT))[__k], CAST(MAP() AS MAP(TEXT, INT))[__k]))), __x -> NOT __x.value IS NULL)) END",
+        "duckdb": "SELECT CASE WHEN CAST(MAP() AS MAP(TEXT, INT)) IS NULL OR CAST({'a': 1} AS MAP(TEXT, INT)) IS NULL THEN NULL ELSE MAP_FROM_ENTRIES(LIST_FILTER(LIST_TRANSFORM(LIST_DISTINCT(LIST_CONCAT(MAP_KEYS(CAST(MAP() AS MAP(TEXT, INT))), MAP_KEYS(CAST({'a': 1} AS MAP(TEXT, INT))))), LAMBDA __k : STRUCT_PACK(key := __k, value := COALESCE(CAST({'a': 1} AS MAP(TEXT, INT))[__k], CAST(MAP() AS MAP(TEXT, INT))[__k]))), LAMBDA __x : NOT __x.value IS NULL)) END",
         "snowflake": "SELECT MAP_CAT(CAST(OBJECT_CONSTRUCT() AS MAP(VARCHAR, INT)), CAST(OBJECT_CONSTRUCT('a', 1) AS MAP(VARCHAR, INT)))"
       }
     },
@@ -4682,7 +4807,7 @@
       "read": {},
       "write": {
         "snowflake": "SELECT ARRAY_DISTINCT(col)",
-        "duckdb": "SELECT CASE WHEN ARRAY_LENGTH(col) <> LIST_COUNT(col) THEN LIST_APPEND(LIST_DISTINCT(LIST_FILTER(col, _u -> NOT _u IS NULL)), NULL) ELSE LIST_DISTINCT(col) END"
+        "duckdb": "SELECT CASE WHEN ARRAY_LENGTH(col) <> LIST_COUNT(col) THEN LIST_APPEND(LIST_DISTINCT(LIST_FILTER(col, LAMBDA _u : NOT _u IS NULL)), NULL) ELSE LIST_DISTINCT(col) END"
       }
     },
     {
@@ -4753,7 +4878,6 @@
         "snowflake": "SELECT ARRAY_SORT(x, foo, TRUE)"
       },
       "write": {
-        "duckdb": "SELECT LIST_SORT(x, foo, 'NULLS FIRST')",
         "snowflake": "SELECT ARRAY_SORT(x, foo, TRUE)"
       }
     },
@@ -4762,7 +4886,7 @@
       "read": {},
       "write": {
         "snowflake": "SELECT STRTOK('a$b/cg', '$/.', 1)",
-        "duckdb": "SELECT CASE WHEN '$/.' = '' AND 'a$b/cg' = '' THEN NULL WHEN '$/.' = '' AND 1 = 1 THEN 'a$b/cg' WHEN '$/.' = '' THEN NULL WHEN 1 < 0 THEN NULL WHEN 'a$b/cg' IS NULL OR '$/.' IS NULL OR 1 IS NULL THEN NULL ELSE LIST_FILTER(REGEXP_SPLIT_TO_ARRAY('a$b/cg', CASE WHEN '$/.' = '' THEN '' ELSE '[' || REGEXP_REPLACE('$/.', '([\\[\\]^.\\-*+?(){}|$\\\\])', '\\\\\\1', 'g') || ']' END), x -> NOT x = '')[1] END"
+        "duckdb": "SELECT CASE WHEN '$/.' = '' AND 'a$b/cg' = '' THEN NULL WHEN '$/.' = '' AND 1 = 1 THEN 'a$b/cg' WHEN '$/.' = '' THEN NULL WHEN 1 < 0 THEN NULL WHEN 'a$b/cg' IS NULL OR '$/.' IS NULL OR 1 IS NULL THEN NULL ELSE LIST_FILTER(REGEXP_SPLIT_TO_ARRAY('a$b/cg', CASE WHEN '$/.' = '' THEN '' ELSE '[' || REGEXP_REPLACE('$/.', '([\\[\\]^.\\-*+?(){}|$\\\\])', '\\\\\\1', 'g') || ']' END), LAMBDA x : NOT x = '')[1] END"
       }
     },
     {
@@ -4770,7 +4894,7 @@
       "read": {},
       "write": {
         "snowflake": "SELECT STRTOK('ab', ' ', 1)",
-        "duckdb": "SELECT CASE WHEN ' ' = '' AND 'ab' = '' THEN NULL WHEN ' ' = '' AND 1 = 1 THEN 'ab' WHEN ' ' = '' THEN NULL WHEN 1 < 0 THEN NULL WHEN 'ab' IS NULL OR ' ' IS NULL OR 1 IS NULL THEN NULL ELSE LIST_FILTER(REGEXP_SPLIT_TO_ARRAY('ab', CASE WHEN ' ' = '' THEN '' ELSE '[' || REGEXP_REPLACE(' ', '([\\[\\]^.\\-*+?(){}|$\\\\])', '\\\\\\1', 'g') || ']' END), x -> NOT x = '')[1] END"
+        "duckdb": "SELECT CASE WHEN ' ' = '' AND 'ab' = '' THEN NULL WHEN ' ' = '' AND 1 = 1 THEN 'ab' WHEN ' ' = '' THEN NULL WHEN 1 < 0 THEN NULL WHEN 'ab' IS NULL OR ' ' IS NULL OR 1 IS NULL THEN NULL ELSE LIST_FILTER(REGEXP_SPLIT_TO_ARRAY('ab', CASE WHEN ' ' = '' THEN '' ELSE '[' || REGEXP_REPLACE(' ', '([\\[\\]^.\\-*+?(){}|$\\\\])', '\\\\\\1', 'g') || ']' END), LAMBDA x : NOT x = '')[1] END"
       }
     },
     {
@@ -4912,7 +5036,7 @@
       "write": {
         "snowflake": "SELECT ARRAY_INTERSECTION([1, 2], [2, 3])",
         "starrocks": "SELECT ARRAY_INTERSECT([1, 2], [2, 3])",
-        "duckdb": "SELECT CASE WHEN [1, 2] IS NULL OR [2, 3] IS NULL THEN NULL ELSE LIST_TRANSFORM(LIST_FILTER(LIST_ZIP([1, 2], GENERATE_SERIES(1, LENGTH([1, 2]))), pair -> (LENGTH(LIST_FILTER([1, 2][1:pair[2]], e -> e IS NOT DISTINCT FROM pair[1])) <= LENGTH(LIST_FILTER([2, 3], e -> e IS NOT DISTINCT FROM pair[1])))), pair -> pair[1]) END"
+        "duckdb": "SELECT CASE WHEN [1, 2] IS NULL OR [2, 3] IS NULL THEN NULL ELSE LIST_TRANSFORM(LIST_FILTER(LIST_ZIP([1, 2], GENERATE_SERIES(1, LENGTH([1, 2]))), LAMBDA pair : (LENGTH(LIST_FILTER([1, 2][1:pair[2]], LAMBDA e : e IS NOT DISTINCT FROM pair[1])) <= LENGTH(LIST_FILTER([2, 3], LAMBDA e : e IS NOT DISTINCT FROM pair[1])))), LAMBDA pair : pair[1]) END"
       }
     },
     {
@@ -5653,7 +5777,7 @@
       "write": {
         "spark": "SELECT ARRAY_JOIN(x, '')",
         "snowflake": "SELECT ARRAY_TO_STRING(x, '')",
-        "duckdb": "SELECT CASE WHEN '' IS NULL THEN NULL ELSE ARRAY_TO_STRING(LIST_TRANSFORM(x, x -> COALESCE(CAST(x AS TEXT), '')), '') END"
+        "duckdb": "SELECT CASE WHEN '' IS NULL THEN NULL ELSE ARRAY_TO_STRING(LIST_TRANSFORM(x, LAMBDA x : COALESCE(CAST(x AS TEXT), '')), '') END"
       }
     },
     {
@@ -5661,7 +5785,7 @@
       "read": {},
       "write": {
         "snowflake": "SELECT ARRAY_TO_STRING(x, NULL)",
-        "duckdb": "SELECT CASE WHEN NULL IS NULL THEN NULL ELSE ARRAY_TO_STRING(LIST_TRANSFORM(x, x -> COALESCE(CAST(x AS TEXT), '')), NULL) END"
+        "duckdb": "SELECT CASE WHEN NULL IS NULL THEN NULL ELSE ARRAY_TO_STRING(LIST_TRANSFORM(x, LAMBDA x : COALESCE(CAST(x AS TEXT), '')), NULL) END"
       }
     },
     {
@@ -5669,7 +5793,7 @@
       "read": {},
       "write": {
         "snowflake": "SELECT ARRAY_TO_STRING([], ',')",
-        "duckdb": "SELECT CASE WHEN ',' IS NULL THEN NULL ELSE ARRAY_TO_STRING(LIST_TRANSFORM([], x -> COALESCE(CAST(x AS TEXT), '')), ',') END"
+        "duckdb": "SELECT CASE WHEN ',' IS NULL THEN NULL ELSE ARRAY_TO_STRING(LIST_TRANSFORM([], LAMBDA x : COALESCE(CAST(x AS TEXT), '')), ',') END"
       }
     },
     {
@@ -5960,7 +6084,7 @@
       "sql": "MINHASH(4, col1)",
       "read": {},
       "write": {
-        "duckdb": "(SELECT JSON_OBJECT('state', LIST(min_h ORDER BY seed NULLS FIRST), 'type', 'minhash', 'version', 1) FROM (SELECT seed, LIST_MIN(LIST_TRANSFORM(vals, __v -> HASH(CAST(__v AS TEXT) || CAST(seed AS TEXT)))) AS min_h FROM (SELECT LIST(col1) AS vals), RANGE(0, 4) AS t(seed)))",
+        "duckdb": "(SELECT JSON_OBJECT('state', LIST(min_h ORDER BY seed NULLS FIRST), 'type', 'minhash', 'version', 1) FROM (SELECT seed, LIST_MIN(LIST_TRANSFORM(vals, LAMBDA __v : HASH(CAST(__v AS TEXT) || CAST(seed AS TEXT)))) AS min_h FROM (SELECT LIST(col1) AS vals), RANGE(0, 4) AS t(seed)))",
         "snowflake": "MINHASH(4, col1)"
       }
     },
@@ -6714,7 +6838,7 @@
       "read": {},
       "write": {
         "snowflake": "SELECT BASE64_DECODE_STRING('U25vd2ZsYWtl', '-_+')",
-        "duckdb": "SELECT DECODE(FROM_BASE64(REPLACE(REPLACE(REPLACE('U25vd2ZsYWtl', '-', '+'), '_', '/'), '+', '=')))"
+        "duckdb": "SELECT DECODE(FROM_BASE64(TRANSLATE('U25vd2ZsYWtl', '-_+', '+/=')))"
       }
     },
     {
@@ -6730,7 +6854,7 @@
       "read": {},
       "write": {
         "snowflake": "SELECT BASE64_DECODE_BINARY(x, '-_+')",
-        "duckdb": "SELECT FROM_BASE64(REPLACE(REPLACE(REPLACE(x, '-', '+'), '_', '/'), '+', '='))"
+        "duckdb": "SELECT FROM_BASE64(TRANSLATE(x, '-_+', '+/='))"
       }
     },
     {
@@ -6762,7 +6886,7 @@
       "read": {},
       "write": {
         "snowflake": "SELECT ARRAY_DISTINCT(['A', NULL, 'B', NULL])",
-        "duckdb": "SELECT CASE WHEN ARRAY_LENGTH(['A', NULL, 'B', NULL]) <> LIST_COUNT(['A', NULL, 'B', NULL]) THEN LIST_APPEND(LIST_DISTINCT(LIST_FILTER(['A', NULL, 'B', NULL], _u -> NOT _u IS NULL)), NULL) ELSE LIST_DISTINCT(['A', NULL, 'B', NULL]) END"
+        "duckdb": "SELECT CASE WHEN ARRAY_LENGTH(['A', NULL, 'B', NULL]) <> LIST_COUNT(['A', NULL, 'B', NULL]) THEN LIST_APPEND(LIST_DISTINCT(LIST_FILTER(['A', NULL, 'B', NULL], LAMBDA _u : NOT _u IS NULL)), NULL) ELSE LIST_DISTINCT(['A', NULL, 'B', NULL]) END"
       }
     },
     {
@@ -6770,7 +6894,7 @@
       "read": {},
       "write": {
         "snowflake": "SELECT ARRAY_DISTINCT([1, 2, 2, 3, 1])",
-        "duckdb": "SELECT CASE WHEN ARRAY_LENGTH([1, 2, 2, 3, 1]) <> LIST_COUNT([1, 2, 2, 3, 1]) THEN LIST_APPEND(LIST_DISTINCT(LIST_FILTER([1, 2, 2, 3, 1], _u -> NOT _u IS NULL)), NULL) ELSE LIST_DISTINCT([1, 2, 2, 3, 1]) END"
+        "duckdb": "SELECT CASE WHEN ARRAY_LENGTH([1, 2, 2, 3, 1]) <> LIST_COUNT([1, 2, 2, 3, 1]) THEN LIST_APPEND(LIST_DISTINCT(LIST_FILTER([1, 2, 2, 3, 1], LAMBDA _u : NOT _u IS NULL)), NULL) ELSE LIST_DISTINCT([1, 2, 2, 3, 1]) END"
       }
     },
     {
@@ -6830,7 +6954,7 @@
       "read": {},
       "write": {
         "snowflake": "NORMAL(0, 1, 42)",
-        "duckdb": "0 + (1 * SQRT(-2 * LN(GREATEST((ABS(HASH(42)) % 1000000) / 1000000.0, 1e-10))) * COS(2 * PI() * (ABS(HASH(42 + 1)) % 1000000) / 1000000.0))"
+        "duckdb": "0 + (1 * SQRT(-2 * LN(GREATEST((ABS(HASH(42)) % 1000000) / 1000000.0, 1e-10))) * COS(2 * PI() * ((ABS(HASH(42 + 1)) % 1000000) / 1000000.0)))"
       }
     },
     {
@@ -6846,7 +6970,7 @@
       "read": {},
       "write": {
         "snowflake": "NORMAL(10.5, 2.5, RANDOM(5))",
-        "duckdb": "10.5 + (2.5 * SQRT(-2 * LN(GREATEST((ABS(HASH(5)) % 1000000) / 1000000.0, 1e-10))) * COS(2 * PI() * (ABS(HASH(5 + 1)) % 1000000) / 1000000.0))"
+        "duckdb": "10.5 + (2.5 * SQRT(-2 * LN(GREATEST((ABS(HASH(5)) % 1000000) / 1000000.0, 1e-10))) * COS(2 * PI() * ((ABS(HASH(5 + 1)) % 1000000) / 1000000.0)))"
       }
     },
     {
@@ -6855,6 +6979,16 @@
       "write": {
         "snowflake": "SYSDATE()",
         "duckdb": "CURRENT_TIMESTAMP AT TIME ZONE 'UTC'"
+      }
+    },
+    {
+      "sql": "LOCALTIMESTAMP",
+      "read": {},
+      "write": {
+        "snowflake": "CURRENT_TIMESTAMP()",
+        "duckdb": "CURRENT_TIMESTAMP",
+        "postgres": "CURRENT_TIMESTAMP",
+        "spark": "CURRENT_TIMESTAMP()"
       }
     },
     {
@@ -7232,6 +7366,27 @@
       }
     },
     {
+      "sql": "DATEDIFF(MONTH, '2026-01-31', '2026-03-01')",
+      "read": {},
+      "write": {
+        "postgres": "CAST(EXTRACT(year FROM AGE(DATE_TRUNC('MONTH', CAST('2026-03-01' AS TIMESTAMP)), DATE_TRUNC('MONTH', CAST('2026-01-31' AS TIMESTAMP)))) * 12 + EXTRACT(month FROM AGE(DATE_TRUNC('MONTH', CAST('2026-03-01' AS TIMESTAMP)), DATE_TRUNC('MONTH', CAST('2026-01-31' AS TIMESTAMP)))) AS BIGINT)"
+      }
+    },
+    {
+      "sql": "DATEDIFF(YEAR, '2025-12-31', '2026-01-01')",
+      "read": {},
+      "write": {
+        "postgres": "CAST(EXTRACT(year FROM AGE(DATE_TRUNC('YEAR', CAST('2026-01-01' AS TIMESTAMP)), DATE_TRUNC('YEAR', CAST('2025-12-31' AS TIMESTAMP)))) AS BIGINT)"
+      }
+    },
+    {
+      "sql": "DATEDIFF(HOUR, '2026-01-01 10:59:00', '2026-01-01 11:01:00')",
+      "read": {},
+      "write": {
+        "postgres": "CAST(EXTRACT(epoch FROM DATE_TRUNC('HOUR', CAST('2026-01-01 11:01:00' AS TIMESTAMP)) - DATE_TRUNC('HOUR', CAST('2026-01-01 10:59:00' AS TIMESTAMP))) / 3600 AS BIGINT)"
+      }
+    },
+    {
       "sql": "DATEDIFF(NANOSECOND, '2023-01-01 10:00:00.000000000', '2023-01-01 10:00:00.123456789')",
       "read": {},
       "write": {
@@ -7292,7 +7447,7 @@
       "read": {},
       "write": {
         "snowflake": "DATE_TRUNC('YEAR', CAST('2024-06-15' AS DATE))",
-        "duckdb": "DATE_TRUNC('YEAR', CAST('2024-06-15' AS DATE))"
+        "duckdb": "CAST(DATE_TRUNC('YEAR', CAST('2024-06-15' AS DATE)) AS DATE)"
       }
     },
     {
@@ -7300,7 +7455,7 @@
       "read": {},
       "write": {
         "snowflake": "DATE_TRUNC('HOUR', CAST('2026-01-01 00:00:00' AS TIMESTAMP))",
-        "duckdb": "DATE_TRUNC('HOUR', CAST('2026-01-01 00:00:00' AS TIMESTAMP))"
+        "duckdb": "CAST(DATE_TRUNC('HOUR', CAST('2026-01-01 00:00:00' AS TIMESTAMP)) AS TIMESTAMP)"
       }
     },
     {
@@ -7423,6 +7578,13 @@
       "write": {
         "snowflake": "SELECT TRY_TO_TIME('11.15.00', 'hh24.mi.ss')",
         "duckdb": "SELECT TRY_CAST(TRY_STRPTIME('11.15.00', '%H.%M.%S') AS TIME)"
+      }
+    },
+    {
+      "sql": "DATE_TRUNC('MONTH', d)",
+      "read": {},
+      "write": {
+        "duckdb": "DATE_TRUNC('MONTH', d)"
       }
     },
     {
@@ -7550,7 +7712,7 @@
       "read": {},
       "write": {
         "snowflake": "ARRAYS_ZIP([1, 2], [3, 4], [4, 5])",
-        "duckdb": "CASE WHEN [1, 2] IS NULL OR [3, 4] IS NULL OR [4, 5] IS NULL THEN NULL WHEN LENGTH([1, 2]) = 0 AND LENGTH([3, 4]) = 0 AND LENGTH([4, 5]) = 0 THEN [{'$1': NULL, '$2': NULL, '$3': NULL}] ELSE LIST_TRANSFORM(RANGE(0, CASE WHEN LENGTH([1, 2]) IS NULL OR LENGTH([3, 4]) IS NULL OR LENGTH([4, 5]) IS NULL THEN NULL ELSE GREATEST(LENGTH([1, 2]), LENGTH([3, 4]), LENGTH([4, 5])) END), __i -> {'$1': COALESCE([1, 2], [])[__i + 1], '$2': COALESCE([3, 4], [])[__i + 1], '$3': COALESCE([4, 5], [])[__i + 1]}) END"
+        "duckdb": "CASE WHEN [1, 2] IS NULL OR [3, 4] IS NULL OR [4, 5] IS NULL THEN NULL WHEN LENGTH([1, 2]) = 0 AND LENGTH([3, 4]) = 0 AND LENGTH([4, 5]) = 0 THEN [{'$1': NULL, '$2': NULL, '$3': NULL}] ELSE LIST_TRANSFORM(RANGE(0, CASE WHEN LENGTH([1, 2]) IS NULL OR LENGTH([3, 4]) IS NULL OR LENGTH([4, 5]) IS NULL THEN NULL ELSE GREATEST(LENGTH([1, 2]), LENGTH([3, 4]), LENGTH([4, 5])) END), LAMBDA __i : {'$1': COALESCE([1, 2], [])[__i + 1], '$2': COALESCE([3, 4], [])[__i + 1], '$3': COALESCE([4, 5], [])[__i + 1]}) END"
       }
     },
     {
@@ -7558,7 +7720,7 @@
       "read": {},
       "write": {
         "snowflake": "ARRAYS_ZIP([1, 2, 3])",
-        "duckdb": "CASE WHEN [1, 2, 3] IS NULL THEN NULL WHEN LENGTH([1, 2, 3]) = 0 THEN [{'$1': NULL}] ELSE LIST_TRANSFORM(RANGE(0, LENGTH([1, 2, 3])), __i -> {'$1': COALESCE([1, 2, 3], [])[__i + 1]}) END"
+        "duckdb": "CASE WHEN [1, 2, 3] IS NULL THEN NULL WHEN LENGTH([1, 2, 3]) = 0 THEN [{'$1': NULL}] ELSE LIST_TRANSFORM(RANGE(0, LENGTH([1, 2, 3])), LAMBDA __i : {'$1': COALESCE([1, 2, 3], [])[__i + 1]}) END"
       }
     },
     {
@@ -7641,6 +7803,14 @@
       }
     },
     {
+      "sql": "CREATE OR REPLACE INTERACTIVE TABLE t CLUSTER BY (a) AS SELECT a FROM s",
+      "read": {},
+      "write": {
+        "duckdb": "CREATE OR REPLACE TABLE t AS SELECT a FROM s",
+        "snowflake": "CREATE OR REPLACE INTERACTIVE TABLE t CLUSTER BY (a) AS SELECT a FROM s"
+      }
+    },
+    {
       "sql": "CREATE TABLE orders_clone CLONE orders",
       "read": {
         "bigquery": "CREATE TABLE orders_clone CLONE orders"
@@ -7649,6 +7819,22 @@
         "bigquery": "CREATE TABLE orders_clone CLONE orders",
         "snowflake": "CREATE TABLE orders_clone CLONE orders"
       }
+    },
+    {
+      "sql": "CREATE SCOPED TEMPORARY TABLE t (a INT)",
+      "read": {},
+      "write": {
+        "duckdb": "CREATE TEMPORARY TABLE t (a INT)",
+        "oracle": "CREATE GLOBAL TEMPORARY TABLE t (a INT)",
+        "snowflake": "CREATE SCOPED TEMPORARY TABLE t (a INT)"
+      }
+    },
+    {
+      "sql": "CREATE TEMPORARY TABLE ora$ptt_t (a INT)",
+      "read": {
+        "oracle": "CREATE PRIVATE TEMPORARY TABLE ora$ptt_t (a INT)"
+      },
+      "write": {}
     },
     {
       "sql": "CREATE OR REPLACE TRANSIENT TABLE a (id INT)",
@@ -7712,7 +7898,7 @@
       "sql": "\n            SELECT\n              uc.user_id,\n              uc.start_ts AS ts,\n              CASE\n                WHEN uc.start_ts::DATE >= '2023-01-01' AND uc.country_code IN ('US') AND uc.user_id NOT IN (\n                  SELECT DISTINCT\n                    _id\n                  FROM\n                    users,\n                    LATERAL FLATTEN(INPUT => PARSE_JSON(flags)) datasource\n                  WHERE datasource.value:name = 'something'\n                )\n                  THEN 'Sample1'\n                  ELSE 'Sample2'\n              END AS entity\n            FROM user_countries AS uc\n            LEFT JOIN (\n              SELECT user_id, MAX(IFF(service_entity IS NULL,1,0)) AS le_null\n              FROM accepted_user_agreements\n              GROUP BY 1\n            ) AS aua\n              ON uc.user_id = aua.user_id\n            ",
       "read": {},
       "write": {
-        "snowflake": "SELECT\n  uc.user_id,\n  uc.start_ts AS ts,\n  CASE\n    WHEN CAST(uc.start_ts AS DATE) >= '2023-01-01'\n    AND uc.country_code IN ('US')\n    AND uc.user_id <> ALL (\n      SELECT DISTINCT\n        _id\n      FROM users, LATERAL IFF(_u.pos = _u_2.pos_2, _u_2.entity, NULL) AS datasource(SEQ, KEY, PATH, INDEX, VALUE, THIS)\n      WHERE\n        GET_PATH(datasource.value, 'name') = 'something'\n    )\n    THEN 'Sample1'\n    ELSE 'Sample2'\n  END AS entity\nFROM user_countries AS uc\nLEFT JOIN (\n  SELECT\n    user_id,\n    MAX(IFF(service_entity IS NULL, 1, 0)) AS le_null\n  FROM accepted_user_agreements\n  GROUP BY\n    1\n) AS aua\n  ON uc.user_id = aua.user_id\nCROSS JOIN TABLE(FLATTEN(INPUT => ARRAY_GENERATE_RANGE(0, (\n  GREATEST(ARRAY_SIZE(INPUT => PARSE_JSON(flags))) - 1\n) + 1))) AS _u(seq, key, path, index, pos, this)\nCROSS JOIN TABLE(FLATTEN(INPUT => PARSE_JSON(flags))) AS _u_2(seq, key, path, pos_2, entity, this)\nWHERE\n  _u.pos = _u_2.pos_2\n  OR (\n    _u.pos > (\n      ARRAY_SIZE(INPUT => PARSE_JSON(flags)) - 1\n    )\n    AND _u_2.pos_2 = (\n      ARRAY_SIZE(INPUT => PARSE_JSON(flags)) - 1\n    )\n  )"
+        "snowflake": "SELECT\n  uc.user_id,\n  uc.start_ts AS ts,\n  CASE\n    WHEN CAST(uc.start_ts AS DATE) >= '2023-01-01'\n    AND uc.country_code IN ('US')\n    AND uc.user_id <> ALL (\n      SELECT DISTINCT\n        _id\n      FROM users, LATERAL FLATTEN(INPUT => PARSE_JSON(flags)) AS datasource(SEQ, KEY, PATH, INDEX, VALUE, THIS)\n      WHERE\n        GET_PATH(datasource.value, 'name') = 'something'\n    )\n    THEN 'Sample1'\n    ELSE 'Sample2'\n  END AS entity\nFROM user_countries AS uc\nLEFT JOIN (\n  SELECT\n    user_id,\n    MAX(IFF(service_entity IS NULL, 1, 0)) AS le_null\n  FROM accepted_user_agreements\n  GROUP BY\n    1\n) AS aua\n  ON uc.user_id = aua.user_id"
       },
       "pretty": true
     },
@@ -8052,7 +8238,7 @@
       "read": {},
       "write": {
         "snowflake": "SELECT REGEXP_INSTR(subject, pattern)",
-        "duckdb": "SELECT CASE WHEN subject IS NULL OR pattern IS NULL THEN NULL WHEN pattern = '' THEN 0 WHEN LENGTH(REGEXP_EXTRACT_ALL(subject, pattern)) < 1 THEN 0 ELSE 1 + COALESCE(LIST_SUM(LIST_TRANSFORM(STRING_SPLIT_REGEX(subject, pattern)[1:1], x -> LENGTH(x))), 0) + COALESCE(LIST_SUM(LIST_TRANSFORM(REGEXP_EXTRACT_ALL(subject, pattern)[1:1 - 1], x -> LENGTH(x))), 0) + 0 END"
+        "duckdb": "SELECT CASE WHEN subject IS NULL OR pattern IS NULL THEN NULL WHEN pattern = '' THEN 0 WHEN LENGTH(REGEXP_EXTRACT_ALL(subject, pattern)) < 1 THEN 0 ELSE 1 + COALESCE(LIST_SUM(LIST_TRANSFORM(STRING_SPLIT_REGEX(subject, pattern)[1:1], LAMBDA x : LENGTH(x))), 0) + COALESCE(LIST_SUM(LIST_TRANSFORM(REGEXP_EXTRACT_ALL(subject, pattern)[1:1 - 1], LAMBDA x : LENGTH(x))), 0) + 0 END"
       }
     },
     {
@@ -8060,7 +8246,7 @@
       "read": {},
       "write": {
         "snowflake": "SELECT REGEXP_INSTR(subject, pattern, 5)",
-        "duckdb": "SELECT CASE WHEN subject IS NULL OR pattern IS NULL OR 5 IS NULL THEN NULL WHEN pattern = '' THEN 0 WHEN LENGTH(REGEXP_EXTRACT_ALL(SUBSTRING(subject, 5), pattern)) < 1 THEN 0 ELSE 1 + COALESCE(LIST_SUM(LIST_TRANSFORM(STRING_SPLIT_REGEX(SUBSTRING(subject, 5), pattern)[1:1], x -> LENGTH(x))), 0) + COALESCE(LIST_SUM(LIST_TRANSFORM(REGEXP_EXTRACT_ALL(SUBSTRING(subject, 5), pattern)[1:1 - 1], x -> LENGTH(x))), 0) + 5 - 1 END"
+        "duckdb": "SELECT CASE WHEN subject IS NULL OR pattern IS NULL OR 5 IS NULL THEN NULL WHEN pattern = '' THEN 0 WHEN LENGTH(REGEXP_EXTRACT_ALL(SUBSTRING(subject, 5), pattern)) < 1 THEN 0 ELSE 1 + COALESCE(LIST_SUM(LIST_TRANSFORM(STRING_SPLIT_REGEX(SUBSTRING(subject, 5), pattern)[1:1], LAMBDA x : LENGTH(x))), 0) + COALESCE(LIST_SUM(LIST_TRANSFORM(REGEXP_EXTRACT_ALL(SUBSTRING(subject, 5), pattern)[1:1 - 1], LAMBDA x : LENGTH(x))), 0) + 5 - 1 END"
       }
     },
     {
@@ -8068,7 +8254,7 @@
       "read": {},
       "write": {
         "snowflake": "SELECT REGEXP_INSTR(subject, pattern, 1, 2)",
-        "duckdb": "SELECT CASE WHEN subject IS NULL OR pattern IS NULL OR 1 IS NULL OR 2 IS NULL THEN NULL WHEN pattern = '' THEN 0 WHEN LENGTH(REGEXP_EXTRACT_ALL(subject, pattern)) < 2 THEN 0 ELSE 1 + COALESCE(LIST_SUM(LIST_TRANSFORM(STRING_SPLIT_REGEX(subject, pattern)[1:2], x -> LENGTH(x))), 0) + COALESCE(LIST_SUM(LIST_TRANSFORM(REGEXP_EXTRACT_ALL(subject, pattern)[1:2 - 1], x -> LENGTH(x))), 0) + 0 END"
+        "duckdb": "SELECT CASE WHEN subject IS NULL OR pattern IS NULL OR 1 IS NULL OR 2 IS NULL THEN NULL WHEN pattern = '' THEN 0 WHEN LENGTH(REGEXP_EXTRACT_ALL(subject, pattern)) < 2 THEN 0 ELSE 1 + COALESCE(LIST_SUM(LIST_TRANSFORM(STRING_SPLIT_REGEX(subject, pattern)[1:2], LAMBDA x : LENGTH(x))), 0) + COALESCE(LIST_SUM(LIST_TRANSFORM(REGEXP_EXTRACT_ALL(subject, pattern)[1:2 - 1], LAMBDA x : LENGTH(x))), 0) + 0 END"
       }
     },
     {
@@ -8076,7 +8262,7 @@
       "read": {},
       "write": {
         "snowflake": "SELECT REGEXP_INSTR(subject, pattern, 1, 1, 0, 'im')",
-        "duckdb": "SELECT CASE WHEN subject IS NULL OR pattern IS NULL OR 1 IS NULL OR 1 IS NULL OR 0 IS NULL OR 'im' IS NULL THEN NULL WHEN pattern = '' THEN 0 WHEN LENGTH(REGEXP_EXTRACT_ALL(subject, '(?im)' || pattern)) < 1 THEN 0 ELSE 1 + COALESCE(LIST_SUM(LIST_TRANSFORM(STRING_SPLIT_REGEX(subject, '(?im)' || pattern)[1:1], x -> LENGTH(x))), 0) + COALESCE(LIST_SUM(LIST_TRANSFORM(REGEXP_EXTRACT_ALL(subject, '(?im)' || pattern)[1:1 - 1], x -> LENGTH(x))), 0) + 0 END"
+        "duckdb": "SELECT CASE WHEN subject IS NULL OR pattern IS NULL OR 1 IS NULL OR 1 IS NULL OR 0 IS NULL OR 'im' IS NULL THEN NULL WHEN pattern = '' THEN 0 WHEN LENGTH(REGEXP_EXTRACT_ALL(subject, '(?im)' || pattern)) < 1 THEN 0 ELSE 1 + COALESCE(LIST_SUM(LIST_TRANSFORM(STRING_SPLIT_REGEX(subject, '(?im)' || pattern)[1:1], LAMBDA x : LENGTH(x))), 0) + COALESCE(LIST_SUM(LIST_TRANSFORM(REGEXP_EXTRACT_ALL(subject, '(?im)' || pattern)[1:1 - 1], LAMBDA x : LENGTH(x))), 0) + 0 END"
       }
     },
     {
@@ -8752,6 +8938,17 @@
       }
     },
     {
+      "sql": "MERGE INTO t USING s ON t.id = s.id WHEN MATCHED THEN UPDATE ALL BY NAME WHEN NOT MATCHED THEN INSERT ALL BY NAME",
+      "read": {
+        "databricks": "MERGE INTO t USING s ON t.id = s.id WHEN MATCHED THEN UPDATE SET * WHEN NOT MATCHED THEN INSERT *",
+        "": "MERGE INTO t USING s ON t.id = s.id WHEN MATCHED THEN UPDATE * WHEN NOT MATCHED THEN INSERT *"
+      },
+      "write": {
+        "snowflake": "MERGE INTO t USING s ON t.id = s.id WHEN MATCHED THEN UPDATE ALL BY NAME WHEN NOT MATCHED THEN INSERT ALL BY NAME",
+        "databricks": "MERGE INTO t USING s ON t.id = s.id WHEN MATCHED THEN UPDATE SET * WHEN NOT MATCHED THEN INSERT *"
+      }
+    },
+    {
       "sql": "SELECT ARRAY_FLATTEN([['a', 'b'], ['c', 'd', 'e']])",
       "read": {},
       "write": {
@@ -8789,7 +8986,7 @@
       "read": {},
       "write": {
         "snowflake": "SELECT ARRAY_EXCEPT([1, 2, 3], [2])",
-        "duckdb": "SELECT CASE WHEN [1, 2, 3] IS NULL OR [2] IS NULL THEN NULL ELSE LIST_TRANSFORM(LIST_FILTER(LIST_ZIP([1, 2, 3], GENERATE_SERIES(1, LENGTH([1, 2, 3]))), pair -> (LENGTH(LIST_FILTER([1, 2, 3][1:pair[2]], e -> e IS NOT DISTINCT FROM pair[1])) > LENGTH(LIST_FILTER([2], e -> e IS NOT DISTINCT FROM pair[1])))), pair -> pair[1]) END"
+        "duckdb": "SELECT CASE WHEN [1, 2, 3] IS NULL OR [2] IS NULL THEN NULL ELSE LIST_TRANSFORM(LIST_FILTER(LIST_ZIP([1, 2, 3], GENERATE_SERIES(1, LENGTH([1, 2, 3]))), LAMBDA pair : (LENGTH(LIST_FILTER([1, 2, 3][1:pair[2]], LAMBDA e : e IS NOT DISTINCT FROM pair[1])) > LENGTH(LIST_FILTER([2], LAMBDA e : e IS NOT DISTINCT FROM pair[1])))), LAMBDA pair : pair[1]) END"
       }
     },
     {
@@ -8850,8 +9047,8 @@
     }
   ],
   "stats": {
-    "identity_count": 857,
-    "transpile_count": 533,
-    "skipped_dynamic": 38
+    "identity_count": 873,
+    "transpile_count": 548,
+    "skipped_dynamic": 51
   }
 }

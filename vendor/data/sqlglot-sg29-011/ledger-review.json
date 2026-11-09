@@ -1,0 +1,67 @@
+{
+  "scope": "Five exact frozen-pin rows: SHA384 kind/type/hex output and two boundary-aware Trino previews. Existing rows, reasons and signatures unchanged. No global oracle or corpus refresh; no new native Trino qualification.",
+  "files": [
+    {
+      "file": "parser-corpus/postgres-parser-known-failures.json",
+      "old_sha256": "ee7b1b364cef8a5f8c49bf931ccea0cad812219e389247fc21888e571686160b",
+      "new_sha256": "a932a54270e35806d37d7682c88cccf88eeb13d3425e79cb4475aec33555c79d",
+      "old_rows_unchanged": true,
+      "added": [
+        {
+          "id": "assertion:v1:sha256:4ff96202c8d1ac1d0b40369bd7cb27083c8c2d559211f2fc7e3a1e0a58b95465:1",
+          "sql": "SHA384(x)",
+          "signature": "ast-mismatch:v1:sha256:84404083693c6436140a2c39f0b92f78e9629ebc018198b5d42859693cfaa61b",
+          "reason": "SG29-011/#8764/78b24a74: PostgreSQL SHA384 is a binary SHA2Digest, not generic hex SHA2. Only the canonical kind changes; native bytea and digest-byte controls cover 256/384/512. Exact frozen-pin row; remove with coherent SG29-020 refresh."
+        }
+      ]
+    },
+    {
+      "file": "generator-corpus/postgres-generator-known-failures.json",
+      "old_sha256": "ee7b1b364cef8a5f8c49bf931ccea0cad812219e389247fc21888e571686160b",
+      "new_sha256": "1bff95aaecc9658b96af0a603fb785b55d1fe90dfcb6c1302e0035b09e35c674",
+      "old_rows_unchanged": true,
+      "added": [
+        {
+          "id": "assertion:v1:sha256:1d94871b8d96ab75ea5047634e7f8ae287d1cdcd3467bb925fe1cb8ac31cb8ba:1",
+          "sql": "SHA384(x)",
+          "signature": "sql-mismatch:v1:sha256:3b84d349bf878339d49836073bce0ea93b8e7ff3c1435ed1e3e7d4bb2bd73a08",
+          "reason": "SG29-011/#8764/78b24a74: this frozen generic SHA2 AST means hex text, so PostgreSQL emits ENCODE(SHA384(x), 'hex') instead of silently returning bytea. Native literal digest/hex controls cover all three sizes; no arbitrary input coercion is qualified. Exact row; remove with SG29-020 refresh."
+        }
+      ]
+    },
+    {
+      "file": "annotate-corpus/known-failures-postgres-annotated-serde.json",
+      "old_sha256": "834eb84c64811b726e3f1e90521e90e5f2649d2640af3d7d83f7bab678c48448",
+      "new_sha256": "41b6c6a9c3e1185c4cb8bfb5764fed6442f98b6ab9a479931f031429ffe78a3d",
+      "old_rows_unchanged": true,
+      "added": [
+        {
+          "id": "assertion:v1:sha256:e9bff597219f06bf08905b93785e44419e35ec29e256fe9b902ccffff5586aa2:1",
+          "sql": "SHA384(x)",
+          "signature": "type-mismatch:v1:sha256:1521d24f5526b7f59234aaf22d731993cc818eae6c65af6d180676e7305c164a",
+          "reason": "SG29-011/#8764/78b24a74: native SHA384 now parses as SHA2Digest with binary typing rather than hex SHA2/VARCHAR. PostgreSQL bytea metadata and byte comparisons cover 256/384/512. Exact frozen-pin type row; remove with SG29-020 refresh."
+        }
+      ]
+    },
+    {
+      "file": "dialect-corpus/duckdb-transpile-known-failures.json",
+      "old_sha256": "3e5ad9ac06e3a2d3739cb4d192332455071e23bc84fcdf160140006ffe020322",
+      "new_sha256": "77148796120a2eb255da6164ad908fd16be8ad6e448cb534a98274f6019f5235",
+      "old_rows_unchanged": true,
+      "added": [
+        {
+          "id": "assertion:v1:sha256:e6e630a59bffc6284af16a9665e6334e21f4e7f983554dde8249e0a021570aa8:1",
+          "case": "write|trino|SELECT DATEDIFF('day', t1.\"A\", t1.\"B\") FROM \"table\" AS t1",
+          "signature": "sql-mismatch:v1:sha256:e6e624476e7cb853ca8ce2a4d76097049e5a8cfcd6e8d790370427dbbf9edcb6",
+          "reason": "SG29-011/#8810/991d6ce5: DuckDB DATEDIFF counts DAY boundaries. Its new canonical flag activates Trino's existing endpoint truncation. Only DATE_TRUNC('DAY', ...) wrappers change. Preview provenance, not new native Trino equivalence; strict DuckDB cross-target temporal execution remains refused. Exact row; remove with SG29-020 refresh."
+        },
+        {
+          "id": "assertion:v1:sha256:065facbe285cac2aad65499d9e1dc68e3cd43730d33a26dec35ba13b37391340:1",
+          "case": "write|trino|SELECT DATE_DIFF('day', DATE '2020-01-01', DATE '2020-01-05')",
+          "signature": "sql-mismatch:v1:sha256:fb0fce19275fd289c8ae792e05c0f531c867c2ec95dcd749ad3e704a64812af3",
+          "reason": "SG29-011/#8810/991d6ce5: the canonical DAY boundary flag activates Trino's existing DATE_TRUNC endpoint wrappers, including already-date operands. Preview-only frozen-pin difference, not a native Trino qualification. Existing DuckDB temporal refusals remain. Exact row; remove with SG29-020 refresh."
+        }
+      ]
+    }
+  ]
+}

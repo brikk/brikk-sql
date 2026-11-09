@@ -94,6 +94,17 @@ class DevelopmentVersionPolicyTest(unittest.TestCase):
             version, _ = self.snapshot_base(path)
             self.assertIn(f"`{version}`", guide)
 
+    def test_sql_and_support_development_versions_align_after_the_one_zero_release(self):
+        expected = "1.0.1-SNAPSHOT"
+        paths = [ROOT / "publish.module-template.yaml"] + [
+            ROOT / artifact / "module.yaml"
+            for artifact in ("brikk-sql-intellij-support", "brikk-sql-intellij-jdbc-support", "brikk-sql-intellij-test-support")
+        ]
+        for path in paths:
+            with self.subTest(path=path):
+                self.assertEqual(expected, development_version(path.read_text()))
+        self.assertIn("artifacts are published on Maven Central at `1.0.0`", (ROOT / "README.md").read_text())
+
 
 class ReleaseLauncherTest(unittest.TestCase):
     def setUp(self):

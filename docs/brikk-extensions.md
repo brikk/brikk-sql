@@ -1,6 +1,6 @@
 # brikk-sql extensions registry — deliberate divergences from sqlglot
 
-brikk-sql is a SQLGlot-derived Kotlin engine (oracle pin: `v30.22.0-5-ga00dc2e5c`), checked by
+brikk-sql is a SQLGlot-derived Kotlin engine (oracle pin: `v30.29.0`), checked by
 differential and semantic gates. This file registers where brikk **deliberately diverges**
 from or **extends beyond** sqlglot, so that upstream syncs know exactly where conflicts
 can arise: when a future sqlglot version adds its own handling for one of these, the
@@ -2198,6 +2198,27 @@ No enum or public constructor change is needed.
 Native table-prefix aliases also reject a simultaneous postfix alias instead of silently
 overwriting it. Subquery/FROM-first/JOIN/nested-scope tests qualify the existing colon-alias
 AST and generation. The historical parser retains its old behavior for corpus compatibility.
+
+## 66. SQLGlot 30.29 compatibility and execution boundaries
+
+The coherent SG29-020 refresh records the raw target schema separately from exact
+compatibility shapes. SortArray remains a published class/serde identity; ArraySort
+keeps its earlier schema. Lambda.colon, native optional/exact NEAREST fields and
+AggregateKeyProperty's `brikk.doris` module remain. New target direction fields do
+not silently activate a breaking sort migration. Unqualified REF, Oracle NLS,
+SCOPED and nonempty new index-option execution mappings refuse explicitly.
+
+Runtime DuckDB PREPARE/EXECUTE tokenization and native literal/routing/regex/sort
+contracts remain distinct from generic oracle metadata. Unknown-source strict
+qualification cannot invent an alias or outer field owner; explicit legacy
+true/null inference and existing whole-row/projection-alias APIs remain.
+Native grammar acceptance does not imply execution, native types or value equivalence.
+
+The [integration review](../vendor/data/sqlglot-sg29-020/README.md) records exact
+ledger decisions and preserves their earlier native proofs. Its unported grammar,
+JSON-alias, INSERT and pivot/CTE correctness gaps are owned deferrals, not protected
+semantic divergences. Do not turn a feature deferral into a permanent "intentional"
+exception or treat a compatibility refusal as permission to emit lossy executable SQL.
 
 ## Upstream sync protocol
 

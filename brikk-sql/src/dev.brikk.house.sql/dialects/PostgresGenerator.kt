@@ -445,9 +445,15 @@ open class PostgresGenerator(
 
         val this_ = expression.thisArg
         if (unit.startsWith("quarter") && this_ is Literal) {
-            val months = (this_.name.toIntOrNull() ?: 0) * 3
-            this_.replace(Literal.string(months.toString()))
-            (expression.args["unit"] as Expression).replace(Var(args("this" to "MONTH")))
+            val quarters = this_.name.toLongOrNull()
+            if (quarters == null || quarters !in Long.MIN_VALUE / 3..Long.MAX_VALUE / 3) {
+                unsupported("Postgres intervals need a bounded whole number of quarters")
+            } else {
+                val rewritten = expression.copy()
+                rewritten.set("this", Literal.string((quarters * 3).toString()))
+                rewritten.set("unit", Var(args("this" to "MONTH")))
+                return super.intervalSql(rewritten as Interval)
+            }
         }
 
         return super.intervalSql(expression)
@@ -503,37 +509,29 @@ open class PostgresGenerator(
     // sqlglot: generators.postgres._date_add_sql — _simplify_unless_literal is
     // approximated by the identity (the optimizer's simplify is not ported)
     open fun dateAddSql(expression: Expression, kind: String): String {
-        var expr = expression
-        if (expr is TsOrDsAdd) {
-            expr = tsOrDsAddCast(expr)
+        val expr = if (expression is TsOrDsAdd) tsOrDsAddCast(expression.copy() as TsOrDsAdd) else expression
+        var this_ = expr.thisArg as? Expression
+        // Newly supported timestamp/datetime deltas must not leave a bare unknown
+        // string for PostgreSQL to resolve as an interval instead of a timestamp.
+        if (this_ is Literal && this_.isString &&
+            (expr is TimestampAdd || expr is TimestampSub || expr is DatetimeAdd || expr is DatetimeSub)) {
+            this_ = Cast(args("this" to this_.copy(), "to" to DataType.build(DType.TIMESTAMP)))
         }
-
-        val this_ = sql(expr, "this")
         val unit = (expr.args["unit"] as? Expression)?.let {
             if (it is Literal || it is Var) Var(args("this" to it.name)) else it.copy()
         }
 
-        var e = expr.args["expression"] as? Expression
-        if (e is Interval) {
-            return "$this_ $kind ${sql(e)}"
-        } else if (e is Literal && e.isString) {
-            // handled below (is_string stays true)
-        } else if (e is Literal) {
-            e.set("is_string", true)
-        } else if (e != null && e.isNumber) {
-            e = Literal.string(e.name)
-        } else {
-            val one = Literal.number("1")
-            val intervalTimesValue = Mul(
-                args(
-                    "this" to Interval(args("this" to one, "unit" to unit)),
-                    "expression" to e,
-                )
-            )
-            return "$this_ $kind ${sql(intervalTimesValue)}"
+        val e = expr.args["expression"] as? Expression
+        val interval = when {
+            e is Interval -> e
+            e is Literal -> Interval(args("this" to Literal.string(e.name), "unit" to unit))
+            e?.isNumber == true -> Interval(args("this" to Literal.string(sql(e)), "unit" to unit))
+            else -> Mul(args(
+                "this" to Interval(args("this" to Literal.number("1"), "unit" to unit)),
+                "expression" to e?.copy()?.let { if (it is Binary) Paren(args("this" to it)) else it },
+            ))
         }
-
-        return "$this_ $kind ${sql(Interval(args("this" to e, "unit" to unit)))}"
+        return dateDeltaToBinarySql(expression, this_, interval, subtract = kind == "-")
     }
 
     // sqlglot: dialect.ts_or_ds_add_cast
@@ -560,17 +558,22 @@ open class PostgresGenerator(
         val unit = ((expression.args["unit"] as? Expression)?.name ?: "DAY").uppercase()
         if (unit == "DAY" && expression.args["date_part_boundary"] == true) {
             val endDate = Cast(
-                args("this" to expression.thisArg, "to" to DataType(args("this" to DType.DATE)))
+                args("this" to (expression.thisArg as? Expression)?.copy(), "to" to DataType(args("this" to DType.DATE)))
             )
             val startDate = Cast(
-                args("this" to expression.args["expression"], "to" to DataType(args("this" to DType.DATE)))
+                args("this" to (expression.args["expression"] as? Expression)?.copy(), "to" to DataType(args("this" to DType.DATE)))
             )
             return sql(Paren(args("this" to Sub(args("this" to endDate, "expression" to startDate)))))
         }
         val factor = DATE_DIFF_FACTOR[unit]
 
-        val end = "CAST(${sql(expression, "this")} AS TIMESTAMP)"
-        val start = "CAST(${sql(expression, "expression")} AS TIMESTAMP)"
+        var end = "CAST(${sql(expression, "this")} AS TIMESTAMP)"
+        var start = "CAST(${sql(expression, "expression")} AS TIMESTAMP)"
+        if (expression.args["date_part_boundary"] == true && unit in setOf(
+                "MICROSECOND", "MILLISECOND", "SECOND", "MINUTE", "HOUR", "MONTH", "QUARTER", "YEAR")) {
+            end = "DATE_TRUNC('${unit.lowercase()}', $end)"
+            start = "DATE_TRUNC('${unit.lowercase()}', $start)"
+        }
 
         if (factor != null) {
             return "CAST(EXTRACT(epoch FROM $end - $start)$factor AS BIGINT)"
@@ -865,8 +868,10 @@ open class PostgresGenerator(
 
     // sqlglot: dialect.bool_xor_sql
     open fun boolXorSql(expression: Xor): String {
-        val a = sql(expression.thisArg)
-        val b = sql(expression.args["expression"])
+        val left = expression.thisArg
+        val right = expression.expressionArg
+        val a = if (left is Connector) "(${sql(left)})" else sql(left)
+        val b = if (right is Connector) "(${sql(right)})" else sql(right)
         return "($a AND (NOT $b)) OR ((NOT $a) AND $b)"
     }
 
@@ -1029,6 +1034,16 @@ open class PostgresGenerator(
     open fun sha2DigestSql(expression: SHA2Digest): String {
         val length = (expression.args["length"] as? Expression)?.name ?: "256"
         return func("SHA$length", expression.thisArg)
+    }
+
+    // #8755: the last case flag wins. Other/dynamic flags cannot be silently lost.
+    open fun postgresRegexpLikeSql(expression: RegexpLike): String {
+        val flag = expression.args["flag"] as? Expression ?: return binary(expression, "~")
+        val flags = if (flag.isString) flag.name else ""
+        if (!flag.isString || flags.any { it != 'i' && it != 'c' }) {
+            unexecutable("PostgreSQL regex operator translation supports only literal case flags i and c")
+        }
+        return binary(expression, if (flags.lastIndexOf('i') > flags.lastIndexOf('c')) "~*" else "~")
     }
 
     // sqlglot: dialect.timestrtotime_sql (include_precision=false)
@@ -1270,6 +1285,10 @@ open class PostgresGenerator(
             reg(DateDiff::class) { e -> pg().dateDiffSql(e) }
             reg(DateStrToDate::class) { e -> pg().datestrtodateSql(e as DateStrToDate) }
             reg(DateSub::class) { e -> pg().dateAddSql(e, "-") }
+            reg(DatetimeAdd::class) { e -> pg().dateAddSql(e, "+") }
+            reg(DatetimeSub::class) { e -> pg().dateAddSql(e, "-") }
+            reg(TimestampAdd::class) { e -> pg().dateAddSql(e, "+") }
+            reg(TimestampSub::class) { e -> pg().dateAddSql(e, "-") }
             reg(Explode::class) { e -> pg().renameFuncSql("UNNEST", e) }
             reg(ExplodingGenerateSeries::class) { e -> pg().renameFuncSql("GENERATE_SERIES", e) }
             reg(GenerateSeries::class) { e -> pg().generateseriesSql(e as GenerateSeries) }
@@ -1318,7 +1337,7 @@ open class PostgresGenerator(
             reg(PercentileDisc::class) { e -> pg().addWithinGroupForPercentilesSql(e) }
             reg(Pivot::class) { e -> pg().noPivotSql(e as Pivot) }
             reg(Rand::class) { e -> pg().renameFuncSql("RANDOM", e) }
-            reg(RegexpLike::class) { e -> binary(e as Binary, "~") }
+            reg(RegexpLike::class) { e -> pg().postgresRegexpLikeSql(e as RegexpLike) }
             reg(RegexpILike::class) { e -> binary(e as Binary, "~*") }
             reg(RegexpReplace::class) { e ->
                 func(
@@ -1339,7 +1358,7 @@ open class PostgresGenerator(
                 s = eliminateQualify(s)
                 selectSql(s as Select)
             }
-            reg(SHA2::class) { e -> pg().sha256Sql(e as SHA2) }
+            reg(SHA2::class) { e -> func("ENCODE", pg().sha256Sql(e as SHA2), Literal.string("hex")) }
             reg(SHA2Digest::class) { e -> pg().sha2DigestSql(e as SHA2Digest) }
             reg(StrPosition::class) { e -> pg().strpositionSql(e as StrPosition) }
             reg(StrToDate::class) { e -> func("TO_DATE", e.thisArg, formatTime(e)) }

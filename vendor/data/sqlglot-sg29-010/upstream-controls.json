@@ -1,0 +1,31 @@
+{
+  "scope": "Frozen SQLGlot v30.29 generation controls, not native equivalence or a global oracle refresh. The port deliberately preserves quoted numeric keys instead of following upstream numeric-key coercion.",
+  "commit": "2fe25297af5b0f44f5c9e5d03e1b296424b7acbe",
+  "fix_commit": "4d7d7ca94250269dc1903d7175b7b8aa96e9a480",
+  "controls": [
+    {
+      "source": "postgres",
+      "target": "clickhouse",
+      "sql": "SELECT payload -> 'amount', payload ->> 'amount'",
+      "upstream_output": "SELECT JSONExtractRaw(payload, 'amount'), JSONExtractString(payload, 'amount')"
+    },
+    {
+      "source": "mysql",
+      "target": "clickhouse",
+      "sql": "SELECT JSON_EXTRACT(payload, '$.a[0].b')",
+      "upstream_output": "SELECT JSONExtractRaw(payload, 'a', 1, 'b')"
+    },
+    {
+      "source": "clickhouse",
+      "target": "clickhouse",
+      "sql": "SELECT JSONExtractRaw(payload, '12')",
+      "upstream_output": "SELECT JSONExtractRaw(payload, '12')"
+    },
+    {
+      "source": "clickhouse",
+      "target": "clickhouse",
+      "sql": "SELECT JSONExtractRaw(payload, 'a', 1)",
+      "upstream_output": "SELECT JSONExtractRaw(payload, 'a', 1)"
+    }
+  ]
+}

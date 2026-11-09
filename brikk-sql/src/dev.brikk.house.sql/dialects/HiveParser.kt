@@ -161,6 +161,7 @@ open class HiveParser(
 
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.HIVE
+    override val isPredicatePrecedence get() = dev.brikk.house.sql.parser.IsPredicatePrecedence.EQUALITY
     open val normalizeDecimalLiterals: Boolean get() = true
     open val decimalLiteralsAllowNegativeScale: Boolean get() = false
 
@@ -248,7 +249,17 @@ open class HiveParser(
     override val alterParsers: Map<String, (Parser) -> Any?>
         get() = super.alterParsers + mapOf<String, (Parser) -> Any?>(
             "CHANGE" to { p -> (p as HiveParser).parseAlterTableChange() },
+            "REPLACE" to { p -> (p as HiveParser).parseAlterTableReplaceColumns() },
         )
+
+    // SG29-015/#8633. Unparsed/empty definitions must retain the whole ALTER as Command.
+    open fun parseAlterTableReplaceColumns(): Expression? {
+        if (!matchTextSeq("COLUMNS")) return null
+        val columns = tryParse({ parseWrappedCsv({ parseFieldDef() }, optional = true).takeIf { it.isNotEmpty() } })
+            ?: return null
+        if (columns.any { it !is dev.brikk.house.sql.ast.ColumnDef }) return null
+        return expression(dev.brikk.house.sql.ast.ReplaceColumns(args("expressions" to columns)))
+    }
 
     // sqlglot: HiveParser._parse_transform
     open fun parseTransform(): Expression? {

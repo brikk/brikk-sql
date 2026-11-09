@@ -1,0 +1,11 @@
+{
+  "scope": "Final Java 17 facade replay of actual native-captured SQL. No new backend executions.",
+  "generated_statements_reproduced_exactly": 20,
+  "class_sha256": {
+    "MysqlParserTables.class": "24f9660f4da4a277654592b7e57af4a0b64e2f648ca77f1c6c147e1a079632a5",
+    "PostgresGenerator.class": "928709c83534b165190aade921ae1be441256c06b9a54da38691073b0a9a59f5",
+    "DuckdbGenerator.class": "18f01d9d6ac1eb5a7c6549da9059e0afda55bf658bd1f9e93598c3c803c78183",
+    "SparkGenerator.class": "8aad67c256da3a327141d5edf3c1bf4f6030009b66165e1577c45a00cb5a3402",
+    "TemporalArithmeticKt.class": "cfabc56446d5b559db19c3f96d8246fda89692bd69349075fe820470769aa257"
+  }
+}

@@ -10,10 +10,10 @@ a platform test fails on any other use). SQL PSI hooks live in
 `com.intellij.sql.resolveExtension` interface from `com.intellij.sql.psi.impl`, which carries
 no internal-API annotation.
 
-The current Maven Central release is **0.4.1** for common support, the optional
+The current Maven Central release is **1.0.0** for common support, the optional
 `brikk-sql-intellij-jdbc-support` adapter and `brikk-sql-intellij-test-support`.
-It references SQL core/metadata/verification API **0.23.0**. See the
-[patch release record](../docs/intellij-support-0.4.1.md) for qualification and dependency details.
+It references SQL core/metadata/verification API **1.0.0**. See the
+[release record](../docs/sql-1.0.0.md) for qualification and dependency details.
 
 ## API
 
@@ -962,9 +962,9 @@ source-preserving renderer has no source map and cannot borrow another rendering
 Our public APIs do not carry `ApiStatus.Experimental`. Genuine IntelliJ API annotations are still
 reported by Plugin Verifier. A Compatible verdict does not establish Marketplace approval of them.
 For a support-only patch against already-published core, use `--skip-core-publication` to avoid
-republishing immutable core coordinates. The latest release is **0.3.0** for common support,
-the JDBC adapter and the test kit, against SQL core/metadata/verify-api **0.22.0**. All are
-published and verified on Maven Central. See [the release record](../docs/sql-0.22.0.md) and
+republishing immutable core coordinates. The latest release is **1.0.0** for common support,
+the JDBC adapter and the test kit, against SQL core/metadata/verify-api **1.0.0**. All are
+published and verified on Maven Central. See [the release record](../docs/sql-1.0.0.md) and
 [DataFusion/Spice consumer coordinates](../docs/datafusion-spice-consumer.md#released-artifacts).
 
 Earlier versions 0.2.1 through 0.2.4 are published on Maven
@@ -982,9 +982,9 @@ platform copy.
 
 ```sh
 ./kotlin publish mavenLocal -m brikk-sql-intellij-support -m brikk-sql-intellij-test-support --transitive
-python3 tools/publish_intellij_support.py 0.3.0 --core-version 0.22.0 --skip-core-publication --local
+python3 tools/publish_intellij_support.py 1.0.0 --core-version 1.0.0 --skip-core-publication --local
 # For a new public release, set NEXT_SUPPORT_VERSION to an unpublished version:
-python3 tools/publish_intellij_support.py "$NEXT_SUPPORT_VERSION" --core-version 0.22.0 --skip-core-publication
+python3 tools/publish_intellij_support.py "$NEXT_SUPPORT_VERSION" --core-version 1.0.0 --skip-core-publication
 ```
 
 The last command requires the existing Central/signing environment. It publishes common support,
@@ -992,7 +992,7 @@ the optional JDBC adapter and `brikk-sql-intellij-test-support` at the same vers
 `--skip-core-publication`, existing core/metadata/verify-api coordinates are only referenced, never
 republished. Omitting that flag also publishes those prerequisites at `--core-version`;
 it never publishes a verifier engine or the oracle. Without `--core-version`, only a local publication is
-allowed; it references the core, metadata and verify-api snapshots already in Maven Local. The module has independent `0.x` versioning.
+allowed; it references the core, metadata and verify-api snapshots already in Maven Local. Support has its own release command; its version is aligned with SQL at `1.0.0`.
 Temporary release overrides restore on success or failure.
 
 Shared platform contracts run in a real IDE against the test kit:

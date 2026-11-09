@@ -1,6 +1,14 @@
 {
     "cases": [
         {
+            "id": "assertion:v1:sha256:df2fcf20a42a912b232b416185f376d2a44c699bfbca9fc60c938e3a65058824:1",
+            "case": "write|postgres|SELECT JSONExtractRaw(payload, 'amount'), JSONExtractString(payload, 'amount')",
+            "signature": "sql-mismatch:v1:sha256:316fcd0aa07a04569cd166189ac00ecbfff93c1a3980dfac452f253e4f96d34b",
+            "reason": "SG29-020: Retain the independently native-tested raw/String extraction model and only_json_types/source markers. Cross-engine JSON String/missing/null equivalence remains refused.",
+            "expected": "SELECT payload -> 'amount', payload ->> 'amount'",
+            "actual": "SELECT JSON_EXTRACT_PATH(payload, 'amount'), JSON_EXTRACT_PATH_TEXT(payload, 'amount')"
+        },
+        {
             "id": "assertion:v1:sha256:06c130f68e85ad5d0d80a1d0bf43d69a52641295a43fb50bcd63d3a7f1cf0bd2:1",
             "case": "write|clickhouse, version=23.8|toMonday(x)",
             "reason": "expected `dateTrunc('week', x)` actual `dateTrunc('WEEK', x)`",

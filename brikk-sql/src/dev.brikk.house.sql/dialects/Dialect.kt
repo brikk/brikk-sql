@@ -53,6 +53,9 @@ enum class NormalizationStrategy {
 
 open class Dialect {
 
+    // sqlglot #8704: Hive is left-associative; most profiles give INTERSECT priority.
+    open val intersectBindsTighterThanUnionAndExcept: Boolean get() = true
+
     /** Registry name ("" is the base sqlglot dialect). */
     open val name: String get() = ""
 

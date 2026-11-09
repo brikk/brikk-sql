@@ -891,7 +891,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
     // as DuckDB lexes it, so it fails as a bad literal rather than parsing as `1 AS e`.
     private fun exponentFollows(): Boolean {
         val afterE = current + 1
-        return afterE >= size || !sql[afterE].isLetter()
+        return afterE >= size || !(sql[afterE].isLetter() || sql[afterE] == '_')
     }
 
     // sqlglot: TokenizerCore._scan_bits

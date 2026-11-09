@@ -1,17 +1,22 @@
 {
   "files": 181,
-  "inputs": 24606,
-  "unique_sql": 5419,
-  "native_counts": {"accepted": 13603, "rejected": 7754, "unverified": 3249},
-  "native_fingerprint": "9e5fae1f61d9e747f28dca82df626c4b7beec4b76443ce1f62e949aa99db65af",
-  "local_counts": {
-    "excluded-or-non-sql-expectation": 65,
-    "expected-unsupported": 9,
-    "foreign-analysis-input": 121,
-    "opaque-command": 398,
-    "unsupported": 235,
-    "unsupported-warning": 1563
+  "inputs": 25326,
+  "unique_sql": 5664,
+  "native_counts": {
+    "accepted": 13899,
+    "rejected": 8077,
+    "unverified": 3350
   },
-  "local_fingerprint": "0337333b39b0e3c9aefa3e6e2b1c040c5b7f1f89871103c3667f7d010109c410",
-  "inventory_fingerprint": "224e97c48b3db6a24c56245cc456fa28fdbf09522877482a59f299d2e49766b6"
+  "native_fingerprint": "12f7a2de7007740891e2a6a8b6812958a8a5207c577645af37fe132710aa6a16",
+  "local_counts": {
+    "excluded-or-non-sql-expectation": 71,
+    "expected-unsupported": 9,
+    "foreign-analysis-input": 130,
+    "local-failure": 68,
+    "opaque-command": 598,
+    "unsupported": 282,
+    "unsupported-warning": 1779
+  },
+  "local_fingerprint": "500262ec90cba6c7af3580eb6a652dba88f17b787fe8f26ded26f0326650b192",
+  "inventory_fingerprint": "730f9dbc57dbe46c1bc0cd7f1ccdceb822228aba0718899322f8bf8ba7b7607c"
 }

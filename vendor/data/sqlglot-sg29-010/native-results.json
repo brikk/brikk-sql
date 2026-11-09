@@ -1,0 +1,903 @@
+{
+  "scope": "Native ClickHouse String/Nullable(String) behavior. JSON null, missing empty string and SQL NULL are distinct; no general cross-engine or arbitrary JSONPath equivalence.",
+  "image": "clickhouse/clickhouse-server@sha256:b2bfa4d8399ee9973868cc5c1754cb506a6f4b86fbddc41010cc090beb55c85e",
+  "version": {
+    "types": [
+      "String"
+    ],
+    "rows": [
+      [
+        "26.10.2.103"
+      ]
+    ],
+    "stdout": "[\"version()\"]\n[\"String\"]\n[\"26.10.2.103\"]\n",
+    "stderr": ""
+  },
+  "observations": [
+    {
+      "sql": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'obj') AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=JSONExtract(this=Literal(this={\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"},is_string=true),expression=JSONPath(expressions=[JSONPathRoot(),JSONPathKey(this=obj)]),only_json_types=false),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'obj') AS v",
+      "executable": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'obj') AS v",
+      "original": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "{\"b\":1}"
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"{\\\"b\\\":1}\"]\n",
+        "stderr": ""
+      },
+      "generated": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "{\"b\":1}"
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"{\\\"b\\\":1}\"]\n",
+        "stderr": ""
+      }
+    },
+    {
+      "sql": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'arr') AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=JSONExtract(this=Literal(this={\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"},is_string=true),expression=JSONPath(expressions=[JSONPathRoot(),JSONPathKey(this=arr)]),only_json_types=false),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'arr') AS v",
+      "executable": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'arr') AS v",
+      "original": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "[10,20]"
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"[10,20]\"]\n",
+        "stderr": ""
+      },
+      "generated": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "[10,20]"
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"[10,20]\"]\n",
+        "stderr": ""
+      }
+    },
+    {
+      "sql": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 's') AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=JSONExtract(this=Literal(this={\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"},is_string=true),expression=JSONPath(expressions=[JSONPathRoot(),JSONPathKey(this=s)]),only_json_types=false),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 's') AS v",
+      "executable": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 's') AS v",
+      "original": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "\"hello\""
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"\\\"hello\\\"\"]\n",
+        "stderr": ""
+      },
+      "generated": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "\"hello\""
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"\\\"hello\\\"\"]\n",
+        "stderr": ""
+      }
+    },
+    {
+      "sql": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'n') AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=JSONExtract(this=Literal(this={\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"},is_string=true),expression=JSONPath(expressions=[JSONPathRoot(),JSONPathKey(this=n)]),only_json_types=false),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'n') AS v",
+      "executable": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'n') AS v",
+      "original": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "12"
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"12\"]\n",
+        "stderr": ""
+      },
+      "generated": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "12"
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"12\"]\n",
+        "stderr": ""
+      }
+    },
+    {
+      "sql": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'bool') AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=JSONExtract(this=Literal(this={\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"},is_string=true),expression=JSONPath(expressions=[JSONPathRoot(),JSONPathKey(this=bool)]),only_json_types=false),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'bool') AS v",
+      "executable": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'bool') AS v",
+      "original": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "true"
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"true\"]\n",
+        "stderr": ""
+      },
+      "generated": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "true"
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"true\"]\n",
+        "stderr": ""
+      }
+    },
+    {
+      "sql": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'null') AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=JSONExtract(this=Literal(this={\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"},is_string=true),expression=JSONPath(expressions=[JSONPathRoot(),JSONPathKey(this=null)]),only_json_types=false),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'null') AS v",
+      "executable": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'null') AS v",
+      "original": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "null"
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"null\"]\n",
+        "stderr": ""
+      },
+      "generated": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "null"
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"null\"]\n",
+        "stderr": ""
+      }
+    },
+    {
+      "sql": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'missing') AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=JSONExtract(this=Literal(this={\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"},is_string=true),expression=JSONPath(expressions=[JSONPathRoot(),JSONPathKey(this=missing)]),only_json_types=false),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'missing') AS v",
+      "executable": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'missing') AS v",
+      "original": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            ""
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"\"]\n",
+        "stderr": ""
+      },
+      "generated": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            ""
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"\"]\n",
+        "stderr": ""
+      }
+    },
+    {
+      "sql": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', '12') AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=JSONExtract(this=Literal(this={\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"},is_string=true),expression=JSONPath(expressions=[JSONPathRoot(),JSONPathKey(this=12)]),only_json_types=false),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', '12') AS v",
+      "executable": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', '12') AS v",
+      "original": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "\"key\""
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"\\\"key\\\"\"]\n",
+        "stderr": ""
+      },
+      "generated": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "\"key\""
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"\\\"key\\\"\"]\n",
+        "stderr": ""
+      }
+    },
+    {
+      "sql": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'a.b') AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=JSONExtract(this=Literal(this={\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"},is_string=true),expression=JSONPath(expressions=[JSONPathRoot(),JSONPathKey(this=a.b)]),only_json_types=false),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'a.b') AS v",
+      "executable": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'a.b') AS v",
+      "original": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "\"dot\""
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"\\\"dot\\\"\"]\n",
+        "stderr": ""
+      },
+      "generated": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "\"dot\""
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"\\\"dot\\\"\"]\n",
+        "stderr": ""
+      }
+    },
+    {
+      "sql": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', '') AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=JSONExtract(this=Literal(this={\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"},is_string=true),expression=JSONPath(expressions=[JSONPathRoot(),JSONPathKey(this=)]),only_json_types=false),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', '') AS v",
+      "executable": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', '') AS v",
+      "original": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "\"empty\""
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"\\\"empty\\\"\"]\n",
+        "stderr": ""
+      },
+      "generated": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "\"empty\""
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"\\\"empty\\\"\"]\n",
+        "stderr": ""
+      }
+    },
+    {
+      "sql": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'arr', 1) AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=JSONExtract(this=Literal(this={\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"},is_string=true),expression=JSONPath(expressions=[JSONPathRoot(),JSONPathKey(this=arr),JSONPathSubscript(this=0)]),only_json_types=false),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'arr', 1) AS v",
+      "executable": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'arr', 1) AS v",
+      "original": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "10"
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"10\"]\n",
+        "stderr": ""
+      },
+      "generated": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "10"
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"10\"]\n",
+        "stderr": ""
+      }
+    },
+    {
+      "sql": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'arr', 2) AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=JSONExtract(this=Literal(this={\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"},is_string=true),expression=JSONPath(expressions=[JSONPathRoot(),JSONPathKey(this=arr),JSONPathSubscript(this=1)]),only_json_types=false),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'arr', 2) AS v",
+      "executable": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'arr', 2) AS v",
+      "original": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "20"
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"20\"]\n",
+        "stderr": ""
+      },
+      "generated": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "20"
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"20\"]\n",
+        "stderr": ""
+      }
+    },
+    {
+      "sql": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'arr', 0) AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=JSONExtract(this=Literal(this={\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"},is_string=true),expression=Literal(this=arr,is_string=true),expressions=[Literal(this=0,is_string=false)]),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'arr', 0) AS v",
+      "executable": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'arr', 0) AS v",
+      "original": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            ""
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"\"]\n",
+        "stderr": ""
+      },
+      "generated": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            ""
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"\"]\n",
+        "stderr": ""
+      }
+    },
+    {
+      "sql": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'arr', -1) AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=JSONExtract(this=Literal(this={\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"},is_string=true),expression=Literal(this=arr,is_string=true),expressions=[Neg(this=Literal(this=1,is_string=false))]),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'arr', -1) AS v",
+      "executable": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'arr', -1) AS v",
+      "original": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "20"
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"20\"]\n",
+        "stderr": ""
+      },
+      "generated": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "20"
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"20\"]\n",
+        "stderr": ""
+      }
+    },
+    {
+      "sql": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'arr', 3) AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=JSONExtract(this=Literal(this={\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"},is_string=true),expression=JSONPath(expressions=[JSONPathRoot(),JSONPathKey(this=arr),JSONPathSubscript(this=2)]),only_json_types=false),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'arr', 3) AS v",
+      "executable": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'arr', 3) AS v",
+      "original": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            ""
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"\"]\n",
+        "stderr": ""
+      },
+      "generated": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            ""
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"\"]\n",
+        "stderr": ""
+      }
+    },
+    {
+      "sql": "SELECT JSONExtractString('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 's') AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=JSONExtractScalar(this=Literal(this={\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"},is_string=true),expression=JSONPath(expressions=[JSONPathRoot(),JSONPathKey(this=s)]),only_json_types=false),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT JSONExtractString('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 's') AS v",
+      "executable": "SELECT JSONExtractString('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 's') AS v",
+      "original": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "hello"
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"hello\"]\n",
+        "stderr": ""
+      },
+      "generated": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "hello"
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"hello\"]\n",
+        "stderr": ""
+      }
+    },
+    {
+      "sql": "SELECT JSONExtractString('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'n') AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=JSONExtractScalar(this=Literal(this={\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"},is_string=true),expression=JSONPath(expressions=[JSONPathRoot(),JSONPathKey(this=n)]),only_json_types=false),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT JSONExtractString('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'n') AS v",
+      "executable": "SELECT JSONExtractString('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'n') AS v",
+      "original": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "12"
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"12\"]\n",
+        "stderr": ""
+      },
+      "generated": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "12"
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"12\"]\n",
+        "stderr": ""
+      }
+    },
+    {
+      "sql": "SELECT JSONExtractString('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'null') AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=JSONExtractScalar(this=Literal(this={\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"},is_string=true),expression=JSONPath(expressions=[JSONPathRoot(),JSONPathKey(this=null)]),only_json_types=false),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT JSONExtractString('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'null') AS v",
+      "executable": "SELECT JSONExtractString('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'null') AS v",
+      "original": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            ""
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"\"]\n",
+        "stderr": ""
+      },
+      "generated": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            ""
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"\"]\n",
+        "stderr": ""
+      }
+    },
+    {
+      "sql": "SELECT JSONExtractString('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', '12') AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=JSONExtractScalar(this=Literal(this={\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"},is_string=true),expression=JSONPath(expressions=[JSONPathRoot(),JSONPathKey(this=12)]),only_json_types=false),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT JSONExtractString('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', '12') AS v",
+      "executable": "SELECT JSONExtractString('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', '12') AS v",
+      "original": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "key"
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"key\"]\n",
+        "stderr": ""
+      },
+      "generated": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "key"
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"key\"]\n",
+        "stderr": ""
+      }
+    },
+    {
+      "sql": "SELECT JSONExtractString('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'bool') AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=JSONExtractScalar(this=Literal(this={\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"},is_string=true),expression=JSONPath(expressions=[JSONPathRoot(),JSONPathKey(this=bool)]),only_json_types=false),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT JSONExtractString('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'bool') AS v",
+      "executable": "SELECT JSONExtractString('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'bool') AS v",
+      "original": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "true"
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"true\"]\n",
+        "stderr": ""
+      },
+      "generated": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "true"
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"true\"]\n",
+        "stderr": ""
+      }
+    },
+    {
+      "sql": "SELECT JSONExtractString('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'arr') AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=JSONExtractScalar(this=Literal(this={\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"},is_string=true),expression=JSONPath(expressions=[JSONPathRoot(),JSONPathKey(this=arr)]),only_json_types=false),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT JSONExtractString('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'arr') AS v",
+      "executable": "SELECT JSONExtractString('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'arr') AS v",
+      "original": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "[10,20]"
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"[10,20]\"]\n",
+        "stderr": ""
+      },
+      "generated": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "[10,20]"
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"[10,20]\"]\n",
+        "stderr": ""
+      }
+    },
+    {
+      "sql": "SELECT JSONExtractString('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'obj') AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=JSONExtractScalar(this=Literal(this={\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"},is_string=true),expression=JSONPath(expressions=[JSONPathRoot(),JSONPathKey(this=obj)]),only_json_types=false),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT JSONExtractString('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'obj') AS v",
+      "executable": "SELECT JSONExtractString('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'obj') AS v",
+      "original": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "{\"b\":1}"
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"{\\\"b\\\":1}\"]\n",
+        "stderr": ""
+      },
+      "generated": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "{\"b\":1}"
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"{\\\"b\\\":1}\"]\n",
+        "stderr": ""
+      }
+    },
+    {
+      "sql": "SELECT JSONExtractRaw(CAST(NULL AS Nullable(String)), 'a') AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=JSONExtract(this=Cast(this=Null(),to=DataType(this=TEXT,expressions=null,nested=false,nullable=true),format=null,safe=null,action=null,default=null),expression=JSONPath(expressions=[JSONPathRoot(),JSONPathKey(this=a)]),only_json_types=false),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT JSONExtractRaw(CAST(NULL AS Nullable(String)), 'a') AS v",
+      "executable": "SELECT JSONExtractRaw(CAST(NULL AS Nullable(String)), 'a') AS v",
+      "original": {
+        "types": [
+          "Nullable(String)"
+        ],
+        "rows": [
+          [
+            null
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"Nullable(String)\"]\n[null]\n",
+        "stderr": ""
+      },
+      "generated": {
+        "types": [
+          "Nullable(String)"
+        ],
+        "rows": [
+          [
+            null
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"Nullable(String)\"]\n[null]\n",
+        "stderr": ""
+      }
+    },
+    {
+      "sql": "SELECT JSONExtractRaw('[10,20]') AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=JSONExtract(this=Literal(this=[10,20],is_string=true),expression=JSONPath(expressions=[JSONPathRoot()]),only_json_types=false),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT JSONExtractRaw('[10,20]') AS v",
+      "executable": "SELECT JSONExtractRaw('[10,20]') AS v",
+      "original": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "[10,20]"
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"[10,20]\"]\n",
+        "stderr": ""
+      },
+      "generated": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "[10,20]"
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"[10,20]\"]\n",
+        "stderr": ""
+      }
+    },
+    {
+      "sql": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', path, 2) AS v FROM (SELECT 'arr' path)",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=JSONExtract(this=Literal(this={\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"},is_string=true),expression=Column(this=Identifier(this=path,quoted=false)),expressions=[Literal(this=2,is_string=false)]),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null,from_=From(this=Subquery(this=Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=Literal(this=arr,is_string=true),alias=Identifier(this=path,quoted=false))],limit=null,exclude=null,operation_modifiers=null),alias=null,sample=null)))",
+      "preview": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', path, 2) AS v FROM (SELECT 'arr' AS path)",
+      "executable": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', path, 2) AS v FROM (SELECT 'arr' AS path)",
+      "original": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "20"
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"20\"]\n",
+        "stderr": ""
+      },
+      "generated": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "20"
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"20\"]\n",
+        "stderr": ""
+      }
+    },
+    {
+      "sql": "SELECT JSONExtractRaw('{\"a\\'b\":42}', 'a\\'b') AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=JSONExtract(this=Literal(this={\"a'b\":42},is_string=true),expression=JSONPath(expressions=[JSONPathRoot(),JSONPathKey(this=a'b)]),only_json_types=false),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT JSONExtractRaw('{\"a''b\":42}', 'a''b') AS v",
+      "executable": "SELECT JSONExtractRaw('{\"a''b\":42}', 'a''b') AS v",
+      "original": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "42"
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"42\"]\n",
+        "stderr": ""
+      },
+      "generated": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "42"
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"42\"]\n",
+        "stderr": ""
+      }
+    }
+  ],
+  "preview_controls": [
+    {
+      "source": "mysql",
+      "sql": "SELECT JSON_EXTRACT('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', '$.arr[0]') AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=JSONExtract(this=Literal(this={\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"},is_string=true),expression=JSONPath(expressions=[JSONPathRoot(),JSONPathKey(this=arr),JSONPathSubscript(this=0)])),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'arr', 1) AS v",
+      "status": "unsupported: ClickHouse raw JSON extraction result types and missing-value semantics have no qualified cross-engine execution mapping",
+      "preview_native_result": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "10"
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"10\"]\n",
+        "stderr": ""
+      },
+      "classification": "Finite ClickHouse preview result only, not source/target execution equivalence"
+    },
+    {
+      "source": "mysql",
+      "sql": "SELECT JSON_EXTRACT('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', '$.obj') AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=JSONExtract(this=Literal(this={\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"},is_string=true),expression=JSONPath(expressions=[JSONPathRoot(),JSONPathKey(this=obj)])),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'obj') AS v",
+      "status": "unsupported: ClickHouse raw JSON extraction result types and missing-value semantics have no qualified cross-engine execution mapping",
+      "preview_native_result": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "{\"b\":1}"
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"{\\\"b\\\":1}\"]\n",
+        "stderr": ""
+      },
+      "classification": "Finite ClickHouse preview result only, not source/target execution equivalence"
+    },
+    {
+      "source": "mysql",
+      "sql": "SELECT JSON_EXTRACT('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', '$.null') AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=JSONExtract(this=Literal(this={\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"},is_string=true),expression=JSONPath(expressions=[JSONPathRoot(),JSONPathKey(this=null)])),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'null') AS v",
+      "status": "unsupported: ClickHouse raw JSON extraction result types and missing-value semantics have no qualified cross-engine execution mapping",
+      "preview_native_result": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            "null"
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"null\"]\n",
+        "stderr": ""
+      },
+      "classification": "Finite ClickHouse preview result only, not source/target execution equivalence"
+    },
+    {
+      "source": "mysql",
+      "sql": "SELECT JSON_EXTRACT('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', '$.missing') AS v",
+      "ast": "Select(kind=null,hint=null,distinct=null,expressions=[Alias(this=JSONExtract(this=Literal(this={\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"},is_string=true),expression=JSONPath(expressions=[JSONPathRoot(),JSONPathKey(this=missing)])),alias=Identifier(this=v,quoted=false))],limit=null,exclude=null,operation_modifiers=null)",
+      "preview": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'missing') AS v",
+      "status": "unsupported: ClickHouse raw JSON extraction result types and missing-value semantics have no qualified cross-engine execution mapping",
+      "preview_native_result": {
+        "types": [
+          "String"
+        ],
+        "rows": [
+          [
+            ""
+          ]
+        ],
+        "stdout": "[\"v\"]\n[\"String\"]\n[\"\"]\n",
+        "stderr": ""
+      },
+      "classification": "Finite ClickHouse preview result only, not source/target execution equivalence"
+    }
+  ],
+  "outbound_refusals": [
+    {
+      "source": "clickhouse",
+      "target": "postgres",
+      "sql": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'obj') AS v",
+      "preview": "SELECT JSON_EXTRACT_PATH('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'obj') AS v",
+      "status": "unsupported: ClickHouse JSONExtractRaw String results and missing-value semantics have no qualified cross-engine execution mapping"
+    },
+    {
+      "source": "clickhouse",
+      "target": "duckdb",
+      "sql": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'obj') AS v",
+      "preview": "SELECT '{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}' -> '$.obj' AS v",
+      "status": "unsupported: ClickHouse JSONExtractRaw String results and missing-value semantics have no qualified cross-engine execution mapping"
+    },
+    {
+      "source": "clickhouse",
+      "target": "mysql",
+      "sql": "SELECT JSONExtractRaw('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', 'obj') AS v",
+      "preview": "SELECT JSON_EXTRACT('{\"obj\":{\"b\":1},\"arr\":[10,20],\"s\":\"hello\",\"n\":12,\"bool\":true,\"null\":null,\"12\":\"key\",\"a.b\":\"dot\",\"\":\"empty\"}', '$.obj') AS v",
+      "status": "unsupported: ClickHouse JSONExtractRaw String results and missing-value semantics have no qualified cross-engine execution mapping"
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 {
-  "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
+  "sqlglot_version": "v30.29.0",
   "dialect": "starrocks",
   "identity": [
     {
@@ -34,6 +34,16 @@
     },
     {
       "sql": "SELECT ST_DISTANCE_SPHERE(10.1, 20.2, 30.3, 40.4)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT LIKE('xyz', 'x%')",
+      "expected": "SELECT 'xyz' LIKE 'x%'",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT TO_DAYS(dt) FROM t",
       "expected": null,
       "pretty": false
     },
@@ -173,6 +183,49 @@
       "pretty": false
     },
     {
+      "sql": "REFRESH MATERIALIZED VIEW lo_mv1",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "REFRESH MATERIALIZED VIEW lo_mv1 FORCE",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "REFRESH MATERIALIZED VIEW lo_mv1 WITH SYNC MODE",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "REFRESH MATERIALIZED VIEW lo_mv1 WITH ASYNC MODE",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "REFRESH MATERIALIZED VIEW lo_mv1 PARTITION START (\"2020-02-01\") END (\"2020-03-01\")",
+      "expected": "REFRESH MATERIALIZED VIEW lo_mv1 PARTITION START ('2020-02-01') END ('2020-03-01')",
+      "pretty": false
+    },
+    {
+      "sql": "REFRESH DICTIONARY dict_obj",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
+      "sql": "REFRESH CONNECTIONS",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
+      "sql": "REFRESH CONNECTIONS FORCE",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
       "sql": "CREATE TABLE foo (col0 DECIMAL(9, 1), col1 DECIMAL32(9, 1), col2 DECIMAL64(18, 10), col3 DECIMAL128(38, 10)) DISTRIBUTED BY HASH (col1) BUCKETS 1",
       "expected": null,
       "pretty": false
@@ -271,6 +324,21 @@
     {
       "sql": "SELECT student, score, t.unnest FROM tests CROSS JOIN LATERAL UNNEST(scores) AS t",
       "expected": "SELECT student, score, t.unnest FROM tests CROSS JOIN LATERAL UNNEST(scores) AS t(unnest)",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT * FROM TABLE(UNNEST([1, 2], ['a', 'b'])) AS t(x, y)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT * FROM (SELECT 1 AS id) AS s, UNNEST([1, 2], ['a', 'b'])",
+      "expected": "SELECT * FROM (SELECT 1 AS id) AS s, UNNEST([1, 2], ['a', 'b']) AS unnest",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT * FROM (SELECT 1 AS id) AS s, UNNEST([1, 2], ['a', 'b']) AS t",
+      "expected": null,
       "pretty": false
     },
     {
@@ -419,7 +487,107 @@
       "pretty": false
     },
     {
+      "sql": "SELECT DATE_DIFF('DAY', CAST('2026-03-11 01:00:00' AS DATETIME), CAST('2026-03-10 23:00:00' AS DATETIME))",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT 'a#b' AS c",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT 1 AS `a#b`",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT 1 AS a -- , 2 AS b",
+      "expected": "SELECT 1 AS a /* , 2 AS b */",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT * FROM t1 PIVOT (SUM(c1) AS sum_c1, AVG(c2) AS avg_c2 FOR c3 IN (1, 2, 3, 4, 5))",
+      "expected": "SELECT * FROM t1 PIVOT(SUM(c1) AS sum_c1, AVG(c2) AS avg_c2 FOR c3 IN (1, 2, 3, 4, 5))",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT * FROM t1 PIVOT(SUM(c1) FOR c3 IN (1 AS one, 2 AS two))",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT * FROM t1 PIVOT(SUM(c1) FOR (c2, c3) IN ((1, 1), (2, 2)))",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT admin, cancel, export, stop FROM t",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT TRANSLATE(c, 'a', 'b'), translate FROM t",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT map{1:\"apple\", 2:\"orange\", 3:\"pear\"} AS fruit",
+      "expected": "SELECT MAP{1:'apple', 2:'orange', 3:'pear'} AS fruit",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT map{true:map{3.13:\"abc\"}, false:map{}} AS nest",
+      "expected": "SELECT MAP{TRUE:MAP{3.13:'abc'}, FALSE:MAP{}} AS nest",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT MAP{1:NULL}",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT MAP{1:2, 3:NULL}[1]",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT MAP{1:MAP{2:1}, 3:NULL}[1][2]",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT map, t.map, map[1] FROM t",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT MAP{t.k:10}[1] FROM (SELECT 1 AS k) AS t CROSS JOIN (SELECT 2 AS k) AS u",
+      "expected": null,
+      "pretty": false
+    },
+    {
       "sql": "ARRAY_FLATTEN(arr)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "REFRESH MATERIALIZED VIEW db.lo_mv1 PARTITION START ('2020-02-01') END ('2020-03-01') FORCE WITH SYNC MODE",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CREATE TABLE t (k1 INT, v1 HLL HLL_UNION) AGGREGATE KEY (k1) DISTRIBUTED BY HASH (k1)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "DELETE FROM t WHERE a = 1",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t ADD COLUMN c INT",
       "expected": null,
       "pretty": false
     },
@@ -429,9 +597,157 @@
       "pretty": false
     },
     {
+      "sql": "CREATE TABLE aggregate_tbl (site_id LARGEINT NOT NULL COMMENT 'id of site', date DATE NOT NULL COMMENT 'time of event', city_code VARCHAR(20) COMMENT 'city_code of user', pv BIGINT SUM DEFAULT '0' COMMENT 'total page views') AGGREGATE KEY (site_id, date, city_code) DISTRIBUTED BY HASH (site_id)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT MAP{1:1, 2:2, 3:3} AS numbers",
+      "expected": null,
+      "pretty": false
+    },
+    {
       "sql": "SELECT * FROM TABLE(GENERATE_SERIES(0, 10))",
       "expected": null,
       "pretty": false
+    },
+    {
+      "sql": "ADMIN SET FRONTEND CONFIG ('disable_balance' = 'true')",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
+      "sql": "ADMIN SHOW FRONTEND CONFIG LIKE 'disable_balance'",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
+      "sql": "BACKUP SNAPSHOT example_db.snapshot1 TO example_repo ON (example_tbl)",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
+      "sql": "RESTORE SNAPSHOT example_db.snapshot1 FROM example_repo ON (example_tbl) PROPERTIES ('backup_timestamp' = '2018-05-04-16-45-08')",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
+      "sql": "RECOVER TABLE example_db.example_tbl",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
+      "sql": "CANCEL LOAD FROM example_db WHERE LABEL = 'example_label'",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
+      "sql": "EXPORT TABLE example_db.example_tbl TO 's3://bucket/export/'",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
+      "sql": "SUBMIT TASK AS INSERT INTO t2 SELECT * FROM t1",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
+      "sql": "PAUSE ROUTINE LOAD FOR example_db.example_job",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
+      "sql": "RESUME ROUTINE LOAD FOR example_db.example_job",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
+      "sql": "STOP ROUTINE LOAD FOR example_db.example_job",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
+      "sql": "DEALLOCATE PREPARE stmt1",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
+      "sql": "INSTALL PLUGIN FROM '/home/users/plugin.zip'",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
+      "sql": "UNINSTALL PLUGIN auditdemo",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
+      "sql": "ADD SQLBLACKLIST \"select count(distinct .+) from .+\"",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
+      "sql": "DELETE SQLBLACKLIST 3, 4",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
+      "sql": "ADD SQL DIGEST BLACKLIST abcdef0123456789abcdef0123456789",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
+      "sql": "DELETE SQL DIGEST BLACKLIST abcdef0123456789abcdef0123456789, 0123456789abcdef0123456789abcdef",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
+      "sql": "ADD BACKEND BLACKLIST 10001, 10002",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
+      "sql": "DELETE BACKEND BLACKLIST 10001",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
+      "sql": "ADD COMPUTE NODE BLACKLIST 10005",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
+      "sql": "DELETE COMPUTE NODE BLACKLIST 10005",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
+      "sql": "TRANSLATE TRINO SELECT id, name FROM products WHERE price > 500",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
     }
   ],
   "transpile": [
@@ -635,6 +951,44 @@
       }
     },
     {
+      "sql": "SELECT DATEDIFF(CAST('2026-03-11 01:00:00' AS DATETIME), CAST('2026-03-10 23:00:00' AS DATETIME))",
+      "read": {},
+      "write": {
+        "starrocks": "SELECT DATEDIFF(CAST('2026-03-11 01:00:00' AS DATETIME), CAST('2026-03-10 23:00:00' AS DATETIME))",
+        "duckdb": "SELECT DATE_DIFF('DAY', CAST('2026-03-10 23:00:00' AS TIMESTAMP), CAST('2026-03-11 01:00:00' AS TIMESTAMP))"
+      }
+    },
+    {
+      "sql": "SELECT * FROM t1 UNPIVOT(c FOR k IN (c1, c2))",
+      "read": {},
+      "write": {
+        "starrocks": {
+          "error": "UnsupportedError"
+        }
+      }
+    },
+    {
+      "sql": "SELECT MAP{'a':1, 'b':2}['a'] AS x",
+      "read": {},
+      "write": {
+        "duckdb": "SELECT MAP {'a': 1, 'b': 2}['a'] AS x"
+      }
+    },
+    {
+      "sql": "SELECT MAP{'a':1, 'b':2} AS m",
+      "read": {
+        "duckdb": "SELECT MAP {'a': 1, 'b': 2} AS m"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT MAP{k:v}['a'] FROM (SELECT 'a' AS k, 10 AS v) AS t",
+      "read": {},
+      "write": {
+        "duckdb": "SELECT MAP {k: v}['a'] FROM (SELECT 'a' AS k, 10 AS v) AS t"
+      }
+    },
+    {
       "sql": "SELECT id, t.col FROM tbl, UNNEST(scores) AS t(col)",
       "read": {},
       "write": {
@@ -652,8 +1006,8 @@
     }
   ],
   "stats": {
-    "identity_count": 86,
-    "transpile_count": 23,
-    "skipped_dynamic": 9
+    "identity_count": 144,
+    "transpile_count": 28,
+    "skipped_dynamic": 12
   }
 }

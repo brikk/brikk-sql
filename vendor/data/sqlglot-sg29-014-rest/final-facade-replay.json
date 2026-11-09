@@ -1,0 +1,19 @@
+{
+  "scope": "Final Java 17 consumer replay of recorded renderings, not repeated SQL execution.",
+  "statement_renderings_reproduced": 51,
+  "readonly_result_pairs": 14,
+  "structured_parse_only_field_pairs": 12,
+  "opaque_records": 25,
+  "java_17_class_counts": {
+    "brikk-sqljvm": 2860,
+    "brikk-sql-metadatajvm": 143
+  },
+  "class_sha256": {
+    "dev/brikk/house/sql/dialects/StarrocksParser.class": "edf84120bc2ba1135ba71d9139f5e7333d186bb4855164cce64fb5a31657dbed",
+    "dev/brikk/house/sql/dialects/StarrocksGenerator.class": "2bb9e17de329d68148366dfce79d0b72aad25c86d9ac94e386e40e761b2bda9b",
+    "dev/brikk/house/sql/dialects/StarrocksDialect.class": "2ba6dc2c0ab63e80d8e1c437e5222dc07c2bbeefdccfa1e64fcb529f03cb98b7",
+    "dev/brikk/house/sql/parser/Parser.class": "26022141f9914da1f3e178ec10dfb57773d334a72ba7cb972b750f348f80cd27",
+    "dev/brikk/house/sql/generator/Generator.class": "b86451785fcd994b12ac8f8aa89a9cf9ecc38e176e84fc5e2fa3dd7b6a99418c",
+    "dev/brikk/house/sql/ast/Refresh.class": "f0edcd50c157e7ddf1591b369a3636f73eb66cceea07478d420bef718bebc7d1"
+  }
+}

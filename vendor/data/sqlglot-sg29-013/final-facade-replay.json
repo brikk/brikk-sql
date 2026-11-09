@@ -1,0 +1,11 @@
+{
+  "scope": "Final Java 17 facade replay of FE-plan SQL and execution refusals, not backend execution.",
+  "paired_fe_statement_renderings_reproduced": 28,
+  "outbound_refusals_reproduced": 8,
+  "class_sha256": {
+    "dev/brikk/house/sql/dialects/DorisParser.class": "78210f1b2f97b9c69132950e1143b7a639d9e96110c944d98dfca5672925981e",
+    "dev/brikk/house/sql/dialects/DorisGenerator.class": "aff9508509654709511e4e9a6e910293262bccfbfd3319a50712b5fd568dfbac",
+    "dev/brikk/house/sql/generator/Generator.class": "ddbeeb658381f5b6b76279594cd1cc74b2c2bf5aefcd24f553adcd125e266c14",
+    "dev/brikk/house/sql/ast/Match.class": "f7669afd189247534cb8632a5c6b637fcf08b5d8688ae8e4c4fe6d61c73bf52e"
+  }
+}

@@ -134,7 +134,7 @@ import dev.brikk.house.sql.parser.seqGet
 
 // sqlglot: parsers.duckdb._build_sort_array_desc
 private fun buildSortArrayDesc(a: List<Expression?>): Expression =
-    SortArray(args("this" to seqGet(a, 0), "asc" to BooleanNode(args("this" to false))))
+    SortArray(args("this" to seqGet(a, 0), "asc" to BooleanNode(args("this" to false)), "nulls_first" to seqGet(a, 1)))
 
 // sqlglot: parsers.duckdb._build_array_prepend
 private fun buildArrayPrependDuckdb(a: List<Expression?>): Expression =
@@ -143,7 +143,10 @@ private fun buildArrayPrependDuckdb(a: List<Expression?>): Expression =
 // sqlglot: parsers.duckdb._build_date_diff
 private fun buildDateDiff(a: List<Expression?>): Expression =
     applyTimeUnitCoercion(
-        DateDiff(args("this" to seqGet(a, 2), "expression" to seqGet(a, 1), "unit" to seqGet(a, 0)))
+        DateDiff(args("this" to seqGet(a, 2), "expression" to seqGet(a, 1), "unit" to seqGet(a, 0),
+            "date_part_boundary" to seqGet(a, 0)?.let { unit ->
+                if ((unit is Literal || unit is Var) && unit.name.uppercase() !in setOf("WEEK", "WEEKS", "W")) true else null
+            }))
     )
 
 // sqlglot: parsers.duckdb._build_generate_series
@@ -232,6 +235,7 @@ open class DuckdbParser(
 
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.DUCKDB
+    override val isPredicatePrecedence get() = dev.brikk.house.sql.parser.IsPredicatePrecedence.LOW
 
     // sqlglot: DuckDBParser.MAP_KEYS_ARE_ARBITRARY_EXPRESSIONS = True
     override val mapKeysAreArbitraryExpressions: Boolean get() = true
@@ -345,9 +349,9 @@ open class DuckdbParser(
         get() = super.setParsers + DuckdbParserTables.SET_PARSERS_EXTRA
 
     // PREPARE used to be a COMMAND token, which was also allowed in identifier/alias sites.
-    override val idVarTokens: Set<TokenType> get() = super.idVarTokens + TokenType.PREPARE
-    override val aliasTokens: Set<TokenType> get() = super.aliasTokens + TokenType.PREPARE
-    override val tableAliasTokens: Set<TokenType> get() = super.tableAliasTokens + TokenType.PREPARE
+    override val idVarTokens: Set<TokenType> get() = super.idVarTokens + setOf(TokenType.PREPARE, TokenType.CONNECT, TokenType.DISCONNECT)
+    override val aliasTokens: Set<TokenType> get() = super.aliasTokens + setOf(TokenType.PREPARE, TokenType.CONNECT, TokenType.DISCONNECT)
+    override val tableAliasTokens: Set<TokenType> get() = super.tableAliasTokens + setOf(TokenType.PREPARE, TokenType.CONNECT, TokenType.DISCONNECT)
 
     // sqlglot: DuckDBParser.SHOW_PARSERS
     open val showParsers: Map<String, (DuckdbParser) -> Expression>
@@ -1287,7 +1291,8 @@ object DuckdbParserTables {
         dev.brikk.house.sql.parser.StringEscapeProfiles.DUCKDB.withIdentifiers(mapOf('`' to "`"))
             // Existing non-command token, dedicated parser above. Keeping the tail
             // tokenized is necessary for exact body/option parameter intervals.
-            .withKeywords(mapOf("EXPLAIN" to TokenType.DESCRIBE))
+            .withKeywords(mapOf("EXPLAIN" to TokenType.DESCRIBE, "PREPARE" to TokenType.PREPARE))
+            .withoutCommands(setOf(TokenType.EXECUTE))
             .withFormatStrings(mapOf(
                 "x'" to dev.brikk.house.sql.parser.StringFormat("'", TokenType.HEX_STRING),
                 "X'" to dev.brikk.house.sql.parser.StringFormat("'", TokenType.HEX_STRING),

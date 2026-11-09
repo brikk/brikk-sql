@@ -1,0 +1,206 @@
+{
+  "commit": "2fe25297af5b0f44f5c9e5d03e1b296424b7acbe",
+  "upstream_sort_array_exists": false,
+  "upstream_array_sort_args": {
+    "this": true,
+    "expression": false,
+    "asc": false,
+    "nulls_first": false
+  },
+  "decision": "Keep both local published classes and schemas; do not import this deletion or migrate default serde implicitly.",
+  "ddb054_review_sha256": "0c686fcf7d7884f25e9f7d2bfa97bbd41adf634611e5a3ed51eb32670966ef2d",
+  "records": [
+    {
+      "sql": "LIST_REVERSE_SORT([3,NULL,1], 'NULLS FIRST')",
+      "node": "ArraySort",
+      "dump": [
+        {
+          "c": "sqlglot.expressions.array.ArraySort",
+          "m": {
+            "line": 1,
+            "col": 17,
+            "start": 0,
+            "end": 16
+          }
+        },
+        {
+          "i": 0,
+          "k": "this",
+          "c": "sqlglot.expressions.array.Array"
+        },
+        {
+          "i": 1,
+          "k": "expressions",
+          "a": true,
+          "c": "sqlglot.expressions.core.Literal",
+          "m": {
+            "line": 1,
+            "col": 20,
+            "start": 19,
+            "end": 19
+          }
+        },
+        {
+          "i": 2,
+          "k": "this",
+          "v": "3"
+        },
+        {
+          "i": 2,
+          "k": "is_string",
+          "v": false
+        },
+        {
+          "i": 1,
+          "k": "expressions",
+          "a": true,
+          "c": "sqlglot.expressions.core.Null"
+        },
+        {
+          "i": 1,
+          "k": "expressions",
+          "a": true,
+          "c": "sqlglot.expressions.core.Literal",
+          "m": {
+            "line": 1,
+            "col": 27,
+            "start": 26,
+            "end": 26
+          }
+        },
+        {
+          "i": 6,
+          "k": "this",
+          "v": "1"
+        },
+        {
+          "i": 6,
+          "k": "is_string",
+          "v": false
+        },
+        {
+          "i": 1,
+          "k": "value_constructor",
+          "v": false
+        },
+        {
+          "i": 0,
+          "k": "asc",
+          "c": "sqlglot.expressions.core.Boolean"
+        },
+        {
+          "i": 10,
+          "k": "this",
+          "v": false
+        },
+        {
+          "i": 0,
+          "k": "nulls_first",
+          "c": "sqlglot.expressions.core.Boolean"
+        },
+        {
+          "i": 12,
+          "k": "this",
+          "v": true
+        }
+      ],
+      "rendered": "LIST_SORT([3, NULL, 1], 'DESC', 'NULLS FIRST')"
+    },
+    {
+      "sql": "LIST_SORT([3,NULL,1], 'DESC', 'NULLS LAST')",
+      "node": "ArraySort",
+      "dump": [
+        {
+          "c": "sqlglot.expressions.array.ArraySort",
+          "m": {
+            "line": 1,
+            "col": 9,
+            "start": 0,
+            "end": 8
+          }
+        },
+        {
+          "i": 0,
+          "k": "this",
+          "c": "sqlglot.expressions.array.Array"
+        },
+        {
+          "i": 1,
+          "k": "expressions",
+          "a": true,
+          "c": "sqlglot.expressions.core.Literal",
+          "m": {
+            "line": 1,
+            "col": 12,
+            "start": 11,
+            "end": 11
+          }
+        },
+        {
+          "i": 2,
+          "k": "this",
+          "v": "3"
+        },
+        {
+          "i": 2,
+          "k": "is_string",
+          "v": false
+        },
+        {
+          "i": 1,
+          "k": "expressions",
+          "a": true,
+          "c": "sqlglot.expressions.core.Null"
+        },
+        {
+          "i": 1,
+          "k": "expressions",
+          "a": true,
+          "c": "sqlglot.expressions.core.Literal",
+          "m": {
+            "line": 1,
+            "col": 19,
+            "start": 18,
+            "end": 18
+          }
+        },
+        {
+          "i": 6,
+          "k": "this",
+          "v": "1"
+        },
+        {
+          "i": 6,
+          "k": "is_string",
+          "v": false
+        },
+        {
+          "i": 1,
+          "k": "value_constructor",
+          "v": false
+        },
+        {
+          "i": 0,
+          "k": "asc",
+          "c": "sqlglot.expressions.core.Boolean"
+        },
+        {
+          "i": 10,
+          "k": "this",
+          "v": false
+        },
+        {
+          "i": 0,
+          "k": "nulls_first",
+          "c": "sqlglot.expressions.core.Boolean"
+        },
+        {
+          "i": 12,
+          "k": "this",
+          "v": false
+        }
+      ],
+      "rendered": "ARRAY_REVERSE_SORT([3, NULL, 1])"
+    }
+  ]
+}

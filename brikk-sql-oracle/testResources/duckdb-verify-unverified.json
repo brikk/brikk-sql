@@ -2,6 +2,30 @@
     "engine": "duckdb",
     "cases": [
         {
+            "sql": "DISCONNECT",
+            "reason": "SG29-020: the native parse-only SELECT serializer cannot serialize routing statements. Never use prepare/bind or change connection state to obtain a verdict. Unavailable/Rejected/Accepted outcomes remain fatal or stale, not waived."
+        },
+        {
+            "sql": "CONNECT qk",
+            "reason": "SG29-020: routing remains explicitly unverified by the parse-only channel; no connection acquisition or bind fallback is allowed."
+        },
+        {
+            "sql": "CONNECT \"remote db\"",
+            "reason": "SG29-020: routing remains explicitly unverified by the parse-only channel; no connection acquisition or bind fallback is allowed."
+        },
+        {
+            "sql": "CONNECT 'quack:localhost'",
+            "reason": "SG29-020: routing remains explicitly unverified by the parse-only channel; no endpoint is contacted and no bind fallback is allowed."
+        },
+        {
+            "sql": "CONNECT 'postgres:dbname=mydb host=localhost'",
+            "reason": "SG29-020: routing remains explicitly unverified by the parse-only channel; no endpoint is contacted and no bind fallback is allowed."
+        },
+        {
+            "sql": "CONNECT 'postgres:dbname=''my db'' host=localhost'",
+            "reason": "SG29-020: routing remains explicitly unverified by the parse-only channel; no endpoint is contacted and no bind fallback is allowed."
+        },
+        {
             "sql": "INSTALL httpfs",
             "reason": "INSTALL is not serialized by the parse-only channel; extension management must never fall back to prepare/bind."
         },

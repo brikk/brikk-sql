@@ -122,6 +122,8 @@ HANDWRITTEN = (
     | scrape_names(AST_DIR / "PipeNodes.kt")
     | scrape_names(AST_DIR / "TrinoNodes.kt")
     | scrape_names(AST_DIR / "DorisNodes.kt")
+    | scrape_names(AST_DIR / "LegacyNodes.kt")
+    | scrape_names(AST_DIR / "ReplaceColumns.kt")
 )
 
 # brikk-native DType members with no sqlglot counterpart (Doris storage types),
@@ -262,6 +264,15 @@ FLAG_ATTRS = [
     ("is_subquery", "isSubquery"),
 ]
 
+# SG29-018 compatibility decision. Keep published schemas, not upstream's
+# breaking ArraySort migration or removal of Lambda.colon. The manifest retains
+# the raw upstream shape and records these exact deviations separately.
+COMPATIBLE_ARG_TYPES = {
+    "ArraySort": {"this": True, "expression": False},
+    "Lambda": {"this": True, "expressions": True, "colon": False},
+    "Nearest": {"this": True, "count": False, "approximate": False, "exact": False, "similarity": False},
+}
+
 
 def topo_nodes() -> list[type]:
     """All catalog node classes, parents before children (by Kotlin chain depth)."""
@@ -305,7 +316,8 @@ def gen_node(c: type, open_classes: set[str]) -> list[str]:
     sup_name = sup.__name__
 
     # arg_types: emit override iff ordered items differ from Kotlin superclass effective
-    own_at = list(c.arg_types.items())
+    own_arg_types = COMPATIBLE_ARG_TYPES.get(c.__name__, c.arg_types)
+    own_at = list(own_arg_types.items())
     sup_at = list(sup.arg_types.items())
     emit_arg_types = own_at != sup_at
 
@@ -365,7 +377,7 @@ def gen_node(c: type, open_classes: set[str]) -> list[str]:
     companion: list[str] = []
     if emit_arg_types:
         body.append("    override val argTypes get() = ARG_TYPES")
-        companion.extend(arg_types_kotlin(c.arg_types, "        "))
+        companion.extend(arg_types_kotlin(own_arg_types, "        "))
     if varlen_override is not None:
         body.append(f"    override val isVarLenArgs get() = {str(varlen_override).lower()}")
     if sql_names_override is not None:
@@ -545,6 +557,10 @@ def gen_manifest() -> None:
         "class_count": len(classes),
         "traits": sorted(MIXINS),
         "classes": classes,
+        "compatibility_arg_types": COMPATIBLE_ARG_TYPES,
+        "legacy_classes": {"SortArray": {"module": "sqlglot.expressions.array",
+                                           "arg_types": {"this": True, "asc": False, "nulls_first": False}}},
+        "native_module_overrides": {"AggregateKeyProperty": "brikk.doris"},
     }
     CORPUS_DIR.mkdir(parents=True, exist_ok=True)
     out = CORPUS_DIR / "arg-types-manifest.json"

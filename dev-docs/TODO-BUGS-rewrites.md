@@ -1,7 +1,7 @@
 # TODO - mixed-dialect transpile rewrites (in scope)
 
 > `brikk-sql` is a Kotlin port of Python `sqlglot`, pinned to
-> `v30.22.0-5-ga00dc2e5c`. The reference clone at `reference/sqlglot/` is the
+> `v30.29.0`. The reference clone at `reference/sqlglot/` is the
 > oracle for this backlog.
 >
 > This file tracks only transpile parity cases that do not involve BigQuery.
@@ -15,9 +15,15 @@
 
 ---
 
-**9 parity-ledger items, all in one cluster: version-qualified targets.**
+**9 previously tracked parity-ledger items, all in one cluster: version-qualified targets.**
 
-The other pinned non-BigQuery parity cases pass. Intentional semantic corrections
+The coherent SG29-020 target refresh has separate exact preview/compatibility
+dispositions and owned unported-feature/correctness deferrals in
+[its integration review](../vendor/data/sqlglot-sg29-020/README.md). They are not
+silently folded into these nine or called native execution proof. Protected
+verifier-backed divergences remain protected; genuine correctness deferrals do not.
+
+The other non-BigQuery parity cases at that earlier checkpoint passed. Intentional semantic corrections
 and their upstream status remain documented in `docs/brikk-extensions.md`.
 
 ## Version-qualified targets (brikk has no dialect-version model)

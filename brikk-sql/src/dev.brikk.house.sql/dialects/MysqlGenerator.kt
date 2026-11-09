@@ -880,6 +880,19 @@ open class MysqlGenerator(
                 s = eliminateFullOuterJoin(s)
                 if (s is Select) selectSql(s) else sql(s)
             }
+            // sqlglot #8632: generic STDDEV/VARIANCE nodes mean sample, not MySQL's
+            // population aliases. Explicit names also survive derivative dispatch merges.
+            fun Generator.statisticalAggregateSql(name: String, e: Expression): String {
+                if (dialect.name in setOf("mysql", "starrocks") && e.thisArg is Distinct) {
+                    unexecutable("${dialect.name} statistical aggregates do not support DISTINCT")
+                }
+                return mg().renameFuncSql(name, e)
+            }
+            reg(Stddev::class) { e -> statisticalAggregateSql("STDDEV_SAMP", e) }
+            reg(StddevSamp::class) { e -> statisticalAggregateSql("STDDEV_SAMP", e) }
+            reg(StddevPop::class) { e -> statisticalAggregateSql("STDDEV_POP", e) }
+            reg(Variance::class) { e -> statisticalAggregateSql("VAR_SAMP", e) }
+            reg(VariancePop::class) { e -> statisticalAggregateSql("VAR_POP", e) }
             reg(StrPosition::class) { e -> mg().strpositionSql(e as StrPosition) }
             reg(StrToDate::class) { e -> mg().strToDateSql(e) }
             reg(StrToTime::class) { e -> mg().strToDateSql(e) }

@@ -1,12 +1,28 @@
 {
     "cases": [
         {
+            "id": "assertion:v1:sha256:c3f4a7ab70ccbdbcd280e617d224678c2defd7827dd3d819905edf5feeb129fd:1",
+            "case": "write|duckdb|SELECT MAKE_INTERVAL(1, day => '2\\'; SELECT 1; --')",
+            "signature": "sql-mismatch:v1:sha256:bdab617a7d12afb1651224544a669f895947254ca1965fe75e60c9e62c73e537",
+            "reason": "SG29-020: Use separately escaped per-unit interval expressions instead of one combined literal. The malicious string remains inside a literal; no native validity/equivalence is asserted for malformed numeric input.",
+            "expected": "SELECT INTERVAL '1 year 2''; SELECT 1; -- day'",
+            "actual": "SELECT (INTERVAL 1 YEAR + INTERVAL '2''; SELECT 1; --' DAY)"
+        },
+        {
             "id": "assertion:v1:sha256:2147b84d237d3bc20e2173dda6ad11ca9ac56488652e469ca817f33b80c2960a:1",
             "case": "write|duckdb|SELECT DATETIME('2020-01-01', 'America/Los_Angeles')",
             "reason": "brikk extension BQ-6, registry section 30: normalize an unzoned string to a UTC instant before deriving Los Angeles civil time. The pin's direct TIMESTAMPTZ cast depends on DuckDB's session zone. Executed under UTC, New York and Auckland.",
             "signature": "sql-mismatch:v1:sha256:358646c44b0746b586d17381739f71c8b1609d59ee553f543d87787b3edc77f4",
             "issue": "BQ-6",
             "status": "intentional-divergence"
+        },
+        {
+            "id": "assertion:v1:sha256:93038d3f76cfd1ffa341f2ef9c866f50b3671d9ad115dbd351d3436c9b583d54:1",
+            "case": "write|duckdb|SELECT ARRAY_TO_STRING(['cake', 'pie', NULL], '--', 'MISSING') AS text",
+            "signature": "sql-mismatch:v1:sha256:0ca2bd1935b31af13c9c79ff56d9f25ecdefd60308b2afade249798f497552fa",
+            "reason": "SG29-020: Retain the independently guarded insertion/null-replacement model; do not import unproved casts, nullability or append semantics from a generic preview expectation.",
+            "expected": "SELECT ARRAY_TO_STRING(LIST_TRANSFORM(['cake', 'pie', NULL], LAMBDA x : COALESCE(CAST(x AS TEXT), 'MISSING')), '--') AS text",
+            "actual": "SELECT ARRAY_TO_STRING(LIST_TRANSFORM(['cake', 'pie', NULL], LAMBDA x : COALESCE(x, 'MISSING')), '--') AS text"
         },
         {
             "id": "assertion:v1:sha256:214ebc397fb13403b902c9b74fd0c5efc91bbf4ba74c27359e227e6df929bfa4:1",
@@ -71,6 +87,22 @@
             "signature": "sql-mismatch:v1:sha256:8323d583c55875d0222882e5b01409cf0e8390eda037864358c96409996f20a9",
             "issue": "BQ-11",
             "status": "intentional-divergence"
+        },
+        {
+            "id": "assertion:v1:sha256:59a328bf659f681833ac4687b73c25a8c38ba7bfa8ea28fb7bb49a171ab9abd8:1",
+            "case": "read|trino|SELECT SUM(APPROX_QUANTILES(x, 2)[1]) OVER () FROM t",
+            "signature": "sql-mismatch:v1:sha256:1227d5b71c5c0d9b902e7117130cdf23897e190aa83fa410c583840b00a1e66d",
+            "reason": "SG29-020: Retain explicit BigQuery OFFSET syntax and the existing approximate/weighted-percentile execution refusal. A generic bracket rendering difference is not a newly qualified approximation.",
+            "expected": "SELECT SUM(APPROX_QUANTILES(x, 2)[1]) OVER () FROM t",
+            "actual": "SELECT SUM(APPROX_QUANTILES(x, 2)[OFFSET(1)]) OVER () FROM t"
+        },
+        {
+            "id": "assertion:v1:sha256:14b00a6ef940c09159726c8d16c44f74b9c53bec646a56511b4b8ce3fa70791b:1",
+            "case": "read|trino|SELECT SUM((SELECT APPROX_QUANTILES(x, 2)[1] FROM t)) OVER () FROM u",
+            "signature": "sql-mismatch:v1:sha256:14b94a11afc20537a027c7256779c2a5b1801a53ffbca3741adfe836df6e8af2",
+            "reason": "SG29-020: Retain explicit BigQuery OFFSET syntax and the existing approximate/weighted-percentile execution refusal. A generic bracket rendering difference is not a newly qualified approximation.",
+            "expected": "SELECT SUM((SELECT APPROX_QUANTILES(x, 2)[1] FROM t)) OVER () FROM u",
+            "actual": "SELECT SUM((SELECT APPROX_QUANTILES(x, 2)[OFFSET(1)] FROM t)) OVER () FROM u"
         }
     ]
 }

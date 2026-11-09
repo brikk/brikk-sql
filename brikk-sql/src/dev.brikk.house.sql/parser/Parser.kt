@@ -324,6 +324,17 @@ import dev.brikk.house.sql.ast.WithSystemVersioningProperty
 import dev.brikk.house.sql.ast.WithinGroup
 import dev.brikk.house.sql.ast.applyIndexOffset
 import dev.brikk.house.sql.ast.args
+import dev.brikk.house.sql.ast.Connector
+import dev.brikk.house.sql.ast.Predicate
+import dev.brikk.house.sql.ast.NEQ
+import dev.brikk.house.sql.ast.GT
+import dev.brikk.house.sql.ast.GTE
+import dev.brikk.house.sql.ast.LT
+import dev.brikk.house.sql.ast.LTE
+import dev.brikk.house.sql.ast.QUERY_MODIFIERS
+
+// sqlglot: parser.IsPredicatePrecedence (#8676).
+enum class IsPredicatePrecedence { HIGH, COMPARISON, EQUALITY, LOW }
 
 /**
  * Faithful port of reference/sqlglot/sqlglot/parser.py `Parser`. Coverage spans the
@@ -466,6 +477,9 @@ open class Parser(
 
     // sqlglot: Parser.MODIFIERS_ATTACHED_TO_SET_OP
     open val modifiersAttachedToSetOp: kotlin.Boolean get() = true
+
+    // sqlglot: Parser.IS_PREDICATE_PRECEDENCE. HIGH retains the generic oracle policy.
+    open val isPredicatePrecedence: IsPredicatePrecedence get() = IsPredicatePrecedence.HIGH
 
     // sqlglot: Parser.SET_OP_MODIFIERS
     open val setOpModifiers: Set<String> get() = setOf("order", "limit", "offset")
@@ -952,6 +966,7 @@ open class Parser(
 
     // sqlglot: Parser.reset
     fun reset() {
+        pendingPostfixIsRange = false
         sql = ""
         hasFromFirstQuery = false
         errors.clear()
@@ -1444,7 +1459,7 @@ open class Parser(
     }
 
     // sqlglot: Parser._parse_conjunction
-    fun parseConjunction(): Expression? {
+    open fun parseConjunction(): Expression? {
         var this_ = parseEquality()
         while (matchSet(conjunction.keys)) {
             val comments = prevComments
@@ -1459,56 +1474,106 @@ open class Parser(
     }
 
     // sqlglot: Parser._parse_equality
-    fun parseEquality(): Expression? {
+    fun parseEquality(): Expression? = parseEquality(parseIs = true)
+
+    // Keep the published zero-argument entry point while allowing a DISTINCT FROM RHS
+    // to stop before another postfix IS predicate.
+    private fun parseEquality(parseIs: kotlin.Boolean): Expression? {
         var this_ = parseComparison()
-        while (matchSet(equality.keys)) {
-            val operator = prevToken.text
-            val comments = prevComments
-            this_ = expression(
-                equality.getValue(prevToken.tokenType)(
-                    args("this" to this_, "expression" to parseComparison())
-                ),
-                comments = comments,
-            )
-            if (preserveOperatorSpelling) this_.meta["operator"] = operator
+        while (true) {
+            if (matchSet(equality.keys)) {
+                val operator = prevToken.text
+                val comments = prevComments
+                val factory = equality.getValue(prevToken.tokenType)
+                this_ = buildPredicate(factory(args("this" to this_, "expression" to parseComparison())), comments)
+                if (preserveOperatorSpelling) this_.meta["operator"] = operator
+            } else if (parseIs && isPredicateAhead()) {
+                val start = index
+                this_ = parseComparison(parsePostfixIsRange(this_))
+                if (index == start) break
+            } else break
         }
         return this_
     }
 
     // sqlglot: Parser._parse_comparison
-    fun parseComparison(): Expression? {
-        var this_ = parseRange()
+    fun parseComparison(): Expression? = parseComparison(null)
+
+    private fun parseComparison(operand: Expression?): Expression? {
+        var this_ = operand ?: parseRange()
         while (matchSet(comparison.keys)) {
             val comments = prevComments
-            this_ = expression(
-                comparison.getValue(prevToken.tokenType)(
-                    args("this" to this_, "expression" to parseRange())
-                ),
-                comments = comments,
-            )
+            val factory = comparison.getValue(prevToken.tokenType)
+            this_ = buildPredicate(factory(args("this" to this_, "expression" to parseRange())), comments)
         }
         return this_
     }
 
+    // sqlglot: Parser._build_predicate. Explicit groups also preserve meaning when the
+    // destination dialect gives IS a different precedence from the source dialect.
+    private fun buildPredicate(predicate: Expression, comments: List<String>? = null): Expression {
+        fun isIsPredicate(node: Expression?) = node is Is || node is NullSafeEQ || node is NullSafeNEQ
+        var left = predicate.thisArg as? Expression
+        var right = predicate.expressionArg as? Expression
+        if (isIsPredicate(predicate)) {
+            if (left is Connector || left is Not || left is NullSafeNEQ || left is EQ || left is NEQ ||
+                left is NullSafeEQ || left is GT || left is GTE || left is LT || left is LTE ||
+                (predicate !is Is && left is Is)) {
+                left = expression(Paren(args("this" to left)))
+            }
+            if (right is Predicate || right is Connector || right is Not || right is Escape) {
+                right = expression(Paren(args("this" to right)))
+            }
+        } else {
+            if (isIsPredicate(if (left is Not) left.thisArg as? Expression else left)) {
+                left = expression(Paren(args("this" to left)))
+            }
+            if (isIsPredicate(if (right is Not) right.thisArg as? Expression else right)) {
+                right = expression(Paren(args("this" to right)))
+            }
+        }
+        predicate.set("this", left)
+        predicate.set("expression", right)
+        return expression(predicate, comments = comments)
+    }
+
+    private fun isPredicateAhead(): kotlin.Boolean = isPredicatePrecedence != IsPredicatePrecedence.HIGH &&
+        (currToken.tokenType in setOf(TokenType.IS, TokenType.ISNULL, TokenType.NOTNULL) ||
+            currToken.tokenType == TokenType.NOT && nextToken.tokenType == TokenType.NULL)
+
+    // Pass the one-shot postfix permission through the OLD virtual parseRange signature.
+    // This preserves both its JVM/default bridge and existing dialect/subclass overrides.
+    // The base method consumes it before parsing any nested operand, and finally restores
+    // it on cancellation/errors as well as success.
+    private var pendingPostfixIsRange = false
+    private fun parsePostfixIsRange(operand: Expression?): Expression? {
+        val previous = pendingPostfixIsRange
+        pendingPostfixIsRange = true
+        return try { parseRange(operand) } finally { pendingPostfixIsRange = previous }
+    }
+
     // sqlglot: Parser._parse_range
     open fun parseRange(this_: Expression? = null): Expression? {
+        val parseIs = pendingPostfixIsRange
+        pendingPostfixIsRange = false
         var current = this_ ?: parseBitwise()
 
         while (true) {
+            if (!parseIs && isPredicateAhead()) break
             val negate = match(TokenType.NOT)
             if (matchSet(rangeParsers.keys)) {
                 val parsed = rangeParsers.getValue(prevToken.tokenType)(this, current)
                     ?: return current
                 current = parsed
             } else if (match(TokenType.ISNULL) || (negate && match(TokenType.NULL))) {
-                current = expression(Is(args("this" to current, "expression" to Null())))
+                current = buildPredicate(Is(args("this" to current, "expression" to Null())))
             } else if (match(TokenType.NOTNULL)) {
                 // Postgres supports ISNULL and NOTNULL for conditions.
                 current = if (normalizeNotNull) {
-                    val isNull = expression(Is(args("this" to current, "expression" to Null())))
+                    val isNull = buildPredicate(Is(args("this" to current, "expression" to Null())))
                     expression(Not(args("this" to isNull)))
                 } else {
-                    expression(Is(args("this" to current, "expression" to Null(), "negate" to true)))
+                    buildPredicate(Is(args("this" to current, "expression" to Null(), "negate" to true)))
                 }
             } else {
                 if (negate) retreat(index - 1)
@@ -1517,11 +1582,10 @@ open class Parser(
 
             if (negate) {
                 current = negateRange(current)
-                if (currToken.exists &&
-                    (currToken.tokenType == TokenType.NOT || currToken.tokenType in rangeParsers)
-                ) {
-                    current = expression(Paren(args("this" to current)))
-                }
+            }
+            if ((negate || current is Not && current.thisArg is Is) && currToken.exists &&
+                (currToken.tokenType == TokenType.NOT || currToken.tokenType in rangeParsers)) {
+                current = expression(Paren(args("this" to current)))
             }
         }
 
@@ -1548,7 +1612,7 @@ open class Parser(
 
         if (matchTextSeq("DISTINCT", "FROM")) {
             val factory: NodeFactory = if (negate) ::NullSafeEQ else ::NullSafeNEQ
-            return expression(factory(args("this" to this_, "expression" to parseBitwise())))
+            return buildPredicate(factory(args("this" to this_, "expression" to parseIsRhs(distinct = true))))
         }
 
         val expr: Expression?
@@ -1571,7 +1635,7 @@ open class Parser(
                 JSON(args("this" to kind, "with_" to with_, "unique" to unique))
             )
         } else {
-            expr = parseNull() ?: parseBitwise()
+            expr = parseIsRhs()
             if (expr == null) {
                 retreat(startIndex)
                 return null
@@ -1580,12 +1644,21 @@ open class Parser(
 
         var result: Expression
         if (negate && expr is Null && !normalizeNotNull) {
-            result = expression(Is(args("this" to this_, "expression" to expr, "negate" to true)))
+            result = buildPredicate(Is(args("this" to this_, "expression" to expr, "negate" to true)))
         } else {
-            result = expression(Is(args("this" to this_, "expression" to expr)))
+            result = buildPredicate(Is(args("this" to this_, "expression" to expr)))
             if (negate) result = expression(Not(args("this" to result)))
         }
         return parseColumnOps(result)
+    }
+
+    private fun parseIsRhs(distinct: kotlin.Boolean = false): Expression? = if (!distinct) {
+        parseNull() ?: parseBitwise()
+    } else when (isPredicatePrecedence) {
+        IsPredicatePrecedence.LOW -> parseEquality(parseIs = false)
+        IsPredicatePrecedence.EQUALITY -> parseComparison()
+        IsPredicatePrecedence.COMPARISON -> parseRange()
+        IsPredicatePrecedence.HIGH -> parseBitwise()
     }
 
     // sqlglot: Parser._parse_in
@@ -1621,6 +1694,9 @@ open class Parser(
 
     // sqlglot: Parser._parse_between
     fun parseBetween(this_: Expression?): Expression {
+        val operand = if (this_ is Is || this_ is NullSafeEQ || this_ is NullSafeNEQ) {
+            expression(Paren(args("this" to this_)))
+        } else this_
         var symmetric: kotlin.Boolean? = null
         if (matchTextSeq("SYMMETRIC")) {
             symmetric = true
@@ -1633,7 +1709,7 @@ open class Parser(
         val high = parseBitwise()
 
         return expression(
-            Between(args("this" to this_, "low" to low, "high" to high, "symmetric" to symmetric))
+            Between(args("this" to operand, "low" to low, "high" to high, "symmetric" to symmetric))
         )
     }
 
@@ -1644,7 +1720,7 @@ open class Parser(
     }
 
     // sqlglot: Parser._parse_bitwise
-    fun parseBitwise(): Expression? {
+    open fun parseBitwise(): Expression? {
         var this_ = parseTerm()
 
         while (true) {
@@ -2034,6 +2110,11 @@ open class Parser(
             return parseSubquery(wrapped, parseAlias = parseSubqueryAlias)
         } else if (match(TokenType.VALUES, advance = false)) {
             this_ = parseDerivedTableValues()
+            if (this_ is Values && currToken.tokenType in setOf(TokenType.ORDER_BY, TokenType.LIMIT, TokenType.OFFSET, TokenType.FETCH)) {
+                // #8803 prerequisite: VALUES is not a Query in this AST. Use the existing
+                // portable SELECT wrapper so pagination is parsed and emitted at its scope.
+                this_ = parseQueryModifiers(valuesToSelect(this_))
+            }
         } else if (from != null) {
             // sqlglot: exp.select("*").from_(from_.this, copy=False)
             this_ = expression(
@@ -2248,6 +2329,11 @@ open class Parser(
 
     // sqlglot: Parser._values_to_select
     private fun valuesToSelect(values: Values): Select {
+        // sqlglot #8803: pagination belongs to the SELECT wrapper, not its VALUES source.
+        val modifiers = QUERY_MODIFIERS.keys.mapNotNull { key ->
+            values.args[key]?.let { key to it }
+        }
+        for ((key, _) in modifiers) values.set(key, null)
         if (values.alias.isEmpty()) {
             values.set(
                 "alias",
@@ -2259,7 +2345,7 @@ open class Parser(
                 "expressions" to mutableListOf<Expression>(selectStar()),
                 "from_" to From(args("this" to values)),
             )
-        )
+        ).also { select -> for ((key, modifier) in modifiers) select.set(key, modifier) }
     }
 
     protected open fun parseCteKeyExpressions(): List<Expression> = parseWrappedIdVars()
@@ -2838,7 +2924,10 @@ open class Parser(
         if (unnest != null) return unnest
 
         val values = parseDerivedTableValues()
-        if (values != null) return values
+        if (values != null) {
+            values.set("pivots", parsePivots())
+            return values
+        }
 
         val subquery = parseSelect(table = true, consumePipe = consumePipe)
         if (subquery != null) {
@@ -3441,7 +3530,7 @@ open class Parser(
     }
 
     // sqlglot: Parser._parse_pivot
-    protected fun parsePivot(): Expression? {
+    protected open fun parsePivot(): Expression? {
         val startIndex = index
         var includeNulls: kotlin.Boolean? = null
 
@@ -3969,14 +4058,20 @@ open class Parser(
     }
 
     // sqlglot: Parser.parse_set_operation
-    fun parseSetOperation(this_: Expression?, consumePipe: kotlin.Boolean = false): Expression? {
+    fun parseSetOperation(this_: Expression?, consumePipe: kotlin.Boolean = false): Expression? =
+        parseSetOperationAtPrecedence(this_, consumePipe, intersectOnly = false)
+
+    // Keep the published two-argument method and its Kotlin default bridge unchanged.
+    private fun parseSetOperationAtPrecedence(
+        this_: Expression?, consumePipe: kotlin.Boolean = false, intersectOnly: kotlin.Boolean = false,
+    ): SetOperation? {
         val start = index
         val (_, sideToken, kindToken) = parseJoinParts()
 
         val side = sideToken?.text
         var kind = kindToken?.text
 
-        if (!matchSet(setOperations)) {
+        if (!matchSet(setOperations) || intersectOnly && prevToken.tokenType != TokenType.INTERSECT) {
             retreat(start)
             return null
         }
@@ -4036,6 +4131,15 @@ open class Parser(
 
         if (left is Values) left = valuesToSelect(left)
         if (expr is Values) expr = valuesToSelect(expr)
+        for (operand in listOf(left, expr)) {
+            if (operand is Subquery) {
+                val values = operand.unnest()
+                if (values is Values) {
+                    val wrapper = values.parent as Subquery
+                    wrapper.set("this", valuesToSelect(values))
+                }
+            }
+        }
 
         return expression(
             operation(
@@ -4050,29 +4154,44 @@ open class Parser(
                 )
             ),
             comments = comments,
-        )
+        ) as SetOperation
     }
 
     // sqlglot: Parser._parse_set_operations
     fun parseSetOperations(this_: Expression?): Expression? {
         var current = this_
+        val intersectBindsTighter = dialect.intersectBindsTighterThanUnionAndExcept
+        var lastSetop: SetOperation? = null
         while (current != null) {
-            val setop = parseSetOperation(current) ?: break
+            val setop = parseSetOperationAtPrecedence(current) ?: break
+            lastSetop = setop
+            if (setop is Intersect && (setop.thisArg is Union || setop.thisArg is Except) && !intersectBindsTighter) {
+                setop.set("this", Subquery(args("this" to setop.thisArg)))
+            } else if (setop !is Intersect && intersectBindsTighter) {
+                var operand = setop.expressionArg as? Expression
+                while (operand != null) {
+                    val intersect = parseSetOperationAtPrecedence(operand, intersectOnly = true) ?: break
+                    operand = intersect
+                    lastSetop = intersect
+                }
+                if (operand !== setop.expressionArg) setop.set("expression", Subquery(args("this" to operand)))
+            }
             current = setop
         }
 
         if (current is SetOperation && modifiersAttachedToSetOp) {
-            val expr = current.args["expression"] as? Expression
+            val expr = lastSetop?.expressionArg as? Expression
 
             if (expr != null) {
                 for (arg in setOpModifiers) {
-                    val modifier = expr.args[arg] as? Expression
-                    if (modifier != null && !(arg == "limit" && modifier.meta["top"] == true)) {
-                        current.set(arg, modifier.pop())
+                    val modifier = expr.args[arg]
+                    if (modifier != null && !(arg == "limit" && (modifier as? Expression)?.meta?.get("top") == true)) {
+                        expr.set(arg, null)
+                        current.set(arg, modifier)
                     }
                 }
             }
-            if (currToken.tokenType in setOf(TokenType.LIMIT, TokenType.FETCH)) {
+            if (currToken.tokenType in queryModifierParsers) {
                 current = parseQueryModifiers(current)
             }
         }
@@ -4433,6 +4552,13 @@ open class Parser(
                 }
             } else if (typeToken in enumTypeTokens) {
                 expressions = parseCsv { parseEquality() }
+            } else if (typeToken == TokenType.REF) {
+                val target = tryParse({ parseTableParts(schema = true) })
+                if (target !is Table || target.name.isEmpty()) {
+                    retreat(startIndex)
+                    return null
+                }
+                expressions = mutableListOf(target)
             } else if (typeToken == TokenType.JSON) {
                 // ClickHouse JSON type supports arguments: JSON(col Type, SKIP col, param=value)
                 expressions = parseCsv { parseJsonTypeArg() }
@@ -5768,10 +5894,15 @@ open class Parser(
         fun isCall() = currToken.tokenType in funcTokens && nextToken.tokenType == TokenType.L_PAREN
         val kind = if (!isCall() && matchSet(creatables)) prevToken.text else null
         var style: String? = if (matchTexts(describeStyles)) prevToken.text.uppercase() else null
-        if (match(TokenType.DOT)) {
+        // sqlglot #8871: only rewind a consumed kind/style used as a database name.
+        // Rewinding a bare DESC. would parse DESC again without making progress.
+        if ((kind != null || style != null) && match(TokenType.DOT)) {
             style = null
             retreat(index - 2)
         }
+        // The table-parts parser tolerates empty dot components for other syntax.
+        // A DESCRIBE target cannot start with a bare dot; report the incomplete edit.
+        if (currToken.tokenType == TokenType.DOT) raiseError("Expected table name but got $currToken")
 
         // brikk-native: FORMAT directly followed by a parenthesis is a call (ClickHouse format(...)), not the option.
         val format = if (match(TokenType.FORMAT, advance = false) && nextToken.tokenType != TokenType.L_PAREN) parseProperty() else null
@@ -5814,7 +5945,9 @@ open class Parser(
 
         val options = mutableListOf<Expression>()
         while (currToken.exists && !match(TokenType.R_PAREN, advance = false)) {
-            val option = parseVar(anyToken = true)
+            val beforeOption = index
+            val option = parseVar(anyToken = true) ?: break
+            if (index == beforeOption) break
             val prev = prevToken.text.uppercase()
 
             // Different dialects might separate options and values by white space, "=" and "AS"
@@ -6369,6 +6502,7 @@ open class Parser(
     // sqlglot: Parser._parse_refresh
     // (open for DorisParser: REFRESH MATERIALIZED VIEW | CATALOG | DATABASE, docs/brikk-extensions.md #19)
     open fun parseRefresh(): Expression {
+        val start = prevToken
         // sqlglot 3c6d84248 (feat(starrocks): parse REFRESH EXTERNAL TABLE): the
         // EXTERNAL TABLE branch is exercised by the StarRocks dialect.
         val kind = when {
@@ -6378,12 +6512,12 @@ open class Parser(
             else -> ""
         }
 
-        val this_ = parseString() ?: parseTable()
+        val this_ = parseString()
         if (kind.isEmpty() && this_ !is Literal) {
-            return parseAsCommand(prevToken)
+            return parseAsCommand(start)
         }
 
-        return expression(Refresh(args("this" to this_, "kind" to kind)))
+        return expression(Refresh(args("this" to (this_ ?: parseTable()), "kind" to kind)))
     }
 
     // sqlglot: Parser._parse_drop
@@ -8230,7 +8364,7 @@ open class Parser(
             }
 
             if (!identity) {
-                this_.set("expression", parseRange())
+                this_.set("expression", parseDisjunction())
             } else if (this_.args["start"] == null && match(TokenType.NUMBER, advance = false)) {
                 val genArgs = parseCsv { parseBitwise() }
                 this_.set("start", genArgs.getOrNull(0))
@@ -9000,7 +9134,8 @@ open class Parser(
         val end: Expression?
         if (matchPair(TokenType.DASH, TokenType.COLON, advance = false)) {
             advance()
-            end = Neg(args("this" to Literal.number("1")))
+            // DuckDB's '-' is an omitted end, not the explicit index -1.
+            end = null
         } else {
             end = parseAssignment()
         }
@@ -9310,7 +9445,7 @@ open class Parser(
                 }
 
                 val currentThis = current.args["this"]
-                if (currentThis is Column) {
+                if (!parseMap && currentThis is Column) {
                     currentThis.replace(currentThis.args["this"])
                 }
             } else {
@@ -9339,6 +9474,7 @@ open class Parser(
                 argsList.addAll(parseCsv { parseDisjunction() })
             }
         } else {
+            match(TokenType.ALL)
             argsList.addAll(parseCsv { parseDisjunction() })
         }
 
@@ -9474,7 +9610,7 @@ open class Parser(
             }
 
             if (typ != false && typ is Expression) {
-                dotOrId = expression(Cast(args("this" to dotOrId, "to" to typ)))
+                dotOrId = expression(Cast(args("this" to dotOrId, "to" to typ.copy())))
             }
 
             var parent = column.parent

@@ -18,6 +18,7 @@ import com.intellij.openapi.util.Disposer
 import dev.brikk.house.sql.intellij.catalog.DialectDataSourceResolver
 import java.lang.reflect.Field
 import java.lang.reflect.ParameterizedType
+import java.rmi.RemoteException
 import java.util.concurrent.Callable
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutionException
@@ -125,7 +126,16 @@ private class StreamingRequest(
         var cancelling: Future<*>? = null
         try {
             if (!isCurrent()) return
-            val running = ApplicationManager.getApplication().executeOnPooledThread(Callable { connection.remoteConnection.cancelAll() })
+            val running = ApplicationManager.getApplication().executeOnPooledThread(Callable {
+                try {
+                    connection.remoteConnection.cancelAll()
+                } catch (e: RemoteException) {
+                    // The platform's Callable wrapper logs escaping failures as background errors before get()
+                    // can handle them. Report transport failures here, even after disconnect retired the connection
+                    // and no one waits for this future; disconnect can itself break the pending RMI reply.
+                    LOG.warn("Cancelling a streaming request failed", e)
+                }
+            })
             cancelling = running
             if (uninterruptibly { finishes(running) }) {
                 if (isCurrent()) awaitHandled(CancelRunningStatementsAction.createCancelRequest(session) as DataRequest, "stock cancel")

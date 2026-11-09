@@ -588,8 +588,10 @@ open class PrestoGenerator(
 
     // sqlglot: dialect.bool_xor_sql
     open fun boolXorSql(expression: Xor): String {
-        val a = sql(expression, "this")
-        val b = sql(expression, "expression")
+        val left = expression.thisArg
+        val right = expression.expressionArg
+        val a = if (left is Connector) "(${sql(left)})" else sql(left)
+        val b = if (right is Connector) "(${sql(right)})" else sql(right)
         return "($a AND (NOT $b)) OR ((NOT $a) AND $b)"
     }
 
@@ -1186,7 +1188,8 @@ open class PrestoGenerator(
     override fun intervalSql(expression: Interval): String {
         val this_ = expression.thisArg as? Expression
         if (this_ != null && expression.text("unit").uppercase().startsWith("WEEK")) {
-            return "(${this_.name} * INTERVAL '7' DAY)"
+            if (!this_.isString) return "(${sql(this_)} * INTERVAL '7' DAY)"
+            if (this_.name.toDoubleOrNull()?.isFinite() == true) return "(${this_.name} * INTERVAL '7' DAY)"
         }
         return super.intervalSql(expression)
     }

@@ -1,0 +1,17 @@
+{
+  "scope": "Published consumer Java facade runs on Java 17; 33 accepted renderings feed the separate native controls, including one normalization-only input. No ALTER executed.",
+  "statement_renderings": 33,
+  "java_17_class_counts": {
+    "brikk-sqljvm": 2862,
+    "brikk-sql-metadatajvm": 143
+  },
+  "class_sha256": {
+    "dev/brikk/house/sql/dialects/SparkParser.class": "59fbca03bf1846162b1f10342640db1c7a80771661540bf0e72009f8bc67c731",
+    "dev/brikk/house/sql/dialects/Spark2Parser.class": "87d429b8fcbb1a89df2d5ce682319d2d078d1d99e7028b92a9ca91657ae56353",
+    "dev/brikk/house/sql/dialects/SparkGenerator.class": "a19a509f572689d5f2fd73fd2e7c31ed700781986e07c7f3795b2ac1c8ff5ab3",
+    "dev/brikk/house/sql/dialects/HiveParser.class": "49e45bcdc6401306e80a11a4142dd5dbfe7681626a02b9e39da8875beb42ecbd",
+    "dev/brikk/house/sql/generator/Generator.class": "7c0537cd6c4cc75063c7a7446d4ef94285eff95cb456bafa7a25661fd6f3f288",
+    "dev/brikk/house/sql/parser/Parser.class": "f6c99a39723508ff61f02c7e541ff57bc053189278e9b724354969e518e925b1",
+    "dev/brikk/house/sql/ast/ReplaceColumns.class": "cf65a4a36c0c28d8ad5b087f608bda6cf7ca3a85cf2244f9fd0f8fa06b431e3d"
+  }
+}

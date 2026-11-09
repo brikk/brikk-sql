@@ -110,8 +110,13 @@ Mutation checks were performed and then reverted:
 | Force inference even when disabled | 5: old default-bridge behavior, explicit disabled policy, populated-schema default, empty-slot nullability safety, and unrelated-catalog validation |
 
 Neither mutation is retained. Production entry points use the explicit split above.
-Parity fixtures now coherently pin `v30.22.0-5-ga00dc2e5c`, retained in the authorized
-main integration for `0.20.0-SNAPSHOT`.
+The earlier main integration for `0.20.0-SNAPSHOT` coherently pinned
+`v30.22.0-5-ga00dc2e5c`.
 The exact private candidate from `dd1ea09` also passes the peer compiler/runtime,
 assembly, smoke and IDE-compiler gates without publication or peer-source edits;
 see [candidate verification](engine-candidate-verification.md) for hashes and scope.
+
+SG29-020 now refreshes the library oracle to `v30.29.0`. SQL-side Engine and ABI
+contracts are rerun; the earlier private peer-candidate results above retain
+their original bytes/pin and are not relabeled as consumer qualification of this
+new candidate. See [the integration review](../vendor/data/sqlglot-sg29-020/README.md).

@@ -1,0 +1,66 @@
+{
+  "scope": "All native outcomes, engine/settings and local dispositions unchanged; exactly one reviewed annotation ledger hash changes.",
+  "before": {
+    "files": 181,
+    "inputs": 24606,
+    "unique_sql": 5419,
+    "native_counts": {
+      "accepted": 13608,
+      "rejected": 7749,
+      "unverified": 3249
+    },
+    "native_fingerprint": "79437a00fab07678b159a47dc2f37c62749d21958eff156c8257e7b72296b12b",
+    "local_counts": {
+      "excluded-or-non-sql-expectation": 65,
+      "expected-unsupported": 9,
+      "foreign-analysis-input": 121,
+      "opaque-command": 398,
+      "unsupported": 235,
+      "unsupported-warning": 1571
+    },
+    "local_fingerprint": "e37c2a7874457cb2ec6ffc2fecbd96974488464240056474773397f0fa429925",
+    "inventory_fingerprint": "b5cf0105c61310406ab857ba64e9fe10733aecedfcd7cc429493598e5c43c4ac"
+  },
+  "after": {
+    "files": 181,
+    "inputs": 24606,
+    "unique_sql": 5419,
+    "native_counts": {
+      "accepted": 13608,
+      "rejected": 7749,
+      "unverified": 3249
+    },
+    "native_fingerprint": "79437a00fab07678b159a47dc2f37c62749d21958eff156c8257e7b72296b12b",
+    "local_counts": {
+      "excluded-or-non-sql-expectation": 65,
+      "expected-unsupported": 9,
+      "foreign-analysis-input": 121,
+      "opaque-command": 398,
+      "unsupported": 235,
+      "unsupported-warning": 1571
+    },
+    "local_fingerprint": "e37c2a7874457cb2ec6ffc2fecbd96974488464240056474773397f0fa429925",
+    "inventory_fingerprint": "85426a6d4292a9636681bcf357c7fee6fab6b2a1616d7f7836a088828f778ceb"
+  },
+  "native_outcomes_unchanged": true,
+  "engine_settings_unchanged": true,
+  "local_dispositions_unchanged": true,
+  "inventory_changes": [
+    {
+      "before": {
+        "file": "annotate-corpus/known-failures-bigquery-annotated-serde.json",
+        "sha256": "cf03e5f09cd72b0477c8d27c9b82605c4e7bc4b2b4574f585ff53cce09b4073b",
+        "classification": "parity ledger; independent, never rewritten",
+        "native_inputs": 0,
+        "local_classifications": 0
+      },
+      "after": {
+        "file": "annotate-corpus/known-failures-bigquery-annotated-serde.json",
+        "sha256": "1b30327b51bd11290abe96fea53890a2292815d1e3d01e2471e4805ef0277be9",
+        "classification": "parity ledger; independent, never rewritten",
+        "native_inputs": 0,
+        "local_classifications": 0
+      }
+    }
+  ]
+}

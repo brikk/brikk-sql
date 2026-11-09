@@ -1,7 +1,12 @@
 {
-  "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
+  "sqlglot_version": "v30.29.0",
   "dialect": "presto",
   "identity": [
+    {
+      "sql": "APPROX_PERCENTILE(x, 0.5, 0.01)",
+      "expected": null,
+      "pretty": false
+    },
     {
       "sql": "DEALLOCATE PREPARE my_query",
       "expected": null,
@@ -192,6 +197,11 @@
       "pretty": false
     },
     {
+      "sql": "SELECT INTERVAL 'x) ; SELECT 1; --' WEEK",
+      "expected": null,
+      "pretty": false
+    },
+    {
       "sql": "SELECT id, FIRST_VALUE(is_deleted) OVER (PARTITION BY id) AS first_is_deleted, NTH_VALUE(is_deleted, 2) OVER (PARTITION BY id) AS nth_is_deleted, LAST_VALUE(is_deleted) OVER (PARTITION BY id) AS last_is_deleted FROM my_table",
       "expected": null,
       "pretty": false
@@ -253,6 +263,13 @@
     }
   ],
   "transpile": [
+    {
+      "sql": "APPROX_PERCENTILE(x, 0.5, 0.01)",
+      "read": {},
+      "write": {
+        "bigquery": "APPROX_QUANTILES(x, 2)[1]"
+      }
+    },
     {
       "sql": "CAST(x AS BOOLEAN)",
       "read": {
@@ -1243,28 +1260,8 @@
       "sql": "SELECT ARRAY_SORT(x, (left, right) -> -1)",
       "read": {},
       "write": {
-        "duckdb": "SELECT ARRAY_SORT(x)",
         "presto": "SELECT ARRAY_SORT(x, (\"left\", \"right\") -> -1)",
-        "hive": "SELECT SORT_ARRAY(x)",
         "spark": "SELECT ARRAY_SORT(x, (left, right) -> -1)"
-      }
-    },
-    {
-      "sql": "SELECT ARRAY_SORT(x)",
-      "read": {},
-      "write": {
-        "presto": "SELECT ARRAY_SORT(x)",
-        "hive": "SELECT SORT_ARRAY(x)",
-        "spark": "SELECT ARRAY_SORT(x)"
-      }
-    },
-    {
-      "sql": "SELECT ARRAY_SORT(x, (left, right) -> -1)",
-      "read": {},
-      "write": {
-        "hive": {
-          "error": "UnsupportedError"
-        }
       }
     },
     {
@@ -1650,8 +1647,8 @@
     }
   ],
   "stats": {
-    "identity_count": 49,
-    "transpile_count": 146,
+    "identity_count": 51,
+    "transpile_count": 145,
     "skipped_dynamic": 3
   }
 }

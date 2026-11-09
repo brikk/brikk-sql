@@ -82,7 +82,7 @@ open class BigqueryDialect : Dialect() {
     // sqlglot: BigQuery.FORMAT_MAPPING
     override val formatMapping: Map<String, String> get() = FORMAT_MAPPING
 
-    override val tokenizerConfig: TokenizerConfig get() = BigqueryTokenizerTables.CONFIG
+    override val tokenizerConfig: TokenizerConfig get() = TOKENIZER_CONFIG
 
     override fun parser(errorLevel: ErrorLevel?): Parser =
         BigqueryParser(errorLevel = errorLevel, tokenizerConfig = tokenizerConfig)
@@ -126,6 +126,11 @@ open class BigqueryDialect : Dialect() {
     }
 
     companion object {
+        // sqlglot #8863: quoted identifiers use backslash escapes. Keep generated tables
+        // at a00dc2e5c until the coherent oracle refresh (SG29-020).
+        internal val TOKENIZER_CONFIG: TokenizerConfig =
+            BigqueryTokenizerTables.CONFIG.withIdentifierEscapes(setOf('\\'))
+
         // sqlglot: BigQuery.PSEUDOCOLUMNS
         val PSEUDOCOLUMNS: Set<String> = setOf(
             "_PARTITIONTIME",

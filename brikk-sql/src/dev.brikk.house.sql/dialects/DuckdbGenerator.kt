@@ -119,6 +119,16 @@ open class DuckdbGenerator(
 
     override val parameterToken: String get() = "$"
     override val namedPlaceholderToken: String get() = "$"
+
+    override fun placeholderSql(expression: Placeholder): String =
+        if (expression.thisArg is Identifier) "$${sql(expression, "this")}" else super.placeholderSql(expression)
+
+    override fun sliceSql(expression: Slice): String {
+        val step = expression.args["step"]
+        // DuckDB requires the '-' end placeholder when an explicit step has no end.
+        if (step != null && expression.expressionArg == null) return "${sql(expression.thisArg)}:-:${sql(step)}"
+        return super.sliceSql(expression)
+    }
     override val joinHints: Boolean get() = false
     override val tableHints: Boolean get() = false
     override val queryHints: Boolean get() = false
@@ -297,6 +307,14 @@ open class DuckdbGenerator(
         val arr = expression.thisArg
         val asc = expression.args["asc"]
         val nullsFirst = expression.args["nulls_first"]
+
+        // Keep the legacy node/API while preserving DuckDB's explicit raw NULL order.
+        // A boolean direction plus a string/expression NULL order comes from reverse-sort.
+        if (asc is BooleanNode && nullsFirst != null && nullsFirst !is BooleanNode) {
+            // Retain the native operator and its session-default direction policy.
+            return if (asc.thisArg == false) func("ARRAY_REVERSE_SORT", arr, nullsFirst)
+                else func("LIST_SORT", arr, Literal.string("ASC"), nullsFirst)
+        }
 
         if (asc !is BooleanNode && nullsFirst !is BooleanNode) {
             return func("LIST_SORT", arr, asc, nullsFirst)
@@ -629,9 +647,19 @@ open class DuckdbGenerator(
         )
     }
 
+    // BigQuery's EXTRACT spelling has a different weekday origin than DuckDB's.
+    override fun extractSql(expression: Extract): String {
+        val rendered = super.extractSql(expression)
+        return if (sourceDialect.equals("bigquery", true) && expression.metaOrNull?.get("duckdb_native_weekday") != true &&
+            (expression.thisArg as? Expression)?.name.equals("DAYOFWEEK", true))
+            "($rendered + 1)" else rendered
+    }
+
     // sqlglot: DuckDBGenerator.approxquantile_sql
-    open fun approxquantileSql(expression: ApproxQuantile): String =
-        func("APPROX_QUANTILE", expression.thisArg, expression.args["quantile"])
+    open fun approxquantileSql(expression: ApproxQuantile): String {
+        if (expression.args["weight"] != null) unexecutable("DuckDB APPROX_QUANTILE has no qualified weighted-percentile mapping")
+        return func("APPROX_QUANTILE", expression.thisArg, expression.args["quantile"])
+    }
 
     // sqlglot: DuckDBGenerator.approxquantiles_sql
     open fun approxquantilesSql(expression: ApproxQuantiles): String {
@@ -880,7 +908,7 @@ open class DuckdbGenerator(
         if (hashFunc == "SHA256") {
             val length = expression.text("length").ifEmpty { "256" }
             if (length != "256") {
-                unsupported("DuckDB only supports SHA256 hashing algorithm.")
+                unexecutable("DuckDB only supports SHA256 hashing algorithm.")
             }
         }
 
@@ -1349,7 +1377,7 @@ open class DuckdbGenerator(
 
             val timestampNs = Cast(
                 args(
-                    "this" to expression.thisArg,
+                    "this" to (expression.thisArg as? Expression)?.copy(),
                     "to" to DataType(args("this" to DType.TIMESTAMP_NS)),
                 )
             )
@@ -1367,7 +1395,7 @@ open class DuckdbGenerator(
                                             "expressions" to listOf(timestampNs),
                                         )
                                     ),
-                                    "expression" to intervalValue,
+                                    "expression" to intervalValue?.copy(),
                                 )
                             ),
                         ),
@@ -1380,16 +1408,13 @@ open class DuckdbGenerator(
         if (intervalValue != null && intervalValue !is Interval) {
             val ivType = intervalValue.type?.thisArg as? DType
             if (ivType in REAL_TYPES) {
-                expression.set(
-                    "expression",
-                    Cast(
-                        args(
-                            "this" to Anonymous(
-                                args("this" to "ROUND", "expressions" to listOf(intervalValue))
-                            ),
-                            "to" to DataType(args("this" to DType.INT)),
-                        )
-                    ),
+                intervalValue = Cast(
+                    args(
+                        "this" to Anonymous(
+                            args("this" to "ROUND", "expressions" to listOf(intervalValue.copy()))
+                        ),
+                        "to" to DataType(args("this" to DType.INT)),
+                    )
                 )
             }
         }
@@ -1408,7 +1433,8 @@ open class DuckdbGenerator(
                 ?: DType.DATE
         } else if (this_ is Literal && this_.isString) {
             // Cast string literals to the appropriate type for +/- interval to work
-            toType = if (expression is DatetimeAdd || expression is DatetimeSub) {
+            toType = if (expression is DatetimeAdd || expression is DatetimeSub ||
+                expression is TimestampAdd || expression is TimestampSub) {
                 DType.DATETIME
             } else {
                 DType.DATE
@@ -1416,15 +1442,14 @@ open class DuckdbGenerator(
         }
 
         if (toType != null) {
-            this_ = Cast(args("this" to this_, "to" to DataType(args("this" to toType))))
+            this_ = Cast(args("this" to this_.copy(), "to" to DataType(args("this" to toType))))
         }
 
-        val expr = expression.args["expression"] as? Expression
-        val interval = if (expr is Interval) expr else Interval(
-            args("this" to expr, "unit" to unitVar)
+        val interval = if (intervalValue is Interval) intervalValue else Interval(
+            args("this" to intervalValue?.copy(), "unit" to unitVar?.copy())
         )
 
-        return "${sql(this_)} $op ${sql(interval)}"
+        return dateDeltaToBinarySql(expression, this_, interval, subtract = op == "-")
     }
 
     // sqlglot: generators.duckdb._date_from_parts_sql
@@ -1490,7 +1515,7 @@ open class DuckdbGenerator(
         if (weekStart != null) {
             val dayOfWeek = Extract(
                 args("this" to Var(args("this" to "DAYOFWEEK")), "expression" to date.copy())
-            )
+            ).also { it.meta["duckdb_native_weekday"] = true }
             val daysToLast = Mod(
                 args(
                     "this" to Paren(
@@ -1534,7 +1559,9 @@ open class DuckdbGenerator(
             if (valueRaw == null) continue
             val value = if (valueRaw is Kwarg) valueRaw.args["expression"] else valueRaw
             val unit = if (valueRaw is Kwarg) {
-                (valueRaw.thisArg as? Expression)?.name?.lowercase() ?: argKey.lowercase()
+                val name = (valueRaw.thisArg as? Expression)?.name?.lowercase() ?: argKey.lowercase()
+                mapOf("years" to "year", "months" to "month", "weeks" to "week", "days" to "day",
+                    "hours" to "hour", "mins" to "minute", "secs" to "second")[name] ?: name
             } else {
                 argKey.lowercase()
             }
@@ -3034,7 +3061,12 @@ open class DuckdbGenerator(
             // sqlglot: dialect.approx_count_distinct_sql (only `this` is forwarded)
             reg(ApproxDistinct::class) { e -> func("APPROX_COUNT_DISTINCT", e.thisArg) }
             // sqlglot: generators.duckdb._array_sort_sql (comparator args are dropped)
-            reg(ArraySort::class) { e -> func("ARRAY_SORT", e.thisArg) }
+            reg(ArraySort::class) { e ->
+                if (e.args["expression"] != null) unexecutable("DuckDB LIST_SORT does not support an ArraySort comparator")
+                if (e.args["asc"] != null || e.args["nulls_first"] != null)
+                    unexecutable("Post-pin ArraySort direction/NULL-order fields need the staged compatibility adapter")
+                func("ARRAY_SORT", e.thisArg)
+            }
             // sqlglot: generators.duckdb._xor_sql (round_input is annotate-independent)
             reg(Xor::class) { e ->
                 fun roundArg(arg: kotlin.Any?): Expression? {
@@ -3048,8 +3080,12 @@ open class DuckdbGenerator(
                         )
                     } else a
                 }
-                val left = roundArg(e.thisArg)
-                val right = roundArg(e.args["expression"])
+                // SG29-007: both the negated and positive uses of a compound operand
+                // must remain a unit inside the AND/OR lowering.
+                fun grouped(arg: Expression?): Expression? =
+                    if (arg is Connector) Paren(args("this" to arg.copy())) else arg
+                val left = grouped(roundArg(e.thisArg))
+                val right = grouped(roundArg(e.args["expression"]))
                 sql(
                     Or(
                         args(

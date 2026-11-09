@@ -126,6 +126,7 @@ object ExpressionRegistry {
         "Avg" to Entry(AGGREGATE) { Avg() },
         "RowNumber" to Entry(AGGREGATE) { RowNumber() },
         "Command" to Entry(DDL) { Command() },
+        "SortArray" to Entry("sqlglot.expressions.array") { SortArray() },
     )
 
     val entries: Map<String, Entry> = LinkedHashMap<String, Entry>(1100).also { m ->
