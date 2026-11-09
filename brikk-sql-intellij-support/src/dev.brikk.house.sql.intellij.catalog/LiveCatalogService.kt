@@ -33,6 +33,7 @@ import dev.brikk.house.sql.intellij.dialect.SqlDialectRegistry
 import dev.brikk.house.sql.intellij.editorShowsFile
 import dev.brikk.house.sql.intellij.notifyEscaped
 import dev.brikk.house.sql.intellij.recoverEditorOperation
+import dev.brikk.house.sql.intellij.warnEditorFailureOnce
 import dev.brikk.house.sql.metadata.DialectMetadata
 import dev.brikk.house.sql.metadata.FunctionPresentation
 import dev.brikk.house.sql.metadata.MetadataSnapshot
@@ -689,7 +690,7 @@ public abstract class RefreshLiveCatalogAction(private val service: Class<out Li
         if (file != null) return catalog.dataSourceOf(file)
         return recoverEditorOperation {
             LocalDataSourceManager.getInstance(project).dataSources.filter { catalog.accepts(it.dbms) }.singleOrNull()
-        }.getOrNull()
+        }.warnEditorFailureOnce("RefreshLiveCatalogAction.target").getOrNull()
     }
 
     /** The data source serving the SQL at the editor popup's caret, by its dialect; null where none plainly does. */
@@ -722,7 +723,7 @@ public abstract class RefreshLiveCatalogAction(private val service: Class<out Li
         val injections = InjectedLanguageManager.getInstance(project)
         val injected = if (injections.isInjectedFragment(file)) null else injections.findInjectedElementAt(file, editor.caretModel.offset)?.containingFile
         (injected ?: file).takeIf { it.language is SqlLanguageDialect }
-    }.getOrNull()
+    }.warnEditorFailureOnce("RefreshLiveCatalogAction.sqlAtCaret").getOrNull()
 }
 
 /**

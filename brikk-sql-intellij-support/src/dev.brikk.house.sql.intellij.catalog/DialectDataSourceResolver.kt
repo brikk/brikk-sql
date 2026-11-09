@@ -14,6 +14,7 @@ import com.intellij.sql.dialects.SqlImportUtil
 import com.intellij.sql.dialects.SqlResolveMappings
 import dev.brikk.house.sql.intellij.dialect.SqlDialectRegistry
 import dev.brikk.house.sql.intellij.recoverEditorOperation
+import dev.brikk.house.sql.intellij.warnEditorFailureOnce
 
 /** Which data source serves a file, and why. */
 public sealed interface DataSourceResolution {
@@ -85,7 +86,7 @@ public class DialectDataSourceResolver(
         }
         if (!onlyDataSourceFallback) return@recoverEditorOperation DataSourceResolution.NotFound
         dataSources.filter { it.dbms.name == dbms.name }.choose(DataSourceResolution::OnlyDataSource)
-    }.getOrDefault(DataSourceResolution.NotFound)
+    }.warnEditorFailureOnce("DialectDataSourceResolver.resolve").getOrDefault(DataSourceResolution.NotFound)
 
     /**
      * The current namespace of the file's valid console, outermost first (for example catalog, then
@@ -94,12 +95,12 @@ public class DialectDataSourceResolver(
     public fun consoleNamespace(file: PsiFile): List<String> = recoverEditorOperation {
         val console = JdbcConsoleProvider.getValidConsole(file.project, hostFile(file))?.takeIf { accepts(it.dataSource.dbms) }
         generateSequence(console?.currentNamespace) { it.parent }.mapNotNull { path -> path.name?.takeIf(String::isNotBlank) }.toList().asReversed()
-    }.getOrDefault(emptyList())
+    }.warnEditorFailureOnce("DialectDataSourceResolver.consoleNamespace").getOrDefault(emptyList())
 
     /** The session of the file's valid console of the dbms, if any. */
     public fun consoleSession(file: PsiFile): DatabaseSession? = recoverEditorOperation {
         JdbcConsoleProvider.getValidConsole(file.project, hostFile(file))?.takeIf { accepts(it.dataSource.dbms) }?.session
-    }.getOrNull()
+    }.warnEditorFailureOnce("DialectDataSourceResolver.consoleSession").getOrNull()
 
     /** The connections a `sql.dataSourceProvider` names for [file], or null when none names any. */
     private fun provided(file: PsiFile, dataSources: List<LocalDataSource>): DataSourceResolution? {

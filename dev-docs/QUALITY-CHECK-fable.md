@@ -84,6 +84,7 @@ the manager and committed on its own.
 | 1 | FQ-16, FQ-17, FQ-18, FQ-19, FQ-23, FQ-24, FQ-21 step 1 | Done |
 | 2 | FQ-01 | Done |
 | 3 | FQ-26, FQ-27, FQ-28 step 1 | Done |
+| 4 | FQ-11; facts for FQ-07 to FQ-10 | FQ-11 done. FQ-07 deferred with a design. FQ-08, FQ-09 and FQ-10 need the owner's decision; see each item. |
 
 Left open by the rounds so far, for the owner:
 
@@ -288,8 +289,35 @@ the one disk probe per key off the caller, serving the bundled catalog until it 
 Keep the lock for the ordering of `record` and `forget`.
 
 Smaller, same file family: `ConnectedDatafusionEditorProfile` keeps two single-slot
-caches behind one `@Synchronized` monitor (lines 17-29 and 33-45). Two editors on
-different data sources rebuild them on every switch and wait on each other.
+caches, each behind its own `@Synchronized` monitor (lines 17-29 and 33-45). Two editors
+on different data sources rebuild them on every switch.
+
+**Findings (round 4, checked by the reviewer).** This is not a lockup, and the lock is
+needed.
+
+- The lock in `selection()` is there for correctness. Without it, a cold disk read that
+  finishes after a concurrent `forget` puts the forgotten inventory back through
+  `entries.putIfAbsent`, and the legacy migration can rewrite the deleted file.
+  `docs/live-catalog-refresh-ordering.md` gives the same reason.
+- File IO from `selection()` happens only on the first probe of a key, and again after a
+  `forget` of that source. Later selections are memory only.
+- Stored inventories measured 360 KB for an embedded DuckDB 2.0.0 harvest and 24 to 32 KB
+  for the DataFusion and Spice captures. DataFusion and Spice files include every table,
+  column and view definition, so they grow with the user's schema and have no cap.
+- The editor entry points have no off-EDT restriction, so a call on the EDT is possible.
+  No consuming plugin was available to check which threads really call
+  `completion(file)`.
+- The two caches in `ConnectedDatafusionEditorProfile` rebuild when callers alternate
+  between inventories. No wrong result was shown; widen them only if profiling shows
+  the rebuild matters.
+
+No change was made. The exposure is a local read or write of a small file, and the fix
+reworks the race handling that 0.4.1 put in place. The design to use when it is done:
+answer completion from memory, run the first disk probe on an IO thread and publish its
+result under the existing source ordering, serve the bundled catalog until it lands and
+then invalidate highlighting. It needs a new test that stalls a cold probe and proves
+that completion does not wait, that `forget` still wins, and that a newer live result
+beats the probe.
 
 ### FQ-08. Harvest deadline on the console engine thread (Behaviour)
 
@@ -304,6 +332,27 @@ console can wait 7 seconds on a slow server, or 32 for DataFusion and Spice.
 
 No structural change is suggested. Decide whether the blocking path should use a shorter
 deadline than the background refresh, and whether 30 seconds was meant to apply to it.
+
+**Findings (round 4, checked by the reviewer).** This is the item closest to a real
+stall, and it needs the owner's decision.
+
+- For DataFusion and Spice the rules mark `SET`, `RESET`, `USE`, `PREPARE`, `DEALLOCATE`
+  and the listed `CREATE`, `DROP` and `ALTER` forms as changing session facts
+  (`DatafusionCatalogProfile.kt:43-47`). So the blocking harvest follows ordinary
+  statements, once per request. For DuckDB it follows `LOAD`, temporary `CREATE`, and
+  `DROP MACRO` or `DROP FUNCTION`.
+- The wait is the deadline plus up to 2 seconds of cleanup: 7 seconds by default, 32 for
+  DataFusion and Spice. It is not a hard bound. The `finally` in `runHarvestBlocking`
+  calls `running.stop()`, which cancels and closes the remote statement synchronously
+  with no local timeout (`LiveHarvest.kt:93-99`, `113-119`, `203-208`).
+- After the cleanup wait the engine thread goes on even if the harvest still uses the
+  console's connection.
+- Nothing in the code or the documents says 30 seconds was chosen with this path in mind.
+
+The decision: keep the profile deadline for every harvest, or cap the automatic harvest
+after a statement (for example at 5 seconds) and keep the full deadline for a refresh the
+user asks for. The cap trades catalog freshness for console responsiveness. It can be an
+internal constant, with no API change. It does not bound the synchronous cancel.
 
 ### FQ-09. Unbounded waits in the streaming cancel (Behaviour)
 
@@ -327,6 +376,27 @@ Line 232 finds the engine's state by reflecting a private `JdbcEngine` field by 
 degrades to the stock cancel and logs when the field is missing, which is the right
 fallback. No change.
 
+**Findings (round 4, checked by the reviewer).** This needs the owner's decision.
+
+- A console can stay parked in two ways, not one. If `cancelAll` never returns, the
+  code disconnects after the deadline, and the console is stuck only if that disconnect
+  is not handled or does not retire the connection. If `cancelAll` does return, the code
+  then waits without a bound for the stock cancel to be handled, and that path also
+  calls into the driver.
+- The platform runs both the disconnect and the stock cancel outside the engine's
+  sequential queue, so in the ordinary case they complete and the console is released.
+- Releasing the engine after a timeout while it is still on the same connection is not
+  safe. The outstanding `cancelAll` covers every statement on the connection and would
+  cancel the next request. This is the hazard the current design avoids.
+- `StreamingCancelTest` covers the timeout disconnect, a refused disconnect and a failed
+  ownership check. It has no test of a wait that never ends.
+
+The decision: keep waiting, which is safe but can strand one console, or escalate after a
+bound to something that proves the connection is retired before the engine is released
+(a forced disconnect or disposal of the console's engine). The second loses the
+session's state and its teardown can hang too. A timeout that only releases the engine
+is not an option.
+
 ### FQ-10. Completion widens the saved introspection scope (Behaviour)
 
 `dev.brikk.house.sql.intellij.catalog/AutoIntrospect.kt:462-463` assigns
@@ -342,6 +412,30 @@ Two things to check:
   own state, so the saved scope keeps a namespace that never loaded. Reverting the
   widening on failure looks right, but confirm against the manual-refresh behaviour the
   comment at lines 456-458 describes.
+
+**Findings (round 4, checked by the reviewer).** This needs the owner's decision, and
+there is more at stake than tidiness.
+
+- The assignment and `updateDataSource` run in the service's coroutine scope, with no
+  EDT hop and no write action.
+- The platform does not require one. In the provisioned SDK (261.25134.95) neither
+  `LocalDataSource.setIntrospectionScope` nor `DataSourceStorage.updateDataSource` has
+  a threading annotation or assertion, and the platform's own callers differ: its
+  introspection session sets the scope from a background thread, while one refresh path
+  sends the storage update to the EDT. Not checked: whether any `dataSourceChanged`
+  listener assumes the EDT.
+- After a failed or cancelled load the saved scope stays widened, and no test asserts
+  the scope after a failure.
+- The consequence, read from the code and not tested: after an IDE restart the
+  in-memory state is gone, and the widened scope alone makes `introspected()` and
+  `completelyLoaded()` treat a namespace that never loaded as introspected. `OutOfScope`
+  then reports names missing under it as nonexistent, so their "Unable to resolve"
+  errors are no longer hidden.
+
+The decision: keep the scope as requested, so a manual refresh retries what the user
+typed, or roll back on failure. A rollback must remove only the request's own addition.
+It must keep selections the user or another request made meanwhile, and it must treat
+an error, a cancellation and a successful empty result as different cases.
 
 ### FQ-11. Log the seven silent recoveries (Move, logging only)
 
@@ -359,6 +453,10 @@ connected feature falls back to the bundled catalog, and `idea.log` says nothing
 
 Log at warn with the exception. These run in highlighting passes, so log once per site
 and exception class, not on every call.
+
+Done in round 4. One limit: a platform method that was removed outright raises
+`NoSuchMethodError`, which is an `Error`. `recoverEditorOperation` does not catch errors,
+so those still reach the IDE's error reporting and are not logged by this helper.
 
 ## C. Verifier contract
 
