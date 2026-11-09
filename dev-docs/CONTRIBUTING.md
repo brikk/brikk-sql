@@ -56,7 +56,8 @@ See [vendor provenance](../vendor/README.md) before refreshing fixtures.
 
 The offline Python gate is `python3 -m unittest discover -s tools -p 'test_*.py'`.
 Generator tests need the SQLGlot checkout at `reference/sqlglot`, exactly
-`a00dc2e5c489214bea53bacbbeba8713f21ebce1`. An existing clean checkout at that
+`2fe25297af5b0f44f5c9e5d03e1b296424b7acbe` (`v30.29.0`, the value of
+`BrikkSql.SQLGLOT_PIN`). An existing clean checkout at that
 commit can instead be supplied through `PYTHONPATH`; do not substitute a newer
 installed package or regenerate fixtures for a documentation change.
 
