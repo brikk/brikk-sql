@@ -2,6 +2,7 @@ package dev.brikk.house.sql.optimizer
 
 import dev.brikk.house.sql.ast.Alias
 import dev.brikk.house.sql.ast.Add
+import dev.brikk.house.sql.ast.Binary
 import dev.brikk.house.sql.ast.AnnotatorRef
 import dev.brikk.house.sql.ast.Anonymous
 import dev.brikk.house.sql.ast.CTE
