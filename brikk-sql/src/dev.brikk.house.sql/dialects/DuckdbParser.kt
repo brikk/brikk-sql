@@ -291,12 +291,12 @@ open class DuckdbParser(
     // subscripts, below prefix unary/exponent/multiplication, not a whole-term suffix.
     override fun parseType(parseInterval: Boolean, fallbackToIdentifier: Boolean): Expression? {
         if (nativeRegexOperators && currToken.tokenType != TokenType.IDENTIFIER &&
-            currToken.text.equals("TIMESTAMPTZ_NS",true) && nextToken.tokenType == TokenType.STRING) {
-            val start=currToken
+            currToken.text.equals("TIMESTAMPTZ_NS", true) && nextToken.tokenType == TokenType.STRING) {
+            val start = currToken
             advance()
-            val value=parsePrimary() ?: raiseError("Expected nanosecond zoned timestamp literal")
+            val value = parsePrimary() ?: raiseError("Expected nanosecond zoned timestamp literal")
             return parseColumnOps(expression(dev.brikk.house.sql.ast.Cast(args("this" to value,
-                "to" to DataType(args("this" to DType.USERDEFINED,"kind" to "TIMESTAMPTZ_NS")))),start))
+                "to" to DataType(args("this" to DType.USERDEFINED, "kind" to "TIMESTAMPTZ_NS")))), start))
         }
         val parsed = super.parseType(parseInterval, fallbackToIdentifier)
         // Literal atoms can bypass parseColumnOps in the base parser's fast path.
@@ -375,7 +375,7 @@ open class DuckdbParser(
         }
         // Qualified CHECKPOINT is storage control, never Column("CHECKPOINT") AS db.
         // Keep the parity parser unchanged; native callers retain this opaque command.
-        if (nativeRegexOperators && currToken.tokenType != TokenType.IDENTIFIER && currToken.text.equals("CHECKPOINT",true)) {
+        if (nativeRegexOperators && currToken.tokenType != TokenType.IDENTIFIER && currToken.text.equals("CHECKPOINT", true)) {
             val start = currToken
             matchTextSeq("CHECKPOINT")
             return parseAsCommand(start)
@@ -930,9 +930,9 @@ open class DuckdbParser(
     // Native typed macro defaults preserve their declared type and authored value;
     // only the engine binder decides whether a literal fits that type.
     override fun parseFunctionParameter(): Expression? {
-        val parameter=super.parseFunctionParameter() ?: return null
-        if(nativeRegexOperators && match(TokenType.COLON_EQ))return expression(dev.brikk.house.sql.ast.PropertyEQ(args(
-            "this" to parameter,"expression" to (parseExpression() ?: raiseError("Expected macro default")),
+        val parameter = super.parseFunctionParameter() ?: return null
+        if (nativeRegexOperators && match(TokenType.COLON_EQ)) return expression(dev.brikk.house.sql.ast.PropertyEQ(args(
+            "this" to parameter, "expression" to (parseExpression() ?: raiseError("Expected macro default")),
         )))
         return parameter
     }
@@ -973,8 +973,8 @@ open class DuckdbParser(
             AttachOption(
                 args(
                     "this" to parseVar(anyToken = true),
-                    "expression" to if(currToken.tokenType==TokenType.INTERVAL ||
-                        currToken.text.uppercase() in setOf("TIMESTAMP","TIMESTAMPTZ","DATE","TIME") && nextToken.tokenType==TokenType.STRING)
+                    "expression" to if (currToken.tokenType == TokenType.INTERVAL ||
+                        currToken.text.uppercase() in setOf("TIMESTAMP", "TIMESTAMPTZ", "DATE", "TIME") && nextToken.tokenType == TokenType.STRING)
                         parseDisjunction() else parseField(anyToken = true),
                 )
             )
@@ -1254,7 +1254,7 @@ open class DuckdbParser(
                 matchRParen()
                 expression(dev.brikk.house.sql.ast.Tuple(args("expressions" to terms)))
             } else if (name in setOf("ORDER_BY", "PARTITION_BY", "PARTITION_PATH")) parseDisjunction()
-            else if (currToken.tokenType in setOf(TokenType.DASH,TokenType.PLUS) && nextToken.tokenType==TokenType.NUMBER) parseDisjunction()
+            else if (currToken.tokenType in setOf(TokenType.DASH, TokenType.PLUS) && nextToken.tokenType == TokenType.NUMBER) parseDisjunction()
             else parseUnquotedField() ?: parseBracket(null)
             if (name == "ORDER_BY" && value == null) raiseError("Expected COPY ORDER_BY value")
             if (name == "PARTITION_PATH") {

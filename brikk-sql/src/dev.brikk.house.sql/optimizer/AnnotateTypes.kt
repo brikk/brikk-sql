@@ -7,10 +7,6 @@ import dev.brikk.house.sql.ast.AnnotatorRef
 import dev.brikk.house.sql.ast.Anonymous
 import dev.brikk.house.sql.ast.CTE
 import dev.brikk.house.sql.ast.hasKeyedAggregatePayload
-import dev.brikk.house.sql.ast.isTriggerDdl
-import dev.brikk.house.sql.ast.isDuckdbExtensionManagement
-import dev.brikk.house.sql.ast.isDuckdbExternalResourceStatement
-import dev.brikk.house.sql.ast.isDuckdbRecursiveViewDefinition
 import dev.brikk.house.sql.ast.Bracket
 import dev.brikk.house.sql.ast.Column
 import dev.brikk.house.sql.ast.ColumnDef
@@ -58,6 +54,7 @@ import dev.brikk.house.sql.ast.intoExpr
 import dev.brikk.house.sql.dialects.Dialect
 import dev.brikk.house.sql.dialects.Dialects
 import dev.brikk.house.sql.dialects.hasDuckdbRegexSelector
+import dev.brikk.house.sql.dialects.duckdbTypeAnnotationRefusal
 import dev.brikk.house.sql.parser.seqGet
 
 /**
@@ -378,17 +375,7 @@ class TypeAnnotator(
 
     // sqlglot: TypeAnnotator.annotate
     fun <E : Expression> annotate(expression: E, annotateScope: Boolean = true): E {
-        if (expression is dev.brikk.house.sql.ast.DuckdbExplain) throw OptimizeError("EXPLAIN returns plan text, not its child's expression types")
-        if (expression.isDuckdbExternalResourceStatement()) throw OptimizeError("External-resource statements require native handle/result contracts")
-        // Keep simple INSTALL's published literal-annotation/serde behavior. The new
-        // management nodes have runtime result contracts, not SELECT expression types.
-        if (expression.isDuckdbExtensionManagement() && expression !is dev.brikk.house.sql.ast.Install)
-            throw OptimizeError("Extension/repository management requires its native result contract")
-        if (expression.isDuckdbRecursiveViewDefinition()) throw OptimizeError("Recursive view self-reference typing is not modeled")
-        if (dialect.triggerScopes && expression.isTriggerDdl()) throw OptimizeError("Trigger definitions require image/transition scope contracts")
-        if (dialect.statefulCtes && expression.hasKeyedAggregatePayload()) {
-            throw OptimizeError("Recursive USING KEY aggregate types require the declarative CTE contract, not SELECT type annotation")
-        }
+        duckdbTypeAnnotationRefusal(expression, dialect)?.let { throw OptimizeError(it) }
         // This flag is used to avoid costly scope traversals when we only care about
         // annotating non-column expressions (partial type inference)
         if (annotateScope) {

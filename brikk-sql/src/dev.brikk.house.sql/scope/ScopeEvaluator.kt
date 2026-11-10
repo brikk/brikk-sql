@@ -12,10 +12,6 @@ import dev.brikk.house.sql.ast.Create
 import dev.brikk.house.sql.ast.TriggerProperties
 import dev.brikk.house.sql.ast.TriggerReferencing
 import dev.brikk.house.sql.ast.TriggerEvent
-import dev.brikk.house.sql.ast.isTriggerDdl
-import dev.brikk.house.sql.ast.isDuckdbExtensionManagement
-import dev.brikk.house.sql.ast.isDuckdbExternalResourceStatement
-import dev.brikk.house.sql.ast.isDuckdbRecursiveViewDefinition
 import dev.brikk.house.sql.ast.Alias
 import dev.brikk.house.sql.ast.Anonymous
 import dev.brikk.house.sql.ast.CTE
@@ -69,7 +65,8 @@ import dev.brikk.house.sql.ast.With
 import dev.brikk.house.sql.ast.outputName
 import dev.brikk.house.sql.dialects.Dialect
 import dev.brikk.house.sql.dialects.Dialects
-import dev.brikk.house.sql.dialects.isDuckdbNameShow
+import dev.brikk.house.sql.dialects.DuckdbScopeAnalysisGuard
+import dev.brikk.house.sql.dialects.duckdbScopeAnalysisGuard
 import dev.brikk.house.sql.dialects.duckdbRegexName
 import dev.brikk.house.sql.dialects.duckdbRegexReturnType
 import dev.brikk.house.sql.dialects.isDuckdbParquetCall
@@ -171,20 +168,19 @@ internal class ScopeEvaluator(
 
     /** Non-query statements normally contribute only their queries; DuckDB UPDATE/MERGE also have row scopes. */
     fun statement(node: Expression, env: Env): Boolean {
-        if (node.hasDuckdbRegexSelector()) throw dev.brikk.house.sql.generator.UnsupportedError("Runtime regex column-selector schemas are not modeled")
-        if (node.isDuckdbNameShow()) return true
-        if (node is dev.brikk.house.sql.ast.DuckdbExplain) {
-            (node.thisArg as? Expression)?.let { statement(it, env) }
-            return true
+        when (val guard = duckdbScopeAnalysisGuard(node, dialect)) {
+            is DuckdbScopeAnalysisGuard.Refusal -> throw dev.brikk.house.sql.generator.UnsupportedError(guard.message)
+            DuckdbScopeAnalysisGuard.Handled -> return true
+            DuckdbScopeAnalysisGuard.Explain -> {
+                (node.thisArg as? Expression)?.let { statement(it, env) }
+                return true
+            }
+            DuckdbScopeAnalysisGuard.Trigger -> {
+                if (node is Create) trigger(node, env)
+                return true
+            }
+            null -> {}
         }
-        if (node.isDuckdbExternalResourceStatement()) return true
-        if (node.isDuckdbExtensionManagement()) return true
-        if (node.isDuckdbRecursiveViewDefinition()) throw dev.brikk.house.sql.generator.UnsupportedError("Recursive view self-reference scope is not modeled")
-        if (dialect.triggerScopes && node.isTriggerDdl()) {
-            if (node is Create) trigger(node, env)
-            return true
-        }
-        if (node is dev.brikk.house.sql.ast.SessionConnect || node is dev.brikk.house.sql.ast.SessionDisconnect) return true
         if (node is Update && dialect.dmlScopes) {
             update(node, withClause(node, env))
             return true

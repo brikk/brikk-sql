@@ -85,6 +85,7 @@ the manager and committed on its own.
 | 2 | FQ-01 | Done |
 | 3 | FQ-26, FQ-27, FQ-28 step 1 | Done |
 | 4 | FQ-11; facts for FQ-07 to FQ-10 | FQ-11 done. FQ-07 deferred with a design. FQ-08, FQ-09 and FQ-10 need the owner's decision; see each item. |
+| 5 | FQ-02, FQ-03, FQ-20 | FQ-02 and FQ-20 done. FQ-03 not done: no flag met its condition; see the item. |
 
 Left open by the rounds so far, for the owner:
 
@@ -169,6 +170,22 @@ collects the facts, and two functions hold every executable boundary. Do the sam
 After the move the seven lists sit side by side and the differences can be reviewed as a
 separate, deliberate change. Do not unify messages, error types or gating in the move.
 
+Done in round 5. `dialects/DuckdbAnalysisGuards.kt` holds nine functions with the 69
+conditions of the seven places, each list moved whole and unchanged. Three parts stayed
+in their callers because they depend on work done there: the side-effecting-CTE check in
+`optimizer/Lineage.kt`, which runs after source expansion; the dependency checks in
+`SqlFragment.sourceTables`, which inspect the normalised tree; and the name check and
+one-statement check in `shape/SqlParameters.kt`, which run before and between parsing
+steps. A differential run of the old tree against the new one over about 440,000 calls
+gave identical output, with every guard message firing.
+
+For the later unification, which is a Behaviour change and not part of this move:
+
+- The file is DuckDB-named, but some checks have no dialect gate and apply to every
+  dialect: trigger DDL, secure views, and the `UPDATE` and `MERGE` lineage refusal.
+- No test asserts any of the 54 guard messages by text. The differential run is the only
+  evidence that they are unchanged.
+
 ### FQ-03. Drop the gate-only dialect flags (Move)
 
 Three flags do not describe behaviour. Every read is `flag && <DuckDB predicate>`:
@@ -188,6 +205,15 @@ under another dialect. Today the gated ones do not and the ungated ones do.
 
 `shape/SqlParameters.kt:23` still compares the dialect name with `"duckdb"` directly,
 seven lines above a read of `nativeStorageContracts` for the same purpose. Fold it in.
+
+Not done in round 5, because no flag met the condition. After the move,
+`nativeStorageContracts` still has one reader in `scope/ScopeEvaluator.kt` and
+`nativeFunctionContracts` has four. `copyLayoutOptions` has a single production reader,
+in the guards file, but `DialectCapabilitiesTest` asserts all three flags and a move may
+not edit tests. Removing them needs the remaining `ScopeEvaluator` reads moved first and
+that test updated, as its own change. The name comparison in `shape/SqlParameters.kt`
+also stays: it runs before the dialect is looked up, so it is not equivalent to a flag
+on the resolved dialect for every input string.
 
 ### FQ-04. Move the DuckDB renderers out of the base generator (Move)
 

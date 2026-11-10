@@ -9,17 +9,12 @@ import dev.brikk.house.sql.ast.DataType
 import dev.brikk.house.sql.ast.DType
 import dev.brikk.house.sql.ast.Dot
 import dev.brikk.house.sql.ast.Expression
-import dev.brikk.house.sql.dialects.isDuckdbNameShow
-import dev.brikk.house.sql.dialects.isDuckdbSetval
-import dev.brikk.house.sql.dialects.duckdbRegexName
-import dev.brikk.house.sql.dialects.hasDuckdbParquetCall
-import dev.brikk.house.sql.dialects.hasDuckdbGeoJsonContract
-import dev.brikk.house.sql.dialects.duckdbGeoJsonScalarType
-import dev.brikk.house.sql.dialects.duckdbStorageDdlIssue
-import dev.brikk.house.sql.dialects.hasDuckdbSnapshot
 import dev.brikk.house.sql.dialects.useNativeDuckdbOperators
 import dev.brikk.house.sql.dialects.withNativeDuckdbFacts
-import dev.brikk.house.sql.dialects.hasDuckdbRegexSelector
+import dev.brikk.house.sql.dialects.DuckdbOutputShapeGuard
+import dev.brikk.house.sql.dialects.duckdbOutputShapeGuard
+import dev.brikk.house.sql.dialects.duckdbSourceTablesRefusal
+import dev.brikk.house.sql.dialects.duckdbTranspileStorageIssue
 import dev.brikk.house.sql.ast.Identifier
 import dev.brikk.house.sql.ast.Parameter
 import dev.brikk.house.sql.ast.PipeCall
@@ -39,12 +34,10 @@ import dev.brikk.house.sql.ast.hasSideEffectingCte
 import dev.brikk.house.sql.ast.hasKeyedCte
 import dev.brikk.house.sql.ast.isRecurringCteReference
 import dev.brikk.house.sql.ast.isTriggerDdl
-import dev.brikk.house.sql.ast.isDuckdbExtensionManagement
 import dev.brikk.house.sql.ast.isDuckdbExternalResourceStatement
 import dev.brikk.house.sql.dialects.duckdbExternalResourceResult
 import dev.brikk.house.sql.dialects.duckdbExplainResult
 import dev.brikk.house.sql.dialects.duckdbExtensionResult
-import dev.brikk.house.sql.ast.isSecureViewDefinition
 import dev.brikk.house.sql.ast.isDuckdbRecursiveViewDefinition
 import dev.brikk.house.sql.ast.isTriggerName
 import dev.brikk.house.sql.ast.isTriggerTransitionReference
@@ -179,10 +172,10 @@ class SqlFragment(val sql: String, val dialect: String = "") {
         desugarPipes: Boolean,
         forExecution: Boolean,
     ): TranspileResult {
-        val storageIssue=if(dialectObj.nativeStorageContracts)duckdbStorageDdlIssue(sql)else null
-        if(storageIssue!=null) {
-            if(forExecution)throw dev.brikk.house.sql.generator.UnsupportedError(storageIssue)
-            return TranspileResult(sql.trim(),listOf(storageIssue),rootKind,isRawPassthroughStatement=true)
+        val storageIssue = duckdbTranspileStorageIssue(dialectObj, sql)
+        if (storageIssue != null) {
+            if (forExecution) throw dev.brikk.house.sql.generator.UnsupportedError(storageIssue)
+            return TranspileResult(sql.trim(), listOf(storageIssue), rootKind, isRawPassthroughStatement = true)
         }
         val generator = Dialects.forName(target)
             .generator(pretty = pretty, sourceDialect = dialect.ifBlank { null })
@@ -392,8 +385,7 @@ class SqlFragment(val sql: String, val dialect: String = "") {
      * use dialect normalization, including its quoted-name rules, as lineage does.
      */
     val sourceTables: List<String> by lazy {
-        if(dialectObj.nativeStorageContracts && (duckdbStorageDdlIssue(sql)!=null || ast.hasDuckdbSnapshot()))throw ShapeError("Storage DDL/snapshot dependencies are not modeled")
-        if (ast.isDuckdbNameShow()) throw ShapeError("SHOW target dependencies depend on runtime name resolution")
+        duckdbSourceTablesRefusal(dialectObj, sql) { ast }?.let { throw ShapeError(it) }
         var tree = normalizeIdentifiers(desugarPipes(ast, dialectObj, copy = true), dialect = dialectObj)
         if (tree is dev.brikk.house.sql.ast.DuckdbExplain) {
             tree = tree.thisArg as? Expression ?: throw ShapeError("EXPLAIN has no structured child")
@@ -516,31 +508,23 @@ class SqlFragment(val sql: String, val dialect: String = "") {
     }
 
     private fun outputShapeOf(tree: Expression, inputs: ShapeCatalog): Shape {
-        if(tree.hasDuckdbRegexSelector())throw ShapeError("Runtime regex column-selector result facts are not modeled")
-        if(dialectObj.nativeStorageContracts && (duckdbStorageDdlIssue(sql)!=null || tree.hasDuckdbSnapshot()))throw ShapeError("Storage DDL/snapshot result facts are not modeled")
-        if(dialectObj.nativeFunctionContracts && (tree.hasDuckdbGeoJsonContract() || tree.walk().any { it.duckdbGeoJsonScalarType()!=null }))return declarativeCteShape(tree,inputs)
-        if(dialectObj.nativeFunctionContracts && tree.hasDuckdbParquetCall())return declarativeCteShape(tree,inputs)
-        if (dialectObj.nativeFunctionContracts && tree.walk().any { it.duckdbRegexName() != null }) return declarativeCteShape(tree, inputs)
-        if (dialectObj.nativeFunctionContracts && tree.walk().any { it.isDuckdbSetval() }) return declarativeCteShape(tree, inputs)
-        if (tree.isDuckdbNameShow()) throw ShapeError("SHOW output depends on runtime show_behavior/catalog; it is not the target query shape")
-        if (tree is dev.brikk.house.sql.ast.DuckdbExplain) {
-            val output = tree.duckdbExplainResult() ?: throw ShapeError("EXPLAIN options or child context are invalid/unmodeled")
-            return Shape(output.columns.map { ColumnShape(it.name, it.sqlType!!, nullable = false) })
+        when (val guard = duckdbOutputShapeGuard(tree, sql) { dialectObj }) {
+            is DuckdbOutputShapeGuard.Refusal -> throw ShapeError(guard.message)
+            DuckdbOutputShapeGuard.DeclarativeCte -> return declarativeCteShape(tree, inputs)
+            DuckdbOutputShapeGuard.Explain -> {
+                val output = tree.duckdbExplainResult() ?: throw ShapeError("EXPLAIN options or child context are invalid/unmodeled")
+                return Shape(output.columns.map { ColumnShape(it.name, it.sqlType!!, nullable = false) })
+            }
+            DuckdbOutputShapeGuard.ExternalResource -> {
+                val output = tree.duckdbExternalResourceResult() ?: throw ShapeError("This external-resource statement has no query output shape")
+                return Shape(output.columns.map { ColumnShape(it.name, it.sqlType!!, nullable = it.nullability != Nullability.NON_NULL) })
+            }
+            DuckdbOutputShapeGuard.Extension -> {
+                val result = tree.duckdbExtensionResult() ?: throw ShapeError("This extension/repository management statement has no query output shape")
+                return Shape(result.columns.map { ColumnShape(it.name, it.sqlType!!, nullable = false) })
+            }
+            null -> {}
         }
-        if (tree.isDuckdbExternalResourceStatement()) {
-            val output = tree.duckdbExternalResourceResult() ?: throw ShapeError("This external-resource statement has no query output shape")
-            return Shape(output.columns.map { ColumnShape(it.name, it.sqlType!!, nullable = it.nullability != Nullability.NON_NULL) })
-        }
-        if (tree.isDuckdbExtensionManagement()) {
-            val result = tree.duckdbExtensionResult() ?: throw ShapeError("This extension/repository management statement has no query output shape")
-            return Shape(result.columns.map { ColumnShape(it.name, it.sqlType!!, nullable = false) })
-        }
-        if (tree.isSecureViewDefinition()) throw ShapeError("SECURE VIEW DDL has no query output shape; analyze its body separately")
-        if (tree.isTriggerDdl()) throw ShapeError("Trigger DDL has no query output shape")
-        if (tree is dev.brikk.house.sql.ast.SessionConnect || tree is dev.brikk.house.sql.ast.SessionDisconnect) {
-            throw ShapeError("Session routing has no query output shape")
-        }
-        if (dialectObj.statefulCtes && (tree.hasSideEffectingCte() || tree.hasKeyedCte())) return declarativeCteShape(tree, inputs)
         val prepared = prepareTree(tree, inputs)
         if (dialectObj.arrowTypes) {
             return dev.brikk.house.sql.scope.datafusionShape(prepared, inputs, dialectObj)
