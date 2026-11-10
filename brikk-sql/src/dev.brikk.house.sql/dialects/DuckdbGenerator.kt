@@ -24,10 +24,9 @@ import kotlin.reflect.KClass
  * TRANSFORMS entries live in [TRANSFORMS] (a dispatch-map overlay handed to the base
  * constructor); flag overrides are open-val overrides; multi-line methods below.
  *
- * NOT PORTED (no Kotlin equivalents of sqlglot's transforms/annotate_types yet):
+ * NOT PORTED:
  * the exp.Select preprocess pipeline (connect_by_to_recursive_cte,
- * _seq_to_range_in_generator), the exp.Pivot unqualify_columns preprocess and the
- * exp.Array inherit_struct_field_names preprocess; the Snowflake-oriented template
+ * _seq_to_range_in_generator); the Snowflake-oriented template
  * transpilations (ZIPF, NORMAL, MINHASH, BITMAP_x, ARRAYS_ZIP, STRTOK, ...).
  * Mismatches are ledgered.
  */

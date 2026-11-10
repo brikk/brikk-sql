@@ -90,8 +90,8 @@ open class AbstractMappingSchema(
         protected set
 
     // TODO(udf): the UDF mapping is stored (and trie-indexed) for parity with Python's
-    // AbstractMappingSchema, but find_udf/get_udf_type consumers haven't been ported yet
-    // (nothing consumes them until annotate_types lands UDF support).
+    // AbstractMappingSchema; nothing consumes udfTrie and getUdfType returns UNKNOWN.
+    // TypeAnnotator is ported, but UDF type resolution is not.
     var udfMapping: MutableMap<String, Any?> = LinkedHashMap()
         protected set
     var udfTrie: MutableMap<Any, Any?> = LinkedHashMap()
@@ -238,7 +238,7 @@ class MappingSchema(
         setMappings(
             if (normalize) normalizeMapping(rawSchema) else rawSchema,
             // TODO(udf): Python normalizes the UDF mapping (_normalize_udfs); ours is
-            // stored raw until a consumer (annotate_types UDF typing) is ported.
+            // stored raw; UDF lookup for the ported TypeAnnotator still returns UNKNOWN.
             rawUdfs,
         )
     }
@@ -381,8 +381,8 @@ class MappingSchema(
     }
 
     // sqlglot: MappingSchema.get_udf_type
-    // TODO(udf): stubbed to UNKNOWN — Python resolves via udf_trie; port together with
-    // the annotate_types UDF support.
+    // TODO(udf): stubbed to UNKNOWN — Python resolves via udf_trie; UDF type resolution
+    // for the ported TypeAnnotator is still unported.
     override fun getUdfType(udf: Any, dialect: Dialect?, normalize: Boolean?): DataType =
         DataType(args("this" to DType.UNKNOWN))
 

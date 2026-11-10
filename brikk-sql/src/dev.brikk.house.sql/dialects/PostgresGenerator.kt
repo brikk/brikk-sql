@@ -26,11 +26,9 @@ import kotlin.reflect.KClass
  * constructor and accepting a further overlay for subclasses — Redshift/Materialize/
  * RisingWave extend Postgres in sqlglot); flag overrides are open-val overrides.
  *
- * NOT PORTED (no Kotlin equivalents of sqlglot's transforms/annotate_types yet):
- * the exp.Select preprocess pipeline (eliminate_semi_and_anti_joins, eliminate_qualify);
- * the annotate_types-dependent branches of unnest_sql (array<json> ->
- * JSON_ARRAY_ELEMENTS) and _round_sql (DOUBLE input detection is approximated for
- * literals); _date_add_sql's _simplify_unless_literal is approximated by the identity.
+ * NOT PORTED: unnest_sql's inferred array<json> -> JSON_ARRAY_ELEMENTS rewrite and
+ * _round_sql's call to annotate_types (DOUBLE input detection uses existing types or
+ * float literals); _date_add_sql's _simplify_unless_literal is approximated by the identity.
  * Mismatches are ledgered.
  */
 // sqlglot: generators.postgres.PostgresGenerator

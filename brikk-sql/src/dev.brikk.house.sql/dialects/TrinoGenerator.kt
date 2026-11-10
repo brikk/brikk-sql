@@ -24,8 +24,8 @@ import kotlin.reflect.KClass
  * TRANSFORMS entries live in [TRANSFORMS], passed through PrestoGenerator's dispatch
  * overlay; flag overrides are open-val overrides; multi-line methods below.
  *
- * NOT PORTED (same infrastructure gaps as PrestoGenerator): the exp.Select preprocess
- * pipeline and the SUPPORTED_JSON_PATH_PARTS restriction. Mismatches are ledgered.
+ * NOT PORTED: amend_exploded_column_table in the exp.Select preprocess pipeline
+ * and the SUPPORTED_JSON_PATH_PARTS restriction. Mismatches are ledgered.
  */
 // sqlglot: generators.trino.TrinoGenerator
 open class TrinoGenerator(
