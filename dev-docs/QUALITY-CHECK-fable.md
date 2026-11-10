@@ -39,70 +39,116 @@ repository-relative.
 
 ## Summary
 
-| ID | Area | Change | Risk |
-| --- | --- | --- | --- |
-| FQ-01 | Release | Check that the released commit is on `main` | Behaviour (CI only) |
-| FQ-02 | Core | One home for the DuckDB analysis refusals | Move |
-| FQ-03 | Core | Drop the gate-only dialect flags | Move |
-| FQ-04 | Core | Move DuckDB renderers out of the base generator | Move |
-| FQ-05 | Core | Meta keys as constants | Move |
-| FQ-06 | IntelliJ | Profile hooks in place of DataFusion downcasts | Move |
-| FQ-07 | IntelliJ | Catalog lock held through disk IO on the completion path | Behaviour |
-| FQ-08 | IntelliJ | Harvest deadline on the console engine thread | Behaviour |
-| FQ-09 | IntelliJ | Unbounded waits in the streaming cancel | Behaviour |
-| FQ-10 | IntelliJ | Completion widens the saved introspection scope | Behaviour |
-| FQ-11 | IntelliJ | Log the seven silent recoveries | Move (logging) |
-| FQ-12 | Verifiers | Doris and ShardingSphere against the documented contract (KQ-03) | Behaviour or Docs |
-| FQ-13 | Verifiers | Verifier lifecycle | Behaviour |
-| FQ-14 | Verifiers | Deadline, bounded workers and size preflight for the ClickHouse verifier (KQ-07) | Behaviour |
-| FQ-15 | Verifiers | Shared connection plumbing | Move |
-| FQ-16 | Comments | "Not ported" comments in `Parser.kt` | Docs |
-| FQ-17 | Comments | SQLGlot pin in documents and test headers | Docs |
-| FQ-18 | Comments | Oracle and verifier comments | Docs |
-| FQ-19 | Comments | Build, CI and README facts | Docs |
-| FQ-20 | Cleanup | Hand-format the unspaced lines, add `.editorconfig` | Move |
-| FQ-21 | Cleanup | Index `tools/`, share its helpers | Docs, then Move |
-| FQ-22 | Cleanup | Test files named after batches | Move |
-| FQ-23 | Cleanup | Archive finished trackers and dated notes | Docs |
-| FQ-24 | Cleanup | Index the evidence folders in `vendor/` | Docs |
-| FQ-25 | Cleanup | Small code leftovers | Move |
-| FQ-26 | Correctness | `IdentityKey` hashes by identity (KQ-01) | Behaviour |
-| FQ-27 | Correctness | Type cache keyed by dialect as well as type text (KQ-02) | Behaviour |
-| FQ-28 | Correctness | Narrow the two broad catches in `SqlFragment` (KQ-04) | Behaviour |
-| FQ-29 | Correctness | Reset the synthetic-alias counter per generation (KQ-06) | Behaviour |
-| FQ-30 | Correctness | PostgreSQL oracle cleanup failures (KQ-08) | Behaviour |
-| FQ-31 | Correctness | Decide who owns `SqlFragment.ast` (KQ-05) | API decision |
+| ID | Area | Change | Risk | State |
+| --- | --- | --- | --- | --- |
+| FQ-01 | Release | Check that the released commit is on `main` | Behaviour (CI only) | Done |
+| FQ-02 | Core | One home for the DuckDB analysis refusals | Move | Done |
+| FQ-03 | Core | Drop the gate-only dialect flags | Move | Not done; see the item |
+| FQ-04 | Core | Move DuckDB renderers out of the base generator | Move | Done, as corrected |
+| FQ-05 | Core | Meta keys as constants | Move | Done |
+| FQ-06 | IntelliJ | Profile hooks in place of DataFusion downcasts | Move | Literals done; hooks are the owner's decision |
+| FQ-07 | IntelliJ | Catalog lock held through disk IO on the completion path | Behaviour | Deferred, with a design |
+| FQ-08 | IntelliJ | Harvest deadline on the console engine thread | Behaviour | Owner's decision |
+| FQ-09 | IntelliJ | Unbounded waits in the streaming cancel | Behaviour | Owner's decision |
+| FQ-10 | IntelliJ | Completion widens the saved introspection scope | Behaviour | Owner's decision |
+| FQ-11 | IntelliJ | Log the seven silent recoveries | Move (logging) | Done |
+| FQ-12 | Verifiers | Doris and ShardingSphere against the documented contract (KQ-03) | Behaviour or Docs | Done |
+| FQ-13 | Verifiers | Verifier lifecycle | Behaviour | Done in part; the rest is the owner's decision |
+| FQ-14 | Verifiers | Deadline, bounded workers and size preflight for the ClickHouse verifier (KQ-07) | Behaviour | Done |
+| FQ-15 | Verifiers | Shared connection plumbing | Move | Not done (optional) |
+| FQ-16 | Comments | "Not ported" comments in `Parser.kt` | Docs | Done |
+| FQ-17 | Comments | SQLGlot pin in documents and test headers | Docs | Done |
+| FQ-18 | Comments | Oracle and verifier comments | Docs | Done |
+| FQ-19 | Comments | Build, CI and README facts | Docs | Done, except two points left to the owner |
+| FQ-20 | Cleanup | Hand-format the unspaced lines, add `.editorconfig` | Move | Done |
+| FQ-21 | Cleanup | Index `tools/`, share its helpers | Docs, then Move | Done, except the two deletions |
+| FQ-22 | Cleanup | Test files named after batches | Move | Rule written; no files renamed |
+| FQ-23 | Cleanup | Archive finished trackers and dated notes | Docs | Done in part; see the item |
+| FQ-24 | Cleanup | Index the evidence folders in `vendor/` | Docs | Done |
+| FQ-25 | Cleanup | Small code leftovers | Move | Done in part; see the item |
+| FQ-26 | Correctness | `IdentityKey` hashes by identity (KQ-01) | Behaviour | Done |
+| FQ-27 | Correctness | Type cache keyed by dialect as well as type text (KQ-02) | Behaviour | Done |
+| FQ-28 | Correctness | Narrow the two broad catches in `SqlFragment` (KQ-04) | Behaviour | Step 1 done; step 2 is the owner's decision |
+| FQ-29 | Correctness | Reset the synthetic-alias counter per generation (KQ-06) | Behaviour | Done |
+| FQ-30 | Correctness | PostgreSQL oracle cleanup failures (KQ-08) | Behaviour | Done |
+| FQ-31 | Correctness | Decide who owns `SqlFragment.ast` (KQ-05) | API decision | KDoc done; enforcement is the owner's decision |
 
 ## Progress
 
-The work is being done on the branch `quality-check-fixes`, one round per group in the
-suggested order. Each round is implemented in one session, reviewed in another, gated by
-the manager and committed on its own.
+The work was done on the branch `quality-check-fixes`, one round per group, roughly in
+the suggested order. Each round was implemented in one session (GPT-6.1 Sol), reviewed
+in another (Claude Opus 5.5), gated by the manager and committed on its own. The State
+column above gives the result for each item, and each item below records what was done
+or why it was not.
 
 | Round | Items | State |
 | --- | --- | --- |
 | 1 | FQ-16, FQ-17, FQ-18, FQ-19, FQ-23, FQ-24, FQ-21 step 1 | Done |
 | 2 | FQ-01 | Done |
 | 3 | FQ-26, FQ-27, FQ-28 step 1 | Done |
-| 4 | FQ-11; facts for FQ-07 to FQ-10 | FQ-11 done. FQ-07 deferred with a design. FQ-08, FQ-09 and FQ-10 need the owner's decision; see each item. |
-| 5 | FQ-02, FQ-03, FQ-20 | FQ-02 and FQ-20 done. FQ-03 not done: no flag met its condition; see the item. |
-| 6 | FQ-05, FQ-06 | FQ-05 done. FQ-06: literals named; the hooks need the owner's decision on public API; see the item. |
-| 7 | FQ-12, FQ-13, FQ-14 | FQ-12 and FQ-14 done. FQ-13 done except the two parts that are the owner's decision; see the item. |
+| 4 | FQ-11; facts for FQ-07 to FQ-10 | FQ-11 done. FQ-07 deferred with a design. FQ-08, FQ-09 and FQ-10 need the owner's decision. |
+| 5 | FQ-02, FQ-03, FQ-20 | FQ-02 and FQ-20 done. FQ-03 not done: no flag met its condition. |
+| 6 | FQ-05, FQ-06 | FQ-05 done. FQ-06: literals named; the hooks need the owner's decision on public API. |
+| 7 | FQ-12, FQ-13, FQ-14 | FQ-12 and FQ-14 done. FQ-13 done except the two parts that are the owner's decision. |
 | 8 | FQ-29, FQ-30 | Done |
 | 9 | FQ-04 | Done as corrected: the renderer bodies moved; the flags stay. |
+| 10 | FQ-21 steps 2 to 4, FQ-22, FQ-25, FQ-31 | Done except the two script deletions and the parts of FQ-25 that are the owner's. |
 
-Left open by the rounds so far, for the owner:
+No round changed a public API, a test expectation, a fixture or a known-failure ledger.
+At the end the suites stood at: core 1,896 passing; the other modules 796 passing with
+74 skipped for engines and fixtures not on the build machine; the Python tool tests 288
+with 1 opt-in skip. The IntelliJ platform tests were run by class for the rounds that
+touched that module, not as a whole suite, and the native DuckDB window fixture was not
+available.
 
-- FQ-19: `.github/workflows/test.yml` still ignores the branch
-  `publish/intellij-support-0.1.0`. It is configuration, so the comments round left it.
-- FQ-19: the Toolchain 0.11 and 0.12 comments were left as they are. Nothing in the
-  repository shows that their statements stopped holding on 0.13.0.
-- FQ-01: the guard checks `HEAD` only. A launcher run from a checkout with uncommitted
-  edits to tracked files would still publish them. CI checkouts are clean, so this
-  affects local releases only. A clean-tree check would be a separate change.
-- FQ-01: the workflow steps have only been exercised locally against throwaway
-  repositories, including a shallow clone like the one GitHub makes. The first real
-  release run is their first run on GitHub.
+### Decisions for the owner
+
+Behaviour:
+
+- **FQ-08.** Cap the automatic catalog harvest that runs on a console's engine thread
+  after a statement, or keep the profile's full deadline (30 seconds for DataFusion and
+  Spice, after ordinary `SET`, `USE` and DDL statements).
+- **FQ-09.** When a streaming cancel never completes: keep waiting, or escalate to
+  something that proves the connection is retired before the console is released.
+- **FQ-10.** Keep the saved introspection scope widened after a failed load, or roll
+  back the request's own addition.
+- **FQ-13.** One behaviour for a verifier used after `close()`. Today one reopens, one
+  returns `Unavailable` and one throws.
+- **FQ-07.** When to do the deferred change that takes disk IO off the completion path.
+
+Public API:
+
+- **FQ-06.** Add members with defaults to `SqlCompletionProfile` and
+  `RelationScopeProfile`, or leave the four DataFusion-specific sites in generic code.
+- **FQ-13.** Whether `SqlVerifier` extends `AutoCloseable`.
+- **FQ-28, step 2.** Whether `contract` should report "dependencies unknown" as data,
+  distinct from "none".
+- **FQ-31.** Whether `SqlFragment.ast` should hand out a copy. The KDoc now says the
+  tree is read-only for callers.
+
+Smaller:
+
+- **FQ-19.** `.github/workflows/test.yml` still ignores the branch
+  `publish/intellij-support-0.1.0`. The Toolchain 0.11 and 0.12 comments were left, since
+  nothing in the repository shows their statements stopped holding on 0.13.0.
+- **FQ-21.** Two unreferenced scripts were kept because they are the provenance of
+  vendored evidence. Ten generators escape Kotlin strings in six ways; see the item.
+- **FQ-25.** `PROPERTY_COMPLETION` (ship or delete), the `# TODO(review)` descriptions
+  in ten `module.yaml` files, and the deprecated member on `TextExplain`.
+- **FQ-01.** The guard checks `HEAD` only, so a launcher run from a checkout with
+  uncommitted edits to tracked files would still publish them. CI checkouts are clean.
+  The workflow steps have been exercised only against throwaway repositories, including
+  a shallow clone like the one GitHub makes; the next release is their first real run.
+  This branch must be merged to `main` before a release branch is cut, or the guard is
+  not on it.
+
+Found along the way and not changed:
+
+- The ShardingSphere PostgreSQL grammar slows down exponentially on nested parentheses
+  (49.5 seconds at depth 20), and that verifier has no cancellation hook (FQ-12).
+- `SELECT * FROM t GROUP BY 1` throws a plain `IllegalStateException` from
+  qualification, reachable from SQL text (FQ-28).
+- No test asserts any of the 54 analysis-guard messages by text (FQ-02).
 
 ## Release
 
@@ -770,6 +816,30 @@ generated file header, so start smaller:
 
 `tools/probe_spark_hive_catchup.py:50` hardcodes a path under `/var/tmp/jayson/`.
 
+Done in rounds 1 and 10, except step 2.
+
+- `tools/README.md` indexes the scripts by family.
+- The two scripts were kept. No document names them, but each is the provenance of
+  vendored evidence: `probe_temporal_arithmetic.py` captured
+  `vendor/data/sqlglot-sg29-009/mysql-native-results.json`, and
+  `import_spice_documentation_audit.py` built
+  `vendor/data/datafusion-spice/docs-audit-2026-10-29.json`. Deleting them is the
+  owner's call.
+- `tools/test_expansion_sources.py` is now `tools/verify_test_expansion_sources.py`.
+- `tools/generator_helpers.py` holds one `sqlglot_version()`, used by the seven
+  generators whose own copies were identical, and four escapers, each shared by the two
+  generators whose copies were identical. Every generator that can run on the build
+  machine was re-run and its output is unchanged.
+
+The escapers were not unified, because they differ in behaviour and unifying them would
+change generated output. For the owner: the DuckDB, Trino and StarRocks escapers do not
+escape a newline, so a captured value that contains one would produce Kotlin that does
+not compile; the ClickHouse escaper writes control characters other than NUL, tab and
+line breaks raw. No generated file contains such a character today. Separately, the
+shared `sqlglot_version()` returns `"unknown"` on any error, as its seven originals did.
+The corpus pin test would catch that stamp in a JSON corpus; nothing would catch it in a
+generated Kotlin header.
+
 ### FQ-22. Test files named after batches (Move)
 
 57 test files are named for a work batch, not a behaviour (`*Catchup*`,
@@ -782,6 +852,9 @@ is touched, move its cases to a file named for the behaviour.
 
 Reported, same area: `private fun roundTrip(` is defined in 23 test files and
 `loadCorpus(` in 8. A shared test utility would remove them.
+
+The rule is in `dev-docs/CONTRIBUTING.md` under "Test naming" (round 10). No file was
+renamed, and the shared test helpers were not added.
 
 ### FQ-23. Archive finished trackers and dated notes (Docs)
 
@@ -816,6 +889,12 @@ Add one line per folder to `vendor/README.md`. Do not move them: tests read
   `brikk-sql-verify`, `brikk-sql-oracle` and `brikk-sql-metadata`. The first two are small.
 - Reported: `Inventory.model` in `AutoIntrospect.kt:157` is written and never read;
   `TextExplain.kt:71-72` keeps a deprecated unused member on a public interface.
+
+Round 10 did two of these. `brikk-sql-verify` and `brikk-sql-oracle` now compile with
+`-Xexplicit-api=strict`; their published class files are identical to before.
+`Inventory.model` is removed. `PROPERTY_COMPLETION`, the `# TODO(review)` descriptions
+and the deprecated member on `TextExplain` are left to the owner. `brikk-sql-metadata`
+does not have the flag: its generated files would need their generators changed first.
 
 ## F. Correctness and failure boundaries
 
@@ -960,6 +1039,11 @@ matches how the rest of the port treats trees, where rewriting functions take a 
 flag. If the owner wants enforcement, the KQ-05 copy-on-read design is the way to do it;
 it should then be a deliberate, announced change. Either way, do not fix a single lazy
 property in isolation.
+
+Round 10 added the KDoc and changed no behaviour. The reviewer fingerprinted the tree of
+2,745 corpus fragments before and after calling every public method of `SqlFragment`:
+none was mutated, so the library itself keeps to the rule the KDoc states. Whether to
+enforce it for callers is still the owner's decision.
 
 ## Parked: gates and lenient verdicts
 

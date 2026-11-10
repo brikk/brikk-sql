@@ -103,6 +103,10 @@ class SqlFragment(val sql: String, val dialect: String = "") {
      * statement — fragments are single composable values by design.
      * DuckDB fragments use native regex operator nodes, unlike the legacy SQLGlot-parity
      * dialect parser. Copy/serde retain the operator's session-dependent semantics.
+     *
+     * This is the fragment's own tree and is read-only for callers. Cached derived values
+     * are computed from it once and are not recomputed if it is changed. To get a tree to
+     * modify, take `ast.copy()`.
      */
     val ast: Expression by lazy {
         when (statements.size) {

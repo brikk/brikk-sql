@@ -61,6 +61,13 @@ Generator tests need the SQLGlot checkout at `reference/sqlglot`, exactly
 commit can instead be supplied through `PYTHONPATH`; do not substitute a newer
 installed package or regenerate fixtures for a documentation change.
 
+### Test naming
+
+Test files and test names say what behaviour they check, not which task, batch, release or
+tracker item produced them. Name new tests for the behaviour. When a batch-named file
+(for example `*Catchup*`, `MainIntegration*` or `FrozenTarget*`) is next changed, move its
+cases to a file named for the behaviour.
+
 ## Publishing
 
 SQL engine, metadata, verification and oracle artifacts share the publishing template.
