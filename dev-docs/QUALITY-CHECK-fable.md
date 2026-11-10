@@ -148,6 +148,12 @@ Found along the way and not changed:
 - `SELECT * FROM t GROUP BY 1` throws a plain `IllegalStateException` from
   qualification, reachable from SQL text (FQ-28).
 - No test asserts any of the 54 analysis-guard messages by text (FQ-02).
+- One CI run on this branch failed on
+  `QualifiedPathIntrospectContributorTest.testAConsoleOfAnotherDbmsIsNotIntrospected`
+  (after a console of another dbms closes, the next completion queued no introspection
+  request). The commit it ran on changed only named constants, and the same test passed
+  in the CI runs before and after and in the local run of the whole suite, so it looks
+  intermittent. It is in the auto-introspection path that FQ-10 is about.
 
 ## Release
 
