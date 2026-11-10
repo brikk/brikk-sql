@@ -97,9 +97,8 @@ or why it was not.
 No round changed a public API, a test expectation, a fixture or a known-failure ledger.
 At the end the suites stood at: core 1,896 passing; the other modules 796 passing with
 74 skipped for engines and fixtures not on the build machine; the Python tool tests 288
-with 1 opt-in skip. The IntelliJ platform tests were run by class for the rounds that
-touched that module, not as a whole suite, and the native DuckDB window fixture was not
-available.
+with 1 opt-in skip; the IntelliJ platform tests 833 passing across 110 classes. The one
+platform class left out needs the native DuckDB window fixture, which was not available.
 
 ### Decisions for the owner
 
