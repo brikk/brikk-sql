@@ -650,14 +650,16 @@ takes the dbms the platform passes):
   its `profile`. `requestPath(file, path)` resolves a typed path (absolute or relative to the
   console's namespace) on the file's data source and, when the model lists it without children,
   adds exactly that namespace to the introspection scope, saves the data source and refreshes only
-  that element; `request(file, dataSource, target)` does the same for a resolved target. Requests are
-  keyed by data source and absolute path in an `AutoIntrospectEngine`: claimed while in flight and
-  after success, claimable again a minute (`createEngine`) after a failure. Refreshes queue rather
-  than stop one another. When one ends, its banner goes (a newer request's banner stays) and after
-  success the file is highlighted again. `refreshChanged(dataSource, path)` reloads a loaded namespace
-  (empty path: the top-level list) after statements changed it, with no banner, no scope change and no
-  claim, so it may run again. Loaded means it has children, the scope selects it, or a refresh of the
-  service loaded it, so a namespace a statement emptied still reloads.
+  that element; `request(file, dataSource, target)` does the same for a resolved target. Scope additions
+  are rolled back to the previous saved scope after a failed or cancelled load only when the request
+  widened it and it still equals what it wrote; later edits are left alone. A successful empty load
+  keeps it. Requests are keyed by data source and absolute path in an `AutoIntrospectEngine`: claimed
+  while in flight and after success, claimable again a minute (`createEngine`) after a failure.
+  Refreshes queue rather than stop one another. When one ends, its banner goes (a newer request's
+  banner stays) and after success the file is highlighted again. `refreshChanged(dataSource, path)`
+  reloads a loaded namespace (empty path: the top-level list) after statements changed it, with no
+  banner, no scope change and no claim, so it may run again. Loaded means it has children, the scope
+  selects it, or a refresh of the service loaded it, so a namespace a statement emptied still reloads.
   `introspect(file, dataSource, target)` is the user-initiated request: it runs also when `autoIntrospect`
   is off and right after a failure, but not while in flight or once loaded.
 - `IntrospectBannerProvider(serviceClass)`: register a no-arg subclass as
