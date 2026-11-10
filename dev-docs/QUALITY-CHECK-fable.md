@@ -89,6 +89,7 @@ the manager and committed on its own.
 | 6 | FQ-05, FQ-06 | FQ-05 done. FQ-06: literals named; the hooks need the owner's decision on public API; see the item. |
 | 7 | FQ-12, FQ-13, FQ-14 | FQ-12 and FQ-14 done. FQ-13 done except the two parts that are the owner's decision; see the item. |
 | 8 | FQ-29, FQ-30 | Done |
+| 9 | FQ-04 | Done as corrected: the renderer bodies moved; the flags stay. |
 
 Left open by the rounds so far, for the owner:
 
@@ -243,6 +244,14 @@ first; if it is awkward, leave the registrations and move only the function bodi
 Related, and small: `Generator.duckdbNativeSemantics` is set to `true` by
 `shape/SqlFragment.kt:188` for every source and target. It means "strict fragment
 transpile", not anything about DuckDB. It is `internal`, so it can be renamed freely.
+
+**Correction (round 9).** The premise of this item was wrong. `Generator.unexecutable`
+throws only when the generator is set to produce executable SQL. In a preview it records
+the message as a finding and rendering continues, so every target's generator has to be
+able to render these nodes. The nine flags are therefore real questions that the shared
+renderer asks of the target, and they stay. What is left of this item is placement: the
+bodies of the DuckDB-node renderers move out of the ported `Generator.kt` and
+`GeneratorTables.kt` into DuckDB's own files, unchanged, as QC-05 asks for new code.
 
 ### FQ-05. Meta keys as constants (Move)
 

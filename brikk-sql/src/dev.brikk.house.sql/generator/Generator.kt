@@ -7,7 +7,6 @@ import dev.brikk.house.sql.ast.Any as AnyNode
 import dev.brikk.house.sql.ast.Boolean as BooleanNode
 import dev.brikk.house.sql.ast.Set as SetNode
 import dev.brikk.house.sql.dialects.checkDuckdbConstructsForForeignTarget
-import dev.brikk.house.sql.dialects.explainProblems
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.TokenizerConfig
 import dev.brikk.house.sql.parser.formatTimeString
@@ -2787,17 +2786,6 @@ open class Generator(
         return "DISCONNECT"
     }
 
-    internal fun duckdbSessionStatementSql(expression: Expression): String {
-        if (!dialect.executesSessionStatements) unexecutable("$targetName cannot execute DuckDB prepared/session statements")
-        val name = sql(expression, "this")
-        return when (expression) {
-            is DuckdbPrepare -> "PREPARE $name AS ${sql(expression, "expression")}"
-            is DuckdbExecute -> expressions(expression, flat = true).let { "EXECUTE $name" + if (it.isEmpty()) "" else "($it)" }
-            is DuckdbDeallocate -> "DEALLOCATE $name"
-            else -> "RESET VARIABLE $name"
-        }
-    }
-
     // sqlglot: Generator.lambda_sql
     open fun lambdaSql(expression: Lambda, arrowSep: String = "->", wrapArgs: Boolean = true): String {
         var argsSql = expressions(expression, flat = true)
@@ -4887,67 +4875,6 @@ open class Generator(
         unexecutable("$targetName cannot execute DuckDB extension installation")
         unsupported("Unsupported INSTALL statement")
         return ""
-    }
-
-    internal fun duckdbExtensionSql(expression: Expression): String {
-        if (!dialect.executesExtensionManagement) unexecutable("$targetName cannot execute DuckDB extension/repository management")
-        val target = sql(expression, "this")
-        val from = sql(expression, "from_").let { if (it.isEmpty()) "" else " FROM $it" }
-        return when (expression) {
-            is DuckdbCreateExtensionRepository -> {
-                val replace = if (expression.args["replace"] == true) " OR REPLACE" else ""
-                val exists = if (expression.args["exists"] == true) " IF NOT EXISTS" else ""
-                val keys = expressions(expression).let { if (it.isEmpty()) "" else " USING PUBLIC ${if (expression.expressionsArg.size == 1) "KEY" else "KEYS"} $it" }
-                "CREATE$replace EXTENSION REPOSITORY$exists $target WITH PREFIX ${sql(expression, "prefix")}$keys"
-            }
-            is DuckdbDropExtensionRepository -> "DROP EXTENSION REPOSITORY${if (expression.args["exists"] == true) " IF EXISTS" else ""} $target"
-            is DuckdbInstallExtension -> {
-                val force = if (expression.args["force"] == true) "FORCE " else ""
-                val load = if (expression.args["load"] == true) " AND LOAD" else ""
-                val version = sql(expression, "version").let { if (it.isEmpty()) "" else " VERSION $it" }
-                "${force}INSTALL$load $target$from$version"
-            }
-            is DuckdbLoadExtension -> "LOAD $target$from" + sql(expression, "alias").let { if (it.isEmpty()) "" else " AS $it" }
-            else -> error("Not an extension management statement")
-        }
-    }
-
-    internal fun duckdbExternalResourceSql(expression: Expression): String {
-        if (!dialect.executesExternalResources) unexecutable("$targetName cannot execute DuckDB external-resource statements")
-        fun options(node: Expression): String = expressions(node).let { if (it.isEmpty()) "" else " ($it)" }
-        val target = sql(expression, "this")
-        val alias = sql(expression, "alias").let { if (it.isEmpty()) "" else " AS $it" }
-        return when (expression) {
-            is DuckdbCreateExternalResource -> {
-                if (alias.isEmpty()) unexecutable("DuckDB durable external resources require AS and a registration name")
-                "CREATE EXTERNAL RESOURCE $target$alias${options(expression)}"
-            }
-            is DuckdbRegisterExternalResource -> {
-                if (alias.isEmpty()) unexecutable("DuckDB durable external resources require AS and a registration name")
-                val handle = sql(expression, "expression")
-                "REGISTER EXTERNAL RESOURCE $target$alias FROM $handle"
-            }
-            is DuckdbDestroyExternalResource -> "DESTROY EXTERNAL RESOURCE $target"
-            is DuckdbShowExternalResources -> "SHOW${if (expression.args["all"] == true) " ALL" else ""} EXTERNAL RESOURCES"
-            is DuckdbExternalResourceSource -> if (expression.args["temporary"] == true)
-                "NEW TEMPORARY EXTERNAL RESOURCE $target${options(expression)}" else "EXTERNAL RESOURCE $target"
-            is DuckdbAttachExternalResource -> "ATTACH TO $target$alias${options(expression)}"
-            is DuckdbConnectExternalResource -> {
-                if ((expression.thisArg as? DuckdbExternalResourceSource)?.args?.get("temporary") == true && expression.expressionsArg.isNotEmpty())
-                    unexecutable("CONNECT TO NEW TEMPORARY EXTERNAL RESOURCE cannot take a second connection option list")
-                "CONNECT TO $target${options(expression)}"
-            }
-            else -> error("Not an external resource node")
-        }
-    }
-
-    internal fun duckdbExplainSql(expression: DuckdbExplain): String {
-        if (!dialect.executesExplainOptions) unexecutable("$targetName cannot execute DuckDB EXPLAIN options")
-        expression.explainProblems().forEach(::unexecutable)
-        val analyze = if (expression.args["analyze"] == true) " ANALYZE" else ""
-        val options = expressions(expression).let { if (it.isEmpty()) "" else " ($it)" }
-        val child = sql(expression, "this")
-        return "EXPLAIN$analyze$options $child"
     }
 
     // sqlglot: Generator.summarize_sql

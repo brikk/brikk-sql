@@ -1,6 +1,7 @@
 package dev.brikk.house.sql.dialects
 
 import dev.brikk.house.sql.ast.*
+import dev.brikk.house.sql.generator.Generator
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.Tokenizer
 import dev.brikk.house.sql.scope.ColumnFact
@@ -61,4 +62,19 @@ internal fun Expression.duckdbExplainResult(): RelationFact? {
     return RelationFact(listOf("explain_key", "explain_value").map {
         ColumnFact(it, "VARCHAR", nullability = Nullability.NON_NULL, origin = ColumnOrigin.COMPUTED)
     })
+}
+
+internal fun Generator.duckdbExplainSql(expression: DuckdbExplain): String {
+    if (!dialect.executesExplainOptions) unexecutable("$targetName cannot execute DuckDB EXPLAIN options")
+    expression.explainProblems().forEach(::unexecutable)
+    val analyze = if (expression.args["analyze"] == true) " ANALYZE" else ""
+    val options = expressions(expression).let { if (it.isEmpty()) "" else " ($it)" }
+    val child = sql(expression, "this")
+    return "EXPLAIN$analyze$options $child"
+}
+
+internal fun Generator.duckdbExplainOptionSql(e: Expression): String = run {
+    val name = e.thisArg as? Identifier
+    val keyword = if (name?.quoted != true && name?.name?.uppercase() in setOf("ANALYZE", "ANALYSE")) "ANALYZE" else sql(e, "this")
+    keyword + sql(e, "expression").let { if (it.isEmpty()) "" else " $it" }
 }
