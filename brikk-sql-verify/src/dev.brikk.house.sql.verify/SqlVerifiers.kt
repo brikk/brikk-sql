@@ -16,6 +16,7 @@ public object SqlVerifiers {
     /**
      * Returns a verifier for [name] (case-insensitive), or null when the engine is unsupported.
      * A supported engine whose parser cannot load returns an [UnavailableVerifier].
+     * The caller owns the returned verifier: reuse it, then [SqlVerifier.close] it (or use `use {}`).
      *
      * Supported engines: `"trino"`, `"duckdb"`, `"doris"`, `"postgres"`, `"mysql"`, `"hive"`,
      * `"clickhouse"`. Engines split into two tiers:

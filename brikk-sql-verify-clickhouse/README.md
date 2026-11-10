@@ -39,6 +39,8 @@ verifier.verify("SELECT 'ü' FRM t") // Rejected: "Syntax error at t: Expected o
   driver can exhaust capacity but cannot grow threads indefinitely. A connection opening after
   cancellation or the deadline is closed without submitting a query.
 - **Query log.** Verification queries appear in the server's `system.query_log` as the hex call.
+- **Lifetime.** Like every `SqlVerifier`, it is `AutoCloseable`; this verifier holds no connection
+  between calls and inherits the no-op `close()`, so closing it does not disable verification.
 
 ## Why not `EXPLAIN AST`
 

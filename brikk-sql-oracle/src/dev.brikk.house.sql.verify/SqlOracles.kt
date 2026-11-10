@@ -19,7 +19,7 @@ package dev.brikk.house.sql.verify
  *
  * Verifier instances are created per call — callers that verify repeatedly (corpus gates)
  * should hold on to the returned instance to amortize cold-start costs (embedded-PG boot,
- * chDB native library load), and [close] any that are [AutoCloseable].
+ * chDB native library load), then [close][SqlVerifier.close] it when finished; the caller owns it.
  */
 public object SqlOracles {
     /**

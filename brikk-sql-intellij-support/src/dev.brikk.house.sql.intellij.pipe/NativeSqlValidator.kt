@@ -26,7 +26,7 @@ public interface NativeSqlValidator {
     public val advisory: Boolean get() = false
 
     public companion object {
-        /** A validator over [verifier], at [timing] for PIPE execution. */
+        /** A validator over [verifier], at [timing] for PIPE execution. The caller retains ownership and closes it. */
         public fun of(verifier: SqlVerifier, timing: ValidationTiming = ValidationTiming.Lowering): NativeSqlValidator =
             object : NativeSqlValidator {
                 override val timing: ValidationTiming = timing

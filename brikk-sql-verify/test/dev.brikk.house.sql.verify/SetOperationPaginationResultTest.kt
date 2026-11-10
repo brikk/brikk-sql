@@ -54,7 +54,7 @@ class SetOperationPaginationResultTest {
         for (dialect in listOf("duckdb", "doris", "trino")) {
             val sql = tree.sql(dialect)
             val verifier = SqlVerifiers.forEngine(dialect)!!
-            (verifier as? AutoCloseable).use {
+            verifier.use {
                 assertIs<VerifyResult.Accepted>(verifier.verify(sql), sql)
             }
         }

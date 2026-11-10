@@ -17,7 +17,7 @@ class ClickhouseLoweringDuckdbAssessmentTest {
         for (row in input.getValue("cases").jsonArray) {
             for ((target, candidate) in row.jsonObject.getValue("targets").jsonObject) {
                 val verifier = SqlVerifiers.forEngine(target)!!
-                val result = (verifier as? AutoCloseable).use { verifier.verify(candidate.jsonPrimitive.content) }
+                val result = verifier.use { verifier.verify(candidate.jsonPrimitive.content) }
                 assertIs<VerifyResult.Accepted>(result, "$target/$candidate: $result")
             }
         }

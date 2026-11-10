@@ -291,7 +291,7 @@ class PipeBoundaryContractTest {
                 }
             }
         } finally {
-            verifiers.values.filterIsInstance<AutoCloseable>().forEach { it.close() }
+            verifiers.values.forEach { it.close() }
         }
     }
 
@@ -316,7 +316,7 @@ class PipeBoundaryContractTest {
                 val result = fragment.toExecutable(case.dialect, pretty = pretty)
                 assertEquals(emptyList(), result.unsupportedMessages, case.sql)
                 val verifier = assertNotNull(SqlVerifiers.forEngine(case.dialect))
-                (verifier as? AutoCloseable).use {
+                verifier.use {
                     assertIs<VerifyResult.Accepted>(verifier.verify(result.sql), result.sql)
                 }
                 val qualified = qualify(Dialects.forName(case.dialect).parseOne(result.sql),

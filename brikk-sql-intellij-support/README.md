@@ -258,6 +258,9 @@ equal length); it never masks ClickHouse's `{name:Type}` server parameters, whic
 `NativeSqlValidator.verify` returns the engine's positioned `VerifyResult` (by default `validate`
 without positions); `NativeSqlValidator.of(verifier)` adapts a `brikk-sql-verify-<engine>`
 verifier, and `VerifyResult.toNativeVerdict` is the execution mapping.
+The adapter does not own or close the `SqlVerifier`: its caller retains it and calls `close()`
+when finished. `DataSourceVerification` has no disposal hook; its factory should supply verifiers
+that hold no resources between calls, as the connection-based verifiers do.
 
 ## SQL in host strings (`dev.brikk.house.sql.intellij.host`)
 

@@ -43,7 +43,7 @@ class SqlVerifierTest {
             for (target in listOf("doris", "trino", "duckdb")) {
                 val result = SqlFragment(source, "duckdb").toExecutable(target)
                 val verifier = SqlVerifiers.forEngine(target)!!
-                (verifier as? AutoCloseable).use {
+                verifier.use {
                     assertIs<VerifyResult.Accepted>(verifier.verify(result.sql), result.sql)
                 }
                 if (target == "duckdb") {
@@ -66,7 +66,7 @@ class SqlVerifierTest {
         // Fidelity tier (native, non-advisory) + advisory tier (ShardingSphere, postgres included).
         for (engine in listOf("trino", "duckdb", "doris", "postgres", "mysql", "hive", "clickhouse")) {
             val verifier = SqlVerifiers.forEngine(engine)
-            (verifier as? AutoCloseable).use {
+            verifier.use {
                 assertNotNull(verifier, "expected a verifier for $engine")
                 assertEquals(engine, verifier.engine)
             }
@@ -198,7 +198,8 @@ class SqlVerifierTest {
 
     @Test
     fun duckdbAcceptsValidSql() {
-        (SqlVerifiers.forEngine("duckdb")!! as DuckdbVerifier).use { verifier ->
+        SqlVerifiers.forEngine("duckdb")!!.use { verifier ->
+            assertIs<DuckdbVerifier>(verifier, "the registry returns the native DuckDB verifier")
             assertIs<VerifyResult.Accepted>(verifier.verify("SELECT a FROM t WHERE b = 1"), "select goes through json_serialize_sql")
             assertIs<VerifyResult.Accepted>(verifier.verify("CREATE TABLE t (a INT)"), "non-select goes through the prepare fallback")
             assertTrue(
@@ -210,7 +211,7 @@ class SqlVerifierTest {
 
     @Test
     fun duckdbRejectsInvalidSqlWithErrorAndPosition() {
-        val error = (SqlVerifiers.forEngine("duckdb")!! as DuckdbVerifier).use {
+        val error = SqlVerifiers.forEngine("duckdb")!!.use {
             assertIs<VerifyResult.Rejected>(it.verify("SELECT FROM WHERE")).error
         }
         assertEquals(1, error.line)
@@ -219,7 +220,7 @@ class SqlVerifierTest {
 
     @Test
     fun duckdbVerifiesExpressionFragments() {
-        (SqlVerifiers.forEngine("duckdb")!! as DuckdbVerifier).use { verifier ->
+        SqlVerifiers.forEngine("duckdb")!!.use { verifier ->
             assertIs<VerifyResult.Accepted>(verifier.verifyExpression("x -> '$.family'"))
             assertFalse(verifier.verifyExpression("1 +") is VerifyResult.Accepted)
         }
@@ -466,7 +467,7 @@ class SqlVerifierTest {
             "SELECT REGEXP_REPLACE(x, 'a', 'b', 'ims') FROM t",
             "SELECT CAST(CAST(x AS TIMESTAMP) AS TIME) FROM t",
         )
-        (SqlVerifiers.forEngine("duckdb")!! as DuckdbVerifier).use { verifier ->
+        SqlVerifiers.forEngine("duckdb")!!.use { verifier ->
             for (sql in renderings) {
                 val result = verifier.verify(sql)
                 assertIs<VerifyResult.Accepted>(result, "DuckDB parser rejected `$sql`: $result")

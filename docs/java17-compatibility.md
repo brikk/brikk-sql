@@ -18,6 +18,12 @@ Other verifier/IDE modules keep their Java 21 targets. The Trino verifier and
 aggregate also depend on trino-parser 484, which needs a Java 25 runtime. Java 17
 consumers must not bring the aggregate verifier into their deployment.
 
+The development verification API adds `AutoCloseable` to `SqlVerifier`: callers can reuse a
+verifier and then close it through that interface. Its no-op `close()` is a real JVM default,
+so implementers compiled against the earlier interface still link on Java 17. Kotlin implementers
+that already declare `close()` must add `override`; Java implementers' `close()` cannot declare
+checked exceptions.
+
 Kotlin can emit Java 17 bytecode without changing the Kotlin version or public
 library APIs. That alone is not sufficient: newer Java API calls and dependencies
 can still prevent loading on 17. Compiling against JDK 17, running the suites on

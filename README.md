@@ -39,6 +39,12 @@ support is independently versioned at **`1.0.0`**.
 All SQL and IntelliJ support artifacts are published on Maven Central at `1.0.0`.
 Development versions are aligned at `1.0.1-SNAPSHOT`.
 
+In development, `SqlVerifier` now extends `AutoCloseable` with a JVM-default no-op `close()`.
+Kotlin implementers with their own `close()` must mark it `override`; Java implementers' `close()`
+cannot declare checked exceptions. Callers own registry results: reuse them, then close them (or use
+`use {}`); closed resource-holding verifiers return
+`VerifyResult.Unavailable`, while stateless verifiers inherit the no-op.
+
 ```kotlin
 repositories { mavenCentral() }
 dependencies {

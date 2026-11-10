@@ -16,7 +16,7 @@ package dev.brikk.house.sql.verify
  * SQL, and they let every exception that is not an engine verdict propagate, so cancellation
  * (`CancellationException`, IntelliJ's `ProcessCanceledException`) is never turned into a result.
  */
-public interface SqlVerifier {
+public interface SqlVerifier : AutoCloseable {
     /** Engine identifier, for example `"trino"`, `"duckdb"`, `"doris"` or `"postgres"`. */
     public val engine: String
 
@@ -34,6 +34,13 @@ public interface SqlVerifier {
      * the result index [sql] itself, whatever wrapper the engine needed.
      */
     public fun verifyExpression(sql: String): VerifyResult
+
+    /**
+     * Releases resources this verifier holds; safe to call more than once. A closed resource-holding
+     * verifier returns [VerifyResult.Unavailable] from subsequent verification calls. Verifiers that
+     * hold nothing inherit this no-op and remain usable.
+     */
+    override fun close() {}
 }
 
 /** A verifier whose engine cannot run, for example because its parser failed to load. */

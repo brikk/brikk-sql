@@ -37,6 +37,7 @@ import java.util.concurrent.CancellationException
  * the console's session (whose transaction, settings and namespace stay untouched), running no
  * startup script, with the driver properties [connectionProperties] adds, never asking for a password, and only while the user has the data source connected; otherwise it gives null,
  * which a verifier reports as unavailable. Introspection harvests skip helper connections.
+ * There is no disposal hook: [verifierFor] should return verifiers holding no resources between calls.
  *
  * [modificationCount] changes with the file's data source, its URL and user, and whether it is
  * connected. Register a [VerificationConnectionListener] so that connecting and disconnecting
