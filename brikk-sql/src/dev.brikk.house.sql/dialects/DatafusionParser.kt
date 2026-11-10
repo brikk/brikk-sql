@@ -1,5 +1,6 @@
 package dev.brikk.house.sql.dialects
 
+import dev.brikk.house.sql.ast.BrikkMetaKeys
 import dev.brikk.house.sql.ast.BitwiseNot
 import dev.brikk.house.sql.ast.Anonymous
 import dev.brikk.house.sql.ast.AnonymousAggFunc
@@ -100,7 +101,7 @@ open class DatafusionParser(
         }
         if (result is DatafusionReset || result is DatafusionShow || result is DatafusionExplain ||
             result is DatafusionPrepare || result is DatafusionExecute || result?.walk()?.any { it is ClusterProperty } == true) {
-            result.meta["native_only_dialect"] = "datafusion"
+            result.meta[BrikkMetaKeys.NATIVE_ONLY_DIALECT] = "datafusion"
             expression(result, head, comments = head.comments)
         }
         return result
@@ -229,7 +230,7 @@ open class DatafusionParser(
             if (name == "METRICS" && word !in setOf("all", "none") &&
                 (word == null || word.split(',').any { it.trim() !in setOf("rows", "bytes", "timing", "uncategorized") })) utilityFail("Unsupported EXPLAIN metrics")
             return PropertyEQ(args("this" to Var(args("this" to name)), "expression" to value)).also {
-                if (implicit) it.meta["datafusion_implicit_option"] = true
+                if (implicit) it.meta[BrikkMetaKeys.DATAFUSION_IMPLICIT_OPTION] = true
             }
         }
         if (list) {
@@ -263,7 +264,7 @@ open class DatafusionParser(
         if (columns.isEmpty() || columns.any { it.walk().any { node -> node is dev.brikk.house.sql.ast.Tuple && node.expressionsArg.isEmpty() } } || prevToken.tokenType == TokenType.COMMA ||
             tokens.subList(start, index).zipWithNext().any { (a, b) -> a.tokenType == TokenType.COMMA && b.tokenType == TokenType.R_PAREN })
             utilityFail("Expected cluster expression")
-        return expression(ClusterProperty(args("expressions" to columns))).also { it.meta["datafusion_cluster_expressions"] = true }
+        return expression(ClusterProperty(args("expressions" to columns))).also { it.meta[BrikkMetaKeys.DATAFUSION_CLUSTER_EXPRESSIONS] = true }
     }
 
     override fun parseCreate(): Expression {
@@ -316,7 +317,7 @@ open class DatafusionParser(
     override fun parseParameter(): Expression {
         val dollar = prevToken.text == "$"
         return super.parseParameter().also {
-            if (dollar && it.name.matches(NUMBERED_PARAMETER_RE)) it.meta["numbered_dollar_parameter"] = true
+            if (dollar && it.name.matches(NUMBERED_PARAMETER_RE)) it.meta[BrikkMetaKeys.NUMBERED_DOLLAR_PARAMETER] = true
         }
     }
 
@@ -387,8 +388,8 @@ open class DatafusionParser(
                 }
                 if (quotedAggregate) AnonymousAggFunc(arguments) else Anonymous(arguments)
             } else nativeFunction(sourceName, values)
-            result.meta["datafusion_native_call"] = true
-            if (!quoted && !qualified && upper in PRESERVED_FUNCTION_NAMES) result.meta["datafusion_function_name"] = sourceName
+            result.meta[BrikkMetaKeys.DATAFUSION_NATIVE_CALL] = true
+            if (!quoted && !qualified && upper in PRESERVED_FUNCTION_NAMES) result.meta[BrikkMetaKeys.DATAFUSION_FUNCTION_NAME] = sourceName
             validateExpression(result).updatePositions(token)
             result.addComments(token.comments)
             matchRParen(result)
@@ -397,7 +398,7 @@ open class DatafusionParser(
         val result = super.parseFunction(functions, anonymous, optionalParens, anyToken)
         val function = result?.walk()?.firstOrNull { it is dev.brikk.house.sql.ast.Func }
         if (function != null && sourceName.uppercase() in PRESERVED_FUNCTION_NAMES) {
-            function.meta["datafusion_function_name"] = sourceName
+            function.meta[BrikkMetaKeys.DATAFUSION_FUNCTION_NAME] = sourceName
         }
         return result
     }
@@ -449,7 +450,7 @@ open class DatafusionParser(
         val sourceName = currToken.text
         val result = super.parseTypes(checkFunc, schema, allowIdentifiers, withCollation)
         if (result is DataType && sourceName.uppercase() in PRESERVED_TYPE_NAMES) {
-            result.meta["datafusion_type_name"] = sourceName
+            result.meta[BrikkMetaKeys.DATAFUSION_TYPE_NAME] = sourceName
         }
         return result
     }
@@ -484,7 +485,7 @@ open class DatafusionParser(
             "ARRAY_SORT" to { values: List<Expression?> -> Anonymous(args("this" to "array_sort", "expressions" to values)) },
             "DATE_BIN" to { values: List<Expression?> ->
                 if (values.size in 2..3) DateBin(args("this" to values[0], "expression" to values[1], "origin" to values.getOrNull(2)))
-                    .also { it.meta["datafusion_date_bin"] = true }
+                    .also { it.meta[BrikkMetaKeys.DATAFUSION_DATE_BIN] = true }
                 else Anonymous(args("this" to "date_bin", "expressions" to values))
             },
             "GENERATE_SERIES" to { values: List<Expression?> ->
@@ -492,7 +493,7 @@ open class DatafusionParser(
                 fromArgList(listOf("start", "end", "step", "is_end_exclusive"), false) {
                     GenerateSeries(it)
                 }(args).also {
-                    if (values.size == 1) it.meta["datafusion_omitted_series_start"] = true
+                    if (values.size == 1) it.meta[BrikkMetaKeys.DATAFUSION_OMITTED_SERIES_START] = true
                 }
             },
         )
@@ -500,7 +501,7 @@ open class DatafusionParser(
         private val COLUMN_OPERATORS = BaseParserTables.COLUMN_OPERATORS +
             (TokenType.DCOLON to { p: Parser, this_: Expression?, to: Expression? ->
                 p.buildCast(strict = p.strictCast, this_ = this_, to = to).also {
-                    if (it is Cast) it.meta["datafusion_cast_style"] = "dcolon"
+                    if (it is Cast) it.meta[BrikkMetaKeys.DATAFUSION_CAST_STYLE] = "dcolon"
                 }
             })
 

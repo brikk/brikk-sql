@@ -3,6 +3,7 @@ package dev.brikk.house.sql.optimizer
 import dev.brikk.house.sql.ast.Alias
 import dev.brikk.house.sql.ast.Add
 import dev.brikk.house.sql.ast.Binary
+import dev.brikk.house.sql.ast.BrikkMetaKeys
 import dev.brikk.house.sql.ast.AnnotatorRef
 import dev.brikk.house.sql.ast.Anonymous
 import dev.brikk.house.sql.ast.CTE
@@ -1917,7 +1918,7 @@ class TypeAnnotator(
     private fun annotateToMap(expression: Expression): Expression {
         val mapType = DataType(args("this" to DType.MAP))
         val arg = expression.thisArg as Expression
-        if (expression.metaOrNull?.get("starrocks_map_literal") == true && arg is Struct) {
+        if (expression.metaOrNull?.get(BrikkMetaKeys.STARROCKS_MAP_LITERAL) == true && arg is Struct) {
             // A native MAP{expr:value} key is not a VARCHAR struct-field name.
             // Bind only homogeneous known types, leaving mixed/unknown domains
             // conservative instead of claiming a general coercion policy.

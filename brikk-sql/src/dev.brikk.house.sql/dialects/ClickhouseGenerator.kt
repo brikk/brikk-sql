@@ -1177,12 +1177,12 @@ open class ClickhouseGenerator(
             //     is byte-level and errors on multibyte). Faithful CH keeps byte `translate`.
             reg(Lower::class) { e ->
                 if (ch().isCrossDialectFrom("clickhouse")) func("lowerUTF8", e.thisArg)
-                else if (e.metaOrNull?.keys?.any { it in setOf("clickhouse_name", "bigquery_name", "name") } == true)
+                else if (e.metaOrNull?.keys?.any { it in setOf("clickhouse_name", "bigquery_name", BrikkMetaKeys.NAME) } == true)
                     functionFallbackSql(e as Func) else func("lower", e.thisArg)
             }
             reg(Upper::class) { e ->
                 if (ch().isCrossDialectFrom("clickhouse")) func("upperUTF8", e.thisArg)
-                else if (e.metaOrNull?.keys?.any { it in setOf("clickhouse_name", "bigquery_name", "name") } == true)
+                else if (e.metaOrNull?.keys?.any { it in setOf("clickhouse_name", "bigquery_name", BrikkMetaKeys.NAME) } == true)
                     functionFallbackSql(e as Func) else func("upper", e.thisArg)
             }
             // week() semantics are SOURCE-SPECIFIC (not uniformly cross-dialect): DuckDB
@@ -1425,7 +1425,7 @@ open class ClickhouseGenerator(
             reg(JSONCast::class) { e -> ch().jsonCastSql(e as JSONCast) }
             reg(JSONExtract::class) { e ->
                 if (sourceDialect?.equals("clickhouse", ignoreCase = true) != true &&
-                    e.metaOrNull?.get("clickhouse_json_extract_raw") != true) {
+                    e.metaOrNull?.get(BrikkMetaKeys.CLICKHOUSE_JSON_EXTRACT_RAW) != true) {
                     unexecutable("ClickHouse raw JSON extraction result types and missing-value semantics have no qualified cross-engine execution mapping")
                 }
                 ch().jsonExtractSegments(e, "JSONExtractRaw", quotedIndex = false)

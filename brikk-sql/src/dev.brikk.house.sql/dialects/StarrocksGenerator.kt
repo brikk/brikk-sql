@@ -44,7 +44,7 @@ open class StarrocksGenerator(
 
     override fun pivotSql(expression: Pivot): String {
         if (expression.args["unpivot"] == true || expression.thisArg != null) return unsupportedPivotSql()
-        if (expression.metaOrNull?.get("starrocks_native_pivot") != true && sourceDialect?.equals("starrocks", true) != true) {
+        if (expression.metaOrNull?.get(BrikkMetaKeys.STARROCKS_NATIVE_PIVOT) != true && sourceDialect?.equals("starrocks", true) != true) {
             unexecutable("StarRocks PIVOT result names/types are not qualified for a foreign source")
         }
         return super.pivotSql(expression)
@@ -198,7 +198,7 @@ open class StarrocksGenerator(
 
     // #8682: map literals are not structs or MySQL's generic map conversion.
     open fun starrocksToMapSql(expression: ToMap): String {
-        if (expression.metaOrNull?.get("starrocks_map_literal") != true && sourceDialect?.equals("starrocks", true) != true) {
+        if (expression.metaOrNull?.get(BrikkMetaKeys.STARROCKS_MAP_LITERAL) != true && sourceDialect?.equals("starrocks", true) != true) {
             unexecutable("Map literal key/null/duplicate/coercion contracts are not qualified across StarRocks engines")
         }
         val struct = expression.thisArg as? Expression

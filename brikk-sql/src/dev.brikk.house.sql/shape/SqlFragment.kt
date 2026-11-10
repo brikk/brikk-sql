@@ -3,6 +3,7 @@ package dev.brikk.house.sql.shape
 import dev.brikk.house.sql.BrikkSqlError
 import dev.brikk.house.sql.ast.Alias
 import dev.brikk.house.sql.ast.Anonymous
+import dev.brikk.house.sql.ast.BrikkMetaKeys
 import dev.brikk.house.sql.ast.Func
 import dev.brikk.house.sql.ast.sqlNames
 import dev.brikk.house.sql.ast.DataType
@@ -308,7 +309,7 @@ class SqlFragment(val sql: String, val dialect: String = "") {
         var ordinal = 0
         for (node in ast.walk(bfs = false)) {
             val key = when {
-                node is Parameter -> Key(if (node.metaOrNull?.get("numbered_dollar_parameter") == true) ParamStyle.NUMBERED_DOLLAR else ParamStyle.NAMED_AT, node.name.ifEmpty { null })
+                node is Parameter -> Key(if (node.metaOrNull?.get(BrikkMetaKeys.NUMBERED_DOLLAR_PARAMETER) == true) ParamStyle.NUMBERED_DOLLAR else ParamStyle.NAMED_AT, node.name.ifEmpty { null })
                 node is Placeholder && node.args["kind"] != null -> Key(ParamStyle.NAMED_TYPED, node.text("this"))
                 node is Placeholder && node.text("this").isNotEmpty() ->
                     Key(ParamStyle.NAMED_COLON, node.text("this"))

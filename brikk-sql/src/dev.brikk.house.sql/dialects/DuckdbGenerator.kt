@@ -96,7 +96,7 @@ open class DuckdbGenerator(
             }
             val terms = value.expressionsArg.filterIsInstance<Ordered>().joinToString(", ") { term ->
                 sql(term, "this") + when (term.args["desc"]) { true -> " DESC"; false -> " ASC"; else -> "" } +
-                    if (term.meta["duckdb_copy_default_null_order"] == true) "" else
+                    if (term.meta[BrikkMetaKeys.DUCKDB_COPY_DEFAULT_NULL_ORDER] == true) "" else
                         when (term.args["nulls_first"]) { true -> " NULLS FIRST"; false -> " NULLS LAST"; else -> "" }
             }
             return "ORDER_BY ($terms)"
@@ -650,7 +650,7 @@ open class DuckdbGenerator(
     // BigQuery's EXTRACT spelling has a different weekday origin than DuckDB's.
     override fun extractSql(expression: Extract): String {
         val rendered = super.extractSql(expression)
-        return if (sourceDialect.equals("bigquery", true) && expression.metaOrNull?.get("duckdb_native_weekday") != true &&
+        return if (sourceDialect.equals("bigquery", true) && expression.metaOrNull?.get(BrikkMetaKeys.DUCKDB_NATIVE_WEEKDAY) != true &&
             (expression.thisArg as? Expression)?.name.equals("DAYOFWEEK", true))
             "($rendered + 1)" else rendered
     }
@@ -1515,7 +1515,7 @@ open class DuckdbGenerator(
         if (weekStart != null) {
             val dayOfWeek = Extract(
                 args("this" to Var(args("this" to "DAYOFWEEK")), "expression" to date.copy())
-            ).also { it.meta["duckdb_native_weekday"] = true }
+            ).also { it.meta[BrikkMetaKeys.DUCKDB_NATIVE_WEEKDAY] = true }
             val daysToLast = Mod(
                 args(
                     "this" to Paren(

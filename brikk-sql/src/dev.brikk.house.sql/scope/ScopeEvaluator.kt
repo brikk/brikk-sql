@@ -2,6 +2,7 @@ package dev.brikk.house.sql.scope
 
 import dev.brikk.house.sql.ast.AggFunc
 import dev.brikk.house.sql.ast.Avg
+import dev.brikk.house.sql.ast.BrikkMetaKeys
 import dev.brikk.house.sql.ast.Sum
 import dev.brikk.house.sql.ast.Min
 import dev.brikk.house.sql.ast.Max
@@ -1141,7 +1142,7 @@ internal class ScopeEvaluator(
             }
         }
         val type = annotateTypes(copy, dialect = dialect, overwriteTypes = false).type as? DataType ?: return null
-        return if (type.thisArg == DType.UNKNOWN && type.metaOrNull?.get(dev.brikk.house.sql.optimizer.DatafusionTypes.NATIVE) == null) null else renderType(type, dialect)
+        return if (type.thisArg == DType.UNKNOWN && type.metaOrNull?.get(BrikkMetaKeys.DATAFUSION_ARROW_TYPE) == null) null else renderType(type, dialect)
     }
 
     private fun aggregated(projection: Any?): Boolean =

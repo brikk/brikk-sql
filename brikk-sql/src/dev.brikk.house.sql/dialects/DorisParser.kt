@@ -1,5 +1,6 @@
 package dev.brikk.house.sql.dialects
 
+import dev.brikk.house.sql.ast.BrikkMetaKeys
 import dev.brikk.house.sql.ast.AddMonths
 import dev.brikk.house.sql.ast.Distinct
 import dev.brikk.house.sql.ast.Order
@@ -142,7 +143,7 @@ open class DorisParser(
             } else null
             current = expression(dev.brikk.house.sql.ast.Match(args("this" to current,
                 "expression" to operand, "kind" to kind, "analyzer" to analyzer))).also {
-                it.meta["doris_full_text"] = true
+                it.meta[BrikkMetaKeys.DORIS_FULL_TEXT] = true
             }
             if (negate) current = expression(dev.brikk.house.sql.ast.Not(args("this" to current)))
         } else if (negate) retreat(start)

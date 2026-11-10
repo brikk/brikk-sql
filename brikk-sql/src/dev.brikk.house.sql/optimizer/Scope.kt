@@ -1,6 +1,7 @@
 package dev.brikk.house.sql.optimizer
 
 import dev.brikk.house.sql.BrikkSqlError
+import dev.brikk.house.sql.ast.BrikkMetaKeys
 import dev.brikk.house.sql.ast.CTE
 import dev.brikk.house.sql.ast.Column
 import dev.brikk.house.sql.ast.Comprehension
@@ -316,7 +317,7 @@ class Scope(
                 val result = mutableListOf<Column>()
                 for (column in columns + externalColumns) {
                     if (generateSequence<Expression>(column) { it.parent }.takeWhile { it !is Select }
-                            .any { it.metaOrNull?.get("spice_relation_call_argument") == true }) continue
+                            .any { it.metaOrNull?.get(BrikkMetaKeys.SPICE_RELATION_CALL_ARGUMENT) == true }) continue
                     val ancestor = column.findAncestor(
                         Select::class,
                         Qualify::class,

@@ -1,5 +1,6 @@
 package dev.brikk.house.sql.dialects
 
+import dev.brikk.house.sql.ast.BrikkMetaKeys
 import dev.brikk.house.sql.ast.Abs
 import dev.brikk.house.sql.ast.Alias
 import dev.brikk.house.sql.ast.AnyValue
@@ -795,7 +796,7 @@ open class DuckdbParser(
     private fun paginationPosition(node: Expression, start: Int) {
         // LIMIT canonicalization may reorder OFFSET and FETCH. Retain order only where
         // anonymous parameters make it semantic; metadata survives copy/serde.
-        if (node.findAll<Placeholder>().any { it.thisArg == null }) node.meta["duckdb_pagination_position"] = start
+        if (node.findAll<Placeholder>().any { it.thisArg == null }) node.meta[BrikkMetaKeys.DUCKDB_PAGINATION_POSITION] = start
     }
 
     override fun parseCteKeyExpressions(): List<Expression> = parseWrappedCsv({
@@ -1247,7 +1248,7 @@ open class DuckdbParser(
                     val desc = when { match(TokenType.ASC) -> false; match(TokenType.DESC) -> true; else -> null }
                     val nulls = when { matchTextSeq("NULLS", "FIRST") -> true; matchTextSeq("NULLS", "LAST") -> false; else -> null }
                     expression(dev.brikk.house.sql.ast.Ordered(args("this" to term, "desc" to desc, "nulls_first" to (nulls ?: false)))).also {
-                        if (nulls == null) it.meta["duckdb_copy_default_null_order"] = true
+                        if (nulls == null) it.meta[BrikkMetaKeys.DUCKDB_COPY_DEFAULT_NULL_ORDER] = true
                     }
                 }
                 if (terms.isEmpty()) raiseError("Expected COPY $name terms")

@@ -49,7 +49,7 @@ open class DorisGenerator(
     override val dialect: Dialect get() = Dialects.DORIS
 
     override fun matchSql(expression: Match): String {
-        if (expression.metaOrNull?.get("doris_full_text") != true && sourceDialect?.equals("doris", true) != true) {
+        if (expression.metaOrNull?.get(BrikkMetaKeys.DORIS_FULL_TEXT) != true && sourceDialect?.equals("doris", true) != true) {
             unexecutable("Foreign MATCH semantics are not qualified as Doris full-text search")
         }
         val kind = expression.text("kind")

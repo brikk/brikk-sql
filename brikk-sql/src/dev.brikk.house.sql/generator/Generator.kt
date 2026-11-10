@@ -644,7 +644,7 @@ open class Generator(
             return if (isTruthyArg(value)) sql(value) else ""
         }
 
-        val nativeDialect = expression.metaOrNull?.get("native_only_dialect") as? String
+        val nativeDialect = expression.metaOrNull?.get(BrikkMetaKeys.NATIVE_ONLY_DIALECT) as? String
         if (expression is ArraySort && (expression.args["asc"] != null || expression.args["nulls_first"] != null)) {
             unexecutable("Post-30.29 ArraySort direction/NULL fields require a separately qualified schema migration")
         }
@@ -663,14 +663,14 @@ open class Generator(
             unexecutable("Ordered string aggregation has no qualified native LISTAGG mapping for $targetName")
         }
         if (forExecution && dialect.name != "starrocks" &&
-            (expression.metaOrNull?.get("starrocks_native_ddl") == true || expression.metaOrNull?.get("starrocks_to_days") == true ||
-                expression.metaOrNull?.get("starrocks_native_pivot") == true)) {
+            (expression.metaOrNull?.get(BrikkMetaKeys.STARROCKS_NATIVE_DDL) == true || expression.metaOrNull?.get(BrikkMetaKeys.STARROCKS_TO_DAYS) == true ||
+                expression.metaOrNull?.get(BrikkMetaKeys.STARROCKS_NATIVE_PIVOT) == true)) {
             throw UnsupportedError("Native StarRocks DDL/TO_DAYS/PIVOT semantics are not qualified for another engine")
         }
-        if (forExecution && dialect.name != "starrocks" && expression.metaOrNull?.get("starrocks_map_literal") == true) {
+        if (forExecution && dialect.name != "starrocks" && expression.metaOrNull?.get(BrikkMetaKeys.STARROCKS_MAP_LITERAL) == true) {
             throw UnsupportedError("StarRocks map literal null/duplicate-key and type contracts have no qualified cross-engine execution mapping")
         }
-        if (forExecution && dialect.name != "clickhouse" && expression.metaOrNull?.get("clickhouse_json_extract_raw") == true) {
+        if (forExecution && dialect.name != "clickhouse" && expression.metaOrNull?.get(BrikkMetaKeys.CLICKHOUSE_JSON_EXTRACT_RAW) == true) {
             throw UnsupportedError("ClickHouse JSONExtractRaw String results and missing-value semantics have no qualified cross-engine execution mapping")
         }
         if (nativeDialect != null && nativeDialect != dialect.name) {
@@ -3271,7 +3271,7 @@ open class Generator(
     }
 
     protected fun anonymousPaginationPosition(node: Expression?): Int? =
-        (node?.metaOrNull?.get("duckdb_pagination_position") as? Number)?.toInt()?.takeIf {
+        (node?.metaOrNull?.get(BrikkMetaKeys.DUCKDB_PAGINATION_POSITION) as? Number)?.toInt()?.takeIf {
             node.findAll<Placeholder>().any { it.thisArg == null }
         }
 
@@ -4070,7 +4070,7 @@ open class Generator(
 
     open fun matchSql(expression: Match): String {
         if (expression.args["kind"] != null || expression.args["analyzer"] != null ||
-            expression.metaOrNull?.get("doris_full_text") == true) {
+            expression.metaOrNull?.get(BrikkMetaKeys.DORIS_FULL_TEXT) == true) {
             unexecutable("Doris full-text MATCH variants/analyzers have no qualified execution mapping in $targetName")
         }
         return binary(expression, "MATCH")
@@ -4186,7 +4186,7 @@ open class Generator(
 
     // sqlglot: Generator.command_sql
     open fun commandSql(expression: Command): String {
-        if (expression.metaOrNull?.get("starrocks_opaque_command") == true && dialect.name != "starrocks") {
+        if (expression.metaOrNull?.get(BrikkMetaKeys.STARROCKS_OPAQUE_COMMAND) == true && dialect.name != "starrocks") {
             unexecutable("Opaque StarRocks administrative commands have no cross-engine execution mapping")
         }
         return "${sql(expression, "this")} ${expression.text("expression").trim()}"
@@ -5873,7 +5873,7 @@ open class Generator(
         // name the function was parsed with
         val name = if (dialectPreserveOriginalNames) {
             (node.metaOrNull?.get("${dialect.name}_name") as? String)
-                ?: (node.metaOrNull?.get("name") as? String).takeIf {
+                ?: (node.metaOrNull?.get(BrikkMetaKeys.NAME) as? String).takeIf {
                     sourceDialect == null || sourceDialect.equals(dialect.name, ignoreCase = true)
                 } ?: expression.sqlName()
         } else {

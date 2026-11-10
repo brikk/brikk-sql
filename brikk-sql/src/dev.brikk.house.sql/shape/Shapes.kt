@@ -3,6 +3,7 @@ package dev.brikk.house.sql.shape
 // Explicit kotlin imports: this package sits next to `dev.brikk.house.sql.ast` whose
 // node classes shadow builtins when star-imported; we import only what we use.
 import dev.brikk.house.sql.BrikkSqlError
+import dev.brikk.house.sql.ast.BrikkMetaKeys
 import dev.brikk.house.sql.ast.DataType
 import dev.brikk.house.sql.ast.Identifier
 import dev.brikk.house.sql.ast.Table
@@ -136,9 +137,9 @@ data class Shape(val columns: List<ColumnShape>) {
 
     private fun typesMatch(expected: String, actual: String, dialect: dev.brikk.house.sql.dialects.Dialect): Boolean {
         val expectedType = parseType(expected, dialect)
-        if (expectedType.thisArg == dev.brikk.house.sql.ast.DType.UNKNOWN && expectedType.metaOrNull?.get(dev.brikk.house.sql.optimizer.DatafusionTypes.NATIVE) == null) return true
+        if (expectedType.thisArg == dev.brikk.house.sql.ast.DType.UNKNOWN && expectedType.metaOrNull?.get(BrikkMetaKeys.DATAFUSION_ARROW_TYPE) == null) return true
         val actualType = parseType(actual, dialect)
-        val native = dev.brikk.house.sql.optimizer.DatafusionTypes.NATIVE
+        val native = BrikkMetaKeys.DATAFUSION_ARROW_TYPE
         if (expectedType.metaOrNull?.get(native) != null || actualType.metaOrNull?.get(native) != null) {
             // Logical ARRAY/TIMESTAMP equivalence does not prove Arrow list width or timestamp unit/zone equality.
             return expectedType.metaOrNull?.get(native) != null && expectedType.metaOrNull?.get(native) == actualType.metaOrNull?.get(native)

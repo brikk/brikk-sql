@@ -8,7 +8,7 @@ import kotlin.Boolean
 
 /** Arrow names are analysis data, not SQL cast syntax. Retain width, units, zones and container identity. */
 internal object DatafusionTypes {
-    const val NATIVE = "datafusion_arrow_type"
+    const val NATIVE = BrikkMetaKeys.DATAFUSION_ARROW_TYPE
     private val ARROW_FIELD = Regex("^\"((?:[^\"]|\\\\.)*)\":\\s*(.*)$")
     private val JSON_TOKEN = Regex("\"(?:[^\"\\\\]|\\\\.)*\"|[{}\\[\\],:]")
     private val primitive = mapOf(
@@ -26,7 +26,7 @@ internal object DatafusionTypes {
         val raw = text.trim()
         fun type(kind: DType, children: List<Expression> = emptyList()) = DataType(args(
             "this" to kind, "expressions" to children, "nested" to (kind in setOf(DType.ARRAY, DType.STRUCT, DType.MAP))
-        )).also { it.meta[NATIVE] = raw }
+        )).also { it.meta[BrikkMetaKeys.DATAFUSION_ARROW_TYPE] = raw }
         primitive[raw]?.let { return type(it) }
         val name = raw.substringBefore('(')
         if (!raw.endsWith(')')) return null
@@ -132,14 +132,14 @@ internal object DatafusionTypes {
         }
         if (e is Pow) return logical(DType.DOUBLE)
         if (e is Length) return when {
-            type(e.thisArg)?.metaOrNull?.get(NATIVE) == "LargeUtf8" -> if (dialect.largeUtf8LengthIsBigint) logical(DType.BIGINT) else unknown()
+            type(e.thisArg)?.metaOrNull?.get(BrikkMetaKeys.DATAFUSION_ARROW_TYPE) == "LargeUtf8" -> if (dialect.largeUtf8LengthIsBigint) logical(DType.BIGINT) else unknown()
             type(e.thisArg)?.thisArg in setOf(DType.VARCHAR, DType.TEXT) -> logical(DType.INT)
             else -> unknown()
         }
         if (e is Abs || e is Min || e is Max) return type(e.thisArg) ?: unknown()
         if (e is Coalesce || e is Nullif) {
             val types = e.iterExpressions().mapNotNull { it.type as? DataType }.filter { it.thisArg != DType.NULL }.toList()
-            return types.firstOrNull()?.takeIf { first -> types.all { it == first && it.metaOrNull?.get(NATIVE) == first.metaOrNull?.get(NATIVE) } } ?: unknown()
+            return types.firstOrNull()?.takeIf { first -> types.all { it == first && it.metaOrNull?.get(BrikkMetaKeys.DATAFUSION_ARROW_TYPE) == first.metaOrNull?.get(BrikkMetaKeys.DATAFUSION_ARROW_TYPE) } } ?: unknown()
         }
         if (e is Lower || e is Upper || e is Substring || e is Concat || e is ConcatWs) return logical(DType.VARCHAR)
         if (e is RegexpLike) return logical(DType.BOOLEAN)
@@ -147,7 +147,7 @@ internal object DatafusionTypes {
         if (dialect.bundledFunctionExtensions && e is JSONExtract) return jsonUnion()
         if (e !is Anonymous && e !is AnonymousAggFunc) {
             // Unverified shared function typing often encodes another engine's widening/coercion rules.
-            return if (e is Func && e !is ArrayAgg && e.metaOrNull?.get("datafusion_native_call") == true) unknown() else null
+            return if (e is Func && e !is ArrayAgg && e.metaOrNull?.get(BrikkMetaKeys.DATAFUSION_NATIVE_CALL) == true) unknown() else null
         }
         if (e.parent is Dot || e.thisArg is Identifier && (e.thisArg as Identifier).name != e.name.lowercase()) return unknown()
         val values = e.expressionsArg.filterIsInstance<Expression>()
@@ -190,7 +190,7 @@ internal object DatafusionTypes {
         return unknown()
     }
 
-    private fun jsonUnion() = unknown().also { it.meta[NATIVE] = JSON_UNION }
+    private fun jsonUnion() = unknown().also { it.meta[BrikkMetaKeys.DATAFUSION_ARROW_TYPE] = JSON_UNION }
 
     // Exact arrow_typeof result from v2.4.0, round5/spice.json; union alternatives are not a struct.
     private val JSON_UNION = "Union(Sparse, 0: (\"null\": Null), 1: (\"bool\": non-null Boolean), " +

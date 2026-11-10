@@ -1,5 +1,6 @@
 package dev.brikk.house.sql.parser
 
+import dev.brikk.house.sql.ast.BrikkMetaKeys
 import dev.brikk.house.sql.ast.SAFE_IDENTIFIER_RE
 import dev.brikk.house.sql.ast.column
 
@@ -1487,7 +1488,7 @@ open class Parser(
                 val comments = prevComments
                 val factory = equality.getValue(prevToken.tokenType)
                 this_ = buildPredicate(factory(args("this" to this_, "expression" to parseComparison())), comments)
-                if (preserveOperatorSpelling) this_.meta["operator"] = operator
+                if (preserveOperatorSpelling) this_.meta[BrikkMetaKeys.OPERATOR] = operator
             } else if (parseIs && isPredicateAhead()) {
                 val start = index
                 this_ = parseComparison(parsePostfixIsRange(this_))
@@ -3918,7 +3919,7 @@ open class Parser(
             )
         )
         if (preserveExplicitNullOrdering && explicitlyNullOrdered) {
-            ordered.meta["explicit_null_ordering"] = if (isNullsFirst) "FIRST" else "LAST"
+            ordered.meta[BrikkMetaKeys.EXPLICIT_NULL_ORDERING] = if (isNullsFirst) "FIRST" else "LAST"
         }
         return ordered
     }

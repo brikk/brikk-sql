@@ -22,7 +22,7 @@ fun datafusionFunctionDiagnostics(sql: String, dialect: String, snapshot: Metada
         val tokens = lexed.tokens
         val byStart = tokens.withIndex().associate { it.value.start to it.index }
         for (node in roots.asSequence().flatMap { it.walk() }) {
-            if (node.metaOrNull?.get("datafusion_native_call") != true || node !is Func) continue
+            if (node.metaOrNull?.get(BrikkMetaKeys.DATAFUSION_NATIVE_CALL) != true || node !is Func) continue
             checkCanceled()
             val start = (node.metaOrNull?.get("start") as? Number)?.toInt() ?: continue
             val index = byStart[start] ?: continue

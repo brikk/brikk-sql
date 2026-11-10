@@ -97,7 +97,7 @@ open class DatafusionGenerator(
             is DatafusionExplain -> {
                 val options = e.expressionsArg.joinToString(if (e.args["list"] == true) ", " else " ") {
                     val option = it as? PropertyEQ ?: throw UnsupportedError("Invalid DataFusion EXPLAIN option")
-                    sql(option, "this") + if (option.metaOrNull?.get("datafusion_implicit_option") == true &&
+                    sql(option, "this") + if (option.metaOrNull?.get(BrikkMetaKeys.DATAFUSION_IMPLICIT_OPTION) == true &&
                         (option.expressionArg as? Expression)?.name.equals("TRUE", true)) "" else " ${sql(option, "expression") }"
                 }
                 "EXPLAIN" + (if (options.isEmpty()) "" else if (e.args["list"] == true) " ($options)" else " $options") + " ${sql(e, "this") }"
@@ -118,7 +118,7 @@ open class DatafusionGenerator(
     override val propertiesLocation get() = PROPERTY_LOCATIONS
 
     override fun clusterpropertySql(expression: ClusterProperty): String =
-        if (expression.metaOrNull?.get("datafusion_cluster_expressions") == true) "CLUSTER BY ${expressions(expression, flat = true)}"
+        if (expression.metaOrNull?.get(BrikkMetaKeys.DATAFUSION_CLUSTER_EXPRESSIONS) == true) "CLUSTER BY ${expressions(expression, flat = true)}"
         else super.clusterpropertySql(expression)
 
     private fun nativeFileFormat(value: kotlin.Any?): String {
@@ -157,14 +157,14 @@ open class DatafusionGenerator(
     }
 
     override fun castSql(expression: Cast, safePrefix: String?): String =
-        if (expression.meta["datafusion_cast_style"] == "dcolon") {
+        if (expression.meta[BrikkMetaKeys.DATAFUSION_CAST_STYLE] == "dcolon") {
             "${sql(expression, "this")}::${sql(expression, "to")}"
         } else {
             super.castSql(expression, safePrefix)
         }
 
     override fun datatypeSql(expression: DataType): String {
-        val sourceName = expression.meta["datafusion_type_name"] as? String ?: return super.datatypeSql(expression)
+        val sourceName = expression.meta[BrikkMetaKeys.DATAFUSION_TYPE_NAME] as? String ?: return super.datatypeSql(expression)
         val preserved = expression.copy() as DataType
         preserved.set("this", DType.USERDEFINED)
         preserved.set("kind", Var(args("this" to sourceName)))
@@ -185,12 +185,12 @@ open class DatafusionGenerator(
 
     override fun orderedSql(expression: Ordered): String {
         val rendered = super.orderedSql(expression)
-        val explicit = expression.meta["explicit_null_ordering"] as? String ?: return rendered
+        val explicit = expression.meta[BrikkMetaKeys.EXPLICIT_NULL_ORDERING] as? String ?: return rendered
         return if (" NULLS " in rendered) rendered else "$rendered NULLS $explicit"
     }
 
     private fun sourceFunctionSql(expression: Expression): String {
-        val sourceName = expression.meta["datafusion_function_name"] as? String
+        val sourceName = expression.meta[BrikkMetaKeys.DATAFUSION_FUNCTION_NAME] as? String
         val functionName = sourceName ?: if (expression is StrPosition) "strpos" else (expression as Func).sqlName()
         val args = expression.args.values.flatMap { value ->
             if (value is List<*>) value else listOf(value)
@@ -210,7 +210,7 @@ open class DatafusionGenerator(
         super.unnestSql(expression).replaceFirst("UNNEST", "unnest")
 
     private fun generateSeriesSql(expression: GenerateSeries): String =
-        if (expression.meta["datafusion_omitted_series_start"] == true) {
+        if (expression.meta[BrikkMetaKeys.DATAFUSION_OMITTED_SERIES_START] == true) {
             func("generate_series", expression.args["end"], normalize = false)
         } else {
             sourceFunctionSql(expression)
@@ -233,7 +233,7 @@ open class DatafusionGenerator(
     // Anonymous functions (no dedicated AST node). Applied before lowercasing.
     override fun anonymousSql(expression: Anonymous): String {
         if (expression.thisArg is Identifier) return func(sql(expression.thisArg), *expression.expressionsArg.toTypedArray(), normalize = false)
-        if (expression.meta["datafusion_native_call"] == true) return super.anonymousSql(expression)
+        if (expression.meta[BrikkMetaKeys.DATAFUSION_NATIVE_CALL] == true) return super.anonymousSql(expression)
         val parent = expression.parent
         val isQualified = parent is Dot && expression === parent.expressionArg
         if (!isQualified) {
@@ -260,7 +260,7 @@ open class DatafusionGenerator(
 
     override fun distinctSql(expression: Distinct): String {
         val call = generateSequence(expression.parent) { it.parent }.firstOrNull { it is Func }
-        if (call?.meta?.get("datafusion_native_call") == true) {
+        if (call?.meta?.get(BrikkMetaKeys.DATAFUSION_NATIVE_CALL) == true) {
             val values = expressions(expression, flat = true)
             return if (values.isEmpty()) "DISTINCT" else "DISTINCT $values"
         }
@@ -293,14 +293,14 @@ open class DatafusionGenerator(
                 else binary(e as Binary, "~")
             }
             reg(RegexpILike::class) { e -> binary(e as Binary, "~*") }
-            reg(NEQ::class) { e -> binary(e as Binary, e.meta["operator"] as? String ?: "!=") }
+            reg(NEQ::class) { e -> binary(e as Binary, e.meta[BrikkMetaKeys.OPERATOR] as? String ?: "!=") }
             reg(ArrayNode::class) { e -> "ARRAY[${expressions(e)}]" }
             reg(FileFormatProperty::class) { e -> "STORED AS ${(this as DatafusionGenerator).nativeFileFormat(e.thisArg)}" }
             reg(ArrayContainsAll::class) { e -> binary(e as Binary, "@>") }
             reg(ArrayContainedBy::class) { e -> binary(e as Binary, "<@") }
             reg(ToChar::class) { e -> func("to_char", e.thisArg, e.args["format"], e.args["nlsparam"]) }
             reg(DateBin::class) { e ->
-                if (e.meta["datafusion_date_bin"] == true) func("date_bin", e.thisArg, e.expressionArg, e.args["origin"])
+                if (e.meta[BrikkMetaKeys.DATAFUSION_DATE_BIN] == true) func("date_bin", e.thisArg, e.expressionArg, e.args["origin"])
                 else functionFallbackSql(e as Func)
             }
             reg(Unnest::class) { e -> (this as DatafusionGenerator).datafusionUnnestSql(e as Unnest) }
