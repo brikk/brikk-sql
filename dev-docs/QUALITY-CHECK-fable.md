@@ -94,6 +94,8 @@ or why it was not.
 | 9 | FQ-04 | Done as corrected: the renderer bodies moved; the flags stay. |
 | 10 | FQ-21 steps 2 to 4, FQ-22, FQ-25, FQ-31 | Done except the two script deletions and the parts of FQ-25 that are the owner's. |
 | 11 | FQ-08, FQ-13 after `close()`; facts for the ShardingSphere slowdown and FQ-09 | Done, by the owner's decisions. |
+| 12 | FQ-10 rollback; `SqlVerifier` extends `AutoCloseable` | Done, by the owner's decisions. |
+| 13 | FQ-09, narrowed to the waits | Done. |
 
 No round changed a public API, a test expectation, a fixture or a known-failure ledger.
 At the end the suites stood at: core 1,896 passing; the other modules 796 passing with
@@ -533,14 +535,26 @@ in these states:
   latch, `finishes(running, wait = true)` checks ownership once and then waits without a
   bound, and `awaitHandled` re-checks engine disposal but not connection retirement.
 
-The owner approved a narrow fix: one pending cancel per console and connection; on a
-second press while one is pending, a choice between "Keep Waiting" and disconnecting
-that console (the same `DataRequest.Disconnect` the deadline path sends, not a
-deactivation of the whole data source); and every wait re-checks engine disposal and
-connection retirement. Disposing the engine from outside when even that stalls is not
-part of it. A driver whose `cancelAll` never returns can only be freed by killing its
-process, and the platform has no public way to do that without calling `cancelAll`
-first. That stays a known limit.
+**Decided and done (round 13), narrowed by the owner.** This is an edge case: only the
+ClickHouse plugin uses the interceptor, and the stuck states were produced in tests by
+blocking calls, never seen with a real driver. So the owner kept one thing only: the
+waits notice when the console's connection is gone. A second press of Cancel behaves as
+before; no dialog and no registry of pending cancels were added.
+
+The three waits (the engine thread in `requestFinished`, the final wait on `cancelAll`,
+and `awaitHandled`) now end when the captured connection is no longer among
+`DatabaseConnectionManager.activeConnections`. The manager removes a connection before
+any call into the driver, and the engine has dropped it by then, so this is exact and
+makes no remote call. So when a disconnect or a deactivation really drops the
+connection, the console comes free.
+
+`JdbcEngine.isDisposed` must not be used for this. It also turns true when any other
+project closes, and a first version of this change, which used it, released a parked
+console while its cancel was still outstanding. A regression test covers that.
+
+Still a known limit: a driver whose `cancelAll` never returns, on a connection that
+cannot be dropped, leaves that console blocked until the IDE restarts. Deactivating the
+data source goes through the same driver call first.
 
 ### FQ-10. Completion widens the saved introspection scope (Behaviour)
 

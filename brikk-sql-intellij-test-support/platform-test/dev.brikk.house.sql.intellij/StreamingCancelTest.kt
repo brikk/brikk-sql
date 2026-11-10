@@ -77,6 +77,9 @@ class StreamingCancelTest : BasePlatformTestCase() {
     private val fetching = CopyOnWriteArrayList<DataRequest>()
     private val finished = CopyOnWriteArrayList<DataRequest>()
     private val executionErrors = CopyOnWriteArrayList<Pair<DataRequest, String>>()
+    private val releases = ArrayList<CountDownLatch>()
+    private val cancelWorkers = ArrayList<CancelWorker>()
+    private val disposals = ArrayList<CountDownLatch>()
 
     override fun setUp() {
         super.setUp()
@@ -118,6 +121,9 @@ class StreamingCancelTest : BasePlatformTestCase() {
 
     override fun tearDown() = RunAll(
         { installed?.unregisterActions(ActionManager.getInstance()) },
+        { releases.forEach { it.countDown() } },
+        { cancelWorkers.forEach { it.awaitEnd() } },
+        { disposals.forEach { assertTrue("engine disposal ends", it.await(15, TimeUnit.SECONDS)) } },
         { PlatformTestUtil.waitWithEventsDispatching("the sessions end their requests", { sessions.values.all { it.isIdle || it in faulted } }, 30) },
         { sessions.forEach { (console, session) -> DatabaseSessionViewService.getInstance().destroyView(console); Disposer.dispose(console); Disposer.dispose(session) } },
         { LocalDataSourceManager.getInstance(project).removeDataSource(dataSource) },
@@ -515,6 +521,243 @@ class StreamingCancelTest : BasePlatformTestCase() {
         var delegated = false
         assertEquals(ExecutionClaim.DECLINED, StreamingCancelInterceptor(DialectDataSourceResolver(Dbms.POSTGRES)).perform(event) { delegated = true })
         assertFalse(delegated)
+    }
+
+    fun testConnectionRetirementAloneReleasesTheRequestFinishedWaitBeforeTheWorkerStarts() = parkedReport(dispose = false)
+
+    fun testEngineDisposalAloneDoesNotReleaseTheRequestFinishedWait() = parkedReport(dispose = true)
+
+    private fun parkedReport(dispose: Boolean) {
+        val console = open()
+        console.run("SELECT 1")
+        val workers = ArrayList<Runnable>()
+        val interceptor = StreamingCancelInterceptor(DialectDataSourceResolver(dataSource.dbms), workers::add)
+        val request = stream(console, "beforeWorker")
+        val engine = engineOf(request)
+        try {
+            assertEquals(ExecutionClaim.HANDLED, interceptor.perform(cancelEvent(console)) {})
+            val reported = afterReport(request)
+            PlatformTestUtil.waitWithEventsDispatching("the engine parks at its finished report", { request in finished }, 30)
+            assertEquals("the interceptor still holds the report", 1L, reported.count)
+            if (dispose) {
+                faulted += console.databaseSession
+                val connection = connectionOf(request)
+                val disposed = disposeEngine(engine)
+                PlatformTestUtil.waitWithEventsDispatching("the engine executor is shut down", { engine.isDisposed }, 10)
+                assertFalse("disposal alone cannot release requestFinished", reported.await(500, TimeUnit.MILLISECONDS))
+                assertTrue(active(connection))
+                workers.removeAt(0).run()
+                assertTrue(reported.await(10, TimeUnit.SECONDS))
+                assertTrue(disposed.await(10, TimeUnit.SECONDS))
+            } else {
+                console.databaseSession.messageBus.dataProducer.processRequest(DataRequest.Disconnect(console.databaseSession))
+                assertTrue("retirement releases the report without running the worker", reported.await(10, TimeUnit.SECONDS))
+                assertNewConnection(console, "beforeWorker")
+            }
+        } finally {
+            workers.forEach { it.run() }
+        }
+    }
+
+    fun testEngineDisposalAloneDoesNotReleaseTheInitialCancelFutureWait() = recoverWait("initial", dispose = true)
+
+    fun testEngineDisposalAloneDoesNotReleaseTheFinalCancelFutureWait() = recoverWait("finally", dispose = true)
+
+    fun testConnectionRetirementReleasesTheFinalCancelFutureWait() = recoverWait("finally", dispose = false)
+
+    fun testEngineDisposalReleasesTheStockCleanupWait() = recoverWait("stock", dispose = true)
+
+    fun testConnectionRetirementReleasesTheStockCleanupWait() = recoverWait("stock", dispose = false)
+
+    fun testConnectionRetirementReleasesTheDisconnectHandledWait() = recoverWait("disconnect", dispose = false)
+
+    /** The probe's worker states: cancel future, refused disconnect's finally, and unhandled stock/disconnect. */
+    private fun recoverWait(kind: String, dispose: Boolean) {
+        val console = open()
+        console.run("SELECT 1")
+        val session = console.databaseSession
+        val releaseCancel = releaseLatch()
+        val releaseRequest = releaseLatch()
+        val blocked = CountDownLatch(1)
+        val cancelReturned = CountDownLatch(1)
+        val disconnects = CopyOnWriteArrayList<DataRequest>()
+        val disconnectHandled = CountDownLatch(1)
+        val refusal = "the recovery test refuses its first disconnect"
+        DataBus.addRootAuditor(project, object : DataAuditor {
+            override fun jobSubmitted(request: DataRequest, producer: DataProducer) {
+                if (request is DataRequest.Disconnect) disconnects += request
+                if (kind == "finally" && request is DataRequest.Disconnect && blocked.count > 0) {
+                    blocked.countDown()
+                    throw IllegalStateException(refusal)
+                }
+            }
+
+            override fun requestCancelStarted(context: DataRequest.Context, cancelRequest: DataRequest.Cancel?) {
+                if ((kind == "stock" || kind == "disconnect") && blocked.count > 0) {
+                    blocked.countDown()
+                    check(releaseRequest.await(120, TimeUnit.SECONDS))
+                }
+            }
+
+            override fun jobFinished(request: DataRequest, producer: DataProducer) {
+                if (request === disconnects.firstOrNull()) disconnectHandled.countDown()
+            }
+        }, testRootDisposable)
+        val logging = LoggedErrorProcessor.executeWith(object : LoggedErrorProcessor() {
+            override fun processError(category: String, message: String, details: Array<out String>, t: Throwable?): Set<Action> =
+                if (generateSequence(t) { it.cause }.any { it.message == refusal }) setOf(Action.RETHROW) else super.processError(category, message, details, t)
+        })
+        val worker = cancelWorker()
+        try {
+            val interceptor = StreamingCancelInterceptor(DialectDataSourceResolver(dataSource.dbms), worker, if (kind == "initial") 30.seconds else 1.seconds)
+            val tag = if (kind == "disconnect") "awaitDisconnect" else SlowStreamDriver.LAGGING
+            val request = stream(console, tag)
+            val engine = engineOf(request)
+            val connection = connectionOf(request)
+            if (kind != "stock") interceptCancel(request) { remote ->
+                if (kind != "disconnect") remote.cancelAll()
+                if (kind == "initial") blocked.countDown()
+                try { check(releaseCancel.await(120, TimeUnit.SECONDS)) } finally { cancelReturned.countDown() }
+            }
+            assertEquals(ExecutionClaim.HANDLED, interceptor.perform(cancelEvent(console)) {})
+            val reported = afterReport(request)
+            assertTrue(blocked.await(10, TimeUnit.SECONDS))
+            PlatformTestUtil.waitWithEventsDispatching("the captured request reaches requestFinished", { request in finished }, 20)
+            worker.awaitWait(if (kind == "stock" || kind == "disconnect") "awaitHandled" else "finishes")
+            if (kind == "finally" || dispose) faulted += session
+            val disposed = if (dispose) disposeEngine(engine) else null
+            if (dispose && kind != "stock") {
+                PlatformTestUtil.waitWithEventsDispatching("the engine executor is shut down", { engine.isDisposed }, 10)
+                assertFalse("disposal is not retirement", worker.done.await(500, TimeUnit.MILLISECONDS))
+                assertEquals("the engine report is still held", 1L, reported.count)
+                assertTrue(active(connection))
+                releaseCancel.countDown()
+            } else if (!dispose) {
+                assertTrue("the captured connection is still registered", active(connection))
+                session.messageBus.dataProducer.processRequest(DataRequest.Disconnect(session))
+            }
+            worker.awaitEnd()
+            assertTrue("the engine thread leaves its finished report", reported.await(10, TimeUnit.SECONDS))
+            if (!dispose && kind != "stock") assertEquals("the remote cancel has not returned", 1L, cancelReturned.count)
+            if (disposed != null) assertTrue(disposed.await(10, TimeUnit.SECONDS))
+            if (kind == "finally") assertTrue(worker.failures.single().let { generateSequence(it) { it.cause }.any { it.message == refusal } })
+            else assertEmpty(worker.failures)
+            if (!dispose) {
+                assertFalse(active(connection))
+                // Finish the old cleanup before reconnecting, without using it to release the worker or engine report.
+                releaseRequest.countDown()
+                if (kind == "disconnect") assertTrue(disconnectHandled.await(10, TimeUnit.SECONDS))
+                assertNewConnection(console, tag)
+            }
+        } finally {
+            releaseRequest.countDown()
+            releaseCancel.countDown()
+            try {
+                worker.awaitEnd()
+                if (kind != "stock") assertTrue(cancelReturned.await(10, TimeUnit.SECONDS))
+            } finally {
+                logging.finish()
+            }
+        }
+    }
+
+    fun testClosingAnotherProjectDoesNotReleaseAPendingCancelOrStopLaterCancelsBeingClaimed() {
+        val console = open()
+        console.run("SELECT 1")
+        val entered = CountDownLatch(1)
+        val releaseCancel = releaseLatch()
+        val returned = CountDownLatch(1)
+        val interceptor = StreamingCancelInterceptor(DialectDataSourceResolver(dataSource.dbms))
+        val request = stream(console, SlowStreamDriver.LAGGING)
+        val engine = engineOf(request)
+        val connection = connectionOf(request)
+        interceptCancel(request) { remote ->
+            remote.cancelAll()
+            entered.countDown()
+            try { check(releaseCancel.await(120, TimeUnit.SECONDS)) } finally { returned.countDown() }
+        }
+        try {
+            assertEquals(ExecutionClaim.HANDLED, interceptor.perform(cancelEvent(console)) {})
+            val reported = afterReport(request)
+            assertTrue(entered.await(10, TimeUnit.SECONDS))
+            PlatformTestUtil.waitWithEventsDispatching("the engine parks at its finished report", { request in finished }, 10)
+            val successor = console.submit("SELECT '${SlowStreamDriver.MARKER} next'")
+            assertFalse(engine.isDisposed)
+            val other = PlatformTestUtil.loadAndOpenProject(Files.createDirectories(work.resolve("other-project")), testRootDisposable)
+            try { assertNotSame(project, other) } finally { PlatformTestUtil.forceCloseProjectWithoutSaving(other) }
+            assertTrue("the platform sets this flag even for another project's close", engine.isDisposed)
+            assertTrue(active(connection))
+            assertFalse("the flag must not release the engine", reported.await(500, TimeUnit.MILLISECONDS))
+            assertEmpty("the next request cannot run during cancelAll", steps("next"))
+            releaseCancel.countDown()
+            assertTrue(returned.await(10, TimeUnit.SECONDS))
+            PlatformTestUtil.waitWithEventsDispatching("the successor runs only after cancelAll returns", { successor in finished }, 30)
+            assertEmpty(errorsOf(successor))
+            assertEquals(steps("@next"), steps("@${SlowStreamDriver.LAGGING}"))
+            val later = stream(console, "laterCancel")
+            assertEquals("a later press is still claimed despite that flag", ExecutionClaim.HANDLED, interceptor.perform(cancelEvent(console)) {})
+            PlatformTestUtil.waitWithEventsDispatching("the later cancel completes", { later in finished }, 10)
+            assertEquals(listOf("execute", "cancel", "close"), steps("laterCancel"))
+        } finally {
+            releaseCancel.countDown()
+            assertTrue(returned.await(10, TimeUnit.SECONDS))
+        }
+    }
+
+    private fun connectionOf(request: DataRequest): DatabaseConnection = DatabaseConnectionManager.getInstance().activeConnections
+        .single { (it.requestor as? JdbcEngine)?.requestContextIfAny?.request === request }
+
+    private fun active(connection: DatabaseConnection): Boolean = DatabaseConnectionManager.getInstance().activeConnections.any { it === connection }
+
+    /** Installed after the interceptor, so this fires only after its requestFinished wait actually returns. */
+    private fun afterReport(request: DataRequest) = CountDownLatch(1).also { reported ->
+        DataBus.addRootAuditor(project, object : DataAuditor {
+            override fun requestFinished(context: DataRequest.Context) {
+                if (context.request === request) reported.countDown()
+            }
+        }, testRootDisposable)
+    }
+
+    private fun assertNewConnection(console: JdbcConsole, oldTag: String) {
+        val successor = console.submit("SELECT '${SlowStreamDriver.MARKER} next'")
+        PlatformTestUtil.waitWithEventsDispatching("the successor runs on a new connection", { successor in finished }, 30)
+        assertEmpty(errorsOf(successor))
+        assertFalse("the old cancel cannot reach the new connection", steps("@next") == steps("@$oldTag"))
+        assertEquals("the successor is neither cancelled nor cleaned up", listOf("execute", "end"), steps("next").distinct())
+    }
+
+    private fun engineOf(request: DataRequest): JdbcEngine = DatabaseConnectionManager.getInstance().activeConnections
+        .mapNotNull { it.requestor as? JdbcEngine }.single { it.requestContextIfAny?.request === request }
+
+    private fun releaseLatch() = CountDownLatch(1).also { releases += it }
+
+    private fun disposeEngine(engine: JdbcEngine): CountDownLatch = CountDownLatch(1).also { done ->
+        disposals += done
+        Thread { try { Disposer.dispose(engine) } finally { done.countDown() } }.start()
+    }
+
+    private fun cancelWorker() = CancelWorker().also { cancelWorkers += it }
+
+    private class CancelWorker : Executor {
+        val done = CountDownLatch(1)
+        val failures = CopyOnWriteArrayList<Throwable>()
+        private lateinit var thread: Thread
+
+        override fun execute(command: Runnable) {
+            thread = Thread {
+                try { command.run() } catch (e: Throwable) { failures += e } finally { done.countDown() }
+            }.also { it.start() }
+        }
+
+        fun awaitWait(method: String) {
+            PlatformTestUtil.waitWithEventsDispatching("the worker enters $method", {
+                thread.stackTrace.any { it.className == "dev.brikk.house.sql.intellij.StreamingRequest" && it.methodName == method }
+            }, 10)
+        }
+
+        fun awaitEnd() {
+            PlatformTestUtil.waitWithEventsDispatching("the cancel worker ends", { done.count == 0L }, 15)
+        }
     }
 
     private companion object {

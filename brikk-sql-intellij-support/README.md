@@ -70,7 +70,10 @@ only invokes DuckDB's JSON parser and does not bind or execute editor text.
   captured request on that connection. The engine runs one request at a time and reports a finished
   request on its own thread before it starts the next; that report of the captured request waits
   until the cancel is done, so no next request opens a statement during `cancelAll` or meets the
-  stock cleanup. The wait has no time limit for the stock cleanup (the engine reports handling it on
+  stock cleanup. The engine-report wait, the final cancel wait and the stock-cleanup/disconnect wait
+  also end when the captured connection leaves the manager's active connections, without remote calls
+  in that check. If `cancelAll` never returns and the connection is not retired, the console stays blocked.
+  The wait has no time limit for the stock cleanup (the engine reports handling it on
   its own thread). A `cancelAll` still running after 30 s disconnects the console instead (the stock
   Disconnect, which also drops queued requests), and the next request runs on a new connection that
   call cannot reach; if the console cannot be disconnected, the wait lasts until `cancelAll` ends. A request queued while the original still runs is dropped when the stock
