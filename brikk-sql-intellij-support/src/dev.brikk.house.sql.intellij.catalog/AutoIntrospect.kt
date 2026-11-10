@@ -154,7 +154,7 @@ public abstract class AutoIntrospectService(protected val project: Project, priv
     }
 
     /** What a data source's model held when last seen, and whether its top-level namespaces were listed since it was cleared. */
-    private class Inventory(@Volatile var model: DasModel, @Volatile var hadRoots: Boolean) {
+    private class Inventory(@Volatile var hadRoots: Boolean) {
         @Volatile var rootsListed = false
     }
 
@@ -269,16 +269,15 @@ public abstract class AutoIntrospectService(protected val project: Project, priv
         val roots = model.modelRoots.any()
         inventories.compute(dataSource.uniqueId) { _, previous ->
             when {
-                previous == null -> Inventory(model, roots)
+                previous == null -> Inventory(roots)
                 !roots && previous.hadRoots -> {
                     LOG.info("Auto-introspection: the model of ${dataSource.name} was cleared; loading again on demand")
                     engine.forget(dataSource.uniqueId)
                     loaded.removeIf { it.dataSourceId == dataSource.uniqueId }
                     synced.removeIf { it.dataSourceId == dataSource.uniqueId }
-                    Inventory(model, hadRoots = false)
+                    Inventory(hadRoots = false)
                 }
                 else -> previous.also {
-                    it.model = model
                     if (roots) it.hadRoots = true
                 }
             }
