@@ -264,6 +264,26 @@ class AutoIntrospectScopeRollbackTest : AutoIntrospectTestCase() {
         assertEquals(before, source.introspectionScope)
     }
 
+    fun testARequestForAnAlreadySelectedNamespaceDoesNotWriteTheScopeAgain() {
+        val schema = ((source.model as BasicModel).root as PgRoot).databases.createOrGet("part").schemas.createOrGet("s")
+        schema.tables.createOrGet("t1")
+        DbPsiFacade.getInstance(project).clearCaches()
+        val before = source.introspectionScope
+        val published = publishedScopes()
+        assertFalse(selects(listOf("part", "s")))
+        assertTrue(service.requestPath(myFixture.file, listOf("memory")))
+        val refresh = nextRefresh()
+        assertSame("an unchanged scope is not written again", before, source.introspectionScope)
+        assertEquals("an unchanged scope is not published", 0, published.size)
+        assertEquals("objects loaded on demand outside the scope stay", listOf("t1"), schema.tables.map { it.name })
+        // A load that succeeds applies the scope in the platform's own sync, which hides them; a failed one does not.
+        refresh.finish { throw SQLException("offline") }
+        awaitIdle()
+        assertSame(before, source.introspectionScope)
+        assertEquals(0, published.size)
+        assertEquals(listOf("t1"), schema.tables.map { it.name })
+    }
+
     fun testAFailedLoadOfAnAlreadySelectedNamespaceRollsBackNothing() {
         val before = source.introspectionScope
         val published = publishedScopes()

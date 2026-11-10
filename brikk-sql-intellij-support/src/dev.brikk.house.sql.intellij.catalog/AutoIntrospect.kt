@@ -468,12 +468,14 @@ public abstract class AutoIntrospectService(protected val project: Project, priv
                 // addition after success (even empty); undo it on failure unless another writer changed it.
                 val before = dataSource.introspectionScope
                 val after = CatalogScopes.widen(before, CatalogScopes.select(profile.levels, request.key.path))
+                // An unchanged scope is not written again: the platform's setter hides objects loaded on
+                // demand in namespaces outside the scope, even when the load then fails.
                 if (after != before) {
                     previousScope = before
                     widenedScope = after
+                    dataSource.introspectionScope = after
+                    storageOf(dataSource)?.updateDataSource(dataSource)
                 }
-                dataSource.introspectionScope = after
-                storageOf(dataSource)?.updateDataSource(dataSource)
             }
             synced = listed ?: sync(request)
             // A completed sync stays successful even if the later model check is cancelled.

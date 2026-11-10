@@ -162,10 +162,11 @@ Before the next release:
 
 Found along the way and not changed:
 
-- `AutoIntrospect` assigns the introspection scope even when the request does not change
-  it, and the platform's setter then hides objects that were loaded on demand in
-  namespaces outside the scope. So typing a path whose namespace is already selected can
-  hide them. This predates the branch (FQ-10).
+- `AutoIntrospect` wrote the introspection scope even when a request did not change it,
+  and the platform's setter then hid objects loaded on demand in namespaces outside the
+  scope. That write is now skipped (FQ-10). It does not cover the case where the load
+  succeeds: the platform's own refresh applies the scope and hides those objects. That
+  is IntelliJ's behaviour for anything outside the scope, not this library's.
 - `QualifiedPathIntrospectContributorTest.testAConsoleOfAnotherDbmsIsNotIntrospected`
   is intermittent: it failed once on CI and once in ten local runs, before any code this
   branch changed runs. The cause was not found.
