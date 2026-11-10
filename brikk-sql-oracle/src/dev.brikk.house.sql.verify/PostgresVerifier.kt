@@ -60,11 +60,15 @@ import org.postgresql.util.PSQLException
  * stop the embedded server; the JVM shutdown reclaims it otherwise. If embedded Postgres cannot
  * be extracted, loaded, started, or connected on this host, [verify] does not throw: it returns
  * [VerifyResult.Unavailable]. That is deliberately distinct from parser rejection.
+ * Cleanup failure retires the connection, stops the embedded server and makes the verifier
+ * [VerifyResult.Unavailable] for every later call, without changing an engine verdict already obtained.
+ * Failed rollback closes the connection without restoring auto-commit, avoiding an implicit commit.
  */
 class PostgresVerifier internal constructor(
-    private val startEmbedded: () -> EmbeddedPostgres,
+    private val connectionFactory: (() -> Connection)? = null,
+    private val startEmbedded: () -> EmbeddedPostgres = { EmbeddedPostgres.builder().start() },
 ) : SqlVerifier, AutoCloseable {
-    constructor() : this({ EmbeddedPostgres.builder().start() })
+    constructor() : this(connectionFactory = null)
 
     override val engine: String = "postgres"
 
@@ -80,6 +84,7 @@ class PostgresVerifier internal constructor(
         if (closed) return null
         unavailableReason?.let { return null }
         return try {
+            connectionFactory?.let { return it().also { conn -> lazyConnection = conn } }
             val pg = startEmbedded()
             embedded = pg
             pg.postgresDatabase.connection.also { lazyConnection = it }
@@ -93,18 +98,23 @@ class PostgresVerifier internal constructor(
     }
 
     private fun markUnavailable(action: String, error: Throwable) {
-        try {
-            lazyConnection?.close()
-        } catch (_: Exception) {
-        }
+        val conn = lazyConnection
+        val pg = embedded
         lazyConnection = null
-        try {
-            embedded?.close()
-        } catch (_: Exception) {
-        }
         embedded = null
         unavailableReason = "PostgreSQL verification was not performed: $action " +
             "(${error::class.simpleName}: ${error.message ?: "no detail"})."
+        try {
+            try {
+                conn?.close()
+            } catch (_: Exception) {
+            }
+        } finally {
+            try {
+                pg?.close()
+            } catch (_: Exception) {
+            }
+        }
     }
 
     private fun unavailableResult(): VerifyResult = VerifyResult.Unavailable(
@@ -149,7 +159,7 @@ class PostgresVerifier internal constructor(
             return classify(sql, e)
         }
         // Prepared successfully: grammar (and analysis) accepted it. Clean up.
-        runCatching { conn.createStatement().use { it.execute("DEALLOCATE $name") } }
+        cleanup("DEALLOCATE failed", null) { conn.createStatement().use { it.execute("DEALLOCATE $name") } }
         return VerifyResult.Accepted
     }
 
@@ -160,18 +170,33 @@ class PostgresVerifier internal constructor(
     private fun verifyByRolledBackExecution(sql: String, conn: Connection): VerifyResult {
         val restoreAutoCommit = conn.autoCommit
         conn.autoCommit = false
+        var failure: Throwable? = null
         try {
             conn.createStatement().use { it.execute(sql) }
             return VerifyResult.Accepted
         } catch (e: PSQLException) {
+            failure = e
             // Statements that can't run inside a transaction block PARSED fine; PG only
             // objected to the transaction context (25001) — count as accepted.
             if (e.sqlState == ACTIVE_SQL_TRANSACTION) return VerifyResult.Accepted
             return classify(sql, e)
+        } catch (e: Throwable) {
+            failure = e
+            throw e
         } finally {
-            runCatching { conn.rollback() }
-            runCatching { conn.autoCommit = restoreAutoCommit }
+            if (lazyConnection === conn && cleanup("rollback failed", failure) { conn.rollback() }) {
+                cleanup("auto-commit restore failed", failure) { conn.autoCommit = restoreAutoCommit }
+            }
         }
+    }
+
+    private fun cleanup(action: String, failure: Throwable?, block: () -> Unit): Boolean = try {
+        block()
+        true
+    } catch (error: Throwable) {
+        if (failure != null && failure !== error) failure.addSuppressed(error)
+        markUnavailable(action, error)
+        false
     }
 
     /**

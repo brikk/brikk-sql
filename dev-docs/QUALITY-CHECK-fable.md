@@ -88,6 +88,7 @@ the manager and committed on its own.
 | 5 | FQ-02, FQ-03, FQ-20 | FQ-02 and FQ-20 done. FQ-03 not done: no flag met its condition; see the item. |
 | 6 | FQ-05, FQ-06 | FQ-05 done. FQ-06: literals named; the hooks need the owner's decision on public API; see the item. |
 | 7 | FQ-12, FQ-13, FQ-14 | FQ-12 and FQ-14 done. FQ-13 done except the two parts that are the owner's decision; see the item. |
+| 8 | FQ-29, FQ-30 | Done |
 
 Left open by the rounds so far, for the owner:
 
@@ -902,6 +903,10 @@ I agree with resetting the counter at the start of `generate()`. I found no plac
 generator calls `generate()` on itself, so a reset cannot hand out the same alias twice
 within one statement. Value is modest and so is the risk; record it as an extension.
 
+Done in round 8, as extension 68. No generator calls `generate()` on itself, and
+`tablealiasSql` is the only user of the sequence, so the reset cannot repeat an alias
+within a statement.
+
 ### FQ-30. PostgreSQL oracle cleanup failures (KQ-08, Behaviour)
 
 `brikk-sql-oracle/src/dev.brikk.house.sql.verify/PostgresVerifier.kt` discards the result
@@ -917,6 +922,13 @@ Follow KQ-08: make a rollback failure explicit and do not restore auto-commit af
 discard the connection or mark the verifier unavailable after any cleanup failure, and
 keep the original SQL exception with cleanup failures attached as suppressed. This is
 oracle code used by the corpus gate, so it ranks below the editor-facing items.
+
+Done in round 8. Any cleanup failure retires the connection, stops the embedded server
+and makes the verifier `Unavailable` for later calls, with the first failure as the
+reason. That weight is deliberate: a `DEALLOCATE` after a successful `PREPARE` should
+only fail on a broken connection, and the corpus gate then stops with the reason
+instead of verifying on a doubtful connection. The verdict the engine gave for the
+current call is kept.
 
 ### FQ-31. Decide who owns `SqlFragment.ast` (KQ-05, API decision)
 
