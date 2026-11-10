@@ -3,6 +3,8 @@ package dev.brikk.house.sql.verify
 import org.apache.shardingsphere.sql.parser.api.CacheOption
 import org.apache.shardingsphere.sql.parser.api.SQLParserEngine
 import org.apache.shardingsphere.sql.parser.exception.SQLParsingException
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Semaphore
 
 /**
  * A portable, pure-JVM **grammar oracle** backed by Apache ShardingSphere's re-implemented SQL
@@ -14,6 +16,12 @@ import org.apache.shardingsphere.sql.parser.exception.SQLParsingException
  * syntax check only — there is no catalog, no name/arity resolution, and no semantic analysis.
  * Consumers may treat an advisory [VerifyResult.Rejected] as a non-blocking warning. It reports
  * no error positions.
+ *
+ * PostgreSQL checks have a two-second limit. [VerifyResult.Unverified] means timeout or both
+ * shared slots are busy. A parse past the limit keeps running. It usually slows other parses
+ * enough to take the second worker too. Every PostgreSQL check then returns unverified until
+ * the slow parse ends. This can last minutes, or for extreme input until the JVM exits.
+ * Up to two CPU cores stay busy meanwhile. Idle daemon workers expire after 30 seconds.
  *
  * Fidelity notes per dialect (from offline validation; these are intentional and NOT bugs to
  * "fix" here):
@@ -36,12 +44,24 @@ public class ShardingSphereVerifier(
 ) : SqlVerifier {
     override val advisory: Boolean get() = true
 
+    private val postgres: Boolean = databaseType.equals("PostgreSQL", ignoreCase = true)
+
     private val parser: SQLParserEngine = withOwnContextClassLoader {
         SQLParserEngine(databaseType, CacheOption(CACHE_INITIAL_CAPACITY, CACHE_MAXIMUM_SIZE))
     }
 
-    override fun verify(sql: String): VerifyResult = shardingSphereParseResult {
-        withOwnContextClassLoader { parser.parse(sql, false) }
+    override fun verify(sql: String): VerifyResult =
+        verifyWithParser(sql, sharedPostgresGrammarWorkers, POSTGRES_GRAMMAR_CHECK_TIMEOUT_MILLIS, sharedPostgresGrammarSlots) { parser.parse(it, false) }
+
+    internal fun verifyWithParser(
+        sql: String,
+        executor: ExecutorService,
+        timeoutMillis: Long,
+        slots: Semaphore,
+        parse: (String) -> Unit,
+    ): VerifyResult {
+        val check = { shardingSphereParseResult { withOwnContextClassLoader { parse(sql) } } }
+        return if (postgres) postgresGrammarCheck(executor, timeoutMillis, slots, check) else check()
     }
 
     /** ShardingSphere has no expression-only entry point, so the fragment is wrapped in `SELECT`. */
