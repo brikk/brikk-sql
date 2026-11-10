@@ -24,10 +24,9 @@ import kotlin.reflect.KClass
  * TRANSFORMS entries live in [TRANSFORMS] (a dispatch-map overlay handed to the base
  * constructor); flag overrides are open-val overrides; multi-line methods below.
  *
- * NOT PORTED (no Kotlin equivalents of sqlglot's transforms/annotate_types yet):
+ * NOT PORTED:
  * the exp.Select preprocess pipeline (connect_by_to_recursive_cte,
- * _seq_to_range_in_generator), the exp.Pivot unqualify_columns preprocess and the
- * exp.Array inherit_struct_field_names preprocess; the Snowflake-oriented template
+ * _seq_to_range_in_generator); the Snowflake-oriented template
  * transpilations (ZIPF, NORMAL, MINHASH, BITMAP_x, ARRAYS_ZIP, STRTOK, ...).
  * Mismatches are ledgered.
  */
@@ -82,8 +81,8 @@ open class DuckdbGenerator(
         // Executable preflight proved the incoming typed operands integral and the
         // divisor nonzero/NULL. Bare integer atoms need this too: parity does not
         // annotate their type slots, and falling through would emit fractional /.
-        if(forExecution && sourceDialect!=null && !sourceDialect.equals("duckdb",true) && expression.args["typed"]==true)
-            return sql(IntDiv(args("this" to expression.left.copy(),"expression" to expression.right.copy())))
+        if (forExecution && sourceDialect != null && !sourceDialect.equals("duckdb", true) && expression.args["typed"] == true)
+            return sql(IntDiv(args("this" to expression.left.copy(), "expression" to expression.right.copy())))
         return super.divSql(expression)
     }
 
@@ -96,7 +95,7 @@ open class DuckdbGenerator(
             }
             val terms = value.expressionsArg.filterIsInstance<Ordered>().joinToString(", ") { term ->
                 sql(term, "this") + when (term.args["desc"]) { true -> " DESC"; false -> " ASC"; else -> "" } +
-                    if (term.meta["duckdb_copy_default_null_order"] == true) "" else
+                    if (term.meta[BrikkMetaKeys.DUCKDB_COPY_DEFAULT_NULL_ORDER] == true) "" else
                         when (term.args["nulls_first"]) { true -> " NULLS FIRST"; false -> " NULLS LAST"; else -> "" }
             }
             return "ORDER_BY ($terms)"
@@ -513,13 +512,13 @@ open class DuckdbGenerator(
 
     // sqlglot: generators.duckdb._regexp_extract_sql
     open fun regexpExtractSql(expression: Expression): String {
-        if ((sourceDialect == null || sourceDialect.equals("duckdb",true)) && expression.duckdbRegexArguments() != null) {
-            val values=expression.duckdbRegexArguments()!!
+        if ((sourceDialect == null || sourceDialect.equals("duckdb", true)) && expression.duckdbRegexArguments() != null) {
+            val values = expression.duckdbRegexArguments()!!
             // Preserve the existing harmless canonical omission of literal group zero,
             // never an authored options/name-list/parameter expression.
-            val group=values.getOrNull(2)
-            val native=if(values.size==3 && group is Literal && !group.isString && group.name=="0")values.take(2)else values
-            return func(expression.duckdbRegexName()!!,*native.toTypedArray())
+            val group = values.getOrNull(2)
+            val native = if (values.size == 3 && group is Literal && !group.isString && group.name == "0") values.take(2) else values
+            return func(expression.duckdbRegexName()!!, *native.toTypedArray())
         }
         var this_ = expression.thisArg as Expression
         var group = expression.args["group"] as? Expression
@@ -650,7 +649,7 @@ open class DuckdbGenerator(
     // BigQuery's EXTRACT spelling has a different weekday origin than DuckDB's.
     override fun extractSql(expression: Extract): String {
         val rendered = super.extractSql(expression)
-        return if (sourceDialect.equals("bigquery", true) && expression.metaOrNull?.get("duckdb_native_weekday") != true &&
+        return if (sourceDialect.equals("bigquery", true) && expression.metaOrNull?.get(BrikkMetaKeys.DUCKDB_NATIVE_WEEKDAY) != true &&
             (expression.thisArg as? Expression)?.name.equals("DAYOFWEEK", true))
             "($rendered + 1)" else rendered
     }
@@ -1515,7 +1514,7 @@ open class DuckdbGenerator(
         if (weekStart != null) {
             val dayOfWeek = Extract(
                 args("this" to Var(args("this" to "DAYOFWEEK")), "expression" to date.copy())
-            ).also { it.meta["duckdb_native_weekday"] = true }
+            ).also { it.meta[BrikkMetaKeys.DUCKDB_NATIVE_WEEKDAY] = true }
             val daysToLast = Mod(
                 args(
                     "this" to Paren(
@@ -2140,8 +2139,8 @@ open class DuckdbGenerator(
     // marker) must have 'g' forced. DuckDB-parsed calls carry single_replace=true
     // (DuckdbParser) and keep their literal flags for a byte-identical round trip.
     open fun regexpreplaceSql(expression: RegexpReplace): String {
-        if ((sourceDialect == null || sourceDialect.equals("duckdb",true)) && expression.args["single_replace"] == true && expression.duckdbRegexArguments() != null)
-            return func("REGEXP_REPLACE",*expression.duckdbRegexArguments()!!.toTypedArray())
+        if ((sourceDialect == null || sourceDialect.equals("duckdb", true)) && expression.args["single_replace"] == true && expression.duckdbRegexArguments() != null)
+            return func("REGEXP_REPLACE", *expression.duckdbRegexArguments()!!.toTypedArray())
         var subject = expression.thisArg as? Expression
         val pattern = expression.args["expression"]
         val replacement = expression.args["replacement"] as? Expression ?: Literal.string("")

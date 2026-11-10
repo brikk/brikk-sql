@@ -15,8 +15,8 @@ import kotlin.test.assertNull
 import kotlin.test.assertSame
 
 /**
- * Hand assertions for the Postgres dialect wiring, each verified against the Python
- * oracle (reference/sqlglot v30.18.0-43-g3ca82489): :: casts, JSON arrow operators,
+ * Hand assertions for the Postgres dialect wiring, with initial expectations captured
+ * from the Python oracle at v30.18.0-43-g3ca82489: :: casts, JSON arrow operators,
  * regex operators, TO_CHAR time mapping, SERIAL-to-GENERATED, array slices with the
  * bracket-paren rule, GENERATE_SERIES transpilation and ON CONFLICT ... RETURNING.
  */

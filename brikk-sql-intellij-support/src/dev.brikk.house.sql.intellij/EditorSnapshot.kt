@@ -1,6 +1,7 @@
 package dev.brikk.house.sql.intellij
 
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.event.DocumentEvent
@@ -11,6 +12,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiFile
 import java.util.concurrent.CancellationException
+import java.util.concurrent.ConcurrentHashMap
 
 /** Exact document identity/revision. A later edit-and-revert also invalidates work. */
 public class EditorSnapshot private constructor(public val document: Document, public val text: String, public val revision: Long) {
@@ -56,6 +58,20 @@ public inline fun <T> recoverEditorOperation(operation: () -> T): Result<T> = tr
     throw e
 } catch (e: Exception) {
     Result.failure(e)
+}
+
+/** Reports an optional recovery once per call site and exception class, never per highlighting pass. */
+internal fun <T> Result<T>.warnEditorFailureOnce(site: String): Result<T> = onFailure { error ->
+    EditorRecoveryWarnings.warn(site, error)
+}
+
+private object EditorRecoveryWarnings {
+    private val warned = ConcurrentHashMap.newKeySet<Pair<String, Class<out Throwable>>>()
+    private val LOG = logger<EditorRecoveryWarnings>()
+
+    fun warn(site: String, error: Throwable) {
+        if (warned.add(site to error.javaClass)) LOG.warn("$site failed", error)
+    }
 }
 
 /**

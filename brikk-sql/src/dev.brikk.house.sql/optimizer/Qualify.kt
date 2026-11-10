@@ -2,21 +2,9 @@ package dev.brikk.house.sql.optimizer
 
 import dev.brikk.house.sql.ast.Expression
 import dev.brikk.house.sql.ast.Table
-import dev.brikk.house.sql.ast.hasSideEffectingCte
-import dev.brikk.house.sql.ast.hasKeyedCte
-import dev.brikk.house.sql.ast.isTriggerDdl
-import dev.brikk.house.sql.ast.isDuckdbExtensionManagement
-import dev.brikk.house.sql.ast.isDuckdbExternalResourceStatement
-import dev.brikk.house.sql.ast.isDuckdbRecursiveViewDefinition
 import dev.brikk.house.sql.dialects.Dialect
 import dev.brikk.house.sql.dialects.Dialects
-import dev.brikk.house.sql.dialects.hasDuckdbCopyLayout
-import dev.brikk.house.sql.dialects.isDuckdbNameShow
-import dev.brikk.house.sql.dialects.isDuckdbSetval
-import dev.brikk.house.sql.dialects.hasDuckdbParquetContract
-import dev.brikk.house.sql.dialects.hasDuckdbGeoJsonContract
-import dev.brikk.house.sql.dialects.hasDuckdbSnapshot
-import dev.brikk.house.sql.dialects.hasDuckdbRegexSelector
+import dev.brikk.house.sql.dialects.duckdbQualificationRefusal
 
 // Import aliases: the rule functions share names with qualify()'s Boolean options
 // (which mirror Python's keyword arguments).
@@ -89,29 +77,7 @@ fun <E : Expression> qualify(
     sql: String? = null,
 ): E {
     val resolvedDialect = dialect ?: Dialects.BASE
-    if(expression.hasDuckdbRegexSelector())throw OptimizeError("Runtime regex column-selector qualification is not modeled")
-    if(resolvedDialect.nativeStorageContracts && expression.hasDuckdbSnapshot())throw OptimizeError("Snapshot qualification is not modeled")
-    if(resolvedDialect.nativeFunctionContracts && expression.hasDuckdbGeoJsonContract())throw OptimizeError("GeoJSON file/Feature rewriting is not modeled")
-    if(resolvedDialect.nativeFunctionContracts && expression.hasDuckdbParquetContract())throw OptimizeError("Parquet schema/virtual-column rewriting is not modeled; preserve the native scan")
-    if (resolvedDialect.nativeFunctionContracts && expression.walk().any { it.isDuckdbSetval() })
-        throw OptimizeError("Automatic rewriting across SETVAL sequence mutation is not modeled")
-    if (expression.isDuckdbNameShow()) throw OptimizeError("SHOW resolution requires runtime catalog/show_behavior, not SELECT qualification")
-    if (resolvedDialect.copyLayoutOptions && expression.hasDuckdbCopyLayout())
-        throw OptimizeError("COPY layout options bind against output columns; automatic qualification is not modeled")
-    if (expression is dev.brikk.house.sql.ast.DuckdbExplain) throw OptimizeError("Qualify an EXPLAIN child explicitly; automatic wrapper rewriting is not modeled")
-    if (expression.isDuckdbExternalResourceStatement()) throw OptimizeError("External-resource options and handles are not SELECT qualification inputs")
-    if (expression.isDuckdbExtensionManagement()) throw OptimizeError("Extension/repository management is not a SELECT qualification input")
-    if (expression.isDuckdbRecursiveViewDefinition()) throw OptimizeError("Recursive view self-reference qualification is not modeled")
-    if (expression.isTriggerDdl()) throw OptimizeError("Trigger definitions are not SELECT optimizer inputs")
-    if (expression is dev.brikk.house.sql.ast.SessionConnect || expression is dev.brikk.house.sql.ast.SessionDisconnect) {
-        throw OptimizeError("Session routing is not a query to qualify")
-    }
-    if (resolvedDialect.statefulCtes && expression.hasKeyedCte()) {
-        throw OptimizeError("Automatic qualification across recursive USING KEY state is not modeled")
-    }
-    if (resolvedDialect.statefulCtes && expression.hasSideEffectingCte()) {
-        throw OptimizeError("Automatic qualification across side-effecting CTEs is not modeled")
-    }
+    duckdbQualificationRefusal(expression, resolvedDialect)?.let { throw OptimizeError(it) }
     val resolvedSchema = ensureSchema(schema, dialect = dialect)
 
     preserveComprehensionIdentifierCase(expression, resolvedDialect)

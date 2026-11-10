@@ -10,8 +10,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 /**
- * Tokenizer parity tests. All expectations below were produced by running the pinned
- * Python sqlglot (v30.12.0-44-g93d16591) base Tokenizer on the same inputs.
+ * Tokenizer parity tests. Initial expectations were captured by running Python
+ * sqlglot's base Tokenizer at v30.12.0-44-g93d16591 on the same inputs.
  */
 class TokenizerTest {
 

@@ -90,8 +90,8 @@ open class AbstractMappingSchema(
         protected set
 
     // TODO(udf): the UDF mapping is stored (and trie-indexed) for parity with Python's
-    // AbstractMappingSchema, but find_udf/get_udf_type consumers haven't been ported yet
-    // (nothing consumes them until annotate_types lands UDF support).
+    // AbstractMappingSchema; nothing consumes udfTrie and getUdfType returns UNKNOWN.
+    // TypeAnnotator is ported, but UDF type resolution is not.
     var udfMapping: MutableMap<String, Any?> = LinkedHashMap()
         protected set
     var udfTrie: MutableMap<Any, Any?> = LinkedHashMap()
@@ -219,9 +219,10 @@ class MappingSchema(
     // sqlglot: MappingSchema.dialect
     override val dialect: Dialect get() = schemaDialect
 
-    // sqlglot: MappingSchema._type_mapping_cache (the Python normalized-table/name/find
-    // caches are pure perf and are not ported)
-    private val typeMappingCache = HashMap<String, DataType>()
+    // sqlglot: MappingSchema._type_mapping_cache; brikk extension (docs/brikk-extensions.md #67):
+    // include the effective dialect instance, unlike Python's string-only key. The
+    // normalized-table/name/find caches are pure perf and are not ported.
+    private val typeMappingCache = HashMap<Pair<String, Dialect>, DataType>()
 
     // sqlglot: MappingSchema._normalized_name_cache. This is not just perf: the cache
     // hit skips normalize_name's `meta["is_table"]` side effect on the AST node, so
@@ -237,7 +238,7 @@ class MappingSchema(
         setMappings(
             if (normalize) normalizeMapping(rawSchema) else rawSchema,
             // TODO(udf): Python normalizes the UDF mapping (_normalize_udfs); ours is
-            // stored raw until a consumer (annotate_types UDF typing) is ported.
+            // stored raw; UDF lookup for the ported TypeAnnotator still returns UNKNOWN.
             rawUdfs,
         )
     }
@@ -380,8 +381,8 @@ class MappingSchema(
     }
 
     // sqlglot: MappingSchema.get_udf_type
-    // TODO(udf): stubbed to UNKNOWN — Python resolves via udf_trie; port together with
-    // the annotate_types UDF support.
+    // TODO(udf): stubbed to UNKNOWN — Python resolves via udf_trie; UDF type resolution
+    // for the ported TypeAnnotator is still unported.
     override fun getUdfType(udf: Any, dialect: Dialect?, normalize: Boolean?): DataType =
         DataType(args("this" to DType.UNKNOWN))
 
@@ -508,9 +509,9 @@ class MappingSchema(
     }
 
     // sqlglot: MappingSchema._to_data_type
-    private fun toDataType(schemaType: String, dialect: Dialect? = null): DataType =
-        typeMappingCache.getOrPut(schemaType) {
-            val d = dialect ?: this.dialect
+    private fun toDataType(schemaType: String, dialect: Dialect? = null): DataType {
+        val d = dialect ?: this.dialect
+        return typeMappingCache.getOrPut(schemaType to d) {
             val udt = d.parser().supportsUserDefinedTypes
 
             val expression = try {
@@ -521,6 +522,7 @@ class MappingSchema(
             expression.transform(copy = false) { d.normalizeIdentifier(it) }
             expression
         }
+    }
 }
 
 // sqlglot: exp.DataType.from_str

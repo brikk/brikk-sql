@@ -8,6 +8,7 @@ from pathlib import Path
 import re
 import subprocess
 from release_config import development_version, validate_version, release_template
+from release_ancestry import require_main_ancestor
 
 
 def main():
@@ -41,6 +42,7 @@ def main():
     if backup.exists():
         raise SystemExit("An interrupted/active release owns the backup; inspect it before proceeding")
     if not args.local:
+        require_main_ancestor(root)
         for new, old in [("KOTLIN_TOOLCHAIN_MAVEN_CENTRAL_USERNAME", "KOTLIN_TOOLCHAIN_MAVENCENTRAL_USERNAME"),
                          ("KOTLIN_TOOLCHAIN_MAVEN_CENTRAL_PASSWORD", "KOTLIN_TOOLCHAIN_MAVENCENTRAL_PASSWORD")]:
             value = os.environ.get(new) or os.environ.get(old)

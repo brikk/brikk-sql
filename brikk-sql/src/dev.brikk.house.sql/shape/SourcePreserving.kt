@@ -1,5 +1,6 @@
 package dev.brikk.house.sql.shape
 
+import dev.brikk.house.sql.ast.BrikkMetaKeys
 import dev.brikk.house.sql.ast.Expression
 import dev.brikk.house.sql.ast.From
 import dev.brikk.house.sql.ast.Group
@@ -290,7 +291,7 @@ internal fun parameterOccurrences(root: Expression, tokens: List<Token>): List<P
         if (parts.isEmpty()) throw UnsupportedError("Parameter interval has no tokens")
         val name = (if (node is Placeholder) node.text("this") else node.name).ifEmpty { null }
         val style = when {
-            node is Parameter && node.metaOrNull?.get("numbered_dollar_parameter") == true -> ParamStyle.NUMBERED_DOLLAR
+            node is Parameter && node.metaOrNull?.get(BrikkMetaKeys.NUMBERED_DOLLAR_PARAMETER) == true -> ParamStyle.NUMBERED_DOLLAR
             node is Parameter || parts.first().tokenType == TokenType.PARAMETER -> ParamStyle.NAMED_AT
             node.args["kind"] != null -> ParamStyle.NAMED_TYPED
             name != null -> ParamStyle.NAMED_COLON

@@ -7,8 +7,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 /**
- * DuckDB-dialect tokenizer parity tests. All expectations below were produced by
- * running the pinned Python sqlglot (v30.12.0-44-g93d16591) duckdb tokenizer
+ * DuckDB-dialect tokenizer parity tests. Initial expectations were captured by
+ * running Python sqlglot's duckdb tokenizer at v30.12.0-44-g93d16591
  * (`Dialect.get_or_raise("duckdb").tokenize(...)`) on the same inputs.
  */
 class DuckdbTokenizerTest {

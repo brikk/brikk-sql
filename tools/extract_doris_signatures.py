@@ -82,7 +82,7 @@ always get null: they produce row sets, and TableValuedFunction.nullable() throw
 scalar nullability is not applicable.
 
 Output: vendor/data/doris-signatures.json (the committed reproducibility artifact, same
-pattern as vendor/data/trino-functions-481.tsv):
+pattern as vendor/data/trino-functions-484.tsv):
 
   {"doris_version": "<git describe>",
    "classes": {"Abs": {"kind": "SCALAR", "names": ["ABS"],

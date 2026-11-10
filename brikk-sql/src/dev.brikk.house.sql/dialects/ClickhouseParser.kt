@@ -1,5 +1,6 @@
 package dev.brikk.house.sql.dialects
 
+import dev.brikk.house.sql.ast.BrikkMetaKeys
 import dev.brikk.house.sql.ast.Alias
 import dev.brikk.house.sql.ast.AlterModifySqlSecurity
 import dev.brikk.house.sql.ast.And
@@ -263,7 +264,7 @@ private fun buildClickhouseJsonExtractPath(
     fun node(nodeArgs: Args): Expression = (if (raw) JSONExtract(nodeArgs) else JSONExtractScalar(nodeArgs)).also {
         // Native raw extraction returns String/Nullable(String), with '' on a missing
         // path. Its JSON-valued canonical node alone does not qualify other engines.
-        if (raw) it.meta["clickhouse_json_extract_raw"] = true
+        if (raw) it.meta[BrikkMetaKeys.CLICKHOUSE_JSON_EXTRACT_RAW] = true
     }
     fun fallback(): Expression = node(args(
         "this" to seqGet(fnArgs, 0), "expression" to seqGet(fnArgs, 1),

@@ -41,7 +41,7 @@ publication packaging were audited before upload.
 
 The preceding local validation passed all 248 Python tooling tests with the
 release-model check enabled. The main integration and its original failing logs
-are recorded in [the integration record](../dev-docs/main-integration-20261106.md).
+are recorded in [the integration record](../dev-docs/archive/main-integration-20261106.md).
 
 ## Independent public verification
 
@@ -60,11 +60,12 @@ The downloaded verifier, Java 17 and IntelliJ publication audits pass. Core,
 metadata, verification API and Doris verifier retain Java 17 compatibility.
 IDE helpers retain Java 21 bytecode. Engine/runtime floors are unchanged.
 
-The public audit manifests and downloaded repository are retained under
+The public audit manifests and downloaded repository were written to the local scratch location
 `/var/tmp/jayson/opencode/release-100-public/`. `sql-verified.json` and
 `ide-verified.json` record public URLs, SHA-256 hashes, signature results and source
-comparisons. Release CI logs are retained as `release-100-sql-ci.log` and
-`release-100-ide-ci.log` in `/var/tmp/jayson/opencode/`.
+comparisons. Release CI logs were written to `release-100-sql-ci.log` and
+`release-100-ide-ci.log` in `/var/tmp/jayson/opencode/`. These paths were on the
+author's machine and are not part of the repository.
 
 ## Scope and next development version
 

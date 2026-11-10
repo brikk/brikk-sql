@@ -13,9 +13,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 /**
- * Full-pipeline qualify smoke test over a TPCH-ish schema. Every expected string was
- * produced by Python sqlglot's optimizer.qualify.qualify with default options
- * (reference/sqlglot @ v30.12.0-44-g93d16591).
+ * Full-pipeline qualify smoke test over a TPCH-ish schema. Initial expectations were
+ * captured from Python sqlglot's optimizer.qualify.qualify with default options
+ * at v30.12.0-44-g93d16591.
  */
 class QualifyTest {
 

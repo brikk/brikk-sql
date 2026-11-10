@@ -87,7 +87,7 @@ class StarrocksWindowEngineTest {
                     val expected = query(name, native.sql).single()
                     val translated = fragment.transpileTo("duckdb")
                     assertTrue(translated.unsupportedMessages.isEmpty(), translated.toString())
-                    assertIs<VerifyResult.Accepted>(SqlVerifiers.forEngine("duckdb")!!.verify(translated.sql), translated.sql)
+                    assertIs<VerifyResult.Accepted>(DuckdbVerifier().use { it.verify(translated.sql) }, translated.sql)
                     statement.executeQuery(translated.sql).use { result ->
                         assertTrue(result.next())
                         val actual = result.getTimestamp(1)?.toLocalDateTime()

@@ -7,8 +7,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 /**
- * Hand assertions for the DuckDB dialect wiring, each verified against the Python
- * oracle (reference/sqlglot v30.12.0-44-g93d16591): struct literals, 1-based index
+ * Hand assertions for the DuckDB dialect wiring, with initial expectations captured
+ * from the Python oracle at v30.12.0-44-g93d16591: struct literals, 1-based index
  * offset, ~ regex operator, sample-method defaulting, simplified PIVOT statements
  * and duckdb->presto transpilation through the registry.
  */

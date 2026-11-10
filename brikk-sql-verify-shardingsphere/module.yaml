@@ -1,9 +1,11 @@
 # Advisory grammar verifiers for postgres, mysql, hive and clickhouse over Apache ShardingSphere's
 # pure-JVM SQL parser. Its own artifact because the parser set is large and the advisory contract
 # differs from the engine-exact verifiers.
+# PostgreSQL checks time out after two seconds. One slow parse usually slows others and takes both workers, leaving every check unverified until it ends.
+# This can last minutes, or for extreme input until the JVM exits. Up to two cores stay busy meanwhile.
 product: jvm/lib
 
-# TODO(review): used verbatim as the published POM <description> (required by Maven Central).
+# Used verbatim as the published POM <description> (required by Maven Central).
 description: Advisory SQL grammar verifiers (ShardingSphere parser for PostgreSQL, MySQL, Hive, ClickHouse) for brikk-sql.
 
 apply:

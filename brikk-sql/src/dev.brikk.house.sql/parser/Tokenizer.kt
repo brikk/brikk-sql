@@ -4,7 +4,7 @@ package dev.brikk.house.sql.parser
  * Hand-written, single-pass, table-driven SQL tokenizer.
  *
  * sqlglot: tokenizer_core.TokenizerCore — a faithful port. Method-level provenance
- * comments reference the Python counterparts (pinned to v30.12.0-44-g93d16591).
+ * comments reference the Python counterparts used for the original port at v30.12.0-44-g93d16591.
  *
  * Not thread-safe; create one instance per thread or per use (construction is cheap,
  * the config tables are shared immutable objects).

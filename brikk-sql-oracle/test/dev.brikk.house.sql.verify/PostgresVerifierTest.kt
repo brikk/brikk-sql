@@ -34,7 +34,7 @@ class PostgresVerifierTest {
     @Test
     fun postgresAcceptsValidStatement() {
         val result = pg.verify("SELECT a FROM t WHERE b = 1")
-        // `t` is undefined, a semantic (42P01) case: grammar accepted, catalog empty => accepted=true.
+        // `t` is undefined, a semantic (42P01) case: grammar accepted, catalog empty => VerifyResult.Accepted.
         assertIs<VerifyResult.Accepted>(result, "expected grammar acceptance, got: $result")
     }
 
@@ -92,7 +92,7 @@ class PostgresVerifierTest {
 
     @Test
     fun postgresTreatsSemanticOnlyErrorsAsAccepted() {
-        // Grammar parsed; only the empty catalog complains => accepted=true, no error surfaced.
+        // Grammar parsed; only the empty catalog complains => VerifyResult.Accepted, no error surfaced.
         assertIs<VerifyResult.Accepted>(pg.verify("SELECT * FROM no_such_table"), "undefined_table is semantic (42P01)")
         assertTrue(
             pg.verify("SELECT missing_col FROM (SELECT 1 AS a) s") is VerifyResult.Accepted,

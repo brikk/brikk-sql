@@ -102,7 +102,7 @@ is asserted by numeric AST value rather than Polyglot's one-token representation
 ## Reproduce
 
 ```sh
-python3 tools/test_expansion_sources.py
+python3 tools/verify_test_expansion_sources.py
 ./kotlin test -m brikk-sql --include-classes='*HarvestTest' --jvm-args='-Xmx1g -XX:ActiveProcessorCount=2'
 ./kotlin test -m brikk-sql-verify-duckdb --include-classes='*EngineSourceHarvestResultTest' --jvm-args='-Xmx1g -XX:ActiveProcessorCount=2'
 ```
@@ -127,4 +127,4 @@ token count or let END become part of a number.
 The original red-test record above remains historical. The combined build,
 2,633 JVM tests, all 841 IntelliJ tests and 247 tooling tests now pass. Existing
 optional JVM assumptions remain. Validation and logs are recorded in
-[the integration record](../../../dev-docs/main-integration-20261106.md).
+[the integration record](../../../dev-docs/archive/main-integration-20261106.md).

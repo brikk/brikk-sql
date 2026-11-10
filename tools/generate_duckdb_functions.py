@@ -24,6 +24,8 @@ import json
 import pathlib
 import re
 
+from generator_helpers import kotlin_quoted_string as kstr
+
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 DATA = ROOT / "vendor" / "data"
 OUT_DIR = ROOT / "brikk-sql-metadata" / "src" / "dev.brikk.house.sql.metadata"
@@ -34,11 +36,6 @@ ESCAPES = {"\\": "\\", "t": "\t", "n": "\n", "r": "\r"}
 # Literal slots (strings + constructor calls) per chunk function, keeping each generated
 # method far below the JVM's 64KB method-size limit.
 CHUNK_BUDGET = 2500
-
-
-def kstr(s: str) -> str:
-    """Kotlin string literal (duckdb type strings can embed quotes, e.g. '"NULL"')."""
-    return '"' + s.replace("\\", "\\\\").replace('"', '\\"').replace("$", "\\$") + '"'
 
 
 def knullable(s: str | None) -> str:

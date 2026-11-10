@@ -190,7 +190,7 @@ class VerifyCorpusGateTest {
         try {
             runGateWith(engine, label, sqls, ledger, verifier)
         } finally {
-            (verifier as? AutoCloseable)?.let { runCatching { it.close() } }
+            runCatching { verifier.close() }
         }
     }
 

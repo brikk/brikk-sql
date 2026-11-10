@@ -1,7 +1,14 @@
 package dev.brikk.house.sql.dialects
 
+import dev.brikk.house.sql.ast.DuckdbAttachExternalResource
+import dev.brikk.house.sql.ast.DuckdbConnectExternalResource
+import dev.brikk.house.sql.ast.DuckdbCreateExternalResource
+import dev.brikk.house.sql.ast.DuckdbDestroyExternalResource
+import dev.brikk.house.sql.ast.DuckdbExternalResourceSource
+import dev.brikk.house.sql.ast.DuckdbRegisterExternalResource
 import dev.brikk.house.sql.ast.DuckdbShowExternalResources
 import dev.brikk.house.sql.ast.Expression
+import dev.brikk.house.sql.generator.Generator
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.Tokenizer
 import dev.brikk.house.sql.scope.ColumnFact
@@ -39,4 +46,33 @@ internal fun Expression.duckdbExternalResourceResult(): RelationFact? {
             else -> Nullability.NULLABLE
         }, origin = ColumnOrigin.COMPUTED)
     })
+}
+
+internal fun Generator.duckdbExternalResourceSql(expression: Expression): String {
+    if (!dialect.executesExternalResources) unexecutable("$targetName cannot execute DuckDB external-resource statements")
+    fun options(node: Expression): String = expressions(node).let { if (it.isEmpty()) "" else " ($it)" }
+    val target = sql(expression, "this")
+    val alias = sql(expression, "alias").let { if (it.isEmpty()) "" else " AS $it" }
+    return when (expression) {
+        is DuckdbCreateExternalResource -> {
+            if (alias.isEmpty()) unexecutable("DuckDB durable external resources require AS and a registration name")
+            "CREATE EXTERNAL RESOURCE $target$alias${options(expression)}"
+        }
+        is DuckdbRegisterExternalResource -> {
+            if (alias.isEmpty()) unexecutable("DuckDB durable external resources require AS and a registration name")
+            val handle = sql(expression, "expression")
+            "REGISTER EXTERNAL RESOURCE $target$alias FROM $handle"
+        }
+        is DuckdbDestroyExternalResource -> "DESTROY EXTERNAL RESOURCE $target"
+        is DuckdbShowExternalResources -> "SHOW${if (expression.args["all"] == true) " ALL" else ""} EXTERNAL RESOURCES"
+        is DuckdbExternalResourceSource -> if (expression.args["temporary"] == true)
+            "NEW TEMPORARY EXTERNAL RESOURCE $target${options(expression)}" else "EXTERNAL RESOURCE $target"
+        is DuckdbAttachExternalResource -> "ATTACH TO $target$alias${options(expression)}"
+        is DuckdbConnectExternalResource -> {
+            if ((expression.thisArg as? DuckdbExternalResourceSource)?.args?.get("temporary") == true && expression.expressionsArg.isNotEmpty())
+                unexecutable("CONNECT TO NEW TEMPORARY EXTERNAL RESOURCE cannot take a second connection option list")
+            "CONNECT TO $target${options(expression)}"
+        }
+        else -> error("Not an external resource node")
+    }
 }

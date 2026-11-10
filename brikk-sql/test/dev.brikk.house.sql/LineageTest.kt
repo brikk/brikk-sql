@@ -9,8 +9,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
- * Hand assertions for optimizer/Lineage.kt. Every expected string was produced by
- * Python sqlglot's lineage() (reference/sqlglot @ v30.12.0-44-g93d16591).
+ * Hand assertions for optimizer/Lineage.kt. Initial expectations were captured from
+ * Python sqlglot's lineage() at v30.12.0-44-g93d16591.
  */
 class LineageTest {
 

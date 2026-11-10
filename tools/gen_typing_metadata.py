@@ -27,8 +27,9 @@ from __future__ import annotations
 import inspect
 import pathlib
 import re
-import subprocess
 import sys
+
+from generator_helpers import sqlglot_version
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SQLGLOT = ROOT / "reference" / "sqlglot"
@@ -51,18 +52,6 @@ from sqlglot.optimizer.annotate_types import (  # noqa: E402
     _COERCES_TO,
     BIGINT_EXTRACT_DATE_PARTS,
 )
-
-
-def sqlglot_version() -> str:
-    try:
-        return subprocess.run(
-            ["git", "-C", str(SQLGLOT), "describe", "--tags", "--abbrev=9"],
-            capture_output=True,
-            text=True,
-            check=True,
-        ).stdout.strip()
-    except Exception:
-        return "unknown"
 
 
 def lambda_source(fn) -> str:

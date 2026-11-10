@@ -24,7 +24,23 @@ verifier.verify("SELECT 'ü' FRM t") // Rejected: "Syntax error at t: Expected o
 - **Cancellation.** `checkCanceled` is polled while the server works; what it throws cancels the
   query (on a worker: a JDBC cancel may itself wait on the server) and propagates. An interrupted
   caller gets a `CancellationException`. Calls are not single-flight.
+- **Bounds.** Inputs over 100,000 UTF-16 units are refused before UTF-8/hex allocation; smaller
+  inputs still get the exact 200,000-hex-character check. The whole call, including connecting,
+  has a client deadline of 30 seconds plus twice `max(timeoutSeconds, 0)`: connection grace and
+  enough time for both attempts when the profile refuses settings, so normal server timeouts
+  remain the server's own `Unverified` failure. Non-positive values still reach JDBC/server
+  unchanged (zero may mean unlimited there), but the client now stops waiting after 30 seconds.
+  Each classloader shares at most 16 verification threads (several editors at once) and four
+  separate cancellation threads, with no queues. When all verification workers are busy,
+  further calls return `Unavailable` at once; callers verifying many statements concurrently
+  against a slow server can meet this limit. Cancellation saturation never delays or replaces
+  caller cancellation: the driver cancel is skipped, the server query runs to its own timeout,
+  and the connection is still closed when the query ends. A stuck
+  driver can exhaust capacity but cannot grow threads indefinitely. A connection opening after
+  cancellation or the deadline is closed without submitting a query.
 - **Query log.** Verification queries appear in the server's `system.query_log` as the hex call.
+- **Lifetime.** Like every `SqlVerifier`, it is `AutoCloseable`; this verifier holds no connection
+  between calls and inherits the no-op `close()`, so closing it does not disable verification.
 
 ## Why not `EXPLAIN AST`
 

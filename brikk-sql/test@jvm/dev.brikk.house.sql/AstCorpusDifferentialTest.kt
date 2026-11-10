@@ -80,7 +80,7 @@ import kotlinx.serialization.json.jsonPrimitive
  * and dumps them with sqlglot.serde.dump). For each case this test hand-builds the
  * SAME tree with our node classes and asserts:
  *  1. Serde.dump(tree) matches the oracle dump structurally (after stripping
- *     meta/comments on both sides — position parity comes with the parser work),
+ *     meta/comments on both sides — these trees are hand-built, not parsed from SQL),
  *  2. load(dump(tree)) round-trips to an equal tree.
  *
  * The Kotlin builders below MUST stay mechanically in sync with the recipes in

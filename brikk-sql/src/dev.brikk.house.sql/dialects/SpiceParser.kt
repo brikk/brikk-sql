@@ -16,18 +16,18 @@ class SpiceParser(errorLevel: ErrorLevel? = null, tokenizerConfig: TokenizerConf
     override val bitwise: Map<TokenType, NodeFactory> =
         (BaseParserTables.BITWISE - TokenType.CARET) + (TokenType.HASH to { a: Args -> BitwiseXor(a) })
     override val exponent: Map<TokenType, NodeFactory> = mapOf(TokenType.CARET to { a: Args ->
-        Pow(a).also { it.meta["spice_exponent_operator"] = true }
+        Pow(a).also { it.meta[BrikkMetaKeys.SPICE_EXPONENT_OPERATOR] = true }
     })
 
     override val columnOperators = super.columnOperators + mapOf(
         TokenType.ARROW to { p: Parser, value: Expression?, path: Expression? ->
-            p.expression(JSONExtract(args("this" to value, "expression" to path))).also { it.meta["native_only_dialect"] = "spice" }
+            p.expression(JSONExtract(args("this" to value, "expression" to path))).also { it.meta[BrikkMetaKeys.NATIVE_ONLY_DIALECT] = "spice" }
         },
         TokenType.DARROW to { p: Parser, value: Expression?, path: Expression? ->
-            p.expression(JSONExtractScalar(args("this" to value, "expression" to path))).also { it.meta["native_only_dialect"] = "spice" }
+            p.expression(JSONExtractScalar(args("this" to value, "expression" to path))).also { it.meta[BrikkMetaKeys.NATIVE_ONLY_DIALECT] = "spice" }
         },
         TokenType.PLACEHOLDER to { p: Parser, value: Expression?, path: Expression? ->
-            p.expression(JSONBContainsTopKey(args("this" to value, "expression" to path))).also { it.meta["native_only_dialect"] = "spice" }
+            p.expression(JSONBContainsTopKey(args("this" to value, "expression" to path))).also { it.meta[BrikkMetaKeys.NATIVE_ONLY_DIALECT] = "spice" }
         },
     )
 
@@ -39,9 +39,9 @@ class SpiceParser(errorLevel: ErrorLevel? = null, tokenizerConfig: TokenizerConf
         // have no proved cross-engine translation. Typed common expressions retain
         // their existing translation paths.
         result.walk().filter { it is Anonymous || it is AnonymousAggFunc }.forEach {
-            it.meta["native_only_dialect"] = "spice"
+            it.meta[BrikkMetaKeys.NATIVE_ONLY_DIALECT] = "spice"
             if (it.name.lowercase() in setOf("vector_search", "text_search", "rrf", "rerank")) {
-                it.expressionsArg.filterIsInstance<Expression>().forEach { arg -> arg.meta["spice_relation_call_argument"] = true }
+                it.expressionsArg.filterIsInstance<Expression>().forEach { arg -> arg.meta[BrikkMetaKeys.SPICE_RELATION_CALL_ARGUMENT] = true }
             }
         }
     }
@@ -67,11 +67,11 @@ class SpiceParser(errorLevel: ErrorLevel? = null, tokenizerConfig: TokenizerConf
             else -> super.parseStatement()
         }
         if (result is SpiceExplain || result is SpicePrepare || result is SpiceExecute || result is SpiceShow || result is SpiceReset || result is Command) {
-            result.meta["native_only_dialect"] = "spice"
+            result.meta[BrikkMetaKeys.NATIVE_ONLY_DIALECT] = "spice"
             expression(result, head)
         }
-        if (result?.walk()?.any { it.metaOrNull?.get("native_only_dialect") == "spice" || it is ClusterProperty } == true) {
-            result.meta["native_only_dialect"] = "spice"
+        if (result?.walk()?.any { it.metaOrNull?.get(BrikkMetaKeys.NATIVE_ONLY_DIALECT) == "spice" || it is ClusterProperty } == true) {
+            result.meta[BrikkMetaKeys.NATIVE_ONLY_DIALECT] = "spice"
         }
         return result
     }
@@ -133,7 +133,7 @@ class SpiceParser(errorLevel: ErrorLevel? = null, tokenizerConfig: TokenizerConf
             if (!seen.add(name)) fail("Duplicate EXPLAIN option $name")
             if (name == "FORMAT" && value.name.lowercase() !in setOf("indent", "tree", "pgjson", "graphviz")) fail("Unsupported EXPLAIN format ${value.name}")
             return PropertyEQ(args("this" to Var(args("this" to name)), "expression" to value)).also {
-                if (implicit) it.meta["spice_implicit_option"] = true
+                if (implicit) it.meta[BrikkMetaKeys.SPICE_IMPLICIT_OPTION] = true
             }
         }
         fun booleanValue(): Expression? {

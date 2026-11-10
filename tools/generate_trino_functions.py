@@ -42,6 +42,8 @@ import pathlib
 import re
 import sys
 
+from generator_helpers import kotlin_quoted_string as kstr
+
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 DEFAULT_TSV = ROOT / "vendor" / "data" / "trino-functions-484.tsv"
 OUT = ROOT / "brikk-sql-metadata" / "src" / "dev.brikk.house.sql.metadata" / "GeneratedTrinoFunctionCatalog.kt"
@@ -54,10 +56,6 @@ KIND_MAP = {
 }
 
 KIND_ORDER = ["SCALAR", "AGGREGATE", "WINDOW", "TABLE_VALUED", "TABLE_GENERATING"]
-
-
-def kstr(s: str) -> str:
-    return '"' + s.replace("\\", "\\\\").replace('"', '\\"').replace("$", "\\$") + '"'
 
 
 def split_args(args: str) -> list[str]:

@@ -1,6 +1,7 @@
 package dev.brikk.house.sql.parser
 
 import dev.brikk.house.sql.BrikkSqlError
+import dev.brikk.house.sql.ast.BrikkMetaKeys
 import dev.brikk.house.sql.ast.Expression
 
 /**
@@ -17,8 +18,8 @@ fun <E : Expression> E.updatePositions(token: Token): E {
     // brikk-native (no sqlglot counterpart): start-anchored line/col so callers can
     // point at where a token BEGINS without re-deriving it from char offsets. The
     // sqlglot-parity "line"/"col" above are the token's END position.
-    m["line_start"] = token.lineStart
-    m["col_start"] = token.colStart
+    m[BrikkMetaKeys.LINE_START] = token.lineStart
+    m[BrikkMetaKeys.COL_START] = token.colStart
     return this
 }
 

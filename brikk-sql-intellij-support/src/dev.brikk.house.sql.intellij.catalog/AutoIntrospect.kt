@@ -14,12 +14,14 @@ import com.intellij.database.model.basic.BasicNamespace
 import com.intellij.database.model.basic.BasicModel
 import com.intellij.database.psi.DbPsiFacade
 import com.intellij.database.util.LoaderContext
+import com.intellij.database.util.TreePattern
 import com.intellij.openapi.application.EDT
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiFile
@@ -39,6 +41,7 @@ import kotlin.time.TimeSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -103,7 +106,9 @@ public class AutoIntrospectEngine(
  * Introspects, one level, what a path typed in an editor names when the model lists it but has not
  * loaded its children, or loaded only some of them (single tables loaded on demand). The data source's
  * introspection scope gains exactly that namespace, so what loads stays loaded, and only that model
- * element is refreshed, never the whole scope; a namespace whose children the dialect lists itself
+ * element is refreshed, never the whole scope. A failed or cancelled load restores the previous scope
+ * only if it still equals what this request wrote; a successful empty load keeps the addition.
+ * A namespace whose children the dialect lists itself
  * ([listNamespaces]) stays out of the scope. A path the model does not hold yet (the model was
  * cleared, or a namespace was never listed) is discovered step by step: the top-level namespaces are
  * listed once, cheaply, then each level down to the path's is loaded, and a name still missing after
@@ -154,7 +159,7 @@ public abstract class AutoIntrospectService(protected val project: Project, priv
     }
 
     /** What a data source's model held when last seen, and whether its top-level namespaces were listed since it was cleared. */
-    private class Inventory(@Volatile var model: DasModel, @Volatile var hadRoots: Boolean) {
+    private class Inventory(@Volatile var hadRoots: Boolean) {
         @Volatile var rootsListed = false
     }
 
@@ -269,16 +274,15 @@ public abstract class AutoIntrospectService(protected val project: Project, priv
         val roots = model.modelRoots.any()
         inventories.compute(dataSource.uniqueId) { _, previous ->
             when {
-                previous == null -> Inventory(model, roots)
+                previous == null -> Inventory(roots)
                 !roots && previous.hadRoots -> {
                     LOG.info("Auto-introspection: the model of ${dataSource.name} was cleared; loading again on demand")
                     engine.forget(dataSource.uniqueId)
                     loaded.removeIf { it.dataSourceId == dataSource.uniqueId }
                     synced.removeIf { it.dataSourceId == dataSource.uniqueId }
-                    Inventory(model, hadRoots = false)
+                    Inventory(hadRoots = false)
                 }
                 else -> previous.also {
-                    it.model = model
                     if (roots) it.hadRoots = true
                 }
             }
@@ -451,6 +455,8 @@ public abstract class AutoIntrospectService(protected val project: Project, priv
     private suspend fun refresh(request: Request) {
         var synced = false
         var loaded = false
+        var previousScope: TreePattern? = null
+        var widenedScope: TreePattern? = null
         try {
             val dataSource = request.dataSource
             // A namespace whose children are namespaces the dialect may list itself, cheaply, instead of the platform's
@@ -458,21 +464,50 @@ public abstract class AutoIntrospectService(protected val project: Project, priv
             // the user selecting all it holds, so the next manual refresh would load all of it.
             val listed = if (request.claimed && request.key.path.size < profile.levels.size) list(dataSource, request.key.path, request.requested) else null
             if (listed == null && request.claimed) {
-                // The platform's one-element refresh loads only what the scope selects.
-                dataSource.introspectionScope = CatalogScopes.widen(dataSource.introspectionScope, CatalogScopes.select(profile.levels, request.key.path))
-                storageOf(dataSource)?.updateDataSource(dataSource)
+                // The platform's one-element refresh loads only what the scope selects. Keep our
+                // addition after success (even empty); undo it on failure unless another writer changed it.
+                val before = dataSource.introspectionScope
+                val after = CatalogScopes.widen(before, CatalogScopes.select(profile.levels, request.key.path))
+                // An unchanged scope is not written again: the platform's setter hides objects loaded on
+                // demand in namespaces outside the scope, even when the load then fails.
+                if (after != before) {
+                    previousScope = before
+                    widenedScope = after
+                    dataSource.introspectionScope = after
+                    storageOf(dataSource)?.updateDataSource(dataSource)
+                }
             }
             synced = listed ?: sync(request)
+            // A completed sync stays successful even if the later model check is cancelled.
             loaded = synced && (!request.claimed || readAction { isLoaded(request) })
             LOG.info("Auto-introspection ${if (loaded) "loaded" else if (synced) "found nothing in" else "failed to load"} " +
                 "${request.dataSource.name}: ${request.label}")
         } finally {
-            if (synced) this.synced += request.key else this.synced -= request.key
-            finish(request, loaded)
+            try {
+                if (!synced && widenedScope != null) withContext(NonCancellable) {
+                    // TreePattern equality is structural and order-sensitive: even an equivalent
+                    // reordered scope counts as changed, erring on the side of keeping a later edit.
+                    if (request.dataSource.introspectionScope == widenedScope) {
+                        // Unlike LocalDataSource's setter, this does not hide objects already loaded
+                        // outside the old scope, including partial results of the failed request.
+                        request.dataSource.schemaMapping.introspectionScope = checkNotNull(previousScope)
+                        storageOf(request.dataSource)?.updateDataSource(request.dataSource)
+                    }
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: ProcessCanceledException) {
+                throw e
+            } catch (e: Exception) {
+                LOG.warn("Restoring the introspection scope of ${request.dataSource.name} after ${request.label} failed", e)
+            } finally {
+                if (synced) this.synced += request.key else this.synced -= request.key
+                // Also when cancellation exits this function before the code below.
+                if (!synced && request.key.path.isEmpty()) inventories[request.dataSource.uniqueId]?.rootsListed = false
+                finish(request, loaded)
+            }
         }
         if (loaded && request.key.path.isNotEmpty()) this.loaded += request.key
-        // A failed refresh of the top level did not list it after all.
-        if (!synced && request.key.path.isEmpty()) inventories[request.dataSource.uniqueId]?.rootsListed = false
         // Also after an empty result: what it was asked for is now known not to exist.
         if (synced) request.file?.let { highlightAgain(it) }
     }

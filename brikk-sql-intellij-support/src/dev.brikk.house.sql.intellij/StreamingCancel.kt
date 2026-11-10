@@ -44,6 +44,8 @@ import kotlin.time.Duration.Companion.seconds
  * the engine still runs the captured request on that connection, and the engine starts no next request
  * before they are done: a connection cancel still running after [deadline] disconnects the console
  * instead, so the next request runs on a new connection. [worker] runs the steps off the EDT.
+ * The waits also end when the captured connection leaves the manager's active connections.
+ * If `cancelAll` never returns and that connection is not retired, the console stays blocked.
  */
 public class StreamingCancelInterceptor(
     private val dataSources: DialectDataSourceResolver,
@@ -59,7 +61,8 @@ public class StreamingCancelInterceptor(
 
     override fun perform(event: AnActionEvent, delegate: () -> Unit): ExecutionClaim {
         val session = DatabaseSessionManager.findSession(event) ?: return ExecutionClaim.DECLINED
-        // A second press on a cancelled session is the stock offer to deactivate the data source.
+        // The stock cancelling state offers to deactivate the data source through the wrapped action.
+        // Before that state is set, another press on a streaming request is claimed again.
         // Exactly the configured dbms, not its registry aliases: another plugin's or the stock dbms keeps its own cancel.
         if (session.isCancelled || session.connectionPoint.dataSource.dbms.name != dataSources.dbms.name) return ExecutionClaim.DECLINED
         val request = StreamingRequest.of(session, deadline) ?: return ExecutionClaim.DECLINED
@@ -105,7 +108,7 @@ private class StreamingRequest(
             override fun requestFinished(context: DataRequest.Context) {
                 if (context !== this@StreamingRequest.context) return
                 ended = true
-                uninterruptibly { done.await() }
+                uninterruptibly { while (!done.await(RECHECK_MILLIS, TimeUnit.MILLISECONDS) && !retired()) {} }
             }
 
             // The engine's own report that it handled a request (its promise completes later, on the EDT).
@@ -120,7 +123,7 @@ private class StreamingRequest(
      * handled, each only while the engine still runs the captured request (a script's request goes on with its
      * next statement). A connection cancel still running after the deadline disconnects the console: the next
      * request then gets a new connection, which the cancel cannot reach. The engine starts no other request
-     * before this returns.
+     * before this returns, unless the captured connection is retired.
      */
     fun cancel() {
         var cancelling: Future<*>? = null
@@ -168,9 +171,20 @@ private class StreamingRequest(
         Disposer.dispose(watch)
     }
 
-    /** Whether [cancelling] ended within the deadline (or at all, with [wait]); its failure is logged. */
+    /** Whether [cancelling] ended within the deadline (or ended or was retired, with [wait]); its failure is logged. */
     private fun finishes(cancelling: Future<*>, wait: Boolean = false): Boolean = try {
-        if (wait) cancelling.get() else cancelling.get(deadline.inWholeMilliseconds, TimeUnit.MILLISECONDS)
+        if (wait) {
+            while (true) {
+                try {
+                    cancelling.get(RECHECK_MILLIS, TimeUnit.MILLISECONDS)
+                    break
+                } catch (_: TimeoutException) {
+                    if (retired()) break
+                }
+            }
+        } else {
+            cancelling.get(deadline.inWholeMilliseconds, TimeUnit.MILLISECONDS)
+        }
         true
     } catch (_: TimeoutException) {
         false
@@ -181,17 +195,28 @@ private class StreamingRequest(
 
     /**
      * Sends [request] to the session's engine and waits until the engine has handled it, however long that takes,
-     * or until the engine is disposed (it then runs no next request).
+     * or until the engine is disposed or the captured connection is retired.
      */
     private fun awaitHandled(request: DataRequest, what: String) {
         val handled = CountDownLatch(1)
         sent = request to handled
         session.messageBus.dataProducer.processRequest(request)
         uninterruptibly {
-            while (!handled.await(deadline.inWholeMilliseconds, TimeUnit.MILLISECONDS) && !engine.isDisposed) {
-                LOG.warn("The $what of a streaming cancel is not handled after $deadline; still waiting")
+            var warned = System.nanoTime()
+            while (!handled.await(RECHECK_MILLIS, TimeUnit.MILLISECONDS) && !engine.isDisposed && !retired()) {
+                if (System.nanoTime() - warned >= deadline.inWholeNanoseconds) {
+                    LOG.warn("The $what of a streaming cancel is not handled after $deadline; still waiting")
+                    warned = System.nanoTime()
+                }
             }
         }
+    }
+
+    private fun retired(): Boolean = try {
+        DatabaseConnectionManager.getInstance().activeConnections.none { it === connection }
+    } catch (_: RuntimeException) {
+        // Unknown retirement is not permission to release an engine behind an outstanding connection cancel.
+        false
     }
 
     private fun isCurrent(): Boolean = !ended && engine.requestContextIfAny === context && engine.runsOn(connection)
@@ -226,6 +251,7 @@ private fun <T> uninterruptibly(wait: () -> T): T {
 }
 
 private const val STREAMING = "STREAMING"
+private const val RECHECK_MILLIS = 100L
 
 // Database Tools keeps an engine's execution state private, with no public alternative (see the README):
 // read through the field's declared shape, else the stock cancel runs.

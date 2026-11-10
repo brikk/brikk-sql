@@ -8,7 +8,7 @@ import kotlin.test.assertEquals
 
 /**
  * Hand assertions for the Spark dialect port (reference/sqlglot/sqlglot/dialects/spark.py).
- * Every expected value is pinned to the Python oracle (parse_one(sql, read="spark")
+ * Initial expectations were captured from the Python oracle (parse_one(sql, read="spark")
  * .sql("spark")) at sqlglot v30.12.0-44-g93d16591.
  */
 class SparkDialectTest {

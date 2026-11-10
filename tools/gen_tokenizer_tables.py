@@ -19,8 +19,9 @@ Re-run whenever reference/sqlglot is updated, then review the diff.
 from __future__ import annotations
 
 import pathlib
-import subprocess
 import sys
+
+from generator_helpers import kotlin_string as kstr, sqlglot_version
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SQLGLOT = ROOT / "reference" / "sqlglot"
@@ -44,43 +45,6 @@ BRIKK_NATIVE_TOKEN_TYPES = ["BITMAP", "HLL", "QUANTILE_STATE", "AGG_STATE"]
 # Existing public tokens used by Brikk's prepared-statement and INSERT payload
 # handling. They are not datatype tokens and have no corresponding DType.
 BRIKK_PROTOCOL_TOKEN_TYPES = ["PREPARE", "INSERT_DATA"]
-
-
-def sqlglot_version() -> str:
-    try:
-        return subprocess.run(
-            ["git", "-C", str(SQLGLOT), "describe", "--tags", "--abbrev=9"],
-            capture_output=True,
-            text=True,
-            check=True,
-        ).stdout.strip()
-    except Exception:
-        return "unknown"
-
-
-def kstr(s: str) -> str:
-    """Escape a Python string into a Kotlin double-quoted string literal."""
-    out = []
-    for ch in s:
-        if ch == "\\":
-            out.append("\\\\")
-        elif ch == '"':
-            out.append('\\"')
-        elif ch == "$":
-            out.append("\\$")
-        elif ch == "\n":
-            out.append("\\n")
-        elif ch == "\r":
-            out.append("\\r")
-        elif ch == "\t":
-            out.append("\\t")
-        elif ord(ch) < 0x20:
-            # Control chars (e.g. \x07 bell in MySQL UNESCAPED_SEQUENCES) — Kotlin
-            # has no \a/\v/\f escapes, so emit \uXXXX.
-            out.append(f"\\u{ord(ch):04X}")
-        else:
-            out.append(ch)
-    return '"' + "".join(out) + '"'
 
 
 def kchar(c: str) -> str:

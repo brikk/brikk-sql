@@ -7,7 +7,6 @@ import dev.brikk.house.sql.ast.Any as AnyNode
 import dev.brikk.house.sql.ast.Boolean as BooleanNode
 import dev.brikk.house.sql.ast.Set as SetNode
 import dev.brikk.house.sql.dialects.checkDuckdbConstructsForForeignTarget
-import dev.brikk.house.sql.dialects.explainProblems
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.TokenizerConfig
 import dev.brikk.house.sql.parser.formatTimeString
@@ -119,6 +118,7 @@ open class Generator(
     protected val escapedIdentifierEnd: String = identifierEnd + identifierEnd
 
     // sqlglot: Generator._next_name (name_sequence("_t"))
+    // brikk extension (docs/brikk-extensions.md #68): reset per generate() call, not per instance.
     private var nextNameCounter = -1
     protected fun nextName(): String { nextNameCounter += 1; return "_t$nextNameCounter" }
 
@@ -397,6 +397,7 @@ open class Generator(
     open fun generate(expression: Expression, copy: Boolean = true): String {
         val expr = if (copy) expression.copy() else expression
         unsupportedMessages.clear()
+        nextNameCounter = -1
         // brikk-native: span tracking bookkeeping (no-op unless trackSpans)
         lastSourceMap = null
         if (trackSpans) {
@@ -644,7 +645,7 @@ open class Generator(
             return if (isTruthyArg(value)) sql(value) else ""
         }
 
-        val nativeDialect = expression.metaOrNull?.get("native_only_dialect") as? String
+        val nativeDialect = expression.metaOrNull?.get(BrikkMetaKeys.NATIVE_ONLY_DIALECT) as? String
         if (expression is ArraySort && (expression.args["asc"] != null || expression.args["nulls_first"] != null)) {
             unexecutable("Post-30.29 ArraySort direction/NULL fields require a separately qualified schema migration")
         }
@@ -663,14 +664,14 @@ open class Generator(
             unexecutable("Ordered string aggregation has no qualified native LISTAGG mapping for $targetName")
         }
         if (forExecution && dialect.name != "starrocks" &&
-            (expression.metaOrNull?.get("starrocks_native_ddl") == true || expression.metaOrNull?.get("starrocks_to_days") == true ||
-                expression.metaOrNull?.get("starrocks_native_pivot") == true)) {
+            (expression.metaOrNull?.get(BrikkMetaKeys.STARROCKS_NATIVE_DDL) == true || expression.metaOrNull?.get(BrikkMetaKeys.STARROCKS_TO_DAYS) == true ||
+                expression.metaOrNull?.get(BrikkMetaKeys.STARROCKS_NATIVE_PIVOT) == true)) {
             throw UnsupportedError("Native StarRocks DDL/TO_DAYS/PIVOT semantics are not qualified for another engine")
         }
-        if (forExecution && dialect.name != "starrocks" && expression.metaOrNull?.get("starrocks_map_literal") == true) {
+        if (forExecution && dialect.name != "starrocks" && expression.metaOrNull?.get(BrikkMetaKeys.STARROCKS_MAP_LITERAL) == true) {
             throw UnsupportedError("StarRocks map literal null/duplicate-key and type contracts have no qualified cross-engine execution mapping")
         }
-        if (forExecution && dialect.name != "clickhouse" && expression.metaOrNull?.get("clickhouse_json_extract_raw") == true) {
+        if (forExecution && dialect.name != "clickhouse" && expression.metaOrNull?.get(BrikkMetaKeys.CLICKHOUSE_JSON_EXTRACT_RAW) == true) {
             throw UnsupportedError("ClickHouse JSONExtractRaw String results and missing-value semantics have no qualified cross-engine execution mapping")
         }
         if (nativeDialect != null && nativeDialect != dialect.name) {
@@ -2785,17 +2786,6 @@ open class Generator(
         return "DISCONNECT"
     }
 
-    internal fun duckdbSessionStatementSql(expression: Expression): String {
-        if (!dialect.executesSessionStatements) unexecutable("$targetName cannot execute DuckDB prepared/session statements")
-        val name = sql(expression, "this")
-        return when (expression) {
-            is DuckdbPrepare -> "PREPARE $name AS ${sql(expression, "expression")}"
-            is DuckdbExecute -> expressions(expression, flat = true).let { "EXECUTE $name" + if (it.isEmpty()) "" else "($it)" }
-            is DuckdbDeallocate -> "DEALLOCATE $name"
-            else -> "RESET VARIABLE $name"
-        }
-    }
-
     // sqlglot: Generator.lambda_sql
     open fun lambdaSql(expression: Lambda, arrowSep: String = "->", wrapArgs: Boolean = true): String {
         var argsSql = expressions(expression, flat = true)
@@ -3271,7 +3261,7 @@ open class Generator(
     }
 
     protected fun anonymousPaginationPosition(node: Expression?): Int? =
-        (node?.metaOrNull?.get("duckdb_pagination_position") as? Number)?.toInt()?.takeIf {
+        (node?.metaOrNull?.get(BrikkMetaKeys.DUCKDB_PAGINATION_POSITION) as? Number)?.toInt()?.takeIf {
             node.findAll<Placeholder>().any { it.thisArg == null }
         }
 
@@ -4070,7 +4060,7 @@ open class Generator(
 
     open fun matchSql(expression: Match): String {
         if (expression.args["kind"] != null || expression.args["analyzer"] != null ||
-            expression.metaOrNull?.get("doris_full_text") == true) {
+            expression.metaOrNull?.get(BrikkMetaKeys.DORIS_FULL_TEXT) == true) {
             unexecutable("Doris full-text MATCH variants/analyzers have no qualified execution mapping in $targetName")
         }
         return binary(expression, "MATCH")
@@ -4186,7 +4176,7 @@ open class Generator(
 
     // sqlglot: Generator.command_sql
     open fun commandSql(expression: Command): String {
-        if (expression.metaOrNull?.get("starrocks_opaque_command") == true && dialect.name != "starrocks") {
+        if (expression.metaOrNull?.get(BrikkMetaKeys.STARROCKS_OPAQUE_COMMAND) == true && dialect.name != "starrocks") {
             unexecutable("Opaque StarRocks administrative commands have no cross-engine execution mapping")
         }
         return "${sql(expression, "this")} ${expression.text("expression").trim()}"
@@ -4885,67 +4875,6 @@ open class Generator(
         unexecutable("$targetName cannot execute DuckDB extension installation")
         unsupported("Unsupported INSTALL statement")
         return ""
-    }
-
-    internal fun duckdbExtensionSql(expression: Expression): String {
-        if (!dialect.executesExtensionManagement) unexecutable("$targetName cannot execute DuckDB extension/repository management")
-        val target = sql(expression, "this")
-        val from = sql(expression, "from_").let { if (it.isEmpty()) "" else " FROM $it" }
-        return when (expression) {
-            is DuckdbCreateExtensionRepository -> {
-                val replace = if (expression.args["replace"] == true) " OR REPLACE" else ""
-                val exists = if (expression.args["exists"] == true) " IF NOT EXISTS" else ""
-                val keys = expressions(expression).let { if (it.isEmpty()) "" else " USING PUBLIC ${if (expression.expressionsArg.size == 1) "KEY" else "KEYS"} $it" }
-                "CREATE$replace EXTENSION REPOSITORY$exists $target WITH PREFIX ${sql(expression, "prefix")}$keys"
-            }
-            is DuckdbDropExtensionRepository -> "DROP EXTENSION REPOSITORY${if (expression.args["exists"] == true) " IF EXISTS" else ""} $target"
-            is DuckdbInstallExtension -> {
-                val force = if (expression.args["force"] == true) "FORCE " else ""
-                val load = if (expression.args["load"] == true) " AND LOAD" else ""
-                val version = sql(expression, "version").let { if (it.isEmpty()) "" else " VERSION $it" }
-                "${force}INSTALL$load $target$from$version"
-            }
-            is DuckdbLoadExtension -> "LOAD $target$from" + sql(expression, "alias").let { if (it.isEmpty()) "" else " AS $it" }
-            else -> error("Not an extension management statement")
-        }
-    }
-
-    internal fun duckdbExternalResourceSql(expression: Expression): String {
-        if (!dialect.executesExternalResources) unexecutable("$targetName cannot execute DuckDB external-resource statements")
-        fun options(node: Expression): String = expressions(node).let { if (it.isEmpty()) "" else " ($it)" }
-        val target = sql(expression, "this")
-        val alias = sql(expression, "alias").let { if (it.isEmpty()) "" else " AS $it" }
-        return when (expression) {
-            is DuckdbCreateExternalResource -> {
-                if (alias.isEmpty()) unexecutable("DuckDB durable external resources require AS and a registration name")
-                "CREATE EXTERNAL RESOURCE $target$alias${options(expression)}"
-            }
-            is DuckdbRegisterExternalResource -> {
-                if (alias.isEmpty()) unexecutable("DuckDB durable external resources require AS and a registration name")
-                val handle = sql(expression, "expression")
-                "REGISTER EXTERNAL RESOURCE $target$alias FROM $handle"
-            }
-            is DuckdbDestroyExternalResource -> "DESTROY EXTERNAL RESOURCE $target"
-            is DuckdbShowExternalResources -> "SHOW${if (expression.args["all"] == true) " ALL" else ""} EXTERNAL RESOURCES"
-            is DuckdbExternalResourceSource -> if (expression.args["temporary"] == true)
-                "NEW TEMPORARY EXTERNAL RESOURCE $target${options(expression)}" else "EXTERNAL RESOURCE $target"
-            is DuckdbAttachExternalResource -> "ATTACH TO $target$alias${options(expression)}"
-            is DuckdbConnectExternalResource -> {
-                if ((expression.thisArg as? DuckdbExternalResourceSource)?.args?.get("temporary") == true && expression.expressionsArg.isNotEmpty())
-                    unexecutable("CONNECT TO NEW TEMPORARY EXTERNAL RESOURCE cannot take a second connection option list")
-                "CONNECT TO $target${options(expression)}"
-            }
-            else -> error("Not an external resource node")
-        }
-    }
-
-    internal fun duckdbExplainSql(expression: DuckdbExplain): String {
-        if (!dialect.executesExplainOptions) unexecutable("$targetName cannot execute DuckDB EXPLAIN options")
-        expression.explainProblems().forEach(::unexecutable)
-        val analyze = if (expression.args["analyze"] == true) " ANALYZE" else ""
-        val options = expressions(expression).let { if (it.isEmpty()) "" else " ($it)" }
-        val child = sql(expression, "this")
-        return "EXPLAIN$analyze$options $child"
     }
 
     // sqlglot: Generator.summarize_sql
@@ -5873,7 +5802,7 @@ open class Generator(
         // name the function was parsed with
         val name = if (dialectPreserveOriginalNames) {
             (node.metaOrNull?.get("${dialect.name}_name") as? String)
-                ?: (node.metaOrNull?.get("name") as? String).takeIf {
+                ?: (node.metaOrNull?.get(BrikkMetaKeys.NAME) as? String).takeIf {
                     sourceDialect == null || sourceDialect.equals(dialect.name, ignoreCase = true)
                 } ?: expression.sqlName()
         } else {

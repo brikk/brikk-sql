@@ -1,5 +1,6 @@
 package dev.brikk.house.sql.parser
 
+import dev.brikk.house.sql.ast.BrikkMetaKeys
 import dev.brikk.house.sql.ast.SAFE_IDENTIFIER_RE
 import dev.brikk.house.sql.ast.column
 
@@ -343,8 +344,9 @@ enum class IsPredicatePrecedence { HIGH, COMPARISON, EQUALITY, LOW }
  * (CREATE/DROP/ALTER with column defs, constraints and the property subsystem), DML
  * (INSERT/UPDATE/DELETE/MERGE) and auxiliary statements (USE/SET/transactions/CACHE/
  * DESCRIBE/COMMENT/GRANT/REVOKE/ANALYZE/KILL/LOAD/PRAGMA/TRUNCATE/REFRESH).
- * Remaining raise-gates: COPY, simplified PIVOT/UNPIVOT statements, triggers,
- * procedure blocks, macro overloads, locks and control-flow statements. The JSON path parser (sqlglot/jsonpath.py) is ported in JsonPath.kt.
+ * Remaining raise-gates: procedure bodies, WHILE control-flow blocks, AT index,
+ * STREAM tables, `WITH (` table hints, CHANGES and multitable INSERT FIRST/ALL.
+ * The JSON path parser (sqlglot/jsonpath.py) is ported in JsonPath.kt.
  * Gate parity:
  * testResources/parser-corpus/known-failures.json (ParserIdentityCorpusTest).
  *
@@ -1486,7 +1488,7 @@ open class Parser(
                 val comments = prevComments
                 val factory = equality.getValue(prevToken.tokenType)
                 this_ = buildPredicate(factory(args("this" to this_, "expression" to parseComparison())), comments)
-                if (preserveOperatorSpelling) this_.meta["operator"] = operator
+                if (preserveOperatorSpelling) this_.meta[BrikkMetaKeys.OPERATOR] = operator
             } else if (parseIs && isPredicateAhead()) {
                 val start = index
                 this_ = parseComparison(parsePostfixIsRange(this_))
@@ -2673,7 +2675,8 @@ open class Parser(
         } else if (
             method == null &&
             !(outerApply || crossApply) &&
-            // sqlglot: `not isinstance(kwargs["this"], exp.Unnest)` — exp.Unnest not ported
+            // sqlglot: Parser._parse_join — upstream's `not isinstance(kwargs["this"], exp.Unnest)`
+            // test is not ported; only its following CROSS/ARRAY token test below is ported.
             !(kind != null && (kind.tokenType == TokenType.CROSS || kind.tokenType == TokenType.ARRAY))
         ) {
             val innerIndex = index
@@ -2995,7 +2998,7 @@ open class Parser(
         }
 
         if (this_ is Table && matchTextSeq("AT")) {
-            // sqlglot: exp.AtIndex — not ported.
+            // sqlglot: Parser._parse_table — exp.AtIndex parser branch not ported.
             return raiseError("AT index expressions are not supported yet")
         }
 
@@ -3030,7 +3033,7 @@ open class Parser(
         return this_
     }
 
-    // sqlglot: Parser._parse_stream — exp.Stream not ported; the retreat keeps STREAM
+    // sqlglot: Parser._parse_stream — exp.Stream parser branch not ported; the retreat keeps STREAM
     // usable as a plain identifier, like Python.
     protected fun parseStream(): Expression? {
         val startIndex = index
@@ -3044,7 +3047,7 @@ open class Parser(
         return null
     }
 
-    // sqlglot: Parser._parse_lateral — exp.Lateral not ported.
+    // sqlglot: Parser._parse_lateral
     protected fun parseLateral(): Expression? {
         var crossApply: kotlin.Boolean? = null
         if (matchPair(TokenType.CROSS, TokenType.APPLY)) {
@@ -3404,7 +3407,7 @@ open class Parser(
     open val tableIndexHintTokens: Set<TokenType>
         get() = setOf(TokenType.FORCE, TokenType.IGNORE, TokenType.USE)
 
-    // sqlglot: Parser._parse_table_hints (exp.WithTableHint branch still raise-gated)
+    // sqlglot: Parser._parse_table_hints — exp.WithTableHint parser branch not ported.
     protected open fun parseTableHints(): List<Expression>? {
         val hints = mutableListOf<Expression>()
         if (matchPair(TokenType.WITH, TokenType.L_PAREN, advance = false)) {
@@ -3427,7 +3430,7 @@ open class Parser(
         return hints.ifEmpty { null }
     }
 
-    // sqlglot: Parser._parse_changes — exp.Changes not ported (Snowflake CHANGES clause).
+    // sqlglot: Parser._parse_changes — exp.Changes parser branch not ported (Snowflake CHANGES clause).
     protected fun parseChanges(): Expression? {
         if (matchTextSeq("CHANGES", "(", "INFORMATION", "=>", advance = false)) {
             return raiseError("CHANGES(...) is not supported yet")
@@ -3435,7 +3438,7 @@ open class Parser(
         return null
     }
 
-    // sqlglot: Parser._parse_historical_data — exp.HistoricalData not ported (Snowflake
+    // sqlglot: Parser._parse_historical_data — exp.HistoricalData (Snowflake
     // AT/BEFORE); the retreat keeps AT/BEFORE usable as identifiers, like Python.
     protected fun parseHistoricalData(): Expression? {
         // https://docs.snowflake.com/en/sql-reference/constructs/at-before
@@ -3916,7 +3919,7 @@ open class Parser(
             )
         )
         if (preserveExplicitNullOrdering && explicitlyNullOrdered) {
-            ordered.meta["explicit_null_ordering"] = if (isNullsFirst) "FIRST" else "LAST"
+            ordered.meta[BrikkMetaKeys.EXPLICIT_NULL_ORDERING] = if (isNullsFirst) "FIRST" else "LAST"
         }
         return ordered
     }
@@ -3929,7 +3932,7 @@ open class Parser(
         return null
     }
 
-    // sqlglot: Parser._parse_limit_options — exp.LimitOptions not ported.
+    // sqlglot: Parser._parse_limit_options
     protected fun parseLimitOptions(): Expression? {
         val percent = matchSet(setOf(TokenType.PERCENT, TokenType.MOD))
         val rows = matchTexts(setOf("ROW", "ROWS"))
@@ -5170,8 +5173,7 @@ open class Parser(
     /** Trigger action after timing/table clauses; DuckDB overrides PostgreSQL's EXECUTE FUNCTION form. */
     protected open fun parseTriggerAction(): Expression? = parseTriggerExecute()
 
-    // sqlglot: Parser._parse_create (macro-overload branch gated:
-    // no base-corpus coverage; CREATABLE_KIND_MAPPING={} in the base dialect)
+    // sqlglot: Parser._parse_create
     open fun parseCreate(): Expression {
         // Note: this can't be None because we've matched a statement parser
         val start = prevToken
@@ -5273,7 +5275,7 @@ open class Parser(
                         expressionArg = if (createTokenType == TokenType.FUNCTION) {
                             parseUserDefinedFunctionExpression()
                         } else {
-                            // sqlglot: Parser._parse_block — exp.Block not ported.
+                            // sqlglot: Parser._parse_block — exp.Block parser branch not ported.
                             raiseError("CREATE PROCEDURE bodies are not supported yet")
                 return parseAsCommand(start)
                         }
@@ -6083,7 +6085,7 @@ open class Parser(
             )
         } else {
             if (matchSet(setOf(TokenType.FIRST, TokenType.ALL))) {
-                // sqlglot: Parser._parse_multitable_inserts — exp.MultitableInserts not ported.
+                // sqlglot: Parser._parse_multitable_inserts — INSERT FIRST/ALL parser branch not ported.
                 raiseError("Multitable INSERT statements are not supported yet")
                 return parseAsCommand(prevToken)
             }
@@ -9806,8 +9808,7 @@ open class Parser(
         )
     }
 
-    // sqlglot: Parser.build_cast — exp.TryCast not ported (base STRICT_CAST is true, so
-    // the non-strict branch never fires).
+    // sqlglot: Parser.build_cast — builds TryCast for non-strict casts, Cast otherwise.
     open fun buildCast(
         strict: kotlin.Boolean,
         this_: Expression?,

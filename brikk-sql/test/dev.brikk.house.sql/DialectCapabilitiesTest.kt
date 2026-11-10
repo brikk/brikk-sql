@@ -4,6 +4,7 @@ import dev.brikk.house.sql.ast.DType
 import dev.brikk.house.sql.dialects.Dialect
 import dev.brikk.house.sql.dialects.Dialects
 import dev.brikk.house.sql.dialects.nativeDuckdbAnalysisDialect
+import dev.brikk.house.sql.dialects.usesDuckdbNativeContracts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -16,9 +17,7 @@ class DialectCapabilitiesTest {
         "variantAccessYieldsVariant" to ({ d: Dialect -> d.variantAccessYieldsVariant } to setOf("duckdb")),
         "triggerScopes" to ({ d: Dialect -> d.triggerScopes } to setOf("duckdb")),
         "statefulCtes" to ({ d: Dialect -> d.statefulCtes } to setOf("duckdb")),
-        "nativeStorageContracts" to ({ d: Dialect -> d.nativeStorageContracts } to setOf("duckdb")),
-        "nativeFunctionContracts" to ({ d: Dialect -> d.nativeFunctionContracts } to setOf("duckdb")),
-        "copyLayoutOptions" to ({ d: Dialect -> d.copyLayoutOptions } to setOf("duckdb")),
+        "usesDuckdbNativeContracts" to ({ d: Dialect -> d.usesDuckdbNativeContracts } to setOf("duckdb")),
         "dmlScopes" to ({ d: Dialect -> d.dmlScopes } to setOf("duckdb")),
         "statementResultRows" to ({ d: Dialect -> d.statementResultRows } to setOf("duckdb")),
         "parametersDefaultToSessionVariables" to ({ d: Dialect -> d.parametersDefaultToSessionVariables } to setOf("duckdb")),

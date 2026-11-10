@@ -29,7 +29,7 @@ class SpiceGenerator(pretty: kotlin.Boolean = false, sourceDialect: String? = nu
         is SpiceExplain -> {
             val options = e.expressionsArg.map { it as? PropertyEQ ?: throw UnsupportedError("Invalid Spice EXPLAIN option") }
                 .joinToString(if (e.args["list"] == true) ", " else " ") { option ->
-                sql(option, "this") + if (option.metaOrNull?.get("spice_implicit_option") == true) "" else " ${sql(option, "expression") }"
+                sql(option, "this") + if (option.metaOrNull?.get(BrikkMetaKeys.SPICE_IMPLICIT_OPTION) == true) "" else " ${sql(option, "expression") }"
             }
             "EXPLAIN" + (if (options.isEmpty()) "" else if (e.args["list"] == true) " ($options)" else " $options") + " ${sql(e, "this") }"
         }
@@ -40,7 +40,7 @@ class SpiceGenerator(pretty: kotlin.Boolean = false, sourceDialect: String? = nu
         private val SPICE_TRANSFORMS: Map<KClass<out Expression>, GenMethod> = buildMap {
             put(BitwiseXor::class) { binary(it as Binary, "#") }
             put(Pow::class) {
-                if (it.metaOrNull?.get("spice_exponent_operator") == true) binary(it as Binary, "^")
+                if (it.metaOrNull?.get(BrikkMetaKeys.SPICE_EXPONENT_OPERATOR) == true) binary(it as Binary, "^")
                 else func("power", it.thisArg, it.expressionArg)
             }
             put(JSONExtract::class) { binary(it as Binary, "->") }

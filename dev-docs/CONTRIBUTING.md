@@ -61,6 +61,13 @@ Generator tests need the SQLGlot checkout at `reference/sqlglot`, exactly
 commit can instead be supplied through `PYTHONPATH`; do not substitute a newer
 installed package or regenerate fixtures for a documentation change.
 
+### Test naming
+
+Test files and test names say what behaviour they check, not which task, batch, release or
+tracker item produced them. Name new tests for the behaviour. When a batch-named file
+(for example `*Catchup*`, `MainIntegration*` or `FrozenTarget*`) is next changed, move its
+cases to a file named for the behaviour.
+
 ## Publishing
 
 SQL engine, metadata, verification and oracle artifacts share the publishing template.
@@ -68,6 +75,22 @@ The three IntelliJ support modules use their own aligned version. Build tooling 
 
 Releases are cut from `main` only; merge first, then release from the merged commit. The
 owner can grant a per-release exception explicitly; see [AGENTS.md](../AGENTS.md).
+
+Both release workflows and both release launchers enforce this through
+`tools/release_ancestry.py`: before Central publication it fetches only `main` from `origin`
+(completing shallow history when needed) and requires `HEAD` to be an ancestor of
+`origin/main`. Missing/unfetchable `origin/main` fails closed, even with an exception;
+local releases (`--local` / Maven Local) do not run this check. `preverified` skips only
+the test gate, never this check.
+
+The guard also refuses staged or unstaged changes to tracked files, listing paths to commit or
+discard; untracked/ignored files do not count, and the owner's exception cannot bypass this check.
+
+Only after the owner's explicit approval for this release from a named branch, set the
+manual workflow's boolean `owner_exception` input to `true`, or run either local launcher
+with `BRIKK_RELEASE_OWNER_EXCEPTION=true`. The override defaults off, is unavailable to
+push-triggered releases, and prints a loud warning with the commit and branch when a
+release proceeds from outside `main`; it is not permission an agent can grant itself.
 
 - Push to `main`: CI builds/tests and checks Maven Local publication before publishing snapshots.
 - Push `release/<version>` (branched from the `main` commit being released) or dispatch the

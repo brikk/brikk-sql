@@ -165,17 +165,6 @@ open class Dialect {
     // shapes model them; qualification and type annotation refuse to rewrite across them (DuckDB).
     internal open val statefulCtes: Boolean get() = false
 
-    // brikk-native: storage layout/property DDL, snapshot reads and CHECKPOINT are native storage
-    // contracts that no pass rewrites (DuckDB).
-    internal open val nativeStorageContracts: Boolean get() = false
-
-    // brikk-native: GeoJSON, Parquet reader, regex, SETVAL, path, overlay, JSON and VARIANT functions follow
-    // reviewed native contracts that analysis models and rewrites refuse (DuckDB).
-    internal open val nativeFunctionContracts: Boolean get() = false
-
-    // brikk-native: COPY takes PARTITION_BY/ORDER_BY layout options that bind against its output (DuckDB).
-    internal open val copyLayoutOptions: Boolean get() = false
-
     // brikk-native: INSERT, UPDATE, DELETE, MERGE and COPY are analyzed as scopes with result rows (DuckDB).
     internal open val dmlScopes: Boolean get() = false
 

@@ -1,9 +1,9 @@
 # Optional IntelliJ JDBC support
 
-`dev.brikk.house:brikk-sql-intellij-jdbc-support:0.2.3` contains only
+`dev.brikk.house:brikk-sql-intellij-jdbc-support:1.0.0` contains only
 `dev.brikk.house.sql.intellij.catalog.GenericJdbcIntrospectorGate`. Its class name and routing
-contract are preserved. Consumers extending this gate must add this artifact explicitly when
-upgrading common SQL IntelliJ support to 0.2.1. Common support has no dependency on this module.
+contract are preserved. Consumers extending this gate must add this artifact explicitly
+alongside common SQL IntelliJ support. Common support has no dependency on this module.
 
 DuckDB and Trino use it to veto fallback-engine native introspection and select JDBC metadata.
 Doris and ClickHouse retain their own native introspectors and must not bundle this adapter.

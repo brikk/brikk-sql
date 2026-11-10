@@ -29,7 +29,7 @@ class DuckdbCatchupResultTest {
                     statement.execute("SET TimeZone = '$zone'")
                     val expression = timestamp.sql("duckdb")
                     val query = "SELECT epoch_us($expression), epoch_us(TIMESTAMPTZ '2019-07-10 09:03:04.123456+00'), typeof($expression)"
-                    assertIs<VerifyResult.Accepted>(SqlVerifiers.forEngine("duckdb")!!.verify(query), query)
+                    assertIs<VerifyResult.Accepted>(DuckdbVerifier().use { it.verify(query) }, query)
                     statement.executeQuery(query).use { result ->
                         assertTrue(result.next())
                         assertEquals(result.getLong(2), result.getLong(1), zone)
@@ -53,7 +53,7 @@ class DuckdbCatchupResultTest {
                     val type = DataType(args("this" to DType.TIMESTAMPLTZ,
                         "expressions" to listOf(Literal.number(precision))))
                     val query = "SELECT CAST(NULL AS ${type.sql("duckdb")})"
-                    assertIs<VerifyResult.Accepted>(SqlVerifiers.forEngine("duckdb")!!.verify(query), query)
+                    assertIs<VerifyResult.Accepted>(DuckdbVerifier().use { it.verify(query) }, query)
                     statement.executeQuery(query).use { result ->
                         assertTrue(result.next())
                         assertEquals(null, result.getObject(1))
@@ -73,7 +73,7 @@ class DuckdbCatchupResultTest {
                     "FROM t |> TABLESAMPLE SYSTEM (100 PERCENT) |> ORDER BY id |> LIMIT 2 OFFSET 1",
                 )) {
                     val output = SqlFragment(source, "duckdb").toExecutable("duckdb", trackSourceMap = false).sql
-                    assertIs<VerifyResult.Accepted>(SqlVerifiers.forEngine("duckdb")!!.verify(output), output)
+                    assertIs<VerifyResult.Accepted>(DuckdbVerifier().use { it.verify(output) }, output)
                     statement.executeQuery(output).use { result ->
                         assertTrue(result.next())
                         assertEquals(2, result.getInt("id"))

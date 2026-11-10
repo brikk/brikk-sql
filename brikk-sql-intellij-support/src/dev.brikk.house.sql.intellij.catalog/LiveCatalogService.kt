@@ -33,6 +33,7 @@ import dev.brikk.house.sql.intellij.dialect.SqlDialectRegistry
 import dev.brikk.house.sql.intellij.editorShowsFile
 import dev.brikk.house.sql.intellij.notifyEscaped
 import dev.brikk.house.sql.intellij.recoverEditorOperation
+import dev.brikk.house.sql.intellij.warnEditorFailureOnce
 import dev.brikk.house.sql.metadata.DialectMetadata
 import dev.brikk.house.sql.metadata.FunctionPresentation
 import dev.brikk.house.sql.metadata.MetadataSnapshot
@@ -96,7 +97,12 @@ public interface LiveCatalogProfile {
     /** The directory name, unique to the plugin, harvests persist under; null keeps them in memory only. */
     public val persistenceId: String? get() = null
 
-    /** The longest one harvest may take. */
+    /**
+     * The longest one harvest may take, capped at 5 seconds for an automatic post-statement harvest on
+     * the console's connection.
+     * The console can wait the budget, plus the driver's synchronous statement cancel and close (with
+     * no local bound), plus up to 2 seconds of cleanup.
+     */
     public val deadline: Duration get() = 5.seconds
 
     /** Persisted harvests not written for this long are deleted. */
@@ -173,7 +179,9 @@ public sealed interface RefreshOutcome {
  * constructor. Harvests on a console's own connection also read that session's facts; a harvest on any
  * other connection, a refresh's helper connection included, updates only the shared inventory.
  */
-public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
+public abstract class LiveCatalogService internal constructor(protected val scope: CoroutineScope, private val automaticHarvestCap: Duration) {
+    public constructor(scope: CoroutineScope) : this(scope, AUTOMATIC_HARVEST_CAP)
+
     public abstract val profile: LiveCatalogProfile
 
     /** Where harvests persist; tests override it. */
@@ -305,9 +313,10 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
         val claim = (dataSource.uniqueId to identity).takeUnless { console && profile.trigger == HarvestTrigger.EVERY_CONSOLE_CONNECT }
         if (claim != null && !inFlight.add(claim)) return
         try {
-            val outcome = runHarvest(profile.harvester, profile.deadline) { RemoteCatalogRows(connection, it) }
+            val budget = profile.deadline
+            val outcome = runHarvest(profile.harvester, budget) { RemoteCatalogRows(connection, it) }
             currentCoroutineContext().ensureActive()
-            record(dataSource, identity, outcome, requestor.takeIf { console }, connection, ticket)
+            record(dataSource, identity, outcome, requestor.takeIf { console }, connection, ticket, budget)
         } finally {
             claim?.let(inFlight::remove)
         }
@@ -339,10 +348,11 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
             return RefreshOutcome.ConnectFailed(e.message)
         } ?: return RefreshOutcome.ConnectFailed(null)
         return ref.use { connection ->
-            val outcome = runHarvest(profile.harvester, profile.deadline) { RemoteCatalogRows(connection.get(), it) }
+            val budget = profile.deadline
+            val outcome = runHarvest(profile.harvester, budget) { RemoteCatalogRows(connection.get(), it) }
             currentCoroutineContext().ensureActive()
             when {
-                !record(dataSource, identity, outcome, session = null, ticket = ticket) -> RefreshOutcome.Superseded
+                !record(dataSource, identity, outcome, session = null, ticket = ticket, budget = budget) -> RefreshOutcome.Superseded
                 outcome is HarvestOutcome.Complete -> RefreshOutcome.Refreshed(outcome.harvest.shared)
                 else -> RefreshOutcome.HarvestFailed(outcome)
             }
@@ -352,8 +362,9 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
     /**
      * Refreshes over [session]'s own connection, so the session's facts are read too (extensions it
      * loaded implicitly, for example DuckDB autoload): the harvest is queued on the session as a request
-     * and runs on its engine's thread, with the same rules as after executed statements. A session in a
-     * transaction is not harvested ([RefreshOutcome.SessionInTransaction]). A session that is not
+     * and runs on its engine's thread, with the profile's full deadline and the transaction rules of
+     * post-statement harvests. A session in a transaction is not harvested
+     * ([RefreshOutcome.SessionInTransaction]). A session that is not
      * connected falls back to [refresh] over a helper connection. Cancellation propagates; a harvest
      * cancelled before the session ran it does not run.
      */
@@ -402,10 +413,10 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
     private fun harvestSession(dataSource: LocalDataSource, session: DatabaseSession, requestor: Any?, connection: DatabaseConnectionCore, ticket: HarvestTicket): RefreshOutcome {
         requestor?.let { learnSession(session, it) }
         val identity = requestor?.let { consoleConnections[it] }?.identity ?: profile.identity(dataSource)
-        return harvestOver(dataSource, connection, identity, requestor, session, ticket)
+        return harvestOver(dataSource, connection, identity, requestor, session, profile.deadline, ticket)
     }
 
-    private fun harvestOver(dataSource: LocalDataSource, connection: DatabaseConnectionCore, identity: ConnectionIdentity, requestor: Any?, session: DatabaseSession, ticket: HarvestTicket = beginHarvest(dataSource.uniqueId)): RefreshOutcome {
+    private fun harvestOver(dataSource: LocalDataSource, connection: DatabaseConnectionCore, identity: ConnectionIdentity, requestor: Any?, session: DatabaseSession, budget: Duration, ticket: HarvestTicket = beginHarvest(dataSource.uniqueId)): RefreshOutcome {
         if (!synchronized(ticket.state) { current(ticket) }) return RefreshOutcome.Superseded
         if (identity != profile.identity(dataSource)) {
             LOG.info("Not harvesting ${dataSource.name} over a connection to the server it named before")
@@ -415,9 +426,9 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
             LOG.info("Not harvesting ${dataSource.name} over a session in a transaction")
             return RefreshOutcome.SessionInTransaction
         }
-        val outcome = runHarvestBlocking(profile.harvester, profile.deadline) { RemoteCatalogRows(connection, it) }
+        val outcome = runHarvestBlocking(profile.harvester, budget) { RemoteCatalogRows(connection, it) }
         return when {
-            !record(dataSource, identity, outcome, requestor, connection, ticket) -> RefreshOutcome.Superseded
+            !record(dataSource, identity, outcome, requestor, connection, ticket, budget) -> RefreshOutcome.Superseded
             outcome is HarvestOutcome.Complete -> RefreshOutcome.Refreshed(outcome.harvest.shared, requestor?.let { outcome.harvest.session } ?: SessionFacts.NONE)
             else -> RefreshOutcome.HarvestFailed(outcome)
         }
@@ -427,10 +438,14 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
      * Called after statements that change the function inventory ran in [session], usually on its
      * engine's thread. When the change may belong to the session ([sessionFacts]) and the session's
      * connection is known, still reaches the same server and is in auto-commit mode, the harvest runs over
-     * that connection on this thread, waiting at most the deadline, so the session's facts are read. A
-     * session in a transaction is not harvested (a failing harvest query could abort it on some engines),
+     * that connection on this thread, with a budget of the smaller of the profile's deadline and 5 seconds,
+     * so the session's facts are read. The console can wait the budget, plus the driver's synchronous
+     * statement cancel and close (with no local bound), plus up to 2 seconds of cleanup.
+     * A session in a transaction is not harvested (a failing harvest query
+     * could abort it on some engines),
      * and a connection to a server the data source no longer names is not used. Otherwise, and never on
-     * the EDT, a debounced [refresh] follows. [notify] shows the result (see [onRefreshed]).
+     * the EDT, a debounced [refresh] follows over a helper connection, off the engine thread, keeping
+     * the profile's full deadline. [notify] shows the result (see [onRefreshed]).
      */
     public fun inventoryChanged(project: Project, session: DatabaseSession, requestor: Any?, sessionFacts: Boolean, notify: Boolean = false) {
         val profile = profile
@@ -447,7 +462,7 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
             }
             return
         }
-        onRefreshed(project, dataSource, harvestOver(dataSource, connection, console.identity, requestor, session), reason)
+        onRefreshed(project, dataSource, harvestOver(dataSource, connection, console.identity, requestor, session, minOf(profile.deadline, automaticHarvestCap)), reason)
     }
 
     /** Whether [connection] may be in a transaction: not in auto-commit mode, or unknown. */
@@ -518,7 +533,7 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
      * never fences out an older success. Session lanes are independent of helper and peer-console work.
      * Forget and recording use the same source lock through the disk write/delete, not just the check.
      */
-    private fun record(dataSource: LocalDataSource, identity: ConnectionIdentity, outcome: HarvestOutcome, session: Any?, connection: DatabaseConnectionCore? = null, ticket: HarvestTicket): Boolean {
+    private fun record(dataSource: LocalDataSource, identity: ConnectionIdentity, outcome: HarvestOutcome, session: Any?, connection: DatabaseConnectionCore? = null, ticket: HarvestTicket, budget: Duration): Boolean {
         synchronized(ticket.state) {
             if (!current(ticket) || ticket.sourceId != dataSource.uniqueId) {
                 LOG.info("The live catalog read was forgotten or cancelled; discarded")
@@ -558,7 +573,7 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
                 }
                 is HarvestOutcome.Failed -> LOG.info("The live catalog harvest of ${dataSource.name} failed; the previous catalog stays", outcome.error)
                 HarvestOutcome.Incomplete -> LOG.info("The live catalog harvest of ${dataSource.name} was incomplete; the previous catalog stays")
-                HarvestOutcome.TimedOut -> LOG.info("The live catalog harvest of ${dataSource.name} exceeded ${profile.deadline}; the previous catalog stays")
+                HarvestOutcome.TimedOut -> LOG.info("The live catalog harvest of ${dataSource.name} exceeded $budget; the previous catalog stays")
             }
             return true
         }
@@ -576,6 +591,8 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
         val LOG = logger<LiveCatalogService>()
     }
 }
+
+internal val AUTOMATIC_HARVEST_CAP: Duration = 5.seconds
 
 /** Opens this library's own helper connections (refreshes, text explain, verification), which harvests skip. */
 internal class HelperRequestor : ConnectionRequestor by ConnectionRequestor.Anonymous() {
@@ -689,7 +706,7 @@ public abstract class RefreshLiveCatalogAction(private val service: Class<out Li
         if (file != null) return catalog.dataSourceOf(file)
         return recoverEditorOperation {
             LocalDataSourceManager.getInstance(project).dataSources.filter { catalog.accepts(it.dbms) }.singleOrNull()
-        }.getOrNull()
+        }.warnEditorFailureOnce("RefreshLiveCatalogAction.target").getOrNull()
     }
 
     /** The data source serving the SQL at the editor popup's caret, by its dialect; null where none plainly does. */
@@ -722,7 +739,7 @@ public abstract class RefreshLiveCatalogAction(private val service: Class<out Li
         val injections = InjectedLanguageManager.getInstance(project)
         val injected = if (injections.isInjectedFragment(file)) null else injections.findInjectedElementAt(file, editor.caretModel.offset)?.containingFile
         (injected ?: file).takeIf { it.language is SqlLanguageDialect }
-    }.getOrNull()
+    }.warnEditorFailureOnce("RefreshLiveCatalogAction.sqlAtCaret").getOrNull()
 }
 
 /**

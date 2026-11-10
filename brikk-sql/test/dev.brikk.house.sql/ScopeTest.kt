@@ -14,6 +14,7 @@ import dev.brikk.house.sql.ast.args
 import dev.brikk.house.sql.ast.desugarPipes
 import dev.brikk.house.sql.generator.UnsupportedError
 import dev.brikk.house.sql.optimizer.OptimizeError
+import dev.brikk.house.sql.optimizer.IdentityKey
 import dev.brikk.house.sql.optimizer.MappingSchema
 import dev.brikk.house.sql.optimizer.Resolver
 import dev.brikk.house.sql.optimizer.Scope
@@ -30,6 +31,26 @@ import kotlin.test.assertTrue
 
 /** Hand assertions against sqlglot's tests/test_optimizer.py::test_scope oracle. */
 class ScopeTest {
+
+    @Test
+    fun identityKeyLookupSurvivesExpressionMutation() {
+        val expression = Literal(args("this" to "1", "is_string" to false))
+        val values = hashMapOf(IdentityKey(expression) to "found")
+        expression.set("this", "2")
+        assertEquals("found", values[IdentityKey(expression)])
+    }
+
+    @Test
+    fun identityKeysKeepStructurallyEqualExpressionsSeparate() {
+        val first = parseOne("SELECT a FROM t")
+        val second = parseOne("SELECT a FROM t")
+        assertEquals(first, second)
+        assertTrue(first !== second)
+        val values = hashMapOf(IdentityKey(first) to "first", IdentityKey(second) to "second")
+        assertEquals(2, values.size)
+        assertEquals("first", values[IdentityKey(first)])
+        assertEquals("second", values[IdentityKey(second)])
+    }
 
     private fun columnName(c: Column): String {
         val table = c.text("table")

@@ -12,13 +12,11 @@ import json
 from pathlib import Path
 import re
 
+from generator_helpers import kotlin_json_string as kstr
+
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "brikk-sql-metadata/src/dev.brikk.house.sql.metadata"
 KINDS = {"SCALAR": "SCALAR", "AGGREGATE": "AGGREGATE", "WINDOW": "WINDOW", "TABLE": "TABLE_VALUED"}
-
-
-def kstr(value):
-    return json.dumps(value, ensure_ascii=False).replace("$", "\\$") if value is not None else "null"
 
 
 def klist(values):

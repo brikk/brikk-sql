@@ -7,8 +7,8 @@ import kotlin.test.assertEquals
 
 /**
  * Hand assertions for the Spark2 dialect port (reference/sqlglot/sqlglot/dialects/spark2.py),
- * focused on behaviors that differ from Spark (the Spark3 leaf). Expected values are pinned
- * to the Python oracle (parse_one(sql, read="spark2").sql("spark2")) at sqlglot
+ * focused on behaviors that differ from Spark (the Spark3 leaf). Initial expectations were
+ * captured from the Python oracle (parse_one(sql, read="spark2").sql("spark2")) at sqlglot
  * v30.12.0-44-g93d16591.
  */
 class Spark2DialectTest {

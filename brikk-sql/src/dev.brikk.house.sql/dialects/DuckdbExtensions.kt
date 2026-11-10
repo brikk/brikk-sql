@@ -1,7 +1,11 @@
 package dev.brikk.house.sql.dialects
 
 import dev.brikk.house.sql.ast.DuckdbCreateExtensionRepository
+import dev.brikk.house.sql.ast.DuckdbDropExtensionRepository
+import dev.brikk.house.sql.ast.DuckdbInstallExtension
+import dev.brikk.house.sql.ast.DuckdbLoadExtension
 import dev.brikk.house.sql.ast.Expression
+import dev.brikk.house.sql.generator.Generator
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.Tokenizer
 import dev.brikk.house.sql.scope.ColumnFact
@@ -28,3 +32,26 @@ internal fun Expression.duckdbExtensionResult(): RelationFact? = if (this is Duc
         ColumnFact(name, type, nullability = Nullability.NON_NULL, origin = ColumnOrigin.COMPUTED)
     })
 } else null
+
+internal fun Generator.duckdbExtensionSql(expression: Expression): String {
+    if (!dialect.executesExtensionManagement) unexecutable("$targetName cannot execute DuckDB extension/repository management")
+    val target = sql(expression, "this")
+    val from = sql(expression, "from_").let { if (it.isEmpty()) "" else " FROM $it" }
+    return when (expression) {
+        is DuckdbCreateExtensionRepository -> {
+            val replace = if (expression.args["replace"] == true) " OR REPLACE" else ""
+            val exists = if (expression.args["exists"] == true) " IF NOT EXISTS" else ""
+            val keys = expressions(expression).let { if (it.isEmpty()) "" else " USING PUBLIC ${if (expression.expressionsArg.size == 1) "KEY" else "KEYS"} $it" }
+            "CREATE$replace EXTENSION REPOSITORY$exists $target WITH PREFIX ${sql(expression, "prefix")}$keys"
+        }
+        is DuckdbDropExtensionRepository -> "DROP EXTENSION REPOSITORY${if (expression.args["exists"] == true) " IF EXISTS" else ""} $target"
+        is DuckdbInstallExtension -> {
+            val force = if (expression.args["force"] == true) "FORCE " else ""
+            val load = if (expression.args["load"] == true) " AND LOAD" else ""
+            val version = sql(expression, "version").let { if (it.isEmpty()) "" else " VERSION $it" }
+            "${force}INSTALL$load $target$from$version"
+        }
+        is DuckdbLoadExtension -> "LOAD $target$from" + sql(expression, "alias").let { if (it.isEmpty()) "" else " AS $it" }
+        else -> error("Not an extension management statement")
+    }
+}

@@ -2,6 +2,7 @@ package dev.brikk.house.sql.scope
 
 import dev.brikk.house.sql.ast.AggFunc
 import dev.brikk.house.sql.ast.Avg
+import dev.brikk.house.sql.ast.BrikkMetaKeys
 import dev.brikk.house.sql.ast.Sum
 import dev.brikk.house.sql.ast.Min
 import dev.brikk.house.sql.ast.Max
@@ -12,10 +13,6 @@ import dev.brikk.house.sql.ast.Create
 import dev.brikk.house.sql.ast.TriggerProperties
 import dev.brikk.house.sql.ast.TriggerReferencing
 import dev.brikk.house.sql.ast.TriggerEvent
-import dev.brikk.house.sql.ast.isTriggerDdl
-import dev.brikk.house.sql.ast.isDuckdbExtensionManagement
-import dev.brikk.house.sql.ast.isDuckdbExternalResourceStatement
-import dev.brikk.house.sql.ast.isDuckdbRecursiveViewDefinition
 import dev.brikk.house.sql.ast.Alias
 import dev.brikk.house.sql.ast.Anonymous
 import dev.brikk.house.sql.ast.CTE
@@ -69,7 +66,9 @@ import dev.brikk.house.sql.ast.With
 import dev.brikk.house.sql.ast.outputName
 import dev.brikk.house.sql.dialects.Dialect
 import dev.brikk.house.sql.dialects.Dialects
-import dev.brikk.house.sql.dialects.isDuckdbNameShow
+import dev.brikk.house.sql.dialects.DuckdbScopeAnalysisGuard
+import dev.brikk.house.sql.dialects.duckdbScopeAnalysisGuard
+import dev.brikk.house.sql.dialects.usesDuckdbNativeContracts
 import dev.brikk.house.sql.dialects.duckdbRegexName
 import dev.brikk.house.sql.dialects.duckdbRegexReturnType
 import dev.brikk.house.sql.dialects.isDuckdbParquetCall
@@ -171,20 +170,19 @@ internal class ScopeEvaluator(
 
     /** Non-query statements normally contribute only their queries; DuckDB UPDATE/MERGE also have row scopes. */
     fun statement(node: Expression, env: Env): Boolean {
-        if (node.hasDuckdbRegexSelector()) throw dev.brikk.house.sql.generator.UnsupportedError("Runtime regex column-selector schemas are not modeled")
-        if (node.isDuckdbNameShow()) return true
-        if (node is dev.brikk.house.sql.ast.DuckdbExplain) {
-            (node.thisArg as? Expression)?.let { statement(it, env) }
-            return true
+        when (val guard = duckdbScopeAnalysisGuard(node, dialect)) {
+            is DuckdbScopeAnalysisGuard.Refusal -> throw dev.brikk.house.sql.generator.UnsupportedError(guard.message)
+            DuckdbScopeAnalysisGuard.Handled -> return true
+            DuckdbScopeAnalysisGuard.Explain -> {
+                (node.thisArg as? Expression)?.let { statement(it, env) }
+                return true
+            }
+            DuckdbScopeAnalysisGuard.Trigger -> {
+                if (node is Create) trigger(node, env)
+                return true
+            }
+            null -> {}
         }
-        if (node.isDuckdbExternalResourceStatement()) return true
-        if (node.isDuckdbExtensionManagement()) return true
-        if (node.isDuckdbRecursiveViewDefinition()) throw dev.brikk.house.sql.generator.UnsupportedError("Recursive view self-reference scope is not modeled")
-        if (dialect.triggerScopes && node.isTriggerDdl()) {
-            if (node is Create) trigger(node, env)
-            return true
-        }
-        if (node is dev.brikk.house.sql.ast.SessionConnect || node is dev.brikk.house.sql.ast.SessionDisconnect) return true
         if (node is Update && dialect.dmlScopes) {
             update(node, withClause(node, env))
             return true
@@ -751,7 +749,7 @@ internal class ScopeEvaluator(
     }
 
     private fun table(node: Table, env: Env, lateral: Frame): Binding {
-        if (dialect.nativeStorageContracts && node.hasDuckdbSnapshot()) throw dev.brikk.house.sql.generator.UnsupportedError("Snapshot table schemas are not current-table scope facts")
+        if (dialect.usesDuckdbNativeContracts && node.hasDuckdbSnapshot()) throw dev.brikk.house.sql.generator.UnsupportedError("Snapshot table schemas are not current-table scope facts")
         val function = node.thisArg as? Anonymous
         if (function != null) return tableFunction(node, function, function.name, function.expressionsArg.filterIsInstance<Expression>(), env, lateral)
         // A function core parses as its own node (ClickHouse's format(...)): its arguments in order.
@@ -830,8 +828,8 @@ internal class ScopeEvaluator(
             !qualified && name in facts.calls -> Triple(RelationKind.CALL, name, facts.calls.getValue(name))
             else -> Triple(RelationKind.FUNCTION, null, null)
         }
-        val parquet = dialect.nativeFunctionContracts && !qualified && function.isDuckdbParquetCall()
-        val nativePairs = if (dialect.nativeFunctionContracts && !qualified && fact == null) {
+        val parquet = dialect.usesDuckdbNativeContracts && !qualified && function.isDuckdbParquetCall()
+        val nativePairs = if (dialect.usesDuckdbNativeContracts && !qualified && fact == null) {
             if (parquet) function.duckdbParquetDeclaredColumns() else function.duckdbGeoJsonDeclaredColumns()
         } else null
         val nativeDeclared = nativePairs?.map { (column, type) ->
@@ -1132,9 +1130,9 @@ internal class ScopeEvaluator(
     /** The type from the expression and its columns' exact SQL types, never from display types. */
     private fun sqlTypeOf(value: Expression): String? {
         val copy = value.copy()
-        if (dialect.nativeFunctionContracts) for (node in copy.walk()) node.duckdbGeoJsonScalarType()?.let { node.typeSlot = it }
+        if (dialect.usesDuckdbNativeContracts) for (node in copy.walk()) node.duckdbGeoJsonScalarType()?.let { node.typeSlot = it }
         // Native shape evidence stays outside the SQLGlot-faithful annotation corpus.
-        if (dialect.nativeFunctionContracts) for (node in copy.walk()) if (node.duckdbRegexName() != null)
+        if (dialect.usesDuckdbNativeContracts) for (node in copy.walk()) if (node.duckdbRegexName() != null)
             node.typeSlot = node.duckdbRegexReturnType() ?: DataType(args("this" to DType.UNKNOWN))
         for ((original, typed) in value.walk().zip(copy.walk())) {
             val sqlType = resolved[original]?.sqlType ?: continue
@@ -1145,7 +1143,7 @@ internal class ScopeEvaluator(
             }
         }
         val type = annotateTypes(copy, dialect = dialect, overwriteTypes = false).type as? DataType ?: return null
-        return if (type.thisArg == DType.UNKNOWN && type.metaOrNull?.get(dev.brikk.house.sql.optimizer.DatafusionTypes.NATIVE) == null) null else renderType(type, dialect)
+        return if (type.thisArg == DType.UNKNOWN && type.metaOrNull?.get(BrikkMetaKeys.DATAFUSION_ARROW_TYPE) == null) null else renderType(type, dialect)
     }
 
     private fun aggregated(projection: Any?): Boolean =

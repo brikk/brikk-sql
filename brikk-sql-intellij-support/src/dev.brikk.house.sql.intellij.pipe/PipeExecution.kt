@@ -45,11 +45,6 @@ import dev.brikk.house.sql.shape.ShapeError
 import dev.brikk.house.sql.shape.TranspileResult
 
 /**
- * Claims Execute for PIPE input in the dialect's consoles and never lets claimed input fall back to
- * raw SQL. Destination identity is captured before preparation and rechecked before submission; the
- * edited document is pinned after the stock save. Refusals are notified, cancellation propagates.
- */
-/**
  * The files Execute may run SQL of: the event's file and, from a host editor (a Kotlin file, say),
  * the SQL injected into every host string the selection intersects or the caret touches (also just
  * past its closing quote), which the stock action runs in a console.
@@ -73,6 +68,11 @@ internal fun injectedFiles(file: PsiFile, caret: Int, selection: SelectionModel)
         .distinct()
 }
 
+/**
+ * Claims Execute for PIPE input in the dialect's consoles and never lets claimed input fall back to
+ * raw SQL. Destination identity is captured before preparation and rechecked before submission; the
+ * edited document is pinned after the stock save. Refusals are notified, cancellation propagates.
+ */
 public class PipeExecuteInterceptor(private val dialect: PipeDialect) : ExecuteInterceptor {
     override fun execute(event: AnActionEvent, option: DatabaseSettings.ExecOption): ExecutionClaim {
         if (executionFiles(event).any(dialect::isInspectionHost)) {

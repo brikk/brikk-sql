@@ -6,6 +6,7 @@ import dev.brikk.house.sql.ast.ColumnDef
 import dev.brikk.house.sql.ast.DataType
 import dev.brikk.house.sql.ast.DType
 import dev.brikk.house.sql.ast.Dot
+import dev.brikk.house.sql.ast.DuckdbRegexOperator
 import dev.brikk.house.sql.ast.Expression
 import dev.brikk.house.sql.ast.Identifier
 import dev.brikk.house.sql.ast.Literal
@@ -16,6 +17,7 @@ import dev.brikk.house.sql.ast.RegexpExtract
 import dev.brikk.house.sql.ast.RegexpExtractAll
 import dev.brikk.house.sql.ast.RegexpReplace
 import dev.brikk.house.sql.ast.args
+import dev.brikk.house.sql.generator.Generator
 
 internal fun Expression.duckdbRegexName(): String? {
     if ((parent as? Dot)?.expressionArg === this) return null
@@ -65,4 +67,14 @@ internal fun Expression.hasDuckdbRegexOverload(): Boolean {
 internal fun buildDuckdbRegexpExtract(all: Boolean): (List<Expression?>) -> Expression = { values ->
     if (values.size in 2..4) buildRegexpExtract(all)(values)
     else Anonymous(args("this" to if (all) "regexp_extract_all" else "regexp_extract", "expressions" to values))
+}
+
+internal fun Generator.duckdbRegexOperatorSql(e: Expression): String = run {
+    if (!dialect.executesRegexOperators) unexecutable("Session-dependent DuckDB regex operators have no verified cross-target translation")
+    val op = (if (e.args["negate"] == true) "!~" else "~") + (if (e.args["insensitive"] == true) "*" else "")
+    fun operand(key: String): String {
+        val node = e.args[key]
+        return if (node is DuckdbRegexOperator) "(${sql(node)})" else sql(node)
+    }
+    "${operand("this")} $op ${operand("expression")}"
 }

@@ -1,5 +1,6 @@
 package dev.brikk.house.sql.dialects
 
+import dev.brikk.house.sql.ast.BrikkMetaKeys
 import dev.brikk.house.sql.ast.Create
 import dev.brikk.house.sql.ast.Bracket
 import dev.brikk.house.sql.ast.Column
@@ -98,7 +99,7 @@ open class StarrocksParser(
     override val pivotColumnNaming: String get() = "agg_name_if_multiple"
 
     override fun parseStatement(): Expression? = super.parseStatement()?.also {
-        if (it is Command) it.meta["starrocks_opaque_command"] = true
+        if (it is Command) it.meta[BrikkMetaKeys.STARROCKS_OPAQUE_COMMAND] = true
     }
 
     override val constraintParsers: Map<String,(Parser)->Expression?>
@@ -109,7 +110,7 @@ open class StarrocksParser(
     override fun parsePivot(): Expression? {
         val pivot = super.parsePivot() as? Pivot ?: return null
         if (pivot.args["unpivot"] == true) return pivot
-        pivot.meta["starrocks_native_pivot"] = true
+        pivot.meta[BrikkMetaKeys.STARROCKS_NATIVE_PIVOT] = true
         val names = if (pivot.expressionsArg.size > 1) pivot.expressionsArg.filterIsInstance<Expression>().map { it.alias } else listOf("")
         val fields = (pivot.args["fields"] as? List<*>)?.filterIsInstance<Expression>()?.firstOrNull()?.expressionsArg?.filterIsInstance<Expression>().orEmpty()
         fun static(e: Expression): Boolean = e is Literal || e is dev.brikk.house.sql.ast.Boolean || e is dev.brikk.house.sql.ast.Null ||
@@ -139,7 +140,7 @@ open class StarrocksParser(
         if (!literal) return bracket
         var struct = bracket
         while (struct is Bracket) struct = struct.thisArg as? Expression ?: return bracket
-        val map = expression(ToMap(args("this" to struct.copy()))).also { it.meta["starrocks_map_literal"] = true }
+        val map = expression(ToMap(args("this" to struct.copy()))).also { it.meta[BrikkMetaKeys.STARROCKS_MAP_LITERAL] = true }
         if (struct === bracket) return map
         struct.replace(map)
         return bracket
@@ -231,7 +232,7 @@ open class StarrocksParser(
         }
 
         if (create is Create && (create.find<AggregateKeyProperty>() != null ||
-            create.findAll<DataType>().any { it.thisArg == DType.HLLSKETCH })) create.meta["starrocks_native_ddl"] = true
+            create.findAll<DataType>().any { it.thisArg == DType.HLLSKETCH })) create.meta[BrikkMetaKeys.STARROCKS_NATIVE_DDL] = true
         return create
     }
 
@@ -380,7 +381,7 @@ object StarrocksParserTables {
         put("DATE_TRUNC", ::buildStarrocksTimestampTrunc)
         put("TIME_SLICE", ::buildStarrocksTimeSlice)
         put("DATEDIFF",MysqlParserTables.FUNCTIONS.getValue("DATEDIFF"))
-        put("TO_DAYS") { a -> ToDays(args("this" to seqGet(a,0))).also { it.meta["starrocks_to_days"] = true } }
+        put("TO_DAYS") { a -> ToDays(args("this" to seqGet(a,0))).also { it.meta[BrikkMetaKeys.STARROCKS_TO_DAYS] = true } }
         put("DATE_DIFF") { a ->
             DateDiff(
                 args(

@@ -6,6 +6,7 @@ import dev.brikk.house.sql.ast.Literal
 import dev.brikk.house.sql.dialects.Dialects
 import dev.brikk.house.sql.optimizer.MappingSchema
 import dev.brikk.house.sql.optimizer.SchemaError
+import dev.brikk.house.sql.optimizer.dataTypeFromStr
 import dev.brikk.house.sql.optimizer.ensureSchema
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -90,6 +91,29 @@ class SchemaTest {
         // Misses resolve to UNKNOWN, mirroring exp.DType.UNKNOWN.into_expr().
         assertEquals(DType.UNKNOWN, schema.getColumnType("x", "zzz").thisArg)
         assertEquals(DType.UNKNOWN, schema.getColumnType("nope", "a").thisArg)
+    }
+
+    @Test
+    fun columnTypeCacheSeparatesEffectiveDialectsInEitherOrder() {
+        val type = "TIMESTAMP"
+        val postgres = dataTypeFromStr(type, Dialects.POSTGRES)
+        val bigquery = dataTypeFromStr(type, Dialects.BIGQUERY)
+        assertEquals(DType.TIMESTAMP, postgres.thisArg)
+        assertEquals(DType.TIMESTAMPTZ, bigquery.thisArg)
+        for (order in listOf(
+            listOf(Dialects.POSTGRES, Dialects.BIGQUERY),
+            listOf(Dialects.BIGQUERY, Dialects.POSTGRES),
+        )) {
+            val schema = MappingSchema(mapOf("t" to mapOf("a" to type)), dialect = order[0])
+            assertEquals(dataTypeFromStr(type, order[0]), schema.getColumnType("t", "a"))
+            for (dialect in order) {
+                assertEquals(
+                    dataTypeFromStr(type, dialect),
+                    schema.getColumnType("t", "a", dialect = dialect),
+                    dialect.name,
+                )
+            }
+        }
     }
 
     @Test

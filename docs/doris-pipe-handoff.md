@@ -97,6 +97,9 @@ lateral, Unicode/source-map, quoting, function and DDL tests remain active.
 
 ## Consumer verification
 
+The `/home/jayson/...` paths below are local checkouts on the author's machine,
+not repository evidence. Substitute your own checkout paths.
+
 The unchanged client is at `49caa9a8f187367393852e71cde4fb0de4696beb`. From
 `/home/jayson/DEV/sortdev/doris-intellij-plugin`, use the candidate gate with
 `CORE_JAR` and `METADATA_JAR` set to fresh candidate outputs:

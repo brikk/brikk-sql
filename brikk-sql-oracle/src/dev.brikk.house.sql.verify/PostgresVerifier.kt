@@ -31,20 +31,21 @@ import org.postgresql.util.PSQLException
  *     cannot run inside a transaction block — `CREATE DATABASE`, `CREATE TABLESPACE`,
  *     `VACUUM`, `CREATE INDEX CONCURRENTLY`, `ALTER SYSTEM`, `REINDEX ... CONCURRENTLY`.
  *     Those raise `25001 active_sql_transaction` at execution and are treated as
- *     accepted=true (they PARSED; PG only refused the transaction context), and because they
+ *     [VerifyResult.Accepted] (they PARSED; PG only refused the transaction context), and because they
  *     never leave the BEGIN they still cause no side effect. A genuinely non-transactional,
  *     side-effecting statement that also passes its transaction guard is not expected from
  *     the generator's corpus; if one appears it would run against the throwaway embedded
  *     instance only.
  *
  * ### SQLSTATE partition (PostgreSQL "Appendix A. PostgreSQL Error Codes")
- * Accepted=true means "the grammar parsed this". The curated [SEMANTIC_ACCEPT] set below is
+ * [VerifyResult.Accepted] means "the grammar parsed this". The curated [SEMANTIC_ACCEPT] set below is
  * the class of errors that can ONLY arise after a successful parse (name/type resolution,
  * catalog lookups and privilege checks). Everything in the
  * syntax family (`42601` and the parse-time subset of class 42) is a real grammar reject.
  *
- * Unknown/unlisted codes are treated **conservatively as accepted=false** ONLY for the
- * syntax code itself; every other non-semantic code is also false with the SQLSTATE and
+ * Connection failures (class 08) return [VerifyResult.Unavailable]. Class 54 limits and
+ * curated semantic codes return [VerifyResult.Accepted]. All other codes, including
+ * syntax errors and unknown codes, return [VerifyResult.Rejected] with the SQLSTATE and
  * message preserved. This risks a false reject on an exotic *semantic* code we didn't
  * enumerate — that is the deliberate trade: the corpus gate's known-failures ledger surfaces
  * any such misclassification (a statement we know is grammatical showing up rejected), and
@@ -56,14 +57,19 @@ import org.postgresql.util.PSQLException
  * launches `initdb` + `postgres` (~1-3s warm). Hold ONE
  * instance for the process/session; per-[verify] cost after boot is sub-millisecond. [verify]
  * is `@Synchronized` (single shared JDBC connection, like [DuckdbVerifier]). Call [close] to
- * stop the embedded server; the JVM shutdown reclaims it otherwise. If embedded Postgres cannot
+ * stop the embedded server; the JVM shutdown reclaims it otherwise. After [close], [verify] and
+ * [verifyExpression] return [VerifyResult.Unavailable] for every input. If embedded Postgres cannot
  * be extracted, loaded, started, or connected on this host, [verify] does not throw: it returns
  * [VerifyResult.Unavailable]. That is deliberately distinct from parser rejection.
+ * Cleanup failure retires the connection, stops the embedded server and makes the verifier
+ * [VerifyResult.Unavailable] for every later call, without changing an engine verdict already obtained.
+ * Failed rollback closes the connection without restoring auto-commit, avoiding an implicit commit.
  */
-class PostgresVerifier internal constructor(
-    private val startEmbedded: () -> EmbeddedPostgres,
+public class PostgresVerifier internal constructor(
+    private val connectionFactory: (() -> Connection)? = null,
+    private val startEmbedded: () -> EmbeddedPostgres = { EmbeddedPostgres.builder().start() },
 ) : SqlVerifier, AutoCloseable {
-    constructor() : this({ EmbeddedPostgres.builder().start() })
+    public constructor() : this(connectionFactory = null)
 
     override val engine: String = "postgres"
 
@@ -79,6 +85,7 @@ class PostgresVerifier internal constructor(
         if (closed) return null
         unavailableReason?.let { return null }
         return try {
+            connectionFactory?.let { return it().also { conn -> lazyConnection = conn } }
             val pg = startEmbedded()
             embedded = pg
             pg.postgresDatabase.connection.also { lazyConnection = it }
@@ -92,18 +99,23 @@ class PostgresVerifier internal constructor(
     }
 
     private fun markUnavailable(action: String, error: Throwable) {
-        try {
-            lazyConnection?.close()
-        } catch (_: Exception) {
-        }
+        val conn = lazyConnection
+        val pg = embedded
         lazyConnection = null
-        try {
-            embedded?.close()
-        } catch (_: Exception) {
-        }
         embedded = null
         unavailableReason = "PostgreSQL verification was not performed: $action " +
             "(${error::class.simpleName}: ${error.message ?: "no detail"})."
+        try {
+            try {
+                conn?.close()
+            } catch (_: Exception) {
+            }
+        } finally {
+            try {
+                pg?.close()
+            } catch (_: Exception) {
+            }
+        }
     }
 
     private fun unavailableResult(): VerifyResult = VerifyResult.Unavailable(
@@ -123,6 +135,7 @@ class PostgresVerifier internal constructor(
 
     @Synchronized
     override fun verify(sql: String): VerifyResult {
+        if (closed) return unavailableResult()
         val statements = try {
             Parser.parseJdbcSql(sql, true, false, true, false, false)
         } catch (e: SQLException) {
@@ -148,7 +161,7 @@ class PostgresVerifier internal constructor(
             return classify(sql, e)
         }
         // Prepared successfully: grammar (and analysis) accepted it. Clean up.
-        runCatching { conn.createStatement().use { it.execute("DEALLOCATE $name") } }
+        cleanup("DEALLOCATE failed", null) { conn.createStatement().use { it.execute("DEALLOCATE $name") } }
         return VerifyResult.Accepted
     }
 
@@ -159,24 +172,40 @@ class PostgresVerifier internal constructor(
     private fun verifyByRolledBackExecution(sql: String, conn: Connection): VerifyResult {
         val restoreAutoCommit = conn.autoCommit
         conn.autoCommit = false
+        var failure: Throwable? = null
         try {
             conn.createStatement().use { it.execute(sql) }
             return VerifyResult.Accepted
         } catch (e: PSQLException) {
+            failure = e
             // Statements that can't run inside a transaction block PARSED fine; PG only
             // objected to the transaction context (25001) — count as accepted.
             if (e.sqlState == ACTIVE_SQL_TRANSACTION) return VerifyResult.Accepted
             return classify(sql, e)
+        } catch (e: Throwable) {
+            failure = e
+            throw e
         } finally {
-            runCatching { conn.rollback() }
-            runCatching { conn.autoCommit = restoreAutoCommit }
+            if (lazyConnection === conn && cleanup("rollback failed", failure) { conn.rollback() }) {
+                cleanup("auto-commit restore failed", failure) { conn.autoCommit = restoreAutoCommit }
+            }
         }
     }
 
+    private fun cleanup(action: String, failure: Throwable?, block: () -> Unit): Boolean = try {
+        block()
+        true
+    } catch (error: Throwable) {
+        if (failure != null && failure !== error) failure.addSuppressed(error)
+        markUnavailable(action, error)
+        false
+    }
+
     /**
-     * Maps a PG error to accepted/rejected by SQLSTATE. Curated semantic codes (post-parse
-     * failures) => accepted=true; syntax and everything else => accepted=false with the
-     * SQLSTATE and message preserved (conservative; see class KDoc).
+     * Maps a PG error by SQLSTATE. Connection failures return [VerifyResult.Unavailable];
+     * class 54 limits and curated semantic codes return [VerifyResult.Accepted]. All other
+     * codes return [VerifyResult.Rejected] with the SQLSTATE and message preserved
+     * (conservative; see class KDoc).
      */
     private fun classify(sql: String, e: PSQLException): VerifyResult {
         val state = e.sqlState

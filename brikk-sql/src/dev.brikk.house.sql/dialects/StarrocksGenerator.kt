@@ -44,19 +44,19 @@ open class StarrocksGenerator(
 
     override fun pivotSql(expression: Pivot): String {
         if (expression.args["unpivot"] == true || expression.thisArg != null) return unsupportedPivotSql()
-        if (expression.metaOrNull?.get("starrocks_native_pivot") != true && sourceDialect?.equals("starrocks",true) != true) {
+        if (expression.metaOrNull?.get(BrikkMetaKeys.STARROCKS_NATIVE_PIVOT) != true && sourceDialect?.equals("starrocks", true) != true) {
             unexecutable("StarRocks PIVOT result names/types are not qualified for a foreign source")
         }
         return super.pivotSql(expression)
     }
 
     override fun refreshSql(expression: Refresh): String {
-        val target = sql(expression,"this")
+        val target = sql(expression, "this")
         val kind = if (expression.thisArg is Literal) "" else "${expression.text("kind")} "
-        val start = sql(expression,"partition_start"); val end = sql(expression,"partition_end")
+        val start = sql(expression, "partition_start"); val end = sql(expression, "partition_end")
         val partition = if (start.isEmpty()) "" else " PARTITION START ($start) END ($end)"
         val force = if (expression.args["force"] == true) " FORCE" else ""
-        val mode = sql(expression,"mode").let { if(it.isEmpty()) "" else " WITH $it MODE" }
+        val mode = sql(expression, "mode").let { if (it.isEmpty()) "" else " WITH $it MODE" }
         return "REFRESH $kind$target$partition$force$mode"
     }
     override val alterPartitionOptions: Set<KClass<out Expression>>
@@ -198,7 +198,7 @@ open class StarrocksGenerator(
 
     // #8682: map literals are not structs or MySQL's generic map conversion.
     open fun starrocksToMapSql(expression: ToMap): String {
-        if (expression.metaOrNull?.get("starrocks_map_literal") != true && sourceDialect?.equals("starrocks", true) != true) {
+        if (expression.metaOrNull?.get(BrikkMetaKeys.STARROCKS_MAP_LITERAL) != true && sourceDialect?.equals("starrocks", true) != true) {
             unexecutable("Map literal key/null/duplicate/coercion contracts are not qualified across StarRocks engines")
         }
         val struct = expression.thisArg as? Expression
@@ -449,15 +449,15 @@ open class StarrocksGenerator(
             reg(CurrentVersion::class) { _ -> "CURRENT_VERSION()" }
             reg(DateDiff::class) { e ->
                 val unit = (e.args["unit"] as? Expression)?.name?.uppercase()
-                if(e.args["date_part_boundary"] == true && (unit == null || unit == "DAY")) func("DATEDIFF",e.thisArg,e.args["expression"])
+                if (e.args["date_part_boundary"] == true && (unit == null || unit == "DAY")) func("DATEDIFF", e.thisArg, e.args["expression"])
                 else {
                     if (e.args["date_part_boundary"] == true) unexecutable("StarRocks elapsed DATE_DIFF cannot qualify non-DAY boundary-counting semantics")
                     func("DATE_DIFF", sg().weekstartUnitToStr(e), e.thisArg, e.args["expression"])
                 }
             }
             reg(Pivot::class) { e -> sg().pivotSql(e as Pivot) }
-            reg(AggregateKeyProperty::class) { e -> "AGGREGATE KEY (${expressions(e,flat=true)})" }
-            reg(AggregateTypeColumnConstraint::class) { e -> sql(e,"this") }
+            reg(AggregateKeyProperty::class) { e -> "AGGREGATE KEY (${expressions(e, flat = true)})" }
+            reg(AggregateTypeColumnConstraint::class) { e -> sql(e, "this") }
             reg(Delete::class) { e -> sg().deleteSql(e as Delete) }
             reg(Flatten::class) { e -> sg().renameFuncSql("ARRAY_FLATTEN", e) }
             reg(JSONExtractScalar::class) { e -> sg().starrocksArrowJsonExtractSql(e as Binary) }

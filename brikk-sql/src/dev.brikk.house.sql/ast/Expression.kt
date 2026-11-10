@@ -35,7 +35,7 @@ val POSITION_META_KEYS: kotlin.Array<String> = arrayOf("line", "col", "start", "
 // Token.updatePositions ("line_start"/"col_start"), so copying positions between
 // nodes (updatePositions(other)) carries the start anchor too.
 internal val BRIKK_POSITION_META_KEYS: kotlin.Array<String> =
-    POSITION_META_KEYS + arrayOf("line_start", "col_start")
+    POSITION_META_KEYS + arrayOf(BrikkMetaKeys.LINE_START, BrikkMetaKeys.COL_START)
 
 internal fun argTypesOf(vararg pairs: Pair<String, kotlin.Boolean>): Map<String, kotlin.Boolean> =
     linkedMapOf(*pairs)

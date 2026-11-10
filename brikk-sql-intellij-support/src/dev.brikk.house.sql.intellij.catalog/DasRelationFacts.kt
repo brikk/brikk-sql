@@ -11,6 +11,7 @@ import com.intellij.psi.PsiFile
 import dev.brikk.house.sql.intellij.recoverEditorOperation
 import dev.brikk.house.sql.intellij.relation.ExternalRelationFacts
 import dev.brikk.house.sql.intellij.relation.RelationFactsResult
+import dev.brikk.house.sql.intellij.warnEditorFailureOnce
 import dev.brikk.house.sql.scope.CatalogKnowledge
 import dev.brikk.house.sql.scope.ColumnFact
 import dev.brikk.house.sql.scope.ColumnOrigin
@@ -56,7 +57,7 @@ public class DasRelationFacts(private val resolver: DialectDataSourceResolver) :
         val searchPath = resolver.consoleNamespace(file).ifEmpty { null }?.let { listOf(catalogPath(it)) }.orEmpty()
         val revision = current.revisions.computeIfAbsent(searchPath) { revisions.incrementAndGet() }
         RelationFactsResult.Available(current.facts.copy(searchPath = searchPath), revision)
-    }.getOrNull()
+    }.warnEditorFailureOnce("DasRelationFacts.facts").getOrNull()
 
     override fun navigationTarget(file: PsiFile, provenance: String): PsiElement? = recoverEditorOperation {
         val dataSource = dataSource(file) ?: return@recoverEditorOperation null
@@ -65,7 +66,7 @@ public class DasRelationFacts(private val resolver: DialectDataSourceResolver) :
         val target: DasObject = provenance.substringAfter(COLUMN, "").takeIf { it.isNotEmpty() }
             ?.let { name -> DasUtil.getColumns(table).firstOrNull { it.name == name } } ?: table
         dataSource.findElement(target)
-    }.getOrNull()
+    }.warnEditorFailureOnce("DasRelationFacts.navigationTarget").getOrNull()
 
     private fun dataSource(file: PsiFile): DbDataSource? =
         resolver.resolve(file).dataSource?.let { DbPsiFacade.getInstance(file.project).findDataSource(it.uniqueId) }

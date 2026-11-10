@@ -26,6 +26,7 @@ import java.util.concurrent.CancellationException
  * Cold start: the first [verify] boots an embedded DuckDB; the connection is created lazily
  * and kept for the verifier's lifetime. [verify] is synchronized because one connection is
  * shared. Call [close] to release the embedded database.
+ * A [verify] or [verifyExpression] after [close] returns [VerifyResult.Unavailable] without reopening it.
  */
 public class DuckdbVerifier internal constructor(
     private val connect: () -> Connection,
@@ -35,6 +36,7 @@ public class DuckdbVerifier internal constructor(
     override val engine: String = "duckdb"
 
     private var lazyConnection: Connection? = null
+    private var closed = false
 
     private val connection: Connection
         get() = lazyConnection ?: connect().also { lazyConnection = it }
@@ -45,6 +47,7 @@ public class DuckdbVerifier internal constructor(
 
     @Synchronized
     override fun verify(sql: String): VerifyResult {
+        if (closed) return VerifyResult.Unavailable("DuckDB verification is unavailable: the verifier is closed.")
         val serialized = try {
             connection.serializeSql(sql)
         } catch (e: CancellationException) {
@@ -95,8 +98,11 @@ public class DuckdbVerifier internal constructor(
 
     @Synchronized
     override fun close() {
-        lazyConnection?.close()
+        if (closed) return
+        closed = true
+        val open = lazyConnection
         lazyConnection = null
+        open?.close()
     }
 
     private companion object {

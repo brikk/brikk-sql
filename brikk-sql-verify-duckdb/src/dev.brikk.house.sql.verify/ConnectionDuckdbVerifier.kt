@@ -41,7 +41,7 @@ public class ConnectionDuckdbVerifier(
 
     override fun verify(sql: String): VerifyResult {
         checkCanceled()
-        duckdbParseInputIssue(sql,checkCanceled)?.let { return VerifyResult.Unverified(it) }
+        duckdbParseInputIssue(sql, checkCanceled)?.let { return VerifyResult.Unverified(it) }
         val call = Call()
         val future = try { WORKERS.submit(Callable {
             try {
@@ -120,8 +120,8 @@ public class ConnectionDuckdbVerifier(
     }
 
     private companion object {
-        fun workers(name: String) = ThreadPoolExecutor(0,2,60,TimeUnit.SECONDS,SynchronousQueue()) { task ->
-            Thread(task,name).apply { isDaemon = true }
+        fun workers(name: String) = ThreadPoolExecutor(0, 2, 60, TimeUnit.SECONDS, SynchronousQueue()) { task ->
+            Thread(task, name).apply { isDaemon = true }
         }
         val WORKERS = workers("brikk-duckdb-verify")
         val CANCELLERS = workers("brikk-duckdb-verify-cancel")

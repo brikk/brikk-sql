@@ -26,8 +26,9 @@ from __future__ import annotations
 import json
 import pathlib
 import re
-import subprocess
 import sys
+
+from generator_helpers import kotlin_string as kstr, sqlglot_version
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SQLGLOT = ROOT / "reference" / "sqlglot"
@@ -45,41 +46,6 @@ from sqlglot.expressions.core import (  # noqa: E402
     Func,
 )
 from sqlglot.helper import camel_to_snake_case  # noqa: E402
-
-
-def sqlglot_version() -> str:
-    try:
-        return subprocess.run(
-            ["git", "-C", str(SQLGLOT), "describe", "--tags", "--abbrev=9"],
-            capture_output=True,
-            text=True,
-            check=True,
-        ).stdout.strip()
-    except Exception:
-        return "unknown"
-
-
-def kstr(s: str) -> str:
-    """Escape a Python string into a Kotlin double-quoted string literal."""
-    out = []
-    for ch in s:
-        if ch == "\\":
-            out.append("\\\\")
-        elif ch == '"':
-            out.append('\\"')
-        elif ch == "$":
-            out.append("\\$")
-        elif ch == "\n":
-            out.append("\\n")
-        elif ch == "\r":
-            out.append("\\r")
-        elif ch == "\t":
-            out.append("\\t")
-        elif ord(ch) < 0x20:
-            out.append(f"\\u{ord(ch):04X}")
-        else:
-            out.append(ch)
-    return '"' + "".join(out) + '"'
 
 
 HEADER = """\

@@ -1,5 +1,6 @@
 package dev.brikk.house.sql.generator
 
+import dev.brikk.house.sql.ast.BrikkMetaKeys
 import dev.brikk.house.sql.ast.Expression
 
 // brikk-native: no sqlglot counterpart. Emit-span tracking for generated SQL —
@@ -153,8 +154,8 @@ class SourceMap(
             // brikk-native start-anchored line/col (Token.updatePositions). Absent on
             // synthesized nodes / older serialized ASTs: fall back to the single-line
             // derivation (exact unless the token straddles a newline).
-            val lineStart = (meta["line_start"] as? Number)?.toInt() ?: line
-            val colStart = (meta["col_start"] as? Number)?.toInt() ?: (col - (end - start))
+            val lineStart = (meta[BrikkMetaKeys.LINE_START] as? Number)?.toInt() ?: line
+            val colStart = (meta[BrikkMetaKeys.COL_START] as? Number)?.toInt() ?: (col - (end - start))
             return SourcePos(line, col, start, end, lineStart, colStart)
         }
     }

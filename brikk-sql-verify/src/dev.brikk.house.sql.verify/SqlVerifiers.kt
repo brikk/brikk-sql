@@ -16,6 +16,7 @@ public object SqlVerifiers {
     /**
      * Returns a verifier for [name] (case-insensitive), or null when the engine is unsupported.
      * A supported engine whose parser cannot load returns an [UnavailableVerifier].
+     * The caller owns the returned verifier: reuse it, then [SqlVerifier.close] it (or use `use {}`).
      *
      * Supported engines: `"trino"`, `"duckdb"`, `"doris"`, `"postgres"`, `"mysql"`, `"hive"`,
      * `"clickhouse"`. Engines split into two tiers:
@@ -29,6 +30,9 @@ public object SqlVerifiers {
      *   its `SqlOracles.forEngine` registry: `PostgresVerifier` (real embedded PostgreSQL +
      *   SQLSTATE discrimination) for the postgres corpus gate, and `ClickhouseVerifier` (chDB
      *   `EXPLAIN AST`) for offline ClickHouse fidelity checks.
+     *   Advisory PostgreSQL checks time out after two seconds. One slow parse usually slows others
+     *   and takes both workers. Every PostgreSQL check then stays unverified until it ends.
+     *   This can last minutes, or for extreme input until the JVM exits. Up to two cores stay busy.
      *
      * Editors should construct the engine verifier they need directly, for example
      * [ParseOnlyDuckdbVerifier], rather than use this registry.

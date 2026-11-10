@@ -9,13 +9,11 @@ import argparse
 import pathlib
 import re
 
+from generator_helpers import kotlin_string as kstr
+
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 DATA = ROOT / "vendor/data"
 OUT = ROOT / "brikk-sql-metadata/src/dev.brikk.house.sql.metadata/GeneratedClickhouseFunctionCatalog.kt"
-
-
-def kstr(value):
-    return '"' + value.replace('\\', '\\\\').replace('"', '\\"').replace('$', '\\$').replace('\n', '\\n').replace('\r', '\\r').replace('\t', '\\t').replace('\0', '\\u0000') + '"'
 
 
 def unescape(value):

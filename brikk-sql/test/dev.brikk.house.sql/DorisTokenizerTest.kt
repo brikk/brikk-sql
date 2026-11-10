@@ -8,8 +8,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 /**
- * Doris-dialect tokenizer parity tests. All expectations below were produced by
- * running the pinned Python sqlglot (v30.12.0-44-g93d16591) doris tokenizer
+ * Doris-dialect tokenizer parity tests. Initial expectations were captured by
+ * running Python sqlglot's doris tokenizer at v30.12.0-44-g93d16591
  * (`Dialect.get_or_raise("doris").tokenize(...)`) on the same inputs.
  */
 class DorisTokenizerTest {

@@ -1,5 +1,6 @@
 package dev.brikk.house.sql.optimizer
 
+import dev.brikk.house.sql.ast.BrikkMetaKeys
 import dev.brikk.house.sql.ast.DataType
 import dev.brikk.house.sql.ast.TrinoIntervalQualifier
 import dev.brikk.house.sql.dialects.Dialect
@@ -7,7 +8,7 @@ import dev.brikk.house.sql.dialects.Dialects
 
 /** Keep normalized type spellings, but retain native qualifiers the base generator cannot render. */
 internal fun renderType(type: DataType, dialect: Dialect): String =
-    if (dialect.arrowTypes && type.metaOrNull?.get(DatafusionTypes.NATIVE) is String)
-        type.metaOrNull?.get(DatafusionTypes.NATIVE) as String
+    if (dialect.arrowTypes && type.metaOrNull?.get(BrikkMetaKeys.DATAFUSION_ARROW_TYPE) is String)
+        type.metaOrNull?.get(BrikkMetaKeys.DATAFUSION_ARROW_TYPE) as String
     else if (type.find(TrinoIntervalQualifier::class) != null) dialect.generate(type)
     else Dialects.BASE.generate(type)

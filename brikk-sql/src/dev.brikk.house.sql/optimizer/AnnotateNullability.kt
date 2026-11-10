@@ -264,7 +264,7 @@ private class NullabilityAnnotator(
             }
             is dev.brikk.house.sql.ast.IntDiv, is dev.brikk.house.sql.ast.Mod -> {
                 val strict = operatorRule(operands(node))
-                if(!dialect.integerDivisionByZeroYieldsNull || strict == true || (node as Binary).right.duckdbKnownNonZeroDivisor()) strict else null
+                if (!dialect.integerDivisionByZeroYieldsNull || strict == true || (node as Binary).right.duckdbKnownNonZeroDivisor()) strict else null
             }
             is Binary -> operatorRule(operands(node))
             is Unary -> operatorRule(operands(node))

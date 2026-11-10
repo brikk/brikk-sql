@@ -5,7 +5,7 @@
 # Used only for offline/extreme validation (corpus gates), not the shipped SqlVerifiers registry.
 product: jvm/lib
 
-# TODO(review): used verbatim as the published POM <description> (required by Maven Central).
+# Used verbatim as the published POM <description> (required by Maven Central).
 description: High-fidelity SQL verification oracles (real engines) — embedded PostgreSQL + chDB ClickHouse, plus the JVM Trino/Doris/DuckDB parsers re-exposed as a full oracle set.
 
 apply:
@@ -20,7 +20,7 @@ dependencies:
   - dev.brikk.house:brikk-chdb:0.16.0
   # Embedded PostgreSQL for PostgresVerifier. Postgres has no parse-only wire API and no
   # mature JVM libpg_query binding, so verification is done by a REAL PG engine and
-  # SQLSTATE discrimination. Zonky ships PG as a NATIVE binary (PostgreSQL 14.22) launched
+  # SQLSTATE discrimination. Zonky ships PG as a NATIVE binary (PostgreSQL 18.4) launched
   # as a subprocess plus the standard org.postgresql JDBC driver 42.7.x — nothing in the
   # hot path is JVM-version-sensitive, so JDK 25 is fine (the library itself is Java-8
   # bytecode). Platform archives are resolved from classpath jars and extracted under the
@@ -60,6 +60,8 @@ settings:
   kotlin:
     version: 2.4.10
     serialization: json
+    freeCompilerArgs:
+      - -Xexplicit-api=strict
   internal:
     # excludeDependencies is per-module in Kotlin Toolchain (it does not propagate
     # through the exported brikk-sql-verify dep), so re-declare the ShardingSphere Groovy
@@ -67,3 +69,9 @@ settings:
     # ~7.2 MB org.apache.groovy:groovy that only the unused inline-expression engine needs.
     excludeDependencies:
       - org.apache.groovy:groovy
+
+test-settings:
+  kotlin:
+    # Explicit API checks apply to the published main sources, not the test suite.
+    freeCompilerArgs:
+      - -Xexplicit-api=disable

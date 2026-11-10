@@ -36,11 +36,8 @@ internal val HIVE_INVERSE_TIME_MAPPING: Map<String, String> =
  * TRANSFORMS entries live in [TRANSFORMS] (a dispatch-map overlay handed to the base
  * constructor); flag overrides are open-val overrides; multi-line methods below.
  *
- * NOT PORTED (no Kotlin equivalents of sqlglot's transforms/annotate_types yet):
- * the exp.Select preprocess pipeline (eliminate_qualify, eliminate_distinct_on,
- * explode_projection_to_unnest, eliminate_semi_and_anti_joins,
- * amend_exploded_column_table, eliminate_window_clause) and the Array
- * inherit_struct_field_names preprocess. Mismatches are ledgered.
+ * NOT PORTED: amend_exploded_column_table in the exp.Select preprocess pipeline.
+ * Mismatches are ledgered.
  */
 // sqlglot: generators.presto.PrestoGenerator
 open class PrestoGenerator(

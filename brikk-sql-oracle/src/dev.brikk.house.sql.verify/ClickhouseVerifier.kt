@@ -10,27 +10,35 @@ import dev.brikk.house.chdb.ChdbOutputFormat
 /**
  * ClickHouse's native grammar verifier, backed in-process by chDB.
  *
- * `EXPLAIN AST` invokes ClickHouse's parser without executing the submitted statement. It is a
- * syntax oracle, not a semantic validator: an unknown table/function or a setting-dependent
- * failure means ClickHouse got beyond parsing and is therefore reported as accepted. This
- * verifier has no catalog dependency; callers that need function name/arity evidence may layer
- * a catalog or a stronger analysis check on top, but neither is required for AST verification.
+ * `EXPLAIN AST` normally parses only, but a leading settings list such as
+ * `optimize = 1 SELECT ...` runs the analyzer: it can fetch `url()` schemas, evaluate scalar
+ * subqueries and load dictionaries. The SQL's own `SETTINGS` also
+ * apply to the EXPLAIN query. This oracle is not a safe parse-only boundary for untrusted SQL;
+ * the editor verifier uses `formatQuery` over hex data instead (see brikk-sql-verify-clickhouse/README.md).
+ *
+ * It is a syntax oracle, not a semantic validator: an unknown table/function or another
+ * non-syntax engine failure is reported as [VerifyResult.Accepted]. No catalog is required
+ * from the caller, but analysis triggered by the input can access engine resources.
  *
  * A compatible `libchdb` is selected by [ChdbConfig.libraryPath], the `brikk.chdb.library`
  * system property, or a matching `brikk-chdb-native-*` classpath resource. No ClickHouse server,
  * CLI, JDBC driver, or child process is involved. Call [close] when the verifier is no longer needed.
+ * A [verify] or [verifyExpression] after [close] returns [VerifyResult.Unavailable].
  */
-class ClickhouseVerifier private constructor(
+public class ClickhouseVerifier private constructor(
     private val session: ChdbSession?,
     private val unavailableReason: String?,
 ) : SqlVerifier, AutoCloseable {
     override val engine: String = "clickhouse"
+
+    private var closed = false
 
     @Synchronized
     override fun verify(sql: String): VerifyResult {
         val activeSession = session ?: return VerifyResult.Unavailable(
             unavailableReason ?: "ClickHouse verification was not performed: libchdb is unavailable.",
         )
+        if (closed) return VerifyResult.Unavailable("ClickHouse verification is unavailable: the verifier is closed.")
         return try {
             activeSession.query("$QUERY_PREFIX$sql", ChdbOutputFormat.TSV)
             VerifyResult.Accepted
@@ -43,11 +51,14 @@ class ClickhouseVerifier private constructor(
     override fun verifyExpression(sql: String): VerifyResult =
         verify("$EXPRESSION_PREFIX$sql").withoutPrefix(EXPRESSION_PREFIX)
 
+    @Synchronized
     override fun close() {
+        if (closed) return
+        closed = true
         session?.close()
     }
 
-    companion object {
+    public companion object {
         private const val EXPRESSION_PREFIX = "SELECT "
 
         /**
@@ -55,7 +66,7 @@ class ClickhouseVerifier private constructor(
          * [verify] returns [VerifyResult.Unavailable], leaving the caller free to continue
          * on unsupported platforms such as Windows.
          */
-        fun create(config: ChdbConfig = ChdbConfig()): ClickhouseVerifier =
+        public fun create(config: ChdbConfig = ChdbConfig()): ClickhouseVerifier =
             try {
                 ClickhouseVerifier(Chdb.open(config), unavailableReason = null)
             } catch (error: ChdbUnavailableException) {

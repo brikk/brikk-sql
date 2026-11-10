@@ -70,7 +70,10 @@ only invokes DuckDB's JSON parser and does not bind or execute editor text.
   captured request on that connection. The engine runs one request at a time and reports a finished
   request on its own thread before it starts the next; that report of the captured request waits
   until the cancel is done, so no next request opens a statement during `cancelAll` or meets the
-  stock cleanup. The wait has no time limit for the stock cleanup (the engine reports handling it on
+  stock cleanup. The engine-report wait, the final cancel wait and the stock-cleanup/disconnect wait
+  also end when the captured connection leaves the manager's active connections, without remote calls
+  in that check. If `cancelAll` never returns and the connection is not retired, the console stays blocked.
+  The wait has no time limit for the stock cleanup (the engine reports handling it on
   its own thread). A `cancelAll` still running after 30 s disconnects the console instead (the stock
   Disconnect, which also drops queued requests), and the next request runs on a new connection that
   call cannot reach; if the console cannot be disconnected, the wait lasts until `cancelAll` ends. A request queued while the original still runs is dropped when the stock
@@ -258,6 +261,9 @@ equal length); it never masks ClickHouse's `{name:Type}` server parameters, whic
 `NativeSqlValidator.verify` returns the engine's positioned `VerifyResult` (by default `validate`
 without positions); `NativeSqlValidator.of(verifier)` adapts a `brikk-sql-verify-<engine>`
 verifier, and `VerifyResult.toNativeVerdict` is the execution mapping.
+The adapter does not own or close the `SqlVerifier`: its caller retains it and calls `close()`
+when finished. `DataSourceVerification` has no disposal hook; its factory should supply verifiers
+that hold no resources between calls, as the connection-based verifiers do.
 
 ## SQL in host strings (`dev.brikk.house.sql.intellij.host`)
 
@@ -650,14 +656,16 @@ takes the dbms the platform passes):
   its `profile`. `requestPath(file, path)` resolves a typed path (absolute or relative to the
   console's namespace) on the file's data source and, when the model lists it without children,
   adds exactly that namespace to the introspection scope, saves the data source and refreshes only
-  that element; `request(file, dataSource, target)` does the same for a resolved target. Requests are
-  keyed by data source and absolute path in an `AutoIntrospectEngine`: claimed while in flight and
-  after success, claimable again a minute (`createEngine`) after a failure. Refreshes queue rather
-  than stop one another. When one ends, its banner goes (a newer request's banner stays) and after
-  success the file is highlighted again. `refreshChanged(dataSource, path)` reloads a loaded namespace
-  (empty path: the top-level list) after statements changed it, with no banner, no scope change and no
-  claim, so it may run again. Loaded means it has children, the scope selects it, or a refresh of the
-  service loaded it, so a namespace a statement emptied still reloads.
+  that element; `request(file, dataSource, target)` does the same for a resolved target. Scope additions
+  are rolled back to the previous saved scope after a failed or cancelled load only when the request
+  widened it and it still equals what it wrote; later edits are left alone. A successful empty load
+  keeps it. Requests are keyed by data source and absolute path in an `AutoIntrospectEngine`: claimed
+  while in flight and after success, claimable again a minute (`createEngine`) after a failure.
+  Refreshes queue rather than stop one another. When one ends, its banner goes (a newer request's
+  banner stays) and after success the file is highlighted again. `refreshChanged(dataSource, path)`
+  reloads a loaded namespace (empty path: the top-level list) after statements changed it, with no
+  banner, no scope change and no claim, so it may run again. Loaded means it has children, the scope
+  selects it, or a refresh of the service loaded it, so a namespace a statement emptied still reloads.
   `introspect(file, dataSource, target)` is the user-initiated request: it runs also when `autoIntrospect`
   is off and right after a failure, but not while in flight or once loaded.
 - `IntrospectBannerProvider(serviceClass)`: register a no-arg subclass as
@@ -866,9 +874,12 @@ may belong to the session, the session's connection is known and reaches the cur
 session is in auto-commit mode, it harvests over that connection on the engine's thread; a session in a
 transaction is not harvested (a failing harvest query could abort it). Otherwise, and never on the EDT, a
 debounced refresh follows (2 s, `refreshDelay`; a change during a refresh brings another). Every harvest
-runs on a pooled thread under `deadline` (5 s, also each query's timeout). Past it, or when the caller is
-cancelled, the running statement is cancelled and closed and the thread interrupted, and the connection
-is handed back once the harvest let go of it, after at most 2 s more: a driver that ignores cancellation
+runs on a pooled thread under `deadline` (default 5 s, also each query's timeout); an automatic
+post-statement harvest on the console's connection uses the smaller of `deadline` and 5 s, while manual
+session refreshes, on-connect harvests and helper-connection refreshes keep the full deadline. Past it, or when the caller is
+cancelled, the running statement is cancelled and closed and the thread interrupted. The console can
+wait the budget, plus the driver's synchronous statement cancel and close (with no local bound), plus
+up to 2 s of cleanup; a driver that ignores cancellation
 may keep the connection busy. Results go to `notificationGroupId` (`onRefreshed`): for manual refreshes,
 and after statements whose rule `notifies` (`StatementRule.notifying()`).
 

@@ -25,6 +25,8 @@ All artifacts use the **`dev.brikk.house`** group:
 | [brikk-sql-verify](brikk-sql-verify/) | `brikk-sql-verify` | Aggregate of every self-contained verifier plus the `SqlVerifiers` registry (not ClickHouse, which needs the user's server). |
 | [brikk-sql-oracle](brikk-sql-oracle/) | `brikk-sql-oracle` | Heavyweight PostgreSQL and chDB ClickHouse engine checks. |
 | [brikk-sql-intellij-support](brikk-sql-intellij-support/README.md) | `brikk-sql-intellij-support` | Shared SQL editing, completion, validation and console integration for IntelliJ plugins. |
+| [brikk-sql-intellij-jdbc-support](brikk-sql-intellij-jdbc-support/README.md) | `brikk-sql-intellij-jdbc-support` | Optional generic JDBC introspector routing for IntelliJ database dialect plugins. |
+| [brikk-sql-intellij-test-support](brikk-sql-intellij-test-support/README.md) | `brikk-sql-intellij-test-support` | Shared IntelliJ plugin test fixtures and contracts; test scope only, never bundled in plugins. |
 
 Core, metadata, the verification API and the Doris verifier require **Java 17**.
 Other verifiers and IntelliJ support require Java 21; Trino, the aggregate verifier
@@ -36,6 +38,12 @@ support is independently versioned at **`1.0.1`**.
 
 All SQL and IntelliJ support artifacts are published on Maven Central at `1.0.1`.
 Development versions are aligned at `1.0.2-SNAPSHOT`.
+
+In development, `SqlVerifier` now extends `AutoCloseable` with a JVM-default no-op `close()`.
+Kotlin implementers with their own `close()` must mark it `override`; Java implementers' `close()`
+cannot declare checked exceptions. Callers own registry results: reuse them, then close them (or use
+`use {}`); closed resource-holding verifiers return
+`VerifyResult.Unavailable`, while stateless verifiers inherit the no-op.
 
 ```kotlin
 repositories { mavenCentral() }

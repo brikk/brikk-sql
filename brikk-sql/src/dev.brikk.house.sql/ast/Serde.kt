@@ -213,7 +213,7 @@ object Serde {
                     // They are re-derivable and only consumed off freshly-parsed in-memory
                     // trees (generator/SourceMap), never off deserialized ones.
                     if (meta != null) payload[META] = JsonObject(
-                        meta.filterKeys { it != "line_start" && it != "col_start" }
+                        meta.filterKeys { it != BrikkMetaKeys.LINE_START && it != BrikkMetaKeys.COL_START }
                             .mapValues { (_, v) -> scalarToJson(v) },
                     )
 
