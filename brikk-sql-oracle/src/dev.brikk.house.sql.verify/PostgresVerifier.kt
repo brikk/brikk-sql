@@ -57,7 +57,8 @@ import org.postgresql.util.PSQLException
  * launches `initdb` + `postgres` (~1-3s warm). Hold ONE
  * instance for the process/session; per-[verify] cost after boot is sub-millisecond. [verify]
  * is `@Synchronized` (single shared JDBC connection, like [DuckdbVerifier]). Call [close] to
- * stop the embedded server; the JVM shutdown reclaims it otherwise. If embedded Postgres cannot
+ * stop the embedded server; the JVM shutdown reclaims it otherwise. After [close], [verify] and
+ * [verifyExpression] return [VerifyResult.Unavailable] for every input. If embedded Postgres cannot
  * be extracted, loaded, started, or connected on this host, [verify] does not throw: it returns
  * [VerifyResult.Unavailable]. That is deliberately distinct from parser rejection.
  * Cleanup failure retires the connection, stops the embedded server and makes the verifier
@@ -134,6 +135,7 @@ public class PostgresVerifier internal constructor(
 
     @Synchronized
     override fun verify(sql: String): VerifyResult {
+        if (closed) return unavailableResult()
         val statements = try {
             Parser.parseJdbcSql(sql, true, false, true, false, false)
         } catch (e: SQLException) {

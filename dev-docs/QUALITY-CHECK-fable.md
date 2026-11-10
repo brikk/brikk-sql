@@ -93,6 +93,7 @@ or why it was not.
 | 8 | FQ-29, FQ-30 | Done |
 | 9 | FQ-04 | Done as corrected: the renderer bodies moved; the flags stay. |
 | 10 | FQ-21 steps 2 to 4, FQ-22, FQ-25, FQ-31 | Done except the two script deletions and the parts of FQ-25 that are the owner's. |
+| 11 | FQ-08, FQ-13 after `close()`; facts for the ShardingSphere slowdown and FQ-09 | Done, by the owner's decisions. |
 
 No round changed a public API, a test expectation, a fixture or a known-failure ledger.
 At the end the suites stood at: core 1,896 passing; the other modules 796 passing with
@@ -464,6 +465,14 @@ after a statement (for example at 5 seconds) and keep the full deadline for a re
 user asks for. The cap trades catalog freshness for console responsiveness. It can be an
 internal constant, with no API change. It does not bound the synchronous cancel.
 
+**Decided and done (round 11).** The owner chose the cap. The automatic harvest after a
+statement now waits at most 5 seconds, or the profile's deadline if that is shorter. A
+refresh the user asks for, the harvest on connect and the refreshes over a helper
+connection keep the profile's full deadline. The cap is an internal constant; no public
+API changed. It bounds the harvest only: on a timeout the console still waits for the
+driver's statement cancel, which has no local bound, and then up to 2 seconds of
+cleanup.
+
 ### FQ-09. Unbounded waits in the streaming cancel (Behaviour)
 
 In `dev.brikk.house.sql.intellij/StreamingCancel.kt`:
@@ -506,6 +515,32 @@ bound to something that proves the connection is retired before the engine is re
 (a forced disconnect or disposal of the console's engine). The second loses the
 session's state and its teardown can hang too. A timeout that only releases the engine
 is not an option.
+
+**More findings (round 11), and the owner's decision.** The owner asked whether IntelliJ
+does not already let the user choose between waiting and disconnecting. It does, but not
+in these states:
+
+- The interceptor's own cancel does not set `session.isCancelled`. While the request is
+  still streaming, a second press of Cancel is claimed by the interceptor again and
+  starts a second worker and a second `cancelAll`. The comment in `perform` that a
+  second press is the platform's offer is not true there.
+- The platform's prompt (`CancelRunningStatementsAction.deactivateWithConfirmation`,
+  "Deactivate" or "Keep Waiting") appears only once the stock cancel is in progress.
+- Accepting "Deactivate" does not reliably free the console. The platform's
+  deactivation calls `cancelAll` on every connection of the data source before it
+  releases the driver process, so it can hang on the call that is already stuck. The
+  interceptor's waits do not re-check either: `requestFinished` waits only for its
+  latch, `finishes(running, wait = true)` checks ownership once and then waits without a
+  bound, and `awaitHandled` re-checks engine disposal but not connection retirement.
+
+The owner approved a narrow fix: one pending cancel per console and connection; on a
+second press while one is pending, a choice between "Keep Waiting" and disconnecting
+that console (the same `DataRequest.Disconnect` the deadline path sends, not a
+deactivation of the whole data source); and every wait re-checks engine disposal and
+connection retirement. Disposing the engine from outside when even that stalls is not
+part of it. A driver whose `cancelAll` never returns can only be freed by killing its
+process, and the platform has no public way to do that without calling `cancelAll`
+first. That stays a known limit.
 
 ### FQ-10. Completion widens the saved introspection scope (Behaviour)
 
@@ -613,6 +648,24 @@ Found while testing, present before this round and not changed by it:
 - Very deep nesting raises `StackOverflowError` in Doris, and in ShardingSphere's MySQL
   and Hive grammars. It is an `Error`, so it propagated before and still does.
 
+More on the ShardingSphere slowdown (round 11, and tests by the manager):
+
+- It terminates; it is not an endless loop. Only the PostgreSQL grammar is affected.
+  Nested parentheses and nested function calls roughly triple in time per level. Nested
+  scalar subqueries are much worse: 0.12 seconds at depth 6, 2.5 at depth 7 and 57 at
+  depth 8.
+- The time is spent in ANTLR's prediction for the grammar's `aExpr` and `cExpr` rules,
+  in the first (SLL) phase of ShardingSphere's two-phase parse. That is third-party
+  code. No prediction mode avoids it, no parse listener is called during a long
+  prediction, and interrupting the thread does not stop it.
+- No version fixes it. The same probe gives the same timings on 5.5.2 (pinned here),
+  on 5.5.3 (the latest release, 2026-02-28) and on a build of upstream's main branch
+  (5.5.4-SNAPSHOT at `13a165ad`, 2026-11-10). 5.5.3 also renames the parser artifacts
+  and moves the API to another package, so upgrading is a code change.
+- Exposure: of the six plugins, only `sql-transpiler` uses this verifier, in a modal
+  cancellable progress, when PostgreSQL is the transpile target. No editor highlighting
+  path uses it.
+
 ### FQ-13. Verifier lifecycle (Behaviour)
 
 - `SqlVerifier` is not `AutoCloseable`, but `SqlVerifiers.forEngine("duckdb")` returns a
@@ -642,7 +695,12 @@ Done in round 7, without the parts that change public API or published behaviour
   are documented where a caller sees them.
 - Sixteen test sites now close the verifier they create.
 
-Left for the owner:
+**Decided and done (round 11).** The owner chose `Unavailable` after `close()` for every
+verifier. `DuckdbVerifier` no longer reopens, the oracle's `ClickhouseVerifier` no longer
+lets the closed chDB session throw, and `PostgresVerifier` checks for closed before
+anything else. No plugin uses the two verifiers whose behaviour changed.
+
+Left for the owner when round 7 ended (both since decided; see Progress):
 
 - Whether `SqlVerifier` should extend `AutoCloseable`. It is binary compatible, but it
   is new public API, and an implementer with its own `close()` that is not an override

@@ -8,12 +8,12 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.thread
 import kotlin.test.Test
-import kotlin.test.assertFailsWith
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
-import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 internal class ClickhouseVerifierLifecycleTest {
@@ -22,16 +22,18 @@ internal class ClickhouseVerifierLifecycleTest {
         val querying = CountDownLatch(1)
         val release = CountDownLatch(1)
         val closed = AtomicBoolean()
-        val afterClose = IllegalStateException("chDB session is closed")
+        val queries = AtomicInteger()
+        val closes = AtomicInteger()
         val session = object : ChdbSession {
             override fun query(sql: String, format: ChdbOutputFormat): ChdbResult {
-                if (closed.get()) throw afterClose
+                queries.incrementAndGet()
+                check(!closed.get()) { "chDB session is closed" }
                 querying.countDown()
                 check(release.await(5, TimeUnit.SECONDS))
                 assertFalse(closed.get(), "close interleaved with verification")
                 return ChdbResult(byteArrayOf(), 0, 0, 0.0)
             }
-            override fun close() { closed.set(true) }
+            override fun close() { closes.incrementAndGet(); closed.set(true) }
         }
         val verifier = ClickhouseVerifier::class.java.getDeclaredConstructor(ChdbSession::class.java, String::class.java)
             .apply { isAccessible = true }.newInstance(session, null)
@@ -62,7 +64,23 @@ internal class ClickhouseVerifierLifecycleTest {
         assertIs<VerifyResult.Accepted>(result.get(5, TimeUnit.SECONDS))
         closeResult.get(5, TimeUnit.SECONDS)
         assertTrue(closed.get())
-        // brikk-chdb 0.16.0's NativeChdbSession.query throws this after close; do not remap it.
-        assertSame(afterClose, assertFailsWith<IllegalStateException> { verifier.verify("SELECT 1") })
+        val unavailable = assertIs<VerifyResult.Unavailable>(verifier.verify("SELECT 1"))
+        assertTrue(unavailable.reason.contains("closed"))
+        assertEquals(unavailable, verifier.verifyExpression("1"))
+        verifier.close()
+        assertEquals(1, queries.get(), "no query reaches the closed session")
+        assertEquals(1, closes.get(), "closing twice closes the session only once")
+    }
+
+    @Test
+    fun closingAnUnavailableVerifierKeepsItsOriginalReason() {
+        val verifier = ClickhouseVerifier::class.java.getDeclaredConstructor(ChdbSession::class.java, String::class.java)
+            .apply { isAccessible = true }.newInstance(null, "no native library for this host")
+        val unavailable = assertIs<VerifyResult.Unavailable>(verifier.verify("SELECT 1"))
+        verifier.close()
+        verifier.close()
+        assertEquals("no native library for this host", unavailable.reason)
+        assertEquals(unavailable, verifier.verify("SELECT 1"))
+        assertEquals(unavailable, verifier.verifyExpression("1"))
     }
 }

@@ -23,7 +23,7 @@ import dev.brikk.house.chdb.ChdbOutputFormat
  * A compatible `libchdb` is selected by [ChdbConfig.libraryPath], the `brikk.chdb.library`
  * system property, or a matching `brikk-chdb-native-*` classpath resource. No ClickHouse server,
  * CLI, JDBC driver, or child process is involved. Call [close] when the verifier is no longer needed.
- * A [verify] after [close] on an opened native session throws [IllegalStateException] (the session is closed).
+ * A [verify] or [verifyExpression] after [close] returns [VerifyResult.Unavailable].
  */
 public class ClickhouseVerifier private constructor(
     private val session: ChdbSession?,
@@ -31,11 +31,14 @@ public class ClickhouseVerifier private constructor(
 ) : SqlVerifier, AutoCloseable {
     override val engine: String = "clickhouse"
 
+    private var closed = false
+
     @Synchronized
     override fun verify(sql: String): VerifyResult {
         val activeSession = session ?: return VerifyResult.Unavailable(
             unavailableReason ?: "ClickHouse verification was not performed: libchdb is unavailable.",
         )
+        if (closed) return VerifyResult.Unavailable("ClickHouse verification is unavailable: the verifier is closed.")
         return try {
             activeSession.query("$QUERY_PREFIX$sql", ChdbOutputFormat.TSV)
             VerifyResult.Accepted
@@ -50,6 +53,8 @@ public class ClickhouseVerifier private constructor(
 
     @Synchronized
     override fun close() {
+        if (closed) return
+        closed = true
         session?.close()
     }
 
