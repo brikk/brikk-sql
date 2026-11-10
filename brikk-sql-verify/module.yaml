@@ -39,6 +39,8 @@ settings:
         brikk.doris.parser.jar: ../vendor/lib/doris-fe-sql-parser-4.1.5-g917b20be8387.jar
   kotlin:
     version: 2.4.10
+    freeCompilerArgs:
+      - -Xexplicit-api=strict
   internal:
     # excludeDependencies does not propagate through module dependencies, so the ShardingSphere
     # Groovy exclusion is repeated here (see brikk-sql-verify-shardingsphere).
@@ -47,5 +49,8 @@ settings:
 
 test-settings:
   kotlin:
+    # Explicit API checks apply to the published main sources, not the test suite.
+    freeCompilerArgs:
+      - -Xexplicit-api=disable
     # Only the gate tests read JSON; the published aggregate carries no serialization dependency.
     serialization: json

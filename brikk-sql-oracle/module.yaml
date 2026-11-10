@@ -60,6 +60,8 @@ settings:
   kotlin:
     version: 2.4.10
     serialization: json
+    freeCompilerArgs:
+      - -Xexplicit-api=strict
   internal:
     # excludeDependencies is per-module in Kotlin Toolchain (it does not propagate
     # through the exported brikk-sql-verify dep), so re-declare the ShardingSphere Groovy
@@ -67,3 +69,9 @@ settings:
     # ~7.2 MB org.apache.groovy:groovy that only the unused inline-expression engine needs.
     excludeDependencies:
       - org.apache.groovy:groovy
+
+test-settings:
+  kotlin:
+    # Explicit API checks apply to the published main sources, not the test suite.
+    freeCompilerArgs:
+      - -Xexplicit-api=disable

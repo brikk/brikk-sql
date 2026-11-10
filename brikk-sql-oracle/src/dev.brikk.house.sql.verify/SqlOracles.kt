@@ -21,7 +21,7 @@ package dev.brikk.house.sql.verify
  * should hold on to the returned instance to amortize cold-start costs (embedded-PG boot,
  * chDB native library load), and [close] any that are [AutoCloseable].
  */
-object SqlOracles {
+public object SqlOracles {
     /**
      * Returns the highest-fidelity available verifier for [name] (case-insensitive), or null
      * when the engine is unsupported.
@@ -29,7 +29,7 @@ object SqlOracles {
      * Supported engines: `"trino"`, `"duckdb"`, `"doris"`, `"postgres"`, `"clickhouse"`,
      * `"mysql"`, `"hive"`.
      */
-    fun forEngine(name: String): SqlVerifier? = when (name.lowercase()) {
+    public fun forEngine(name: String): SqlVerifier? = when (name.lowercase()) {
         // Engine-exact JVM parsers, authoritative on both tiers (small enough to ship).
         "trino", "doris", "duckdb" -> SqlVerifiers.forEngine(name)
         // Real embedded engines: authoritative, non-advisory.

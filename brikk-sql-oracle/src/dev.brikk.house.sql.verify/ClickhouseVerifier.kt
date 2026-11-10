@@ -25,7 +25,7 @@ import dev.brikk.house.chdb.ChdbOutputFormat
  * CLI, JDBC driver, or child process is involved. Call [close] when the verifier is no longer needed.
  * A [verify] after [close] on an opened native session throws [IllegalStateException] (the session is closed).
  */
-class ClickhouseVerifier private constructor(
+public class ClickhouseVerifier private constructor(
     private val session: ChdbSession?,
     private val unavailableReason: String?,
 ) : SqlVerifier, AutoCloseable {
@@ -53,7 +53,7 @@ class ClickhouseVerifier private constructor(
         session?.close()
     }
 
-    companion object {
+    public companion object {
         private const val EXPRESSION_PREFIX = "SELECT "
 
         /**
@@ -61,7 +61,7 @@ class ClickhouseVerifier private constructor(
          * [verify] returns [VerifyResult.Unavailable], leaving the caller free to continue
          * on unsupported platforms such as Windows.
          */
-        fun create(config: ChdbConfig = ChdbConfig()): ClickhouseVerifier =
+        public fun create(config: ChdbConfig = ChdbConfig()): ClickhouseVerifier =
             try {
                 ClickhouseVerifier(Chdb.open(config), unavailableReason = null)
             } catch (error: ChdbUnavailableException) {

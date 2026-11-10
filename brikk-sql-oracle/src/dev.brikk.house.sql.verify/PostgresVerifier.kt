@@ -64,11 +64,11 @@ import org.postgresql.util.PSQLException
  * [VerifyResult.Unavailable] for every later call, without changing an engine verdict already obtained.
  * Failed rollback closes the connection without restoring auto-commit, avoiding an implicit commit.
  */
-class PostgresVerifier internal constructor(
+public class PostgresVerifier internal constructor(
     private val connectionFactory: (() -> Connection)? = null,
     private val startEmbedded: () -> EmbeddedPostgres = { EmbeddedPostgres.builder().start() },
 ) : SqlVerifier, AutoCloseable {
-    constructor() : this(connectionFactory = null)
+    public constructor() : this(connectionFactory = null)
 
     override val engine: String = "postgres"
 
