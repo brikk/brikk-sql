@@ -43,35 +43,35 @@ repository-relative.
 | --- | --- | --- | --- | --- |
 | FQ-01 | Release | Check that the released commit is on `main` | Behaviour (CI only) | Done |
 | FQ-02 | Core | One home for the DuckDB analysis refusals | Move | Done |
-| FQ-03 | Core | Drop the gate-only dialect flags | Move | Not done; see the item |
+| FQ-03 | Core | Drop the gate-only dialect flags | Move | Done (final round) |
 | FQ-04 | Core | Move DuckDB renderers out of the base generator | Move | Done, as corrected |
 | FQ-05 | Core | Meta keys as constants | Move | Done |
-| FQ-06 | IntelliJ | Profile hooks in place of DataFusion downcasts | Move | Literals done; hooks are the owner's decision |
-| FQ-07 | IntelliJ | Catalog lock held through disk IO on the completion path | Behaviour | Deferred, with a design |
-| FQ-08 | IntelliJ | Harvest deadline on the console engine thread | Behaviour | Owner's decision |
-| FQ-09 | IntelliJ | Unbounded waits in the streaming cancel | Behaviour | Owner's decision |
-| FQ-10 | IntelliJ | Completion widens the saved introspection scope | Behaviour | Owner's decision |
+| FQ-06 | IntelliJ | Profile hooks in place of DataFusion downcasts | Move | Literals done; hooks left until a second engine needs them (owner) |
+| FQ-07 | IntelliJ | Catalog lock held through disk IO on the completion path | Behaviour | Deferred to its own change (owner), with a design |
+| FQ-08 | IntelliJ | Harvest deadline on the console engine thread | Behaviour | Done: automatic harvest capped at 5 seconds (owner) |
+| FQ-09 | IntelliJ | Unbounded waits in the streaming cancel | Behaviour | Done, narrowed to the waits (owner) |
+| FQ-10 | IntelliJ | Completion widens the saved introspection scope | Behaviour | Done: rollback on failure (owner) |
 | FQ-11 | IntelliJ | Log the seven silent recoveries | Move (logging) | Done |
 | FQ-12 | Verifiers | Doris and ShardingSphere against the documented contract (KQ-03) | Behaviour or Docs | Done |
-| FQ-13 | Verifiers | Verifier lifecycle | Behaviour | Done in part; the rest is the owner's decision |
+| FQ-13 | Verifiers | Verifier lifecycle | Behaviour | Done: `Unavailable` after `close()`; `SqlVerifier` is `AutoCloseable` (owner) |
 | FQ-14 | Verifiers | Deadline, bounded workers and size preflight for the ClickHouse verifier (KQ-07) | Behaviour | Done |
 | FQ-15 | Verifiers | Shared connection plumbing | Move | Not done (optional) |
 | FQ-16 | Comments | "Not ported" comments in `Parser.kt` | Docs | Done |
 | FQ-17 | Comments | SQLGlot pin in documents and test headers | Docs | Done |
 | FQ-18 | Comments | Oracle and verifier comments | Docs | Done |
-| FQ-19 | Comments | Build, CI and README facts | Docs | Done, except two points left to the owner |
+| FQ-19 | Comments | Build, CI and README facts | Docs | Done |
 | FQ-20 | Cleanup | Hand-format the unspaced lines, add `.editorconfig` | Move | Done |
-| FQ-21 | Cleanup | Index `tools/`, share its helpers | Docs, then Move | Done, except the two deletions |
+| FQ-21 | Cleanup | Index `tools/`, share its helpers | Docs, then Move | Done |
 | FQ-22 | Cleanup | Test files named after batches | Move | Rule written; no files renamed |
 | FQ-23 | Cleanup | Archive finished trackers and dated notes | Docs | Done in part; see the item |
 | FQ-24 | Cleanup | Index the evidence folders in `vendor/` | Docs | Done |
-| FQ-25 | Cleanup | Small code leftovers | Move | Done in part; see the item |
+| FQ-25 | Cleanup | Small code leftovers | Move | Done; property completion stays paused (owner) |
 | FQ-26 | Correctness | `IdentityKey` hashes by identity (KQ-01) | Behaviour | Done |
 | FQ-27 | Correctness | Type cache keyed by dialect as well as type text (KQ-02) | Behaviour | Done |
-| FQ-28 | Correctness | Narrow the two broad catches in `SqlFragment` (KQ-04) | Behaviour | Step 1 done; step 2 is the owner's decision |
+| FQ-28 | Correctness | Narrow the two broad catches in `SqlFragment` (KQ-04) | Behaviour | Step 1 done; step 2 not planned |
 | FQ-29 | Correctness | Reset the synthetic-alias counter per generation (KQ-06) | Behaviour | Done |
 | FQ-30 | Correctness | PostgreSQL oracle cleanup failures (KQ-08) | Behaviour | Done |
-| FQ-31 | Correctness | Decide who owns `SqlFragment.ast` (KQ-05) | API decision | KDoc done; enforcement is the owner's decision |
+| FQ-31 | Correctness | Decide who owns `SqlFragment.ast` (KQ-05) | API decision | KDoc done; no enforcement (owner) |
 
 ## Progress
 
@@ -96,67 +96,78 @@ or why it was not.
 | 11 | FQ-08, FQ-13 after `close()`; facts for the ShardingSphere slowdown and FQ-09 | Done, by the owner's decisions. |
 | 12 | FQ-10 rollback; `SqlVerifier` extends `AutoCloseable` | Done, by the owner's decisions. |
 | 13 | FQ-09, narrowed to the waits | Done. |
+| 14 | FQ-03; Grok QC-01 and QC-02; the ShardingSphere time limit; generator escaping; clean-tree release check; housekeeping | Done, by the owner's decisions. |
 
-No round changed a public API, a test expectation, a fixture or a known-failure ledger.
-At the end the suites stood at: core 1,896 passing; the other modules 796 passing with
-74 skipped for engines and fixtures not on the build machine; the Python tool tests 288
-with 1 opt-in skip; the IntelliJ platform tests 833 passing across 110 classes. The one
+Rounds 1 to 10 changed no public API. Two later changes did, by the owner's decision:
+`SqlVerifier` now extends `AutoCloseable`, and a closed verifier returns `Unavailable`.
+No round changed a fixture or a known-failure ledger. Test expectations changed only
+where a decision changed the behaviour they pinned (the after-close results, and the
+three dialect flags that became one predicate).
+
+At the end the suites stood at: core 1,896 passing; the other modules 824 passing with
+74 skipped for engines and fixtures not on the build machine; the Python tool tests 299
+with 1 opt-in skip; the IntelliJ platform tests 862 passing across 112 classes. The one
 platform class left out needs the native DuckDB window fixture, which was not available.
 
-### Decisions for the owner
+### What the owner decided
 
-Behaviour:
+After round 10 the owner settled every open question. Each item below records the
+result where it is described.
 
-- **FQ-08.** Cap the automatic catalog harvest that runs on a console's engine thread
-  after a statement, or keep the profile's full deadline (30 seconds for DataFusion and
-  Spice, after ordinary `SET`, `USE` and DDL statements).
-- **FQ-09.** When a streaming cancel never completes: keep waiting, or escalate to
-  something that proves the connection is retired before the console is released.
-- **FQ-10.** Keep the saved introspection scope widened after a failed load, or roll
-  back the request's own addition.
-- **FQ-13.** One behaviour for a verifier used after `close()`. Today one reopens, one
-  returns `Unavailable` and one throws.
-- **FQ-07.** When to do the deferred change that takes disk IO off the completion path.
+- **FQ-08:** cap the automatic catalog harvest at 5 seconds. Done.
+- **FQ-13:** every closeable verifier returns `Unavailable` after `close()`, and
+  `SqlVerifier` extends `AutoCloseable`. Done.
+- **FQ-10:** roll back the introspection scope when a load fails. Done.
+- **FQ-09:** keep only the waits noticing a dropped connection. Done.
+- **ShardingSphere PostgreSQL slowdown (FQ-12):** a 2-second time limit on the check.
+  Done. No upstream report was written.
+- **FQ-03:** remove the gate-only flags. Done.
+- **Grok note:** fix the wrong comments (QC-01, QC-02); add no new ones (QC-03 to QC-05
+  not done).
+- **Generators:** escape newlines and control characters. Done, with no generated file
+  changed.
+- **FQ-01:** refuse a release from a checkout with uncommitted tracked changes. Done.
+- **Module descriptions:** approved as written; the markers are removed.
+- **Stale branch:** `publish/intellij-support-0.1.0` is deleted and no longer ignored in
+  `test.yml`.
+- **Two provenance scripts:** deleted.
+- **FQ-06 hooks:** leave until a second engine needs them.
+- **FQ-31:** the KDoc is enough.
+- **Property completion:** stays paused.
+- **FQ-07:** later, as its own change.
 
-Public API:
+### Still open
 
-- **FQ-06.** Add members with defaults to `SqlCompletionProfile` and
-  `RelationScopeProfile`, or leave the four DataFusion-specific sites in generic code.
-- **FQ-13.** Whether `SqlVerifier` extends `AutoCloseable`.
-- **FQ-28, step 2.** Whether `contract` should report "dependencies unknown" as data,
-  distinct from "none".
-- **FQ-31.** Whether `SqlFragment.ast` should hand out a copy. The KDoc now says the
-  tree is read-only for callers.
+Not planned, unless the owner says otherwise:
 
-Smaller:
+- **FQ-28, step 2:** `contract` reporting "dependencies unknown" as data.
+- **FQ-15:** sharing the DuckDB and ClickHouse connection plumbing.
+- The deprecated `builtinFunctions` member on `TextExplainProfile`, which can only go in
+  a breaking release.
+- The Toolchain 0.11 and 0.12 comments (FQ-19), left because nothing in the repository
+  shows their statements stopped holding on 0.13.0.
 
-- **FQ-19.** `.github/workflows/test.yml` still ignores the branch
-  `publish/intellij-support-0.1.0`. The Toolchain 0.11 and 0.12 comments were left, since
-  nothing in the repository shows their statements stopped holding on 0.13.0.
-- **FQ-21.** Two unreferenced scripts were kept because they are the provenance of
-  vendored evidence. Ten generators escape Kotlin strings in six ways; see the item.
-- **FQ-25.** `PROPERTY_COMPLETION` (ship or delete), the `# TODO(review)` descriptions
-  in ten `module.yaml` files, and the deprecated member on `TextExplain`.
-- **FQ-01.** The guard checks `HEAD` only, so a launcher run from a checkout with
-  uncommitted edits to tracked files would still publish them. CI checkouts are clean.
-  The workflow steps have been exercised only against throwaway repositories, including
-  a shallow clone like the one GitHub makes; the next release is their first real run.
-  This branch must be merged to `main` before a release branch is cut, or the guard is
-  not on it.
+Before the next release:
+
+- This branch must be merged to `main` before a release branch is cut, or the release
+  guard is not on it. The guard's workflow steps have run only against throwaway
+  repositories; the next release is their first real run.
 
 Found along the way and not changed:
 
-- The ShardingSphere PostgreSQL grammar slows down exponentially on nested parentheses
-  (49.5 seconds at depth 20), and that verifier has no cancellation hook (FQ-12).
+- `AutoIntrospect` assigns the introspection scope even when the request does not change
+  it, and the platform's setter then hides objects that were loaded on demand in
+  namespaces outside the scope. So typing a path whose namespace is already selected can
+  hide them. This predates the branch (FQ-10).
+- `QualifiedPathIntrospectContributorTest.testAConsoleOfAnotherDbmsIsNotIntrospected`
+  is intermittent: it failed once on CI and once in ten local runs, before any code this
+  branch changed runs. The cause was not found.
 - `SELECT * FROM t GROUP BY 1` throws a plain `IllegalStateException` from
   qualification, reachable from SQL text (FQ-28).
 - No test asserts any of the 54 analysis-guard messages by text (FQ-02).
-- One CI run on this branch failed on
-  `QualifiedPathIntrospectContributorTest.testAConsoleOfAnotherDbmsIsNotIntrospected`
-  (after a console of another dbms closes, the next completion queued no introspection
-  request). The commit it ran on changed only named constants, and the same test passed
-  in the CI runs before and after and in the local run of the whole suite, so it looks
-  intermittent. It is in the auto-introspection path that FQ-10 is about.
+- After one PostgreSQL statement runs past the ShardingSphere time limit, further
+  PostgreSQL checks usually return `Unverified` until that parse ends (FQ-12).
+- The parked gates and lenient verdicts, at the end of this note, were not touched.
 
 ## Release
 
@@ -272,6 +283,11 @@ not edit tests. Removing them needs the remaining `ScopeEvaluator` reads moved f
 that test updated, as its own change. The name comparison in `shape/SqlParameters.kt`
 also stays: it runs before the dialect is looked up, so it is not equivalent to a flag
 on the resolved dialect for every input string.
+
+**Done in the final round**, once the owner allowed the test to change. The three flags
+are gone. Their 22 reads use one internal predicate, `usesDuckdbNativeContracts`,
+defined beside the analysis guards and true for `DuckdbDialect` and its subclasses.
+`DialectCapabilitiesTest` pins the predicate in place of the flags.
 
 ### FQ-04. Move the DuckDB renderers out of the base generator (Move)
 
@@ -679,6 +695,15 @@ More on the ShardingSphere slowdown (round 11, and tests by the manager):
 - Exposure: of the six plugins, only `sql-transpiler` uses this verifier, in a modal
   cancellable progress, when PostgreSQL is the transpile target. No editor highlighting
   path uses it.
+
+**The owner's decision on the slowdown (final round).** A check that counted nesting
+before parsing was tried and dropped: tested against the real parser it let slow shapes
+through (nested array subscripts, chains of unary minus, a subquery after a
+non-breaking space) and refused 7 of the 99 TPC-DS queries. The PostgreSQL check now
+has a time limit of 2 seconds instead; past it the result is `Unverified`. Over 2,527
+statements, including TPC-DS and TPC-H, it refuses none. A parse past the limit cannot
+be stopped: it keeps one of two workers and a CPU core until it ends, and meanwhile
+other PostgreSQL checks usually return `Unverified` too.
 
 ### FQ-13. Verifier lifecycle (Behaviour)
 
