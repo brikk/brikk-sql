@@ -8,7 +8,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-import test_expansion_sources as sources
+import verify_test_expansion_sources as sources
 
 
 class TestExpansionSourcesTest(unittest.TestCase):
@@ -22,7 +22,7 @@ class TestExpansionSourcesTest(unittest.TestCase):
         self.addCleanup(self.patch_root.stop)
 
     def run_tool(self, *arguments):
-        with patch("sys.argv", ["test_expansion_sources.py", *arguments]), contextlib.redirect_stdout(io.StringIO()):
+        with patch("sys.argv", ["verify_test_expansion_sources.py", *arguments]), contextlib.redirect_stdout(io.StringIO()):
             sources.main()
 
     def test_committed_sources_verify_without_network_access(self):

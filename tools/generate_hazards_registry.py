@@ -38,6 +38,8 @@ import pathlib
 import re
 import sys
 
+from generator_helpers import kotlin_text_string as kstr
+
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SEMANTICS_DIR = ROOT / "brikk-sql" / "testResources" / "semantics"
 OUT_DIR = ROOT / "brikk-sql-metadata" / "src" / "dev.brikk.house.sql.metadata"
@@ -63,12 +65,6 @@ SEVERITY_RANK = {
 IDENT = re.compile(r"^[A-Za-z_][A-Za-z_0-9]*$")
 
 CHUNK = 40  # entries per emitted function (keeps methods well under JVM bytecode limits)
-
-
-def kstr(s: str) -> str:
-    out = s.replace("\\", "\\\\").replace('"', '\\"').replace("$", "\\$")
-    out = out.replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t")
-    return '"' + out + '"'
 
 
 def keys_for(side_name: str) -> list[str]:

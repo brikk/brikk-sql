@@ -70,14 +70,29 @@ reproduce earlier evidence; that does not make their observations current engine
 - **Tests — live.** `test_*.py` exercises tooling policies, generators and checked-in evidence.
   [CONTRIBUTING](../dev-docs/CONTRIBUTING.md) defines the full offline gate:
   `python3 -m unittest discover -s tools -p 'test_*.py'`. Workflows run selected release, DataFusion,
-  Spice and ClickHouse patterns, not the full discovery set. `test_expansion_sources.py` is a
-  source-harvest verifier despite its name; [vendor provenance](../vendor/README.md) documents its CLI.
+  Spice and ClickHouse patterns, not the full discovery set. `verify_test_expansion_sources.py`
+  verifies the source harvest; [vendor provenance](../vendor/README.md) documents its CLI.
+  Its tests are in `test_verify_test_expansion_sources.py`.
+- **Shared generator helpers.** `generator_helpers.py` supplies the common SQLGlot version
+  stamp and four intentionally different Kotlin string-literal renderers. The AST and tokenizer
+  generators escape every control below U+0020; DuckDB/Trino escape only backslash, quote and
+  dollar; hazard/coverage generators also escape newline, carriage return and tab; DataFusion
+  and Doris properties retain JSON escaping and nullable values. The unique ClickHouse
+  (also escapes NUL) and StarRocks (unquoted content) escapers stay local. The dialect extractor,
+  lineage and qualification generators keep their distinct version/error-handling policies.
+  `test_generator_helpers.py` checks these spelling boundaries and the Doris-properties
+  escaper against every string literal in its checked-in output, without the absent clones.
 
-No workflow, document or generated-header references were found for
-`probe_temporal_arithmetic.py` or `import_spice_documentation_audit.py`, apart
-from the cleanup review naming them. Their headers describe an SG29-009 temporal
-probe and a historical Spice documentation import. They remain here unchanged;
-this index does not establish that either is live.
+`probe_temporal_arithmetic.py` and `import_spice_documentation_audit.py` are kept as
+provenance for vendored evidence. The first captured
+`vendor/data/sqlglot-sg29-009/mysql-native-results.json` (the SG29-009 MySQL TIMESTAMPADD
+and DATE_ADD controls). The second built
+`vendor/data/datafusion-spice/docs-audit-2026-10-29.json` from the 2026-10-29 research
+export. Neither is run by CI or by a live generator, and both need inputs that are no
+longer available (a private MySQL container, the original export). No document names
+either script;
+[FQ-21](../dev-docs/QUALITY-CHECK-fable.md#fq-21-index-tools-share-its-helpers-docs-then-move)
+of the quality check proposed deleting them, and that decision is left to the owner.
 
 The Kotlin `metadata-capture` and `dialect-audit` modules and the Rust
 `datafusion-reference` tools support these captures. Their module files, the

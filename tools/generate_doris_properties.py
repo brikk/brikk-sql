@@ -11,12 +11,13 @@ Inputs:
 
 Usage: tools/generate_doris_properties.py <cache-dir> <doris-checkout>
 """
-import json
 import os
 import re
 import subprocess
 import sys
 import urllib.request
+
+from generator_helpers import kotlin_json_string as kt
 
 WEBSITE_COMMIT = "81077becd6a77efa3e237ed9159bf413f36c9902"
 RAW = f"https://raw.githubusercontent.com/apache/doris-website/{WEBSITE_COMMIT}/versioned_docs/version-4.x/"
@@ -409,10 +410,6 @@ for function in sorted(set(re.findall(r'TableFunctionInfo\(\s*"([a-z_0-9]+)"', h
     found = {k: v for k in handwritten_keys if source and (v := source.line_of(k))}
     if found:
         handwritten_since[function] = found
-
-def kt(s):
-    return "null" if s is None else json.dumps(s, ensure_ascii=False).replace("$", "\\$")
-
 
 def key(k):
     args = [kt(k["name"])]

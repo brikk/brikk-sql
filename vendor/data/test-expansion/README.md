@@ -102,7 +102,7 @@ is asserted by numeric AST value rather than Polyglot's one-token representation
 ## Reproduce
 
 ```sh
-python3 tools/test_expansion_sources.py
+python3 tools/verify_test_expansion_sources.py
 ./kotlin test -m brikk-sql --include-classes='*HarvestTest' --jvm-args='-Xmx1g -XX:ActiveProcessorCount=2'
 ./kotlin test -m brikk-sql-verify-duckdb --include-classes='*EngineSourceHarvestResultTest' --jvm-args='-Xmx1g -XX:ActiveProcessorCount=2'
 ```

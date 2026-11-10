@@ -29,8 +29,9 @@ from __future__ import annotations
 import argparse
 import json
 import pathlib
-import subprocess
 import sys
+
+from generator_helpers import sqlglot_version
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SQLGLOT = ROOT / "reference" / "sqlglot"
@@ -41,18 +42,6 @@ sys.path.insert(0, str(SQLGLOT))
 
 import sqlglot  # noqa: E402
 from sqlglot import serde  # noqa: E402
-
-
-def sqlglot_version() -> str:
-    try:
-        return subprocess.run(
-            ["git", "-C", str(SQLGLOT), "describe", "--tags", "--abbrev=9"],
-            capture_output=True,
-            text=True,
-            check=True,
-        ).stdout.strip()
-    except Exception:
-        return "unknown"
 
 
 def iter_sqls(dialect: str | None):

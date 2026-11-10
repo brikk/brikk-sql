@@ -14,6 +14,8 @@ import pathlib
 import re
 import sys
 
+from generator_helpers import kotlin_text_string as kstr
+
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SEMANTICS = ROOT / "brikk-sql" / "testResources" / "semantics"
 OUT = (
@@ -21,12 +23,6 @@ OUT = (
     / "GeneratedSemanticCoverage.kt"
 )
 IDENT = re.compile(r"^[A-Za-z_][A-Za-z_0-9]*$")
-
-
-def kstr(value: str) -> str:
-    value = value.replace("\\", "\\\\").replace('"', '\\"').replace("$", "\\$")
-    value = value.replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t")
-    return f'"{value}"'
 
 
 def keys_for(side_name: str) -> set[str]:

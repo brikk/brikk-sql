@@ -16,7 +16,7 @@ Kotlin tests with attribution. Engine SQL and expected results come directly fro
 the engine repositories, not through Polyglot. See the directory's `README.md`,
 `manifest.json` and per-project licenses, plus root `ATTRIBUTIONS.md`.
 
-Verify locally with `python3 tools/test_expansion_sources.py`. Use `--fetch` to
+Verify locally with `python3 tools/verify_test_expansion_sources.py`. Use `--fetch` to
 restore exact locked bytes. Only a reviewed source refresh should use `--record`,
 after updating the pinned revisions and reviewing every changed fixture.
 
