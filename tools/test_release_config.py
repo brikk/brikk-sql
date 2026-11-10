@@ -135,6 +135,9 @@ class ReleaseLauncherTest(unittest.TestCase):
             "exit \"${FAKE_EXIT_CODE:-0}\"\n"
         )
         fake_kotlin.chmod(0o755)
+        git(self.root, "add", ".")
+        git(self.root, "commit", "-m", "tracked release fixtures")
+        git(self.root, "push", "origin", "HEAD:main")
         self.env = {
             **git_test_env(),
             OWNER_EXCEPTION_ENV: "false",
@@ -161,6 +164,27 @@ class ReleaseLauncherTest(unittest.TestCase):
         self.assertEqual(["publish", "mavenLocal", "-m", "brikk-sql-verify", "-m", "brikk-sql-oracle", "--non-transitive"],
                          (self.root / "observed-args.txt").read_text().splitlines())
         self.assert_restored()
+
+    def test_workflow_guard_then_local_install_then_central_keeps_tracked_files_clean(self):
+        initial = subprocess.run(["python3", "tools/release_ancestry.py"], cwd=self.root,
+                                 env=self.env, capture_output=True, text=True)
+        self.assertEqual(0, initial.returncode, initial.stderr)
+        (self.root / ".env").write_text("brikk.mavencentral.user=unused\nbrikk.mavencentral.pass=unused\n")
+        for local in (True, False):
+            result = self.run_release(local=local)
+            self.assertEqual(0, result.returncode, result.stderr)
+            self.assert_restored()
+            self.assertEqual("", git(self.root, "status", "--porcelain", "--untracked-files=no"))
+        self.assertIn("Release ancestry verified", result.stdout)
+
+    def test_central_refuses_a_tracked_edit_after_local_install(self):
+        self.assertEqual(0, self.run_release(local=True).returncode)
+        (self.root / "publish.module-template.yaml").write_text(self.original + "# real edit\n")
+        result = self.run_release()
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("uncommitted changes", result.stderr)
+        self.assertIn("publish.module-template.yaml", result.stderr)
+        self.assertEqual(["publish", "mavenLocal"], (self.root / "observed-args.txt").read_text().splitlines()[:2])
 
     def test_local_release_rejects_snapshots_and_unknown_modules(self):
         for version, modules in (("0.20.0-SNAPSHOT", ()), ("0.20.0", ("brikk-sql-intellij-support",))):

@@ -8,7 +8,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from release_ancestry import OWNER_EXCEPTION_ENV
+from release_ancestry import OWNER_EXCEPTION_ENV, require_main_ancestor
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -78,6 +78,73 @@ class ReleaseAncestryTest(unittest.TestCase):
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertIn(self.main, result.stdout)
         self.assertIn("contained in origin/main", result.stdout)
+
+    def tracked_file(self, name="tracked file.txt"):
+        path = self.root / name
+        path.write_text("original\n")
+        git(self.root, "add", name)
+        git(self.root, "commit", "-m", "tracked fixture")
+        git(self.root, "push", "origin", "HEAD:main")
+        return path
+
+    def test_staged_and_unstaged_tracked_edits_refuse_even_with_owner_exception(self):
+        path = self.tracked_file()
+        path.write_text("edited\n")
+        for staged in (False, True):
+            if staged:
+                git(self.root, "add", path.name)
+            for exception in ("false", "true"):
+                with self.subTest(staged=staged, exception=exception):
+                    result = self.check_release(**{OWNER_EXCEPTION_ENV: exception})
+                    self.assertNotEqual(0, result.returncode)
+                    self.assertIn(repr(path.name), result.stderr)
+                    self.assertIn("Commit or discard", result.stderr)
+                    self.assertIn("does not bypass", result.stderr)
+
+    def test_staged_edit_is_not_hidden_by_worktree_contents_matching_head(self):
+        path = self.tracked_file()
+        path.write_text("staged edit\n")
+        git(self.root, "add", path.name)
+        path.write_text("original\n")
+        self.assertIn("uncommitted changes", self.check_release().stderr)
+
+    def test_tracked_deletion_rename_and_mode_changes_refuse(self):
+        path = self.tracked_file()
+        path.chmod(0o755)
+        git(self.root, "add", "--chmod=+x", path.name)
+        self.assertIn(repr(path.name), self.check_release().stderr)
+        git(self.root, "mv", path.name, "renamed\nfile.txt")
+        result = self.check_release()
+        self.assertIn(repr(path.name), result.stderr)
+        self.assertIn(repr("renamed\nfile.txt"), result.stderr)
+        (self.root / "renamed\nfile.txt").unlink()
+        self.assertIn("uncommitted changes", self.check_release().stderr)
+
+    def test_untracked_and_ignored_files_do_not_block_release(self):
+        (self.root / ".git/info/exclude").write_text("ignored.env\n")
+        for name in (".env", "ignored.env", ".publish-base.backup.module-template.yaml"):
+            (self.root / name).write_text("untracked\n")
+        result = self.check_release()
+        self.assertEqual(0, result.returncode, result.stderr)
+
+    def test_changed_path_list_is_capped(self):
+        for i in range(25):
+            (self.root / f"file-{i:02}.txt").write_text("staged new file\n")
+        git(self.root, "add", "*.txt")
+        result = self.check_release()
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("'file-00.txt'", result.stderr)
+        self.assertIn("'file-19.txt'", result.stderr)
+        self.assertNotIn("'file-20.txt'", result.stderr)
+        self.assertIn("and 5 more", result.stderr)
+
+    def test_git_status_failure_refuses_before_fetch_even_with_exception(self):
+        error = subprocess.CalledProcessError(128, ["git", "status"], stderr="cannot read index")
+        with patch.dict(os.environ, {OWNER_EXCEPTION_ENV: "true"}), patch("release_ancestry.subprocess.run", side_effect=error) as run:
+            with self.assertRaisesRegex(SystemExit, "refusing Central publication"):
+                require_main_ancestor(self.root)
+        self.assertEqual(1, run.call_count)
+        self.assertEqual("status", run.call_args.args[0][1])
 
     def test_release_branch_at_main_commit_passes(self):
         git(self.root, "checkout", "-b", "release/1.2.3")

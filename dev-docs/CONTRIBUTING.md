@@ -83,6 +83,9 @@ Both release workflows and both release launchers enforce this through
 local releases (`--local` / Maven Local) do not run this check. `preverified` skips only
 the test gate, never this check.
 
+The guard also refuses staged or unstaged changes to tracked files, listing paths to commit or
+discard; untracked/ignored files do not count, and the owner's exception cannot bypass this check.
+
 Only after the owner's explicit approval for this release from a named branch, set the
 manual workflow's boolean `owner_exception` input to `true`, or run either local launcher
 with `BRIKK_RELEASE_OWNER_EXCEPTION=true`. The override defaults off, is unavailable to

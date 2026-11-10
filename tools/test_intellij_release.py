@@ -38,6 +38,9 @@ class ScopedReleaseTest(unittest.TestCase):
                             'Path("observed-template").write_text(Path("publish.module-template.yaml").read_text())\n'
                            'sys.exit(int(os.environ.get("TEST_EXIT", "0")))\n')
         wrapper.chmod(0o755)
+        git(self.root, 'add', '.')
+        git(self.root, 'commit', '-m', 'tracked release fixtures')
+        git(self.root, 'push', 'origin', 'HEAD:main')
         self.env = {**git_test_env(), OWNER_EXCEPTION_ENV: 'false',
                     'KOTLIN_TOOLCHAIN_MAVENCENTRAL_USERNAME': 'test-user',
                     'KOTLIN_TOOLCHAIN_MAVENCENTRAL_PASSWORD': 'test-password',
@@ -107,6 +110,31 @@ class ScopedReleaseTest(unittest.TestCase):
                           ':brikk-sql-intellij-test-support:publishToMavenCentral'],
                          json.loads((self.root / 'calls.json').read_text()))
         self.assert_restored()
+
+    def test_workflow_guard_then_local_install_then_central_restores_tracked_descriptors(self):
+        initial = subprocess.run(['python3', 'tools/release_ancestry.py'], cwd=self.root,
+                                 env=self.env, capture_output=True, text=True)
+        self.assertEqual(0, initial.returncode, initial.stderr)
+        (self.root / '.env').write_text('brikk.mavencentral.user=unused\nbrikk.mavencentral.pass=unused\n')
+        for publish_core in (False, True):
+            options = ['--core-version', '0.20.0'] + ([] if publish_core else ['--skip-core-publication'])
+            for local in (True, False):
+                result = self.run_release(*options, local=local)
+                self.assertEqual(0, result.returncode, result.stderr)
+                self.assert_restored()
+                self.assertEqual('', git(self.root, 'status', '--porcelain', '--untracked-files=no'))
+            self.assertIn('Release ancestry verified', result.stdout)
+
+    def test_central_refuses_a_staged_descriptor_edit_after_local_install(self):
+        options = ['--core-version', '0.20.0', '--skip-core-publication']
+        self.assertEqual(0, self.run_release(*options).returncode)
+        self.modules[0].write_text(self.module + '# real edit\n')
+        git(self.root, 'add', str(self.modules[0]))
+        result = self.run_release(*options, local=False)
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn('uncommitted changes', result.stderr)
+        self.assertIn('brikk-sql-intellij-support/module.yaml', result.stderr)
+        self.assertEqual(['publish', 'mavenLocal'], json.loads((self.root / 'calls.json').read_text())[:2])
 
     def test_central_release_refuses_unmerged_commit_before_changing_files(self):
         git(self.root, 'commit', '--allow-empty', '-m', 'not on main')

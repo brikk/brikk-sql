@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Require a Central release commit to be contained in a freshly fetched origin/main."""
+"""Require a clean tracked tree and a Central release commit on freshly fetched origin/main."""
 
 import os
 from pathlib import Path
@@ -15,6 +15,23 @@ def require_main_ancestor(root: Path) -> None:
 
     context = "HEAD"
     try:
+        status = git("status", "--porcelain=v1", "-z", "--untracked-files=no",
+                     "--ignore-submodules=untracked").stdout.split("\0")
+        changed = []
+        entries = iter(status)
+        for entry in entries:
+            if not entry:
+                continue
+            changed.append(entry[3:])
+            if "R" in entry[:2] or "C" in entry[:2]:
+                changed.append(next(entries))
+        if changed:
+            paths = sorted(set(changed))
+            shown = ", ".join(repr(path) for path in paths[:20])
+            more = f" (and {len(paths) - 20} more)" if len(paths) > 20 else ""
+            raise SystemExit(f"ERROR: Refusing Central publication: tracked files have uncommitted changes: "
+                             f"{shown}{more}. Commit or discard them before releasing; "
+                             "the owner's exception does not bypass the clean-tree check.")
         commit = git("rev-parse", "--verify", "HEAD^{commit}").stdout.strip()
         branch = git("symbolic-ref", "--quiet", "--short", "HEAD", check=False).stdout.strip()
         if branch:
@@ -33,7 +50,7 @@ def require_main_ancestor(root: Path) -> None:
     except (subprocess.CalledProcessError, OSError) as error:
         detail = error.stderr.strip() if isinstance(error, subprocess.CalledProcessError) else str(error)
         detail = detail.rstrip(".")
-        raise SystemExit(f"ERROR: Cannot verify {context} against origin/main: {detail}. "
+        raise SystemExit(f"ERROR: Cannot verify the tracked working tree or {context} against origin/main: {detail}. "
                          "Fetching and resolving origin/main must succeed; refusing Central publication.") from None
 
     if result.returncode == 0:
