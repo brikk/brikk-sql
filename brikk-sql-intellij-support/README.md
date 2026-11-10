@@ -866,9 +866,12 @@ may belong to the session, the session's connection is known and reaches the cur
 session is in auto-commit mode, it harvests over that connection on the engine's thread; a session in a
 transaction is not harvested (a failing harvest query could abort it). Otherwise, and never on the EDT, a
 debounced refresh follows (2 s, `refreshDelay`; a change during a refresh brings another). Every harvest
-runs on a pooled thread under `deadline` (5 s, also each query's timeout). Past it, or when the caller is
-cancelled, the running statement is cancelled and closed and the thread interrupted, and the connection
-is handed back once the harvest let go of it, after at most 2 s more: a driver that ignores cancellation
+runs on a pooled thread under `deadline` (default 5 s, also each query's timeout); an automatic
+post-statement harvest on the console's connection uses the smaller of `deadline` and 5 s, while manual
+session refreshes, on-connect harvests and helper-connection refreshes keep the full deadline. Past it, or when the caller is
+cancelled, the running statement is cancelled and closed and the thread interrupted. The console can
+wait the budget, plus the driver's synchronous statement cancel and close (with no local bound), plus
+up to 2 s of cleanup; a driver that ignores cancellation
 may keep the connection busy. Results go to `notificationGroupId` (`onRefreshed`): for manual refreshes,
 and after statements whose rule `notifies` (`StatementRule.notifying()`).
 
