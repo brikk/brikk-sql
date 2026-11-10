@@ -87,6 +87,7 @@ the manager and committed on its own.
 | 4 | FQ-11; facts for FQ-07 to FQ-10 | FQ-11 done. FQ-07 deferred with a design. FQ-08, FQ-09 and FQ-10 need the owner's decision; see each item. |
 | 5 | FQ-02, FQ-03, FQ-20 | FQ-02 and FQ-20 done. FQ-03 not done: no flag met its condition; see the item. |
 | 6 | FQ-05, FQ-06 | FQ-05 done. FQ-06: literals named; the hooks need the owner's decision on public API; see the item. |
+| 7 | FQ-12, FQ-13, FQ-14 | FQ-12 and FQ-14 done. FQ-13 done except the two parts that are the owner's decision; see the item. |
 
 Left open by the rounds so far, for the owner:
 
@@ -533,15 +534,34 @@ syntax error and catch only those (KQ-03). If they cannot be told apart from int
 failures, keep the broad mapping and say so in the KDoc as an advisory-tier exception to
 the contract.
 
+Done in round 7, for both verifiers. Doris `verify` and `verifyExpression` reject only
+`ParseException` and its subclass `SyntaxParseException`, the two types the pinned
+4.1.5 parser uses, and rethrow anything else. ShardingSphere could be narrowed after
+all: the pinned 5.5.2 parser reports every syntax error as `SQLParsingException`, in all
+four dialects, so the verifier catches that type only. The reviewer ran 2,226 malformed
+inputs through Doris and about 6,840 per dialect through ShardingSphere, including every
+prefix of a statement as it is typed. No input moved from a rejection to a thrown
+exception, and no corpus ledger moved.
+
+Found while testing, present before this round and not changed by it:
+
+- The ShardingSphere PostgreSQL grammar slows down exponentially on balanced nested
+  parentheses: `SELECT ((...1))` took 0.7 seconds at depth 16, 5.8 at depth 18 and 49.5
+  at depth 20. The verifier has no cancellation hook, so an editor thread that calls it
+  can be held for that long.
+- Very deep nesting raises `StackOverflowError` in Doris, and in ShardingSphere's MySQL
+  and Hive grammars. It is an `Error`, so it propagated before and still does.
+
 ### FQ-13. Verifier lifecycle (Behaviour)
 
 - `SqlVerifier` is not `AutoCloseable`, but `SqlVerifiers.forEngine("duckdb")` returns a
   new `DuckdbVerifier` holding an embedded database, typed as `SqlVerifier`. Ten test
   sites in seven files call `SqlVerifiers.forEngine("duckdb")!!.verify(...)` inline and
   never close it.
-- `DuckdbVerifier.close()` (`brikk-sql-verify-duckdb/src/.../DuckdbVerifier.kt:97-100`)
-  is not synchronised although `verify` is, and `verify` after `close` silently opens a
-  new database. `ParseOnlyDuckdbVerifier` after `close` returns `Unavailable`.
+- `verify` on a `DuckdbVerifier` after `close` silently opens a new database
+  (`brikk-sql-verify-duckdb/src/.../DuckdbVerifier.kt`). `ParseOnlyDuckdbVerifier` after
+  `close` returns `Unavailable`. (An earlier version of this note said `close()` was not
+  synchronised. It is, and was.)
 - The oracle's `ClickhouseVerifier.close()`
   (`brikk-sql-oracle/src/.../ClickhouseVerifier.kt:46`) is unsynchronised against a
   synchronised `verify` on a native chDB session.
@@ -553,6 +573,24 @@ synchronise the two `close()` methods, and give both DuckDB verifiers the same
 after-close result (`Unavailable`). Close the verifier in the ten test sites. The
 interface is published; check the supertype change against `AGENTS.md`. For the Doris
 loader, either document it or tie it to the verifier's lifetime.
+
+Done in round 7, without the parts that change public API or published behaviour:
+
+- The oracle's `ClickhouseVerifier.close()` is synchronised with `verify`.
+- The after-close behaviour of each verifier and the lifetime of the Doris class loader
+  are documented where a caller sees them.
+- Sixteen test sites now close the verifier they create.
+
+Left for the owner:
+
+- Whether `SqlVerifier` should extend `AutoCloseable`. It is binary compatible, but it
+  is new public API, and an implementer with its own `close()` that is not an override
+  would stop compiling.
+- What a verifier does after `close()`. Today `DuckdbVerifier` reopens,
+  `ParseOnlyDuckdbVerifier` returns `Unavailable`, and the oracle's `ClickhouseVerifier`
+  throws `IllegalStateException` from the chDB session. The `VerifyResult.Unavailable`
+  KDoc says `Unavailable` covers a closed engine, so the last one contradicts the API
+  documentation. Returning `Unavailable` there needs a closed flag under the same lock.
 
 ### FQ-14. Deadline, bounded workers and size preflight for the ClickHouse verifier (Behaviour)
 
@@ -590,6 +628,15 @@ On the DuckDB side the opposite limit is worth a decision. Its pool is two threa
 no queue (`ConnectionDuckdbVerifier.kt:123-127`), so a third concurrent verification
 returns "helper capacity is exhausted". Decide whether that is the wanted result when
 several editors highlight at once.
+
+Done in round 7. The client deadline is 30 seconds plus twice the statement timeout, 40
+seconds with the default. It is a last resort for a hung connect or a driver that
+ignores its timeout, chosen so that it cannot cut off a normal answer; an editor that
+passes `checkCanceled` gives up long before it. The connection allowance could be
+shorter once the driver's own connect timeout is known. There are 16 verification
+workers and 4 cancellation workers, with no queue: when all workers are busy, further
+calls return `Unavailable` at once. The question above about the DuckDB verifier's
+two-thread pool is still open.
 
 ### FQ-15. Shared connection plumbing (Move, optional)
 

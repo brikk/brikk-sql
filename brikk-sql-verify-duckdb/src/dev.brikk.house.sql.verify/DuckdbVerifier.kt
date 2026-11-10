@@ -26,6 +26,7 @@ import java.util.concurrent.CancellationException
  * Cold start: the first [verify] boots an embedded DuckDB; the connection is created lazily
  * and kept for the verifier's lifetime. [verify] is synchronized because one connection is
  * shared. Call [close] to release the embedded database.
+ * A [verify] after [close] opens a new embedded database.
  */
 public class DuckdbVerifier internal constructor(
     private val connect: () -> Connection,

@@ -32,6 +32,8 @@ import org.antlr.v4.runtime.tree.TerminalNode
  * Cold start is class loading plus ANTLR grammar initialization on the first parse (tens of
  * milliseconds). One instance is safe to share across threads: every call builds a fresh lexer
  * and parser.
+ * Parser classes loaded from explicit jars are cached for the life of the JVM; their
+ * URLClassLoaders are not released when a verifier is no longer used.
  */
 public class DorisVerifier private constructor(private val linked: LinkedParser) : SqlVerifier {
     override val engine: String = "doris"
@@ -46,11 +48,8 @@ public class DorisVerifier private constructor(private val linked: LinkedParser)
         VerifyResult.Accepted
     } catch (e: InvocationTargetException) {
         val cause = e.targetException
-        if (cause !is Exception) throw cause
-        val message = cause.message?.trim()
-        VerifyResult.Rejected(
-            errorAt(sql, if (isParseException(cause)) message.orEmpty() else "${cause::class.java.simpleName}: $message"),
-        )
+        if (!isParseException(cause)) throw cause
+        VerifyResult.Rejected(errorAt(sql, cause.message?.trim().orEmpty()))
     }
 
     /** True when [cause] is (a subclass of) Doris's ParseException, checked by name across class loaders. */

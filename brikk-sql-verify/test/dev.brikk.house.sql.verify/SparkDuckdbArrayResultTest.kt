@@ -74,7 +74,7 @@ class SparkDuckdbArrayResultTest {
                         assertEquals(listOf("Array index/endpoint/comparator/null-order semantics have no verified executable DuckDB mapping"),
                             output.unsupportedMessages, output.toString())
                         assertFailsWith<UnsupportedError> { fragment.toExecutable("duckdb") }
-                        assertIs<VerifyResult.Accepted>(SqlVerifiers.forEngine("duckdb")!!.verify(output.sql), output.sql)
+                        assertIs<VerifyResult.Accepted>(DuckdbVerifier().use { it.verify(output.sql) }, output.sql)
                         statement.executeQuery("SELECT to_json(a) FROM (${output.sql}) AS q").use { rows ->
                             assertTrue(rows.next())
                             assertEquals(expected, rows.getString(1), output.sql)
@@ -116,7 +116,7 @@ class SparkDuckdbArrayResultTest {
                 )) {
                     val output = SqlFragment("SELECT $call AS result", "spark").transpileTo("duckdb")
                     assertTrue(output.unsupportedMessages.isEmpty(), output.toString())
-                    assertIs<VerifyResult.Accepted>(SqlVerifiers.forEngine("duckdb")!!.verify(output.sql), output.sql)
+                    assertIs<VerifyResult.Accepted>(DuckdbVerifier().use { it.verify(output.sql) }, output.sql)
                     statement.executeQuery(output.sql).use { rows ->
                         assertTrue(rows.next())
                         assertEquals(expected, rows.getString("result"), output.sql)

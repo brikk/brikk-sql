@@ -23,6 +23,7 @@ import org.duckdb.DuckDBDriver
  * DuckDB's UTF-8 bytes in 2.0, or code points in earlier versions.
  *
  * Calls are synchronized over one lazily opened connection; [close] releases it.
+ * A [verify] after [close] returns [VerifyResult.Unavailable].
  * Input budgets match [ConnectionDuckdbVerifier], but this embedded API is not process-
  * isolated and does not provide its helper deadline/cancellation contract. IDE consumers
  * must use an out-of-process helper through [ConnectionDuckdbVerifier] for crash containment.

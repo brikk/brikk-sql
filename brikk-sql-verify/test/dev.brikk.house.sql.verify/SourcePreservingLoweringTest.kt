@@ -23,7 +23,7 @@ class SourcePreservingLoweringTest {
     private fun probe(source: String, expected: List<List<String?>>) {
         val fragment = SqlFragment(source, "duckdb")
         val preserved = fragment.toSourcePreservingExecutable()
-        assertIs<VerifyResult.Accepted>(SqlVerifiers.forEngine("duckdb")!!.verify(preserved.sql), preserved.sql)
+        assertIs<VerifyResult.Accepted>(DuckdbVerifier().use { it.verify(preserved.sql) }, preserved.sql)
         assertEquals(expected, rows(preserved.sql), preserved.sql)
         assertEquals(rows(fragment.toExecutable("duckdb", trackSourceMap = false).sql), rows(preserved.sql), preserved.sql)
         assertTrue(preserved.unsupportedMessages.isEmpty(), preserved.unsupportedMessages.joinToString())

@@ -42,7 +42,10 @@ class SqlVerifierTest {
         )) {
             for (target in listOf("doris", "trino", "duckdb")) {
                 val result = SqlFragment(source, "duckdb").toExecutable(target)
-                assertIs<VerifyResult.Accepted>(SqlVerifiers.forEngine(target)!!.verify(result.sql), result.sql)
+                val verifier = SqlVerifiers.forEngine(target)!!
+                (verifier as? AutoCloseable).use {
+                    assertIs<VerifyResult.Accepted>(verifier.verify(result.sql), result.sql)
+                }
                 if (target == "duckdb") {
                     java.sql.DriverManager.getConnection("jdbc:duckdb:").use { connection ->
                         connection.createStatement().use { statement ->
@@ -63,8 +66,10 @@ class SqlVerifierTest {
         // Fidelity tier (native, non-advisory) + advisory tier (ShardingSphere, postgres included).
         for (engine in listOf("trino", "duckdb", "doris", "postgres", "mysql", "hive", "clickhouse")) {
             val verifier = SqlVerifiers.forEngine(engine)
-            assertNotNull(verifier, "expected a verifier for $engine")
-            assertEquals(engine, verifier.engine)
+            (verifier as? AutoCloseable).use {
+                assertNotNull(verifier, "expected a verifier for $engine")
+                assertEquals(engine, verifier.engine)
+            }
         }
         assertNotNull(SqlVerifiers.forEngine("TRINO"), "engine lookup is case-insensitive")
         assertNotNull(SqlVerifiers.forEngine("POSTGRES"), "engine lookup is case-insensitive")
@@ -193,27 +198,31 @@ class SqlVerifierTest {
 
     @Test
     fun duckdbAcceptsValidSql() {
-        val verifier = SqlVerifiers.forEngine("duckdb")!!
-        assertIs<VerifyResult.Accepted>(verifier.verify("SELECT a FROM t WHERE b = 1"), "select goes through json_serialize_sql")
-        assertIs<VerifyResult.Accepted>(verifier.verify("CREATE TABLE t (a INT)"), "non-select goes through the prepare fallback")
-        assertTrue(
-            verifier.verify("SELECT * FROM completely_unknown_table") is VerifyResult.Accepted,
-            "binder errors (unknown table) are not grammar rejections",
-        )
+        (SqlVerifiers.forEngine("duckdb")!! as DuckdbVerifier).use { verifier ->
+            assertIs<VerifyResult.Accepted>(verifier.verify("SELECT a FROM t WHERE b = 1"), "select goes through json_serialize_sql")
+            assertIs<VerifyResult.Accepted>(verifier.verify("CREATE TABLE t (a INT)"), "non-select goes through the prepare fallback")
+            assertTrue(
+                verifier.verify("SELECT * FROM completely_unknown_table") is VerifyResult.Accepted,
+                "binder errors (unknown table) are not grammar rejections",
+            )
+        }
     }
 
     @Test
     fun duckdbRejectsInvalidSqlWithErrorAndPosition() {
-        val error = assertIs<VerifyResult.Rejected>(SqlVerifiers.forEngine("duckdb")!!.verify("SELECT FROM WHERE")).error
+        val error = (SqlVerifiers.forEngine("duckdb")!! as DuckdbVerifier).use {
+            assertIs<VerifyResult.Rejected>(it.verify("SELECT FROM WHERE")).error
+        }
         assertEquals(1, error.line)
         assertEquals(13, error.column)
     }
 
     @Test
     fun duckdbVerifiesExpressionFragments() {
-        val verifier = SqlVerifiers.forEngine("duckdb")!!
-        assertIs<VerifyResult.Accepted>(verifier.verifyExpression("x -> '$.family'"))
-        assertFalse(verifier.verifyExpression("1 +") is VerifyResult.Accepted)
+        (SqlVerifiers.forEngine("duckdb")!! as DuckdbVerifier).use { verifier ->
+            assertIs<VerifyResult.Accepted>(verifier.verifyExpression("x -> '$.family'"))
+            assertFalse(verifier.verifyExpression("1 +") is VerifyResult.Accepted)
+        }
     }
 
     @Test
@@ -449,7 +458,6 @@ class SqlVerifierTest {
         // Tier-1 fixes (docs/research/function-semantics-trino-duckdb.md contradictions 1+2,
         // ported sqlglot duckdb _greatest_least_sql / regexpreplace_sql) and the entry-15
         // TIME(x) rendering. Keep in sync with brikk-sql's FunctionSemanticsTest.
-        val verifier = SqlVerifiers.forEngine("duckdb")!!
         val renderings = listOf(
             "SELECT CASE WHEN a IS NULL OR b IS NULL OR c IS NULL THEN NULL ELSE GREATEST(a, b, c) END FROM t",
             "SELECT CASE WHEN a IS NULL THEN NULL ELSE LEAST(a) END FROM t",
@@ -458,16 +466,18 @@ class SqlVerifierTest {
             "SELECT REGEXP_REPLACE(x, 'a', 'b', 'ims') FROM t",
             "SELECT CAST(CAST(x AS TIMESTAMP) AS TIME) FROM t",
         )
-        for (sql in renderings) {
-            val result = verifier.verify(sql)
-            assertIs<VerifyResult.Accepted>(result, "DuckDB parser rejected `$sql`: $result")
+        (SqlVerifiers.forEngine("duckdb")!! as DuckdbVerifier).use { verifier ->
+            for (sql in renderings) {
+                val result = verifier.verify(sql)
+                assertIs<VerifyResult.Accepted>(result, "DuckDB parser rejected `$sql`: $result")
+            }
+            // ... and the Python-oracle rendering of a zone-less TIME(x) (empty AT TIME ZONE
+            // operand) is indeed grammar-invalid — the reason entry 15 diverges.
+            assertFalse(
+                verifier.verify("SELECT CAST(CAST(x AS TIMESTAMPTZ) AT TIME ZONE  AS TIME) FROM t") is VerifyResult.Accepted,
+                "DuckDB unexpectedly accepts an empty AT TIME ZONE operand",
+            )
         }
-        // ... and the Python-oracle rendering of a zone-less TIME(x) (empty AT TIME ZONE
-        // operand) is indeed grammar-invalid — the reason entry 15 diverges.
-        assertFalse(
-            verifier.verify("SELECT CAST(CAST(x AS TIMESTAMPTZ) AT TIME ZONE  AS TIME) FROM t") is VerifyResult.Accepted,
-            "DuckDB unexpectedly accepts an empty AT TIME ZONE operand",
-        )
     }
 
     @Test

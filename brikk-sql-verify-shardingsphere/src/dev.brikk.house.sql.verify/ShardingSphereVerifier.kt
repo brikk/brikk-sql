@@ -1,8 +1,8 @@
 package dev.brikk.house.sql.verify
 
-import java.util.concurrent.CancellationException
 import org.apache.shardingsphere.sql.parser.api.CacheOption
 import org.apache.shardingsphere.sql.parser.api.SQLParserEngine
+import org.apache.shardingsphere.sql.parser.exception.SQLParsingException
 
 /**
  * A portable, pure-JVM **grammar oracle** backed by Apache ShardingSphere's re-implemented SQL
@@ -40,16 +40,9 @@ public class ShardingSphereVerifier(
         SQLParserEngine(databaseType, CacheOption(CACHE_INITIAL_CAPACITY, CACHE_MAXIMUM_SIZE))
     }
 
-    override fun verify(sql: String): VerifyResult =
-        try {
-            withOwnContextClassLoader { parser.parse(sql, false) }
-            VerifyResult.Accepted
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            // ShardingSphere reports grammar rejections through several exception types.
-            VerifyResult.Rejected(VerifyError(e.message ?: e::class.java.name))
-        }
+    override fun verify(sql: String): VerifyResult = shardingSphereParseResult {
+        withOwnContextClassLoader { parser.parse(sql, false) }
+    }
 
     /** ShardingSphere has no expression-only entry point, so the fragment is wrapped in `SELECT`. */
     override fun verifyExpression(sql: String): VerifyResult =
@@ -81,4 +74,12 @@ public class ShardingSphereVerifier(
             else -> null
         }
     }
+}
+
+/** 5.5.2's error listener and final LL bailout both report SQLParsingException. */
+internal inline fun shardingSphereParseResult(parse: () -> Unit): VerifyResult = try {
+    parse()
+    VerifyResult.Accepted
+} catch (e: SQLParsingException) {
+    VerifyResult.Rejected(VerifyError(e.message ?: e::class.java.name))
 }

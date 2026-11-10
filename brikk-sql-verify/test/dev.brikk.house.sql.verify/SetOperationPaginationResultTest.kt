@@ -53,7 +53,10 @@ class SetOperationPaginationResultTest {
         assertEquals(listOf(1, 5), rows(output), output)
         for (dialect in listOf("duckdb", "doris", "trino")) {
             val sql = tree.sql(dialect)
-            assertIs<VerifyResult.Accepted>(SqlVerifiers.forEngine(dialect)!!.verify(sql), sql)
+            val verifier = SqlVerifiers.forEngine(dialect)!!
+            (verifier as? AutoCloseable).use {
+                assertIs<VerifyResult.Accepted>(verifier.verify(sql), sql)
+            }
         }
         val nested = Dialects.DUCKDB.parseOne("SELECT 1 AS x UNION ALL SELECT 2 AS x ORDER BY x LIMIT 1")
         val union = Union(args("this" to nested, "expression" to Dialects.DUCKDB.parseOne("SELECT 3 AS x"), "distinct" to false))

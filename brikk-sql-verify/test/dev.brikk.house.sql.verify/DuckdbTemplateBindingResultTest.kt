@@ -42,7 +42,7 @@ class DuckdbTemplateBindingResultTest {
                     }
                     append(result.sql, cursor, result.sql.length)
                 }
-                assertIs<VerifyResult.Accepted>(SqlVerifiers.forEngine("duckdb")!!.verify(adapted), adapted)
+                assertIs<VerifyResult.Accepted>(DuckdbVerifier().use { it.verify(adapted) }, adapted)
                 connection.prepareStatement(adapted).use { statement ->
                     for (value in listOf<Int?>(7, null)) {
                         for (index in result.parameterOccurrences.indices) {

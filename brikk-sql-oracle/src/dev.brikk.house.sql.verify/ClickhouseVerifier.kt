@@ -23,6 +23,7 @@ import dev.brikk.house.chdb.ChdbOutputFormat
  * A compatible `libchdb` is selected by [ChdbConfig.libraryPath], the `brikk.chdb.library`
  * system property, or a matching `brikk-chdb-native-*` classpath resource. No ClickHouse server,
  * CLI, JDBC driver, or child process is involved. Call [close] when the verifier is no longer needed.
+ * A [verify] after [close] on an opened native session throws [IllegalStateException] (the session is closed).
  */
 class ClickhouseVerifier private constructor(
     private val session: ChdbSession?,
@@ -47,6 +48,7 @@ class ClickhouseVerifier private constructor(
     override fun verifyExpression(sql: String): VerifyResult =
         verify("$EXPRESSION_PREFIX$sql").withoutPrefix(EXPRESSION_PREFIX)
 
+    @Synchronized
     override fun close() {
         session?.close()
     }
