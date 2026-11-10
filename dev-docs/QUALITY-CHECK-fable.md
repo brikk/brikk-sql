@@ -1,14 +1,17 @@
 # Quality check (Fable), 2026-11-09
 
-A second review of the tree on `main`, by reading the code, not the history. It agrees
-with [the Grok quality check](QUALITY-CHECK-grok.md): the Kotlin code is respectable, and
-the SQLGlot port should keep its shape. This note covers what that one does not: engine
-logic in shared code, IDE blocking, the verifier contract, stale comments beyond the
-generator headers, and repository clutter.
+A review of the tree on `main`, by reading the code, not the history. Its verdict: the
+Kotlin code is respectable, and the SQLGlot port should keep its shape. It covers engine
+logic in shared code, IDE blocking, the verifier contract, correctness and failure
+boundaries, stale comments, and repository clutter.
 
-Section F and parts of section C roll in the [Kimi quality check](QUALITY-CHECK-kimi.md),
-which found correctness problems this review missed. Each adopted item names its `KQ` id
-and says where this note agrees, refines or differs.
+Two other reviews were made the same day, by Grok and by Kimi. Their notes were removed
+from the tree once their content had been dealt with here; both can be read at commit
+`fa5138bc` (`dev-docs/QUALITY-CHECK-grok.md` and `dev-docs/QUALITY-CHECK-kimi.md`). The
+ids `QC-01` to `QC-05` below are the Grok note's items and `KQ-01` to `KQ-08` are the
+Kimi note's. Section F and parts of section C roll in the Kimi items, which found
+correctness problems this review missed; each says where this note agrees, refines or
+differs.
 
 Nothing was built or run for this review, because another session was running tests in the
 checkout. The Kimi check did run the suites and records the results: core 1,880 of 1,880
@@ -27,7 +30,11 @@ Each item has a risk label, because the tree has just been through a destabilisi
 
 Do not mix a Move and a Behaviour change in one commit.
 
-The standing constraint in the Grok note applies here too. Nothing below splits
+The Grok note's standing constraint applies here: until there is an explicit decision to
+diverge from SQLGlot, the port keeps its shape and its `sqlglot:` provenance comments.
+Its placement rule (QC-05) applies too: a Brikk-native engine contract goes in a small
+internal file beside that dialect, not into the ported `Parser.kt` or `Generator.kt`, and
+no `Dialect` flag exists only to switch on one engine's helper. Nothing below splits
 `Parser.kt` or `Generator.kt` or retypes the `Expression` args. Two items change
 behaviour that upstream SQLGlot shares, FQ-27 and FQ-29. They are small and deliberate,
 and each should be recorded in `docs/brikk-extensions.md` when made.
@@ -1000,10 +1007,9 @@ does not have the flag: its generated files would need their generators changed 
 
 ## F. Correctness and failure boundaries
 
-These come from the [Kimi check](QUALITY-CHECK-kimi.md). I verified each against the
-source and agree with all of them as problems. Where my suggested fix differs from the
-Kimi one, the item says so. That note has the regression tests to write for each; they
-are not repeated here.
+These come from the Kimi check. I verified each against the source and agree with all of
+them as problems. Where my suggested fix differs from the Kimi one, the item says so.
+The regression tests that note listed for each were written with the fixes.
 
 ### FQ-26. `IdentityKey` hashes by identity (KQ-01, Behaviour)
 
