@@ -22,7 +22,7 @@ def sqlglot_version() -> str:
 
 
 def kotlin_string(s: str) -> str:
-    """Quoted literal: escape Kotlin metacharacters and every control below U+0020."""
+    """Quoted literal: escape Kotlin metacharacters, C0 controls and DEL."""
     out = []
     for ch in s:
         if ch == "\\":
@@ -37,7 +37,7 @@ def kotlin_string(s: str) -> str:
             out.append("\\r")
         elif ch == "\t":
             out.append("\\t")
-        elif ord(ch) < 0x20:
+        elif ord(ch) < 0x20 or ord(ch) == 0x7F:
             out.append(f"\\u{ord(ch):04X}")
         else:
             out.append(ch)
@@ -45,8 +45,8 @@ def kotlin_string(s: str) -> str:
 
 
 def kotlin_quoted_string(s: str) -> str:
-    """Quoted literal escaping only backslash, double quote and dollar sign."""
-    return '"' + s.replace("\\", "\\\\").replace('"', '\\"').replace("$", "\\$") + '"'
+    """Quoted literal escaping Kotlin metacharacters, C0 controls and DEL."""
+    return kotlin_string(s)
 
 
 def kotlin_text_string(s: str) -> str:

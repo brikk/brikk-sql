@@ -54,6 +54,8 @@ import pathlib
 import re
 import sys
 
+from generator_helpers import kotlin_string
+
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 VENDOR = ROOT / "vendor" / "data"
 LIVE_TSV = VENDOR / "starrocks-builtin-functions-4.1.4.tsv"
@@ -157,7 +159,7 @@ def load_live() -> list[tuple[str, list[str], str, str]]:
 
 
 def kesc(s: str) -> str:
-    return s.replace("\\", "\\\\").replace('"', '\\"').replace("$", "\\$")
+    return kotlin_string(s)[1:-1]
 
 
 def main() -> None:

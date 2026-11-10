@@ -74,11 +74,11 @@ reproduce earlier evidence; that does not make their observations current engine
   verifies the source harvest; [vendor provenance](../vendor/README.md) documents its CLI.
   Its tests are in `test_verify_test_expansion_sources.py`.
 - **Shared generator helpers.** `generator_helpers.py` supplies the common SQLGlot version
-  stamp and four intentionally different Kotlin string-literal renderers. The AST and tokenizer
-  generators escape every control below U+0020; DuckDB/Trino escape only backslash, quote and
-  dollar; hazard/coverage generators also escape newline, carriage return and tab; DataFusion
-  and Doris properties retain JSON escaping and nullable values. The unique ClickHouse
-  (also escapes NUL) and StarRocks (unquoted content) escapers stay local. The dialect extractor,
+  stamp and shared Kotlin string-literal renderers. The AST and tokenizer
+  generators and DuckDB/Trino/ClickHouse/StarRocks share escaping for backslash, quote, dollar,
+  LF/CR/tab (`\n`, `\r`, `\t`), and all other C0 controls and DEL (`\uXXXX`); StarRocks uses
+  unquoted content. Hazard/coverage generators escape only the metacharacters and LF/CR/tab;
+  DataFusion and Doris properties retain JSON escaping and nullable values. The dialect extractor,
   lineage and qualification generators keep their distinct version/error-handling policies.
   `test_generator_helpers.py` checks these spelling boundaries and the Doris-properties
   escaper against every string literal in its checked-in output, without the absent clones.

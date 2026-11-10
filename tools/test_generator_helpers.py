@@ -10,6 +10,10 @@ import unittest
 from unittest.mock import patch
 
 import generator_helpers as helpers
+from generate_clickhouse_functions import kstr as clickhouse_string
+from generate_duckdb_functions import kstr as duckdb_string
+from generate_starrocks_functions import kesc as starrocks_content
+from generate_trino_functions import kstr as trino_string
 
 
 class GeneratorHelpersTest(unittest.TestCase):
@@ -31,11 +35,23 @@ class GeneratorHelpersTest(unittest.TestCase):
         with patch.object(helpers.subprocess, "run", side_effect=KeyboardInterrupt), self.assertRaises(KeyboardInterrupt):
             helpers.sqlglot_version()
 
-    def test_quoted_variant_escapes_only_the_three_metacharacters(self):
-        escaped = {"\\": "\\\\", '"': '\\"', "$": "\\$"}
-        for i in range(128):
-            ch = chr(i)
-            self.assertEqual('"' + escaped.get(ch, ch) + '"', helpers.kotlin_quoted_string(ch))
+    def test_function_generators_escape_c0_controls_and_del(self):
+        escaped = {"\n": "\\n", "\r": "\\r", "\t": "\\t"}
+        for escape in (duckdb_string, trino_string, clickhouse_string, lambda s: '"' + starrocks_content(s) + '"'):
+            for i in (*range(32), 127):
+                with self.subTest(escape=escape, code=i):
+                    self.assertEqual('"' + escaped.get(chr(i), f"\\u{i:04X}") + '"', escape(chr(i)))
+
+    def test_function_generators_preserve_spelling_without_c0_controls_or_del(self):
+        def old_content(s):
+            return s.replace("\\", "\\\\").replace('"', '\\"').replace("$", "\\$")
+
+        values = [''.join(chr(i) for i in range(32, 127)), "é中文😀\x80\x85\u2028\u2029"]
+        values.extend(''.join(parts) for parts in itertools.product(['\\', '"', '$', 'a', 'é'], repeat=3))
+        for value in values:
+            self.assertEqual(old_content(value), starrocks_content(value))
+            for escape in (duckdb_string, trino_string, clickhouse_string):
+                self.assertEqual('"' + old_content(value) + '"', escape(value))
 
     def test_text_variant_adds_only_newline_carriage_return_and_tab(self):
         escaped = {"\\": "\\\\", '"': '\\"', "$": "\\$", "\n": "\\n", "\r": "\\r", "\t": "\\t"}
@@ -43,11 +59,11 @@ class GeneratorHelpersTest(unittest.TestCase):
             ch = chr(i)
             self.assertEqual('"' + escaped.get(ch, ch) + '"', helpers.kotlin_text_string(ch))
 
-    def test_full_variant_escapes_all_low_controls_with_uppercase_hex(self):
+    def test_full_variant_escapes_c0_controls_and_del_with_uppercase_hex(self):
         escaped = {"\\": "\\\\", '"': '\\"', "$": "\\$", "\n": "\\n", "\r": "\\r", "\t": "\\t"}
         for i in range(128):
             ch = chr(i)
-            expected = escaped.get(ch, f"\\u{i:04X}" if i < 32 else ch)
+            expected = escaped.get(ch, f"\\u{i:04X}" if i < 32 or i == 127 else ch)
             self.assertEqual('"' + expected + '"', helpers.kotlin_string(ch))
 
     def test_json_variant_keeps_json_control_spelling_and_null(self):
