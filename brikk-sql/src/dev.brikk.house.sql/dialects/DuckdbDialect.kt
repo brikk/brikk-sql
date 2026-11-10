@@ -67,9 +67,6 @@ open class DuckdbDialect: Dialect() {
     override val variantAccessYieldsVariant: Boolean get() = true
     override val triggerScopes: Boolean get() = true
     override val statefulCtes: Boolean get() = true
-    override val nativeStorageContracts: Boolean get() = true
-    override val nativeFunctionContracts: Boolean get() = true
-    override val copyLayoutOptions: Boolean get() = true
     override val dmlScopes: Boolean get() = true
     override val statementResultRows: Boolean get() = true
     override val parametersDefaultToSessionVariables: Boolean get() = true

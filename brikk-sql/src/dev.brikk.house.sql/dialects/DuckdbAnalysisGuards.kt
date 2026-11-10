@@ -15,6 +15,8 @@ import dev.brikk.house.sql.optimizer.Scope
 import dev.brikk.house.sql.parser.Token
 import dev.brikk.house.sql.parser.TokenType
 
+internal val Dialect.usesDuckdbNativeContracts: Boolean get() = this is DuckdbDialect
+
 // Analysis passes' guards for native constructs: most return a refusal message; two return
 // outcomes for handled statements, EXPLAIN, triggers, or alternative result shapes.
 // Add new constructs to each pass's list here, with differences readable side by side;
@@ -23,13 +25,13 @@ import dev.brikk.house.sql.parser.TokenType
 // apply to every dialect (e.g. trigger DDL, secure views, UPDATE/MERGE lineage).
 internal fun duckdbQualificationRefusal(expression: Expression, resolvedDialect: Dialect): String? {
     if (expression.hasDuckdbRegexSelector()) return "Runtime regex column-selector qualification is not modeled"
-    if (resolvedDialect.nativeStorageContracts && expression.hasDuckdbSnapshot()) return "Snapshot qualification is not modeled"
-    if (resolvedDialect.nativeFunctionContracts && expression.hasDuckdbGeoJsonContract()) return "GeoJSON file/Feature rewriting is not modeled"
-    if (resolvedDialect.nativeFunctionContracts && expression.hasDuckdbParquetContract()) return "Parquet schema/virtual-column rewriting is not modeled; preserve the native scan"
-    if (resolvedDialect.nativeFunctionContracts && expression.walk().any { it.isDuckdbSetval() })
+    if (resolvedDialect.usesDuckdbNativeContracts && expression.hasDuckdbSnapshot()) return "Snapshot qualification is not modeled"
+    if (resolvedDialect.usesDuckdbNativeContracts && expression.hasDuckdbGeoJsonContract()) return "GeoJSON file/Feature rewriting is not modeled"
+    if (resolvedDialect.usesDuckdbNativeContracts && expression.hasDuckdbParquetContract()) return "Parquet schema/virtual-column rewriting is not modeled; preserve the native scan"
+    if (resolvedDialect.usesDuckdbNativeContracts && expression.walk().any { it.isDuckdbSetval() })
         return "Automatic rewriting across SETVAL sequence mutation is not modeled"
     if (expression.isDuckdbNameShow()) return "SHOW resolution requires runtime catalog/show_behavior, not SELECT qualification"
-    if (resolvedDialect.copyLayoutOptions && expression.hasDuckdbCopyLayout())
+    if (resolvedDialect.usesDuckdbNativeContracts && expression.hasDuckdbCopyLayout())
         return "COPY layout options bind against output columns; automatic qualification is not modeled"
     if (expression is dev.brikk.house.sql.ast.DuckdbExplain) return "Qualify an EXPLAIN child explicitly; automatic wrapper rewriting is not modeled"
     if (expression.isDuckdbExternalResourceStatement()) return "External-resource options and handles are not SELECT qualification inputs"
@@ -75,10 +77,10 @@ internal fun duckdbTypeAnnotationRefusal(expression: Expression, dialect: Dialec
 
 internal fun duckdbLineageRefusal(expression: Expression, resolvedDialect: Dialect, scope: Scope?): String? {
     if (expression.hasDuckdbRegexSelector()) return "Runtime regex column-selector lineage is not modeled"
-    if (resolvedDialect.nativeStorageContracts && expression.hasDuckdbSnapshot()) return "Snapshot/state lineage is not modeled"
-    if (resolvedDialect.nativeFunctionContracts && expression.hasDuckdbGeoJsonContract()) return "GeoJSON Feature/geometry/file lineage is not modeled"
-    if (resolvedDialect.nativeFunctionContracts && expression.hasDuckdbParquetContract()) return "Parquet file/field-ID/default lineage is not modeled"
-    if (resolvedDialect.nativeFunctionContracts && expression.walk().any { it.isDuckdbSetval() })
+    if (resolvedDialect.usesDuckdbNativeContracts && expression.hasDuckdbSnapshot()) return "Snapshot/state lineage is not modeled"
+    if (resolvedDialect.usesDuckdbNativeContracts && expression.hasDuckdbGeoJsonContract()) return "GeoJSON Feature/geometry/file lineage is not modeled"
+    if (resolvedDialect.usesDuckdbNativeContracts && expression.hasDuckdbParquetContract()) return "Parquet file/field-ID/default lineage is not modeled"
+    if (resolvedDialect.usesDuckdbNativeContracts && expression.walk().any { it.isDuckdbSetval() })
         return "SETVAL sequence-state lineage is not modeled"
     if (expression.isDuckdbNameShow()) return "SHOW metadata/setting output is not target query-result lineage"
     if (expression is dev.brikk.house.sql.ast.DuckdbExplain) return "EXPLAIN plan text has computed provenance, not child-result lineage"
@@ -125,10 +127,10 @@ internal fun duckdbScopeAnalysisGuard(node: Expression, dialect: Dialect): Duckd
 }
 
 internal fun duckdbTranspileStorageIssue(dialect: Dialect, sql: String): String? =
-    if (dialect.nativeStorageContracts) duckdbStorageDdlIssue(sql) else null
+    if (dialect.usesDuckdbNativeContracts) duckdbStorageDdlIssue(sql) else null
 
 internal fun duckdbSourceTablesRefusal(dialectObj: Dialect, sql: String, ast: () -> Expression): String? {
-    if (dialectObj.nativeStorageContracts && (duckdbStorageDdlIssue(sql) != null || ast().hasDuckdbSnapshot())) return "Storage DDL/snapshot dependencies are not modeled"
+    if (dialectObj.usesDuckdbNativeContracts && (duckdbStorageDdlIssue(sql) != null || ast().hasDuckdbSnapshot())) return "Storage DDL/snapshot dependencies are not modeled"
     if (ast().isDuckdbNameShow()) return "SHOW target dependencies depend on runtime name resolution"
     return null
 }
@@ -143,11 +145,11 @@ internal sealed interface DuckdbOutputShapeGuard {
 
 internal fun duckdbOutputShapeGuard(tree: Expression, sql: String, dialectObj: () -> Dialect): DuckdbOutputShapeGuard? {
     if (tree.hasDuckdbRegexSelector()) return DuckdbOutputShapeGuard.Refusal("Runtime regex column-selector result facts are not modeled")
-    if (dialectObj().nativeStorageContracts && (duckdbStorageDdlIssue(sql) != null || tree.hasDuckdbSnapshot())) return DuckdbOutputShapeGuard.Refusal("Storage DDL/snapshot result facts are not modeled")
-    if (dialectObj().nativeFunctionContracts && (tree.hasDuckdbGeoJsonContract() || tree.walk().any { it.duckdbGeoJsonScalarType() != null })) return DuckdbOutputShapeGuard.DeclarativeCte
-    if (dialectObj().nativeFunctionContracts && tree.hasDuckdbParquetCall()) return DuckdbOutputShapeGuard.DeclarativeCte
-    if (dialectObj().nativeFunctionContracts && tree.walk().any { it.duckdbRegexName() != null }) return DuckdbOutputShapeGuard.DeclarativeCte
-    if (dialectObj().nativeFunctionContracts && tree.walk().any { it.isDuckdbSetval() }) return DuckdbOutputShapeGuard.DeclarativeCte
+    if (dialectObj().usesDuckdbNativeContracts && (duckdbStorageDdlIssue(sql) != null || tree.hasDuckdbSnapshot())) return DuckdbOutputShapeGuard.Refusal("Storage DDL/snapshot result facts are not modeled")
+    if (dialectObj().usesDuckdbNativeContracts && (tree.hasDuckdbGeoJsonContract() || tree.walk().any { it.duckdbGeoJsonScalarType() != null })) return DuckdbOutputShapeGuard.DeclarativeCte
+    if (dialectObj().usesDuckdbNativeContracts && tree.hasDuckdbParquetCall()) return DuckdbOutputShapeGuard.DeclarativeCte
+    if (dialectObj().usesDuckdbNativeContracts && tree.walk().any { it.duckdbRegexName() != null }) return DuckdbOutputShapeGuard.DeclarativeCte
+    if (dialectObj().usesDuckdbNativeContracts && tree.walk().any { it.isDuckdbSetval() }) return DuckdbOutputShapeGuard.DeclarativeCte
     if (tree.isDuckdbNameShow()) return DuckdbOutputShapeGuard.Refusal("SHOW output depends on runtime show_behavior/catalog; it is not the target query shape")
     if (tree is dev.brikk.house.sql.ast.DuckdbExplain) return DuckdbOutputShapeGuard.Explain
     if (tree.isDuckdbExternalResourceStatement()) return DuckdbOutputShapeGuard.ExternalResource
@@ -162,7 +164,7 @@ internal fun duckdbOutputShapeGuard(tree: Expression, sql: String, dialectObj: (
 }
 
 internal fun duckdbParameterBindingRefusal(source: Dialect, statements: List<Expression>, tokens: List<Token>): String? {
-    if (source.nativeStorageContracts && statements.single().isDuckdbCheckpointCommand() && tokens.any { it.tokenType in setOf(TokenType.PLACEHOLDER, TokenType.PARAMETER, TokenType.COLON) })
+    if (source.usesDuckdbNativeContracts && statements.single().isDuckdbCheckpointCommand() && tokens.any { it.tokenType in setOf(TokenType.PLACEHOLDER, TokenType.PARAMETER, TokenType.COLON) })
         return "Parameter binding in native CHECKPOINT commands is not modeled"
     if (statements.single() is dev.brikk.house.sql.ast.DuckdbExplain && statements.single().thisArg is dev.brikk.house.sql.ast.Command &&
         tokens.any { it.tokenType in setOf(TokenType.PLACEHOLDER, TokenType.PARAMETER, TokenType.COLON) })
