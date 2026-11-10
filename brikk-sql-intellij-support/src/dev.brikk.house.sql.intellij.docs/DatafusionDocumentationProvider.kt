@@ -13,6 +13,8 @@ import com.intellij.sql.dialects.BuiltinFunction
 import com.intellij.sql.psi.SqlFunctionCallExpression
 import com.intellij.sql.psi.SqlReferenceExpression
 import dev.brikk.house.sql.intellij.dialect.DatafusionEditorProfile
+import dev.brikk.house.sql.intellij.dialect.SPICE_DIALECT
+import dev.brikk.house.sql.intellij.dialect.SPICE_PROFILE_VERSION
 import dev.brikk.house.sql.metadata.*
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.Tokenizer
@@ -55,8 +57,8 @@ public open class DatafusionDocumentationProvider(private val profile: Datafusio
         val item = element as? FunctionDocs ?: return constructs.generateDoc(element, originalElement)
         val entry = item.entry
         val snapshot = profile.snapshot(item.file)
-        val evidence = if (profile.dialect == "spice") SPICE_PROFILE_EVIDENCE else DATAFUSION_PROFILE_EVIDENCE
-        val pinned = snapshot.engineVersion == if (profile.dialect == "spice") "2.4.0" else "55.2.0"
+        val evidence = if (profile.dialect == SPICE_DIALECT) SPICE_PROFILE_EVIDENCE else DATAFUSION_PROFILE_EVIDENCE
+        val pinned = snapshot.engineVersion == if (profile.dialect == SPICE_DIALECT) SPICE_PROFILE_VERSION else "55.2.0"
         val captured = if (pinned) evidence.functions(entry.name).filter { it.kind == entry.kind } else emptyList()
         fun esc(text: String) = StringUtil.escapeXmlEntities(text)
         val definitions = snapshot.functions.getAll(entry.name).filter { it.kind == entry.kind }
@@ -87,12 +89,12 @@ public open class DatafusionDocumentationProvider(private val profile: Datafusio
     private fun url(entry: FunctionPresentation): String {
         val docs = requireNotNull(profile.metadata.docs)
         val page = docs.tableFunctions[entry.name] ?: when {
-            profile.dialect == "spice" && entry.name.startsWith("json_") -> "json"
-            profile.dialect == "spice" && (entry.name.startsWith("ai_") || entry.name in setOf("ai", "embed")) -> "ai"
-            entry.kind == FunctionKind.AGGREGATE -> if (profile.dialect == "spice") "aggregate_functions" else "aggregate_functions.html"
-            entry.kind == FunctionKind.WINDOW -> if (profile.dialect == "spice") "window_functions" else "window_functions.html"
+            profile.dialect == SPICE_DIALECT && entry.name.startsWith("json_") -> "json"
+            profile.dialect == SPICE_DIALECT && (entry.name.startsWith("ai_") || entry.name in setOf("ai", "embed")) -> "ai"
+            entry.kind == FunctionKind.AGGREGATE -> if (profile.dialect == SPICE_DIALECT) "aggregate_functions" else "aggregate_functions.html"
+            entry.kind == FunctionKind.WINDOW -> if (profile.dialect == SPICE_DIALECT) "window_functions" else "window_functions.html"
             entry.kind == FunctionKind.TABLE_VALUED -> ""
-            else -> if (profile.dialect == "spice") "scalar_functions" else "scalar_functions.html"
+            else -> if (profile.dialect == SPICE_DIALECT) "scalar_functions" else "scalar_functions.html"
         }
         return docs.base + page
     }

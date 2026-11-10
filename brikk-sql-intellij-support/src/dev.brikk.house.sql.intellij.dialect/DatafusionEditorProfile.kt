@@ -8,11 +8,16 @@ import dev.brikk.house.sql.intellij.completion.*
 import dev.brikk.house.sql.intellij.relation.ExternalRelationFacts
 import dev.brikk.house.sql.intellij.relation.RelationScopeProfile
 import dev.brikk.house.sql.metadata.*
+import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.shape.DatafusionArgumentRole
 import dev.brikk.house.sql.shape.datafusionCallSite
 import dev.brikk.house.sql.intellij.pipe.PipeText
 import java.util.Collections
 import java.util.WeakHashMap
+
+internal const val SCALAR_STUB_KIND: String = "SCALAR_STUB"
+internal const val SPICE_DIALECT: String = "spice"
+internal const val SPICE_PROFILE_VERSION: String = "2.4.0"
 
 /** A consumer supplies stable providers and a cached version selection; these hooks perform no I/O. */
 public open class DatafusionEditorProfile(
@@ -20,7 +25,7 @@ public open class DatafusionEditorProfile(
     override val providers: List<ExternalRelationFacts> = emptyList(),
 ) : SqlCompletionProfile, RelationScopeProfile {
     final override val dialect: String get() = language.profile.coreDialect
-    final override val metadata: DialectMetadata = if (dialect == "spice") SPICE_METADATA else DATAFUSION_METADATA
+    final override val metadata: DialectMetadata = if (dialect == SPICE_DIALECT) SPICE_METADATA else DATAFUSION_METADATA
     override val styles: SqlLookupStyles get() = SqlLookupStyles.DEFAULT
     public open fun serverVersion(file: PsiFile): String? = null
     /** Copied parser settings from the connection catalog, when available. */
@@ -32,15 +37,15 @@ public open class DatafusionEditorProfile(
     override fun functions(file: PsiFile): List<FunctionPresentation> {
         val selected = snapshot(file)
         return presentations.getOrPut(selected) { selected.completableFunctions()
-            .filterNot { it.nativeKind == "SCALAR_STUB" }
-            .map { entry -> if (dialect == "spice" && selected.engineVersion == "2.4.0") entry.copy(
+            .filterNot { it.nativeKind == SCALAR_STUB_KIND }
+            .map { entry -> if (dialect == SPICE_DIALECT && selected.engineVersion == SPICE_PROFILE_VERSION) entry.copy(
                 namedParameters = SPICE_NAMED_ARGUMENTS[entry.name].orEmpty(),
                 returnType = entry.returnType ?: SPICE_SCALAR_RETURN_TYPES[entry.name].takeIf { entry.kind == FunctionKind.SCALAR },
             ) else entry } }
     }
     override fun builtinFunctionFilter(file: PsiFile): (String) -> Boolean {
         val snapshot = snapshot(file)
-        return { name -> snapshot.functions.getAll(name).any { it.nativeKind != "SCALAR_STUB" } ||
+        return { name -> snapshot.functions.getAll(name).any { it.nativeKind != SCALAR_STUB_KIND } ||
             snapshot.grammarForms.orEmpty().any { it.name.equals(name, true) } }
     }
 
@@ -61,16 +66,16 @@ public open class DatafusionEditorProfile(
         val at = source.textOffset(offset)
         val site = datafusionCallSite(source.text, at, dialect)
         val clause = dev.brikk.house.sql.shape.SqlNameContext.of(source.text.take(at), dialect)?.tokens?.lastOrNull {
-            it.tokenType in setOf(dev.brikk.house.sql.parser.TokenType.SELECT, dev.brikk.house.sql.parser.TokenType.WHERE,
-                dev.brikk.house.sql.parser.TokenType.ON, dev.brikk.house.sql.parser.TokenType.GROUP_BY,
-                dev.brikk.house.sql.parser.TokenType.HAVING, dev.brikk.house.sql.parser.TokenType.ORDER_BY)
+            it.tokenType in setOf(TokenType.SELECT, TokenType.WHERE,
+                TokenType.ON, TokenType.GROUP_BY,
+                TokenType.HAVING, TokenType.ORDER_BY)
         }?.tokenType
         return { entry ->
-            entry.nativeKind != "SCALAR_STUB" &&
+            entry.nativeKind != SCALAR_STUB_KIND &&
                 (site?.role != DatafusionArgumentRole.SEARCH_INPUT || entry.name.lowercase() in SEARCH_CALLS) &&
                 !(entry.kind in setOf(FunctionKind.AGGREGATE, FunctionKind.WINDOW) && clause in setOf(
-                    dev.brikk.house.sql.parser.TokenType.WHERE, dev.brikk.house.sql.parser.TokenType.ON, dev.brikk.house.sql.parser.TokenType.GROUP_BY)) &&
-                !(entry.kind == FunctionKind.WINDOW && clause == dev.brikk.house.sql.parser.TokenType.HAVING)
+                    TokenType.WHERE, TokenType.ON, TokenType.GROUP_BY)) &&
+                !(entry.kind == FunctionKind.WINDOW && clause == TokenType.HAVING)
         }
     }
 

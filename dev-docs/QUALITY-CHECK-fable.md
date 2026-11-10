@@ -86,6 +86,7 @@ the manager and committed on its own.
 | 3 | FQ-26, FQ-27, FQ-28 step 1 | Done |
 | 4 | FQ-11; facts for FQ-07 to FQ-10 | FQ-11 done. FQ-07 deferred with a design. FQ-08, FQ-09 and FQ-10 need the owner's decision; see each item. |
 | 5 | FQ-02, FQ-03, FQ-20 | FQ-02 and FQ-20 done. FQ-03 not done: no flag met its condition; see the item. |
+| 6 | FQ-05, FQ-06 | FQ-05 done. FQ-06: literals named; the hooks need the owner's decision on public API; see the item. |
 
 Left open by the rounds so far, for the owner:
 
@@ -257,6 +258,13 @@ The per-node checks at `generator/Generator.kt:662-675` also compare `dialect.na
 existing `native_only_dialect` marker would change when they refuse (that marker refuses
 always; these refuse only for execution).
 
+Done in round 6, narrowed. `ast/BrikkMetaKeys.kt` holds the 29 keys that Brikk invented.
+The 16 keys that upstream SQLGlot also uses as meta keys (`line`, `col`, `start`, `end`,
+`nonnull`, `is_table`, `case_sensitive`, `dot_parts`, `quoted_table`, `quoted_column`,
+`maybe_column`, `query_type`, `top`, `inline`, `clickhouse_name`, `bigquery_name`) stay
+as string literals, so the ported code still reads like the Python. The compiled classes
+of `brikk-sql` are identical to before apart from the new object.
+
 ### FQ-06. Profile hooks in place of DataFusion downcasts (Move)
 
 Generic IntelliJ code reaches into one engine's profile. In `brikk-sql-intellij-support/src/`:
@@ -277,6 +285,20 @@ so check the change against the binary-compatibility rule in `AGENTS.md`.
 The literal `"SCALAR_STUB"` appears at five sites, and `"spice"` with `"2.4.0"` at
 several more in `DatafusionEditorProfile.kt`, `ConnectedDatafusionEditorProfile.kt` and
 `DatafusionDocumentationProvider.kt`. Name them once.
+
+Round 6 did the constants and not the hooks. `"SCALAR_STUB"`, `"spice"` and `"2.4.0"`
+are named in `DatafusionEditorProfile.kt` and used in the three DataFusion files.
+
+The hooks need the owner's decision, because they cannot be added without new public
+API. `SqlCompletionProfile` and `RelationScopeProfile` are public interfaces that plugins
+implement, Kotlin does not allow an `internal` member in an interface, and a public
+class that implements an internal interface must make its overrides public. An internal
+function that hides the cast would only move the type name from four files to one; the
+next engine would still edit a central type switch. So the choice is to add public
+members with defaults to the two interfaces, or to leave the four sites as they are.
+Note that `RelationAnalysis.kt:78` tests the dialect name on any profile, so a hook
+there must keep working for a profile that is not `DatafusionEditorProfile` but whose
+dialect is `spice`.
 
 ## B. IDE blocking and side effects
 

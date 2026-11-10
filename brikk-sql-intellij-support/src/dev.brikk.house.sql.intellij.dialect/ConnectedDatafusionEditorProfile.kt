@@ -46,8 +46,8 @@ public open class ConnectedDatafusionEditorProfile(
     override fun functions(file: PsiFile): List<FunctionPresentation> {
         val live = service().completion(file)
         if (live.selection.inventory == null) return super.functions(file)
-        return live.functions.filterNot { it.nativeKind == "SCALAR_STUB" }.map { entry ->
-            if (dialect == "spice" && live.selection.inventory.serverVersion == "2.4.0")
+        return live.functions.filterNot { it.nativeKind == SCALAR_STUB_KIND }.map { entry ->
+            if (dialect == SPICE_DIALECT && live.selection.inventory.serverVersion == SPICE_PROFILE_VERSION)
                 entry.copy(namedParameters = SPICE_NAMED_ARGUMENTS[entry.name].orEmpty()) else entry
         }
     }

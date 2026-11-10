@@ -1,5 +1,6 @@
 package dev.brikk.house.sql.intellij.catalog
 
+import dev.brikk.house.sql.intellij.dialect.SCALAR_STUB_KIND
 import dev.brikk.house.sql.metadata.FunctionDef
 import dev.brikk.house.sql.metadata.FunctionKind
 import dev.brikk.house.sql.scope.Nullability
@@ -55,7 +56,7 @@ public open class DatafusionCatalogHarvester protected constructor(private val p
             }
             val namespace = routines.firstOrNull { it[2] == name && it[3].equals(row[4], true) }?.take(2)?.map { requireNotNull(it) }.orEmpty()
             val stub = product == "spice" && kind == FunctionKind.SCALAR && name in setOf("vector_search", "text_search", "rrf", "rerank")
-            functions[name to kind] = LiveFunction(FunctionDef(name, kind, nativeKind = if (stub) "SCALAR_STUB" else null), namespace)
+            functions[name to kind] = LiveFunction(FunctionDef(name, kind, nativeKind = if (stub) SCALAR_STUB_KIND else null), namespace)
         }
         if (functions.isEmpty()) return null
         // These endpoints have no metadata snapshot transaction. Reject changes seen across the read.
