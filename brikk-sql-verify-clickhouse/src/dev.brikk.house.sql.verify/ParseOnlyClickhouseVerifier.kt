@@ -8,8 +8,10 @@ import java.util.concurrent.Callable
 import java.util.concurrent.CancellationException
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 import java.util.concurrent.Future
+import java.util.concurrent.RejectedExecutionException
+import java.util.concurrent.SynchronousQueue
+import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicBoolean
@@ -38,6 +40,14 @@ import java.util.concurrent.atomic.AtomicBoolean
  * [checkCanceled] is polled while the server works; whatever it throws cancels the query, closes
  * the connection and propagates. An interrupted caller cancels too, with a `CancellationException`.
  * Not single-flight: callers serialize calls if they need to.
+ * The client deadline, including connecting, is 30 seconds plus twice the non-negative
+ * [timeoutSeconds], allowing both settings attempts their server timeout and connection grace.
+ * Non-positive values are still passed unchanged to JDBC and the server, but now have a
+ * 30-second client deadline even if the driver treats zero as unlimited.
+ * Per classloader, 16 verification workers allow several editors to highlight concurrently;
+ * four separate cancellation workers keep a stuck cancel from consuming verification capacity.
+ * Neither pool queues work: exhausted capacity returns [VerifyResult.Unavailable], and exhausted
+ * cancellation capacity never delays or replaces the caller's cancellation.
  */
 public class ParseOnlyClickhouseVerifier(
     private val connect: () -> ClickhouseQueryConnection?,
@@ -46,12 +56,17 @@ public class ParseOnlyClickhouseVerifier(
 ) : SqlVerifier {
     override val engine: String = "clickhouse"
 
+    private val limits = clickhouseVerificationLimits.get() ?: ClickhouseVerificationLimits(
+        clickhouseClientDeadlineNanos(timeoutSeconds), WORKERS, CANCELLERS,
+    )
+
     /** Set once the server refused the query-level settings; later calls ask without them. */
     private val settingsRefused = AtomicBoolean()
 
     override fun verify(sql: String): VerifyResult {
+        if (sql.length > MAX_HEX_LENGTH / 2) return VerifyResult.Unverified(TOO_LONG)
         val hex = sql.toByteArray(Charsets.UTF_8).toHex()
-        if (hex.length > MAX_HEX_LENGTH) return VerifyResult.Unverified("The statement is too long for ClickHouse parse-checking.")
+        if (hex.length > MAX_HEX_LENGTH) return VerifyResult.Unverified(TOO_LONG)
         val answer = ask(hex)
         return when (answer) {
             is Answer.Formatted -> if (hasInlineData(sql)) VerifyResult.Unverified(INSERT_DATA) else VerifyResult.Accepted
@@ -76,7 +91,7 @@ public class ParseOnlyClickhouseVerifier(
      * One call's cancellation, kept: a connection that opens after it is closed at once, and nothing is
      * submitted after it.
      */
-    private class Call {
+    private class Call(private val cancellers: ExecutorService) {
         private var canceled = false
         private var connection: ClickhouseQueryConnection? = null
 
@@ -100,14 +115,20 @@ public class ParseOnlyClickhouseVerifier(
                 canceled = true
                 connection
             } ?: return
-            WORKERS.execute { runCatching { open.cancel() } }
+            try {
+                cancellers.execute { runCatching { open.cancel() } }
+            } catch (_: RejectedExecutionException) {
+                // Stuck driver cancels already occupy the bounded workers. Still cancel the
+                // future without waiting for the driver or replacing the caller's exception.
+            }
         }
     }
 
     /** Opens a connection, asks the server to format the SQL whose UTF-8 is [hex], and closes it; all on a worker. */
     private fun ask(hex: String): Answer {
-        val call = Call()
-        val future: Future<Answer> = WORKERS.submit(Callable {
+        val call = Call(limits.cancellers)
+        val deadline = System.nanoTime() + limits.deadlineNanos
+        val future: Future<Answer> = try { limits.workers.submit(Callable {
             val opened = try {
                 connect() ?: return@Callable Answer.NoConnection("ClickHouse verification is unavailable: no ClickHouse data source.")
             } catch (e: SQLException) {
@@ -117,11 +138,22 @@ public class ParseOnlyClickhouseVerifier(
                 if (!call.opened(opened)) return@Callable Answer.NoConnection("ClickHouse verification was canceled.")
                 format(opened, hex, call)
             }
-        })
+        }) } catch (_: RejectedExecutionException) {
+            return Answer.NoConnection("ClickHouse verification is unavailable: verification capacity is exhausted.")
+        }
         try {
             while (true) {
+                val remaining = deadline - System.nanoTime()
+                if (remaining <= 0) {
+                    // Prefer an answer already delivered (notably the server's timeout) if
+                    // the caller was descheduled across its client deadline.
+                    if (future.isDone) return future.get()
+                    call.cancel()
+                    future.cancel(true)
+                    return Answer.NoConnection("ClickHouse verification is unavailable: timed out.")
+                }
                 try {
-                    return future.get(POLL_MILLIS, TimeUnit.MILLISECONDS)
+                    return future.get(minOf(remaining, TimeUnit.MILLISECONDS.toNanos(POLL_MILLIS)), TimeUnit.NANOSECONDS)
                 } catch (_: TimeoutException) {
                     checkCanceled()
                 }
@@ -196,12 +228,47 @@ public class ParseOnlyClickhouseVerifier(
         const val EXPRESSION_PREFIX = "SELECT "
         const val UNREADABLE = "<Unreadable error message>"
         const val INSERT_DATA = "ClickHouse parses an INSERT's header only; its inline data is checked when it runs."
+        private const val TOO_LONG = "The statement is too long for ClickHouse parse-checking."
 
-        val WORKERS: ExecutorService = Executors.newCachedThreadPool { task ->
-            Thread(task, "brikk-clickhouse-verify").apply { isDaemon = true }
-        }
+        val WORKERS: ExecutorService = clickhouseVerificationWorkers("brikk-clickhouse-verify", CLICKHOUSE_VERIFY_WORKERS)
+        val CANCELLERS: ExecutorService = clickhouseVerificationWorkers("brikk-clickhouse-verify-cancel", CLICKHOUSE_CANCEL_WORKERS)
     }
 }
+
+internal const val CLICKHOUSE_VERIFY_WORKERS = 16
+internal const val CLICKHOUSE_CANCEL_WORKERS = 4
+
+internal fun clickhouseClientDeadlineNanos(timeoutSeconds: Int): Long =
+    TimeUnit.SECONDS.toNanos(30 + 2 * timeoutSeconds.toLong().coerceAtLeast(0))
+
+internal class ClickhouseVerificationLimits(
+    val deadlineNanos: Long,
+    val workers: ExecutorService,
+    val cancellers: ExecutorService,
+)
+
+private val clickhouseVerificationLimits = ThreadLocal<ClickhouseVerificationLimits>()
+
+/** Scoped construction seam: internal parameters without adding even a JVM-public constructor. */
+internal fun clickhouseVerifierWithLimits(
+    connect: () -> ClickhouseQueryConnection?,
+    timeoutSeconds: Int,
+    checkCanceled: () -> Unit,
+    limits: ClickhouseVerificationLimits,
+): ParseOnlyClickhouseVerifier {
+    val previous = clickhouseVerificationLimits.get()
+    clickhouseVerificationLimits.set(limits)
+    try {
+        return ParseOnlyClickhouseVerifier(connect, timeoutSeconds, checkCanceled)
+    } finally {
+        if (previous == null) clickhouseVerificationLimits.remove() else clickhouseVerificationLimits.set(previous)
+    }
+}
+
+internal fun clickhouseVerificationWorkers(name: String, maximum: Int): ThreadPoolExecutor =
+    ThreadPoolExecutor(0, maximum, 60, TimeUnit.SECONDS, SynchronousQueue()) { task ->
+        Thread(task, name).apply { isDaemon = true }
+    }
 
 /** One short-lived connection to the ClickHouse server a [ParseOnlyClickhouseVerifier] asks. */
 public interface ClickhouseQueryConnection : AutoCloseable {
