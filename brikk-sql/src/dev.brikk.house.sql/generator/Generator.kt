@@ -119,6 +119,7 @@ open class Generator(
     protected val escapedIdentifierEnd: String = identifierEnd + identifierEnd
 
     // sqlglot: Generator._next_name (name_sequence("_t"))
+    // brikk extension (docs/brikk-extensions.md #68): reset per generate() call, not per instance.
     private var nextNameCounter = -1
     protected fun nextName(): String { nextNameCounter += 1; return "_t$nextNameCounter" }
 
@@ -397,6 +398,7 @@ open class Generator(
     open fun generate(expression: Expression, copy: Boolean = true): String {
         val expr = if (copy) expression.copy() else expression
         unsupportedMessages.clear()
+        nextNameCounter = -1
         // brikk-native: span tracking bookkeeping (no-op unless trackSpans)
         lastSourceMap = null
         if (trackSpans) {
