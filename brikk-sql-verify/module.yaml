@@ -3,7 +3,7 @@
 # Its tests are brikk-sql's verification gates.
 product: jvm/lib
 
-# TODO(review): used verbatim as the published POM <description> (required by Maven Central).
+# Used verbatim as the published POM <description> (required by Maven Central).
 description: SQL verification oracles (Trino, DuckDB, Doris fidelity; ShardingSphere advisory) for brikk-sql.
 
 apply:

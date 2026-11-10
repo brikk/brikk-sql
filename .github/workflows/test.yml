@@ -14,7 +14,6 @@ on:
     branches-ignore:
       - main
       - 'release/**'
-      - 'publish/intellij-support-0.1.0'
   pull_request:
   workflow_call:
   workflow_dispatch:

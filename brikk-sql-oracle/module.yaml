@@ -5,7 +5,7 @@
 # Used only for offline/extreme validation (corpus gates), not the shipped SqlVerifiers registry.
 product: jvm/lib
 
-# TODO(review): used verbatim as the published POM <description> (required by Maven Central).
+# Used verbatim as the published POM <description> (required by Maven Central).
 description: High-fidelity SQL verification oracles (real engines) — embedded PostgreSQL + chDB ClickHouse, plus the JVM Trino/Doris/DuckDB parsers re-exposed as a full oracle set.
 
 apply:

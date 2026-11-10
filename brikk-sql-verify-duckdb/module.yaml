@@ -3,7 +3,7 @@
 # initialized instance and grammar profile. Neither editor verifier binds or runs the user's SQL.
 product: jvm/lib
 
-# TODO(review): used verbatim as the published POM <description> (required by Maven Central).
+# Used verbatim as the published POM <description> (required by Maven Central).
 description: DuckDB native-grammar SQL verifiers (embedded DuckDB parser, parse-only editor variant) for brikk-sql.
 
 apply:

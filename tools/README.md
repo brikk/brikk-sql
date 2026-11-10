@@ -83,16 +83,9 @@ reproduce earlier evidence; that does not make their observations current engine
   `test_generator_helpers.py` checks these spelling boundaries and the Doris-properties
   escaper against every string literal in its checked-in output, without the absent clones.
 
-`probe_temporal_arithmetic.py` and `import_spice_documentation_audit.py` are kept as
-provenance for vendored evidence. The first captured
-`vendor/data/sqlglot-sg29-009/mysql-native-results.json` (the SG29-009 MySQL TIMESTAMPADD
-and DATE_ADD controls). The second built
-`vendor/data/datafusion-spice/docs-audit-2026-10-29.json` from the 2026-10-29 research
-export. Neither is run by CI or by a live generator, and both need inputs that are no
-longer available (a private MySQL container, the original export). No document names
-either script;
-[FQ-21](../dev-docs/QUALITY-CHECK-fable.md#fq-21-index-tools-share-its-helpers-docs-then-move)
-of the quality check proposed deleting them, and that decision is left to the owner.
+The scripts that produced `vendor/data/sqlglot-sg29-009/mysql-native-results.json` and
+`vendor/data/datafusion-spice/docs-audit-2026-10-29.json` were removed because their inputs
+no longer exist.
 
 The Kotlin `metadata-capture` and `dialect-audit` modules and the Rust
 `datafusion-reference` tools support these captures. Their module files, the

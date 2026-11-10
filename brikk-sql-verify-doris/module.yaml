@@ -3,7 +3,7 @@
 # classpath or pass its path.
 product: jvm/lib
 
-# TODO(review): used verbatim as the published POM <description> (required by Maven Central).
+# Used verbatim as the published POM <description> (required by Maven Central).
 description: Doris native-grammar SQL verifier (Doris FE parser) for brikk-sql.
 
 apply:
